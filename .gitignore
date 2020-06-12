@@ -14,3 +14,4 @@ fs/figs/
 fs/model_results/
 fs/reports/
 dask-worker-space/
+.DS_Store
