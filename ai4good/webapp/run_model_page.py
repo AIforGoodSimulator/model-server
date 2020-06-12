@@ -197,17 +197,16 @@ def update_history(n):
         Input('interval-component', 'n_intervals'),
         Input('camp-dropdown', 'value'),
         Input('model-dropdown', 'value'),
-        Input('profile-dropdown', 'value'),
-        Input('model_results_button', 'href')
+        Input('profile-dropdown', 'value')
     ]
 )
-def on_see_results_click_and_state_update(n, camp, model, profile, href):
+def on_see_results_click_and_state_update(n, camp, model, profile):
     if camp is None or model is None or profile is None:
         return False, True, True, ''
     else:
         if model_runner.results_exist(model, profile, camp):
             return False, False, False, f'/sim/results?model={model}&profile={profile}&camp={camp}'
-        elif href == '':
-            return False, False, True, ''
+        #TODO: elif href == '':
+        #    return False, False, True, ''
         else:
             return True, False, True, ''
