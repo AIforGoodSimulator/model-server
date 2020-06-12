@@ -1,14 +1,20 @@
-
+) Fix multi call to see results
+) Editable params
+) Document webapp run in readme
 
 ) camp_params.csv remove computed parameters from csv to code
 ) move R code that generates params to python
 ) setup mongo + impl parameter store and model result store
-) add async and progress webapp run
+) add progress to webapp run
 ) better info page in model run in webapp
 ) add more complex charts to webapp
 ) add profile customization, convert to table form
 ) TODO: add save csv specific to model
 ) #TODO: make specific to model
+) add flask cache ideally using azure infra + local
+) github PR model
+) add azure authentication
+
 
 B) move camp params generator to python (now in notebook)
 B) parameter generator to populate into Mongo

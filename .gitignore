@@ -1,0 +1,16 @@
+Figs
+CSV_output
+saved_runs
+Visualisation/model_outcomes/baseline_new.csv
+Visualisation/model_outcomes/baseline.csv
+readme_local.txt
+env/
+.idea/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+fs/figs/
+fs/model_results/
+fs/reports/
+dask-worker-space/

@@ -1,6 +1,7 @@
 import dash
 import dash_bootstrap_components as dbc
 from flask import Flask
+from dask.distributed import Client
 from ai4good.runner.facade import Facade
 from ai4good.webapp.model_runner import ModelRunner
 
@@ -14,5 +15,16 @@ dash_app = dash.Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP]
 )
 
+
+_client = None  #Needs lazy init
+
+
+def dask_client() -> Client:
+    global _client
+    if _client is None:
+        _client = Client(processes=False)
+    return _client
+
+
 facade = Facade.simple()
-model_runner = ModelRunner(facade)
+model_runner = ModelRunner(facade, dask_client)
