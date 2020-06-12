@@ -66,7 +66,7 @@ def model_run_buttons():
     return html.Div([
         dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True),
         dbc.Button("See Results", id="model_results_button", color="success", className="mr-1",
-                   target="_blank", disabled=True, external_link=True),
+                   target="_blank", disabled=True, external_link=True, href='none'),
         dbc.Toast(
             [],
             id="run_model_toast",
@@ -76,15 +76,11 @@ def model_run_buttons():
             dismissable=True,
             is_open=False
         ),
-        dbc.Toast(
-            [html.P("No cached results, please run model first", className="mb-0")],
-            id="no_results_toast",
-            header="Notification",
-            duration=3000,
-            icon="primary",
-            dismissable=True,
-            is_open=False
-        ),
+        dbc.Tooltip(
+            '',
+            id='model_results_tooltip',
+            target="model_results_button",
+        )
     ])
 
 
@@ -116,7 +112,7 @@ layout = html.Div(
         history_table(),
         dcc.Interval(
             id='interval-component',
-            interval=2 * 1000  # in milliseconds
+            interval=5 * 1000  # in milliseconds
         )
     ], style={'margin': 10}
 )
@@ -184,7 +180,7 @@ def update_history(n):
 
 @dash_app.callback(
     [
-        Output("no_results_toast", "is_open"),
+        Output("model_results_tooltip", "children"),
         Output('run_model_button', 'disabled'),
         Output('model_results_button', 'disabled'),
         Output('model_results_button', 'href')
@@ -199,11 +195,9 @@ def update_history(n):
 )
 def on_see_results_click_and_state_update(n, camp, model, profile, href):
     if camp is None or model is None or profile is None:
-        return False, True, True, ''
+        return 'Select camp, model and profile to see results', True, True, ''
     else:
         if model_runner.results_exist(model, profile, camp):
-            return False, False, False, f'/sim/results?model={model}&profile={profile}&camp={camp}'
-        elif href == '':
-            return False, False, True, ''
+            return '', False, False, f'/sim/results?model={model}&profile={profile}&camp={camp}'
         else:
-            return True, False, True, ''
+            return 'No cached results please run model first', False, True, ''
