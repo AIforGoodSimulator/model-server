@@ -14,7 +14,7 @@ dash_app = dash.Dash(
     suppress_callback_exceptions=True,
     external_stylesheets=[dbc.themes.BOOTSTRAP]
 )
-
+dash_app.title = "AI4Good COVID-19 Model Server"
 
 _client = None  #Needs lazy init
 

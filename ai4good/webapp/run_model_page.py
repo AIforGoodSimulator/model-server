@@ -4,7 +4,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from ai4good.webapp.apps import dash_app, facade, model_runner
 from ai4good.webapp.model_runner import ModelScheduleRunResult
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_table
 
@@ -66,7 +66,7 @@ def model_run_buttons():
     return html.Div([
         dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True),
         dbc.Button("See Results", id="model_results_button", color="success", className="mr-1",
-                   target="_blank", disabled=True),
+                   target="_blank", disabled=True, external_link=True),
         dbc.Toast(
             [],
             id="run_model_toast",
@@ -156,27 +156,23 @@ def display_value(model, profile):
 
 @dash_app.callback(
     [Output("run_model_toast", "is_open"), Output("run_model_toast", "children")],
-    [Input("run_model_button", "n_clicks"), Input('camp-dropdown', 'value'), Input('model-dropdown', 'value'),
-     Input('profile-dropdown', 'value')]
+    [Input("run_model_button", "n_clicks")],
+    [State('camp-dropdown', 'value'), State('model-dropdown', 'value'), State('profile-dropdown', 'value')]
 )
 def on_run_model_click(n, camp, model, profile):
     ctx = dash.callback_context
     if not ctx.triggered:
         return False, dash.no_update
     else:
-        event_source_id = ctx.triggered[0]['prop_id'].split('.')[0]
-        if event_source_id == 'run_model_button':
-            res = model_runner.run_model(model, profile, camp)
-            if res == ModelScheduleRunResult.SCHEDULED:
-                return True, html.P("Model run scheduled", className="mb-0")
-            elif res == ModelScheduleRunResult.CAPACITY:
-                return True, html.P("Can not run model now, over capacity, try again later", className="mb-0")
-            elif res == ModelScheduleRunResult.ALREADY_RUNNING:
-                return True, html.P("Already running", className="mb-0")
-            else:
-                raise RuntimeError("Unsupported result type: "+str(res))
+        res = model_runner.run_model(model, profile, camp)
+        if res == ModelScheduleRunResult.SCHEDULED:
+            return True, html.P("Model run scheduled", className="mb-0")
+        elif res == ModelScheduleRunResult.CAPACITY:
+            return True, html.P("Can not run model now, over capacity, try again later", className="mb-0")
+        elif res == ModelScheduleRunResult.ALREADY_RUNNING:
+            return True, html.P("Already running", className="mb-0")
         else:
-            return False, dash.no_update
+            raise RuntimeError("Unsupported result type: "+str(res))
 
 
 @dash_app.callback(Output('history_table', 'data'),
@@ -198,15 +194,16 @@ def update_history(n):
         Input('camp-dropdown', 'value'),
         Input('model-dropdown', 'value'),
         Input('profile-dropdown', 'value')
-    ]
+    ],
+    [State('model_results_button', 'href')]
 )
-def on_see_results_click_and_state_update(n, camp, model, profile):
+def on_see_results_click_and_state_update(n, camp, model, profile, href):
     if camp is None or model is None or profile is None:
         return False, True, True, ''
     else:
         if model_runner.results_exist(model, profile, camp):
             return False, False, False, f'/sim/results?model={model}&profile={profile}&camp={camp}'
-        #TODO: elif href == '':
-        #    return False, False, True, ''
+        elif href == '':
+            return False, False, True, ''
         else:
             return True, False, True, ''
