@@ -1,9 +1,10 @@
 import argparse
 import logging
+import json
 import plotly.graph_objects as go
 from typeguard import typechecked
 from ai4good.models.model import Model, ModelResult
-from ai4good.models.model_registry import get_models
+from ai4good.models.model_registry import get_models, create_params
 from ai4good.models.cm.cm_model import CompartmentalModel
 from ai4good.runner.facade import Facade
 from ai4good.models.cm.functions import generate_csv
@@ -15,16 +16,17 @@ facade = Facade.simple()
 
 @typechecked
 def run_model(_model: str, _profile: str, camp: str, load_from_cache: bool, save_to_cache: bool,
-              is_save_plots: bool, is_show_plots: bool, is_save_report: bool):
+              is_save_plots: bool, is_show_plots: bool, is_save_report: bool, overrides) -> ModelResult:
     logging.info('Running %s model with %s profile', _model, _profile)
     _mdl: Model = get_models()[_model](facade.ps)
-    res_id = _mdl.result_id(camp, _profile)
+    params = create_params(facade.ps, _model, _profile, camp, overrides)
+    res_id = _mdl.result_id(params)
     if load_from_cache and facade.rs.exists(_mdl.id(), res_id):
         logging.info("Loading from model result cache")
         mr: ModelResult = facade.rs.load(_mdl.id(), res_id)
     else:
         logging.info("Running model for camp %s", camp)
-        mr: ModelResult = _mdl.run(camp, _profile)
+        mr: ModelResult = _mdl.run(params)
         if save_to_cache:
             logging.info("Saving model result to cache")
             facade.rs.store(_mdl.id(), res_id, mr)
@@ -32,6 +34,7 @@ def run_model(_model: str, _profile: str, camp: str, load_from_cache: bool, save
         save_plots(mr, res_id, is_save_plots, is_show_plots)
     if is_save_report:
         save_report(mr, res_id)
+    return mr
 
 
 def save_plots(mr, res_id, is_save_plots, is_show_plots):
@@ -60,11 +63,15 @@ def save_plots(mr, res_id, is_save_plots, is_show_plots):
         fig_uncertainty.write_image(pu.fig_path(f"Uncertainty_{res_id}.png"))
 
 
-def save_report(mr, res_id):
-    logging.info("Saving report")
+def get_report(mr):
     sols_raw = mr.get('sols_raw')
     p = mr.get('params')
-    df = generate_csv(sols_raw, p,  input_type='raw')
+    return generate_csv(sols_raw, p, input_type='raw')
+
+
+def save_report(mr, res_id):
+    logging.info("Saving report")
+    df = get_report(mr)
     df.to_csv(pu.reports_path(f"all_R0_{res_id}.csv"))
 
 
@@ -84,6 +91,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_plots', dest='save_plots', action='store_true', help='Save plots', default=False)
     parser.add_argument('--show_plots', dest='show_plots', action='store_true', help='Show plots', default=False)
     parser.add_argument('--save_report', dest='save_report', action='store_true', help='Save model report', default=False)
+    parser.add_argument('--profile_overrides', type=str, help='Model specific profile overrides as JSON', default=None)
     args = parser.parse_args()
 
     model = args.model
@@ -91,13 +99,13 @@ if __name__ == '__main__':
     if args.run_all_profiles:
         for profile in facade.ps.get_profiles(model):
             run_model(model, profile, args.camp, args.load_from_cache, args.save_to_cache, args.save_plots,
-                      args.show_plots, args.save_report)
+                      args.show_plots, args.save_report, args.profile_overrides)
     else:
         if args.profile is None:
             profile = facade.ps.get_profiles(model)[0]
         else:
             profile = args.profile
         run_model(model, profile, args.camp, args.load_from_cache, args.save_to_cache, args.save_plots,
-                  args.show_plots, args.save_report)
+                  args.show_plots, args.save_report, args.profile_overrides)
 
     logging.info('Model Runner finished normally')

@@ -6,7 +6,7 @@ from typing import List
 from enum import Enum, auto
 from dask.distributed import Client, Future
 from ai4good.models.model import Model, ModelResult
-from ai4good.models.model_registry import get_models
+from ai4good.models.model_registry import get_models, create_params
 from datetime import datetime
 
 MAX_CONCURRENT_MODELS = 5
@@ -98,23 +98,26 @@ class ModelRunner:
     def _sync_run_model(self, _model: str, _profile: str, camp: str) -> ModelResult:
         logging.info('Running %s model with %s profile', _model, _profile)
         _mdl: Model = get_models()[_model](self.facade.ps)
-        res_id = _mdl.result_id(camp, _profile)
+        params = create_params(self.facade.ps, _model, _profile, camp)
+        res_id = _mdl.result_id(params)
         if self.facade.rs.exists(_mdl.id(), res_id):
             logging.info("Loading from model result cache")
             return self.facade.rs.load(_mdl.id(), res_id)
         else:
             logging.info("Running model for camp %s", camp)
-            mr = _mdl.run(camp, _profile)
+            mr = _mdl.run(params)
             logging.info("Saving model result to cache")
             self.facade.rs.store(_mdl.id(), res_id, mr)
             return mr
 
     def results_exist(self, _model: str, _profile: str, camp: str) -> bool:
         _mdl: Model = get_models()[_model](self.facade.ps)
-        res_id = _mdl.result_id(camp, _profile)
+        params = create_params(self.facade.ps, _model, _profile, camp)
+        res_id = _mdl.result_id(params)
         return self.facade.rs.exists(_mdl.id(), res_id)
 
     def get_result(self, _model: str, _profile: str, camp: str) -> ModelResult:
         _mdl: Model = get_models()[_model](self.facade.ps)
-        res_id = _mdl.result_id(camp, _profile)
+        params = create_params(self.facade.ps, _model, _profile, camp)
+        res_id = _mdl.result_id(params)
         return self.facade.rs.load(_mdl.id(), res_id)

@@ -56,9 +56,8 @@ def profile_selector():
             ]),
             width=3,
         ),
-        dbc.Col(html.Div([dbc.Card('', id='profile-info', body=True)], style={'height': '100%'}),
-            width=6,
-        ),
+        dbc.Col(html.Div([dbc.Card(id='profile-info', body=True)], style={'height': '100%'}),
+        width=6),
     ], style={'margin': 10})
 
 
@@ -66,7 +65,7 @@ def model_run_buttons():
     return html.Div([
         dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True),
         dbc.Button("See Results", id="model_results_button", color="success", className="mr-1",
-                   target="_blank", disabled=True, external_link=True, href='none'),
+                   target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'),
         dbc.Toast(
             [],
             id="run_model_toast",
@@ -76,12 +75,8 @@ def model_run_buttons():
             dismissable=True,
             is_open=False
         ),
-        dbc.Tooltip(
-            '',
-            id='model_results_tooltip',
-            target="model_results_button",
-        )
-    ])
+        html.Div([], id='model_run_tooltip_holder')
+    ], id='run_buttons_div')
 
 
 def history_table():
@@ -121,7 +116,7 @@ layout = html.Div(
 @dash_app.callback(
     Output('camp-info', 'children'),
     [Input('camp-dropdown', 'value')])
-def display_value(value):
+def update_camp_info(value):
     if value is not None:
         total_population = int(facade.ps.get_camp_params(value).Total_population.dropna().sum())
         return f'Camp "{value}" with total population {total_population} people'
@@ -132,7 +127,7 @@ def display_value(value):
 @dash_app.callback(
     [Output('model-info', 'children'), Output('profile-dropdown', 'options')],
     [Input('model-dropdown', 'value')])
-def display_value(value):
+def update_model_info(value):
     if value is not None:
         return value, [{'label': i, 'value': i} for i in facade.ps.get_profiles(value)]
     else:
@@ -142,12 +137,16 @@ def display_value(value):
 @dash_app.callback(
     Output('profile-info', 'children'),
     [Input('model-dropdown', 'value'), Input('profile-dropdown', 'value')])
-def display_value(model, profile):
+def update_profile_info(model, profile):
     if model is not None and profile is not None:
-        params = facade.ps.get_params(model, profile)
-        return pprint.pformat(params)
+        df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
+        return dash_table.DataTable(
+            id='profile_table',
+            columns=[{"name": i, "id": i} for i in df.columns],
+            data=df.to_dict('records'),
+        )
     else:
-        return 'Select model and profile'
+        return 'Select profile'
 
 
 @dash_app.callback(
@@ -172,7 +171,7 @@ def on_run_model_click(n, camp, model, profile):
 
 
 @dash_app.callback(Output('history_table', 'data'),
-              [Input('interval-component', 'n_intervals')])
+                   [Input('interval-component', 'n_intervals')])
 def update_history(n):
     df = model_runner.history_df()
     return df.to_dict('records')
@@ -180,24 +179,26 @@ def update_history(n):
 
 @dash_app.callback(
     [
-        Output("model_results_tooltip", "children"),
         Output('run_model_button', 'disabled'),
         Output('model_results_button', 'disabled'),
-        Output('model_results_button', 'href')
+        Output('model_results_button', 'href'),
+        Output("model_run_tooltip_holder", "children")
     ],
     [
         Input('interval-component', 'n_intervals'),
         Input('camp-dropdown', 'value'),
         Input('model-dropdown', 'value'),
         Input('profile-dropdown', 'value')
-    ],
-    [State('model_results_button', 'href')]
+    ]
 )
-def on_see_results_click_and_state_update(n, camp, model, profile, href):
+def on_see_results_click_and_state_update(n, camp, model, profile):
+
     if camp is None or model is None or profile is None:
-        return 'Select camp, model and profile to see results', True, True, ''
+        return True, True, '', \
+               dbc.Tooltip('Select camp, model and profile to see results', id='_mr_tt', target="run_buttons_div")
     else:
         if model_runner.results_exist(model, profile, camp):
-            return '', False, False, f'/sim/results?model={model}&profile={profile}&camp={camp}'
+            return False, False, f'/sim/results?model={model}&profile={profile}&camp={camp}', []
         else:
-            return 'No cached results please run model first', False, True, ''
+            return False, True, '', \
+                   dbc.Tooltip('No cached results, please run model first', id='_mr_tt', target='run_buttons_div'),

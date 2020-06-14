@@ -27,12 +27,12 @@ class Model(ABC):
         pass
 
     @abstractmethod
-    def result_id(self, camp: str, profile: str) -> str:
+    def result_id(self, params: Any) -> str:
         """Result id to enable caching"""
         pass
 
     @abstractmethod
-    def run(self, camp: str, profile: str) -> ModelResult:
+    def run(self, params: Any) -> ModelResult:
         pass
 
 

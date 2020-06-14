@@ -3,11 +3,13 @@ This file sets up the parameters for SEIR models used in the cov_functions_AI.py
 """
 
 import numpy as np
+import json
+import hashlib
 from ai4good.params.param_store import ParamStore
 
 
 class Parameters:
-    def __init__(self, ps: ParamStore, camp: str, profile: str='baseline'):
+    def __init__(self, ps: ParamStore, camp: str, profile: str='baseline', profile_override_dict={}):
         self.ps = ps
         self.camp = camp
         disease_params = ps.get_disease_params()
@@ -18,6 +20,7 @@ class Parameters:
         model_params = parameter_csv[parameter_csv['Type'] == 'Model Parameter']
         model_params = model_params.loc[:, ['Name', 'Value']]
         control_data = parameter_csv[parameter_csv['Type'] == 'Control']
+        self.model_params = model_params
 
         # print()
 
@@ -208,24 +211,88 @@ class Parameters:
         self.population_frame, self.population = self.prepare_population_frame(camp_params)
 
         self.profile = profile
-        self.control_dict = self.load_control_dict()
+        self.control_dict = self.load_control_dict(profile_override_dict)
 
         self.infection_matrix, self.im_beta_list, self.largest_eigenvalue = self.generate_infection_matrix()
         self.generated_disease_vectors = self.ps.get_generated_disease_param_vectors()
 
-    def load_control_dict(self):
-        cd = self.ps.get_params('compartmental-model', self.profile)
-        for k, d in cd.items():
-            if k == 'better_hygiene':
-                if 'value' not in d:
-                    d['value'] = self.better_hygiene
+    def sha1_hash(self) -> str:
+        hash_params = [
+            {i: self.control_dict[i] for i in self.control_dict if i != 'nProcesses'},
+            self.infection_matrix.tolist(),
+            self.im_beta_list.tolist(),
+            self.largest_eigenvalue,
+            self.generated_disease_vectors.to_dict('records'),
+            self.population_frame.to_dict('records'),
+            self.population,
+            self.camp,
+            self.calculated_categories,
+            self.model_params.to_dict('records')
+        ]
+        serialized_params = json.dumps(hash_params, sort_keys=True)
+        hash_object = hashlib.sha1(serialized_params.encode('UTF-8'))
+        _hash = hash_object.hexdigest()
+        return _hash
+
+    def load_control_dict(self, profile_override_dict):
+
+        def get_values(df, p_name):
+            val_rows = df[df['Parameter'] == p_name]
+            assert len(val_rows) == 1
+            val_row = val_rows.iloc[0]
+            st = val_row['Start Time']
+            et = val_row['End Time']
+            _v = val_row['Value']
+            if (st is None) or (et is None) or (st == '<no_edit>') or (et == '<no_edit>'):
+                _t = None
             else:
-                if isinstance(d, dict):
-                    # scale values by population size
-                    for sk in d.keys():
-                        if sk in {'value', 'rate'}:
-                            d[sk] = d[sk] / self.population
-        return cd
+                _t = [int(st), int(et)]
+            return p_name, _v, _t
+
+        def add_int_scalar(df, p_name, dct):
+            p, _v, _ = get_values(df, p_name)
+            dct[p] = int(_v)
+
+        def str2bool(v):
+            return v.lower() in ("yes", "true", "t", "1")
+
+        cd = self.ps.get_params('compartmental-model', self.profile)
+        dct = {}
+        p, v, t = get_values(cd, 'better_hygiene')
+        dct[p] = {
+            'timing': t,
+            'value': self.better_hygiene if v == '<default>' else float(v)
+        }
+
+        p, v, _ = get_values(cd, 'ICU_capacity')
+        dct[p] = {'value': int(v) / self.population}
+
+        p, v, t = get_values(cd, 'remove_symptomatic')
+        dct[p] = {
+            'timing': t,
+            'rate': float(v) / self.population
+        }
+
+        p, v, t = get_values(cd, 'shielding')
+        dct[p] = {'used': str2bool(v)}
+
+        p, v, t = get_values(cd, 'remove_high_risk')
+        _, v2, _ = get_values(cd, 'remove_high_risk_categories')
+        dct[p] = {
+            'timing': t,
+            'rate': float(v) / self.population,
+            'n_categories_removed': int(v2)
+        }
+
+        add_int_scalar(cd, 't_sim', dct)
+        add_int_scalar(cd, 'numberOfIterations', dct)
+        add_int_scalar(cd, 'nProcesses', dct)
+
+        for k, d in dct.items():
+            if k in profile_override_dict.keys():
+                dct[k] = profile_override_dict[k]
+
+        return dct
 
     @staticmethod
     def prepare_population_frame(population_frame):
