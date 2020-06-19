@@ -1,4 +1,5 @@
-import pprint
+import numpy as np
+import pandas as pd
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -56,8 +57,31 @@ def profile_selector():
             ]),
             width=3,
         ),
-        dbc.Col(html.Div([dbc.Card(id='profile-info', body=True)], style={'height': '100%'}),
-        width=6),
+        dbc.Col(html.Div([dbc.Card(id='profile-info', body=True, children=html.Div([
+            html.Div(id='profile_help'),
+            dash_table.DataTable(
+                id='profile_table',
+                columns=[],
+                data=[]
+            ),
+            dbc.Button("Save", id="save_profile_button", color="primary", className="mr-1", disabled=True,
+                       style={'display': 'none'})
+        ]))], style={'height': '100%'}), width=6),
+
+        dbc.Modal([
+            dbc.ModalHeader("Save profile"),
+            dbc.ModalBody(dbc.Input(id="profile_name_input", placeholder="Specify profile name...", type="text",
+                                    autoFocus=True)),
+            dbc.ModalFooter([
+                dbc.Button(
+                    "OK", id="do_save_profile_dialog", className="ml-auto"
+                ),
+                dbc.Button(
+                    "Close", id="close_save_profile_dialog", className="ml-auto"
+                )
+            ]),
+        ], id="save_profile_dialog", centered=True)
+
     ], style={'margin': 10})
 
 
@@ -135,24 +159,63 @@ def update_model_info(value):
 
 
 @dash_app.callback(
-    Output('profile-info', 'children'),
+    [Output('profile_help', 'children'),
+     Output('profile_table', 'columns'), Output('profile_table', 'data'),
+     Output('save_profile_button', 'style')],
     [Input('model-dropdown', 'value'), Input('profile-dropdown', 'value')])
 def update_profile_info(model, profile):
     if model is not None and profile is not None:
         df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
-        return dash_table.DataTable(
-            id='profile_table',
-            columns=[{"name": i, "id": i} for i in df.columns],
-            data=df.to_dict('records'),
-        )
+        return '', [{"name": i, "id": i, 'editable': i != 'Parameter'} for i in df.columns], \
+               df.to_dict('records'), {'float': 'right', 'margin-top': 12}
     else:
-        return 'Select profile'
+        return ['Select profile', [], [], {'display': 'none'}]
+
+
+@dash_app.callback(
+    Output('save_profile_button', 'disabled'),
+    [Input('model-dropdown', 'value'), Input('profile-dropdown', 'value'),
+     Input('profile_table', 'data'), Input('profile_table', 'columns')])
+def update_save_button_state(model, profile, profile_table_data, profile_table_columns):
+    if model is not None and profile is not None:
+        original_df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
+        new_df = pd.DataFrame(profile_table_data, columns=[c['name'] for c in profile_table_columns])
+        return np.array_equal(original_df.values,new_df.values)
+    else:
+        return True
+
+
+@dash_app.callback(
+    [Output("save_profile_dialog", "is_open"), Output('profile-dropdown', 'value'), Output('model-dropdown', 'value'),
+     Output('profile_name_input', 'value')],
+    [Input("save_profile_button", "n_clicks"), Input("close_save_profile_dialog", "n_clicks"), Input("do_save_profile_dialog", "n_clicks")],
+    [State("save_profile_dialog", "is_open"), State('profile_name_input', 'value'),
+     State('model-dropdown', 'value'), State('profile-dropdown', 'value'),
+     State('profile_table', 'data'), State('profile_table', 'columns')]
+)
+def on_save_profile_button_click(n_save, n_close, n_confirm_save, is_open, new_profile_name, model, profile,
+                                 profile_table_data, profile_table_columns):
+    ctx = dash.callback_context
+    if ctx.triggered and (n_save or n_close or n_confirm_save):
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        if button_id == 'save_profile_button':
+            return True, dash.no_update, dash.no_update, profile
+        elif button_id == 'close_save_profile_dialog':
+            return False, profile, dash.no_update, dash.no_update
+        elif button_id == 'do_save_profile_dialog':
+            assert new_profile_name is not None and len(new_profile_name) > 0
+            new_profile_df = pd.DataFrame(profile_table_data, columns=[c['name'] for c in profile_table_columns])
+            facade.ps.store_params(model, new_profile_name, new_profile_df)
+            return False, new_profile_name, model, dash.no_update
+    else:
+        return is_open, dash.no_update, dash.no_update, dash.no_update
 
 
 @dash_app.callback(
     [Output("run_model_toast", "is_open"), Output("run_model_toast", "children")],
     [Input("run_model_button", "n_clicks")],
-    [State('camp-dropdown', 'value'), State('model-dropdown', 'value'), State('profile-dropdown', 'value')]
+    [State('camp-dropdown', 'value'), State('model-dropdown', 'value'),
+    State('profile-dropdown', 'value')]
 )
 def on_run_model_click(n, camp, model, profile):
     ctx = dash.callback_context

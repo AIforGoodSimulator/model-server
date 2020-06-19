@@ -3,13 +3,14 @@ This file sets up the parameters for SEIR models used in the cov_functions_AI.py
 """
 
 import numpy as np
+import pandas as pd
 import json
 import hashlib
 from ai4good.params.param_store import ParamStore
 
 
 class Parameters:
-    def __init__(self, ps: ParamStore, camp: str, profile: str='baseline', profile_override_dict={}):
+    def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
         self.ps = ps
         self.camp = camp
         disease_params = ps.get_disease_params()
@@ -210,8 +211,7 @@ class Parameters:
 
         self.population_frame, self.population = self.prepare_population_frame(camp_params)
 
-        self.profile = profile
-        self.control_dict = self.load_control_dict(profile_override_dict)
+        self.control_dict = self.load_control_dict(profile, profile_override_dict)
 
         self.infection_matrix, self.im_beta_list, self.largest_eigenvalue = self.generate_infection_matrix()
         self.generated_disease_vectors = self.ps.get_generated_disease_param_vectors()
@@ -234,7 +234,7 @@ class Parameters:
         _hash = hash_object.hexdigest()
         return _hash
 
-    def load_control_dict(self, profile_override_dict):
+    def load_control_dict(self, profile, profile_override_dict):
 
         def get_values(df, p_name):
             val_rows = df[df['Parameter'] == p_name]
@@ -256,7 +256,7 @@ class Parameters:
         def str2bool(v):
             return v.lower() in ("yes", "true", "t", "1")
 
-        cd = self.ps.get_params('compartmental-model', self.profile)
+        cd = profile.copy()
         dct = {}
         p, v, t = get_values(cd, 'better_hygiene')
         dct[p] = {

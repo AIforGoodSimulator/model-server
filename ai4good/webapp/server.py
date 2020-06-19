@@ -8,6 +8,8 @@ import ai4good.webapp.run_model_page as run_model_page
 import ai4good.webapp.cm_model_results_page as cm_model_results_page
 from ai4good.webapp.apps import flask_app, dash_app
 
+logging.basicConfig(level=logging.INFO)
+
 
 @flask_app.route("/")
 def index():

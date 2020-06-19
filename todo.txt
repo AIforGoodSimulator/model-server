@@ -1,4 +1,3 @@
-) Editable params
 ) add more complex charts to webapp
 
 ) model run page run queue ux improvements:
@@ -15,6 +14,7 @@
 ) add flask cache ideally using azure infra + local
 ) github PR model
 ) add azure authentication
+) convert run model page to use form
 
 
 B) move camp params generator to python (now in notebook)
@@ -35,3 +35,4 @@ webapp
 webapp run queue
 hash for params
 *param change
+

@@ -38,6 +38,13 @@ class ParamStore(ABC):
         pass
 
     @abstractmethod
+    def store_params(self, model: str, profile: str, profile_df: pd.DataFrame):
+        """
+            Given model and profile name store profile params
+        """
+        pass
+
+    @abstractmethod
     def get_camp_params(self, camp: str) -> pd.DataFrame:
         pass
 
@@ -67,6 +74,14 @@ class SimpleParamStore(ParamStore):
     def get_params(self, model: str, profile: str) -> pd.DataFrame:
         df = self._read_csv(model+"_profile_params.csv")
         return df[df['Profile'] == profile].copy()
+
+    def store_params(self, model: str, profile: str, profile_df: pd.DataFrame):
+        _file = model + "_profile_params.csv"
+        df = self._read_csv(_file)
+        df = df[df['Profile'] != profile].copy()
+        profile_df['Profile'] = profile
+        df = df.append(profile_df)
+        df.to_csv(pu.params_path(_file), index=False)
 
     def get_camps(self) -> List[str]:
         df = self._read_csv("camp_params.csv")
