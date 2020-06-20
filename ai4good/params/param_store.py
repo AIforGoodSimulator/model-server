@@ -2,7 +2,6 @@ from typeguard import typechecked
 from typing import List, Dict, Any
 from abc import ABC, abstractmethod
 import pandas as pd
-import copy
 import ai4good.utils.path_utils as pu
 
 

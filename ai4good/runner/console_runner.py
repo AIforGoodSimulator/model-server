@@ -7,7 +7,6 @@ from ai4good.models.model import Model, ModelResult
 from ai4good.models.model_registry import get_models, create_params
 from ai4good.models.cm.cm_model import CompartmentalModel
 from ai4good.runner.facade import Facade
-from ai4good.models.cm.functions import generate_csv
 from ai4good.models.cm.plotter import figure_generator, age_structure_plot, stacked_bar_plot, uncertainty_plot
 import ai4good.utils.path_utils as pu
 
@@ -63,15 +62,9 @@ def save_plots(mr, res_id, is_save_plots, is_show_plots):
         fig_uncertainty.write_image(pu.fig_path(f"Uncertainty_{res_id}.png"))
 
 
-def get_report(mr):
-    sols_raw = mr.get('sols_raw')
-    p = mr.get('params')
-    return generate_csv(sols_raw, p, input_type='raw')
-
-
 def save_report(mr, res_id):
     logging.info("Saving report")
-    df = get_report(mr)
+    df = mr.get('report')
     df.to_csv(pu.reports_path(f"all_R0_{res_id}.csv"))
 
 

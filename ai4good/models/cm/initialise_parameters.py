@@ -211,7 +211,7 @@ class Parameters:
 
         self.population_frame, self.population = self.prepare_population_frame(camp_params)
 
-        self.control_dict = self.load_control_dict(profile, profile_override_dict)
+        self.control_dict, self.icu_count = self.load_control_dict(profile, profile_override_dict)
 
         self.infection_matrix, self.im_beta_list, self.largest_eigenvalue = self.generate_infection_matrix()
         self.generated_disease_vectors = self.ps.get_generated_disease_param_vectors()
@@ -265,7 +265,8 @@ class Parameters:
         }
 
         p, v, _ = get_values(cd, 'ICU_capacity')
-        dct[p] = {'value': int(v) / self.population}
+        icu_capacity = int(v)
+        dct[p] = {'value': icu_capacity / self.population}
 
         p, v, t = get_values(cd, 'remove_symptomatic')
         dct[p] = {
@@ -292,7 +293,7 @@ class Parameters:
             if k in profile_override_dict.keys():
                 dct[k] = profile_override_dict[k]
 
-        return dct
+        return dct, icu_capacity
 
     @staticmethod
     def prepare_population_frame(population_frame):

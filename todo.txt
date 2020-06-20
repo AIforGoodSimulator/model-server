@@ -15,6 +15,8 @@
 ) github PR model
 ) add azure authentication
 ) convert run model page to use form
+) add validation / better ux in profile change page
+) improve performance of    report = generate_csv(sols_raw, p, input_type='raw') to remove need of saving dataframe
 
 
 B) move camp params generator to python (now in notebook)

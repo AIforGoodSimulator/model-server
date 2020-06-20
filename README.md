@@ -51,4 +51,19 @@ Parameters are in fs/params + profile configuration in code right now, but to mo
 
 Webapp can be started from PyCharm by running server.py main method or from terminal:
 
-    waitress-serve --port 8050 --host 0.0.0.0 ai4good.webapp.server:flask_app 
+    waitress-serve --port 8050 --host 0.0.0.0 ai4good.webapp.server:flask_app
+    
+### Azure deployment
+
+First add azure remote
+
+    git remote add azure https://ai4good-sim2.scm.azurewebsites.net:443/ai4good-sim2.git
+    
+ Note down deployment credentials from Deployment Center/Deployment Credentials on Azure portal for AI4Good-Sim2 app service.
+ 
+ Now just do 
+    
+    git push azure master
+
+enter credentials when prompted.
+    

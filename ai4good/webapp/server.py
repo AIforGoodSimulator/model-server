@@ -6,7 +6,9 @@ from dash.dependencies import Input, Output
 from urllib.parse import urlparse, parse_qs
 import ai4good.webapp.run_model_page as run_model_page
 import ai4good.webapp.cm_model_results_page as cm_model_results_page
+import ai4good.webapp.cm_model_report_page as cm_model_report_page
 from ai4good.webapp.apps import flask_app, dash_app
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -34,7 +36,12 @@ def display_page(pathname, query=None):
             return cm_model_results_page.layout(query['camp'][0], query['profile'][0])
         else:
             return '404'
-
+    elif pathname == '/sim/report':
+        query = parse_qs(urlparse(query).query)
+        if query['model'][0] == 'compartmental-model':
+            return cm_model_report_page.layout(query['camp'][0], query['profile'][0])
+        else:
+            return '404'
     else:
         return '404'
 

@@ -90,6 +90,8 @@ def model_run_buttons():
         dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True),
         dbc.Button("See Results", id="model_results_button", color="success", className="mr-1",
                    target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'),
+        dbc.Button("See Report", id="model_report_button", color="success", className="mr-1",
+                   target="_blank", disabled=True, external_link=True, href='none', key='model_report_button_key'),
         dbc.Toast(
             [],
             id="run_model_toast",
@@ -245,6 +247,8 @@ def update_history(n):
         Output('run_model_button', 'disabled'),
         Output('model_results_button', 'disabled'),
         Output('model_results_button', 'href'),
+        Output('model_report_button', 'disabled'),
+        Output('model_report_button', 'href'),
         Output("model_run_tooltip_holder", "children")
     ],
     [
@@ -257,11 +261,18 @@ def update_history(n):
 def on_see_results_click_and_state_update(n, camp, model, profile):
 
     if camp is None or model is None or profile is None:
-        return True, True, '', \
+        return True, \
+               True, '', \
+               True, '', \
                dbc.Tooltip('Select camp, model and profile to see results', id='_mr_tt', target="run_buttons_div")
     else:
         if model_runner.results_exist(model, profile, camp):
-            return False, False, f'/sim/results?model={model}&profile={profile}&camp={camp}', []
+            return False, \
+                   False, f'/sim/results?model={model}&profile={profile}&camp={camp}', \
+                   False, f'/sim/report?model={model}&profile={profile}&camp={camp}', \
+                   []
         else:
-            return False, True, '', \
+            return False, \
+                   True, '', \
+                   True, '', \
                    dbc.Tooltip('No cached results, please run model first', id='_mr_tt', target='run_buttons_div'),

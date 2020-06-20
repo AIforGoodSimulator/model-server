@@ -15,3 +15,8 @@ fs/model_results/
 fs/reports/
 dask-worker-space/
 .DS_Store
+workbook.ipynb
+.ipynb_checkpoints/
+activate.cmd
+notebook.cmd
+removal_log.txt
