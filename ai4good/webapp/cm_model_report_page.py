@@ -28,7 +28,7 @@ def layout(camp, profile):
             html.Div(overview_population(params), style={'margin': 30}),
             dcc.Loading(html.Div([], id='main_section_part1', style={'margin': 30})),
             dcc.Loading(html.Div([], id='main_section_part2', style={'margin': 30})),
-            dcc.Loading(html.Div([], id='main_section_part3', style={'margin': 30})),
+            chart_section(),
             html.Div(camp, id='_camp_param', style={'display': 'none'}),
             html.Div(profile, id='_profile_param', style={'display': 'none'})
         ], style={'margin': 50}
@@ -83,7 +83,7 @@ def overview_population(params: Parameters):
         ''')),
         dbc.Row([
             dbc.Col([
-                html.Div(html.B(f'Population breakdown of {params.camp} camp with {params.population} residents')),
+                html.Div(html.B(f'Population breakdown of {params.camp} camp with {int(params.population)} residents')),
                 dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
             ], width=4)
         ]),
@@ -231,14 +231,49 @@ def render_main_section_part2(camp, profile):
     ]
 
 
-@dash_app.callback(
-    Output('main_section_part3', 'children'),
-    [Input('_camp_param', 'children'), Input('_profile_param', 'children')],
-)
-def render_main_section_part3_charts(camp, profile):
-    mr, profile_df, params, report = get_model_result(camp, profile)
+def chart_section():
+    options = [
+        {'label': 'All ages', 'value': 'ALL'},
+        {'label': '<9 years', 'value': '0-9'},
+        {'label': '10-19 years', 'value': '10-19'},
+        {'label': '20-29 years', 'value': '20-29'},
+        {'label': '30-39 years', 'value': '30-39'},
+        {'label': '40-49 years', 'value': '40-49'},
+        {'label': '50-59 years', 'value': '50-59'},
+        {'label': '60-69 years', 'value': '60-69'},
+        {'label': '70+ years', 'value': '70+'}
+    ]
 
-#   Aggregate plots
+    return html.Div([
+        dbc.Row([
+            dbc.Col([
+                html.B('Plots of changes in symptomatically infected cases, hopitalisation cases, critical care cases '
+                       'and death incidents over the course of simulation days'),
+                dcc.Dropdown(
+                    id='charts_age_dropdown',
+                    options=options,
+                    value='ALL',
+                    clearable=False,
+                    style={'margin-top': 5}
+                ),
+            ], width=6)
+        ]),
+        dbc.Row([
+            dbc.Col([
+                dcc.Loading(html.Div([], id='chart_section_plot_container')),
+            ], width=12)
+        ])
+    ], style={'margin': 30})
+
+
+@dash_app.callback(
+    Output('chart_section_plot_container', 'children'),
+    [Input('_camp_param', 'children'), Input('_profile_param', 'children'), Input('charts_age_dropdown', 'value')],
+)
+def render_main_section_charts(camp, profile, age_to_plot):
+    mr, profile_df, params, report = get_model_result(camp, profile)
+    logging.info(f"Plotting {age_to_plot}")
+
     columns_to_plot = ['Infected (symptomatic)', 'Hospitalised', 'Critical', 'Deaths']
     fig = make_subplots(rows=2, cols=2, shared_xaxes=True,
                         vertical_spacing=0.05,
@@ -248,6 +283,11 @@ def render_main_section_part3_charts(camp, profile):
     for i, col in enumerate(columns_to_plot):
         row_idx = int(i % 2 + 1)
         col_idx = int(i / 2 + 1)
+        if age_to_plot != 'ALL':
+            age_cols = [c for c in report.columns if (age_to_plot in c) and (c.startswith(col))]
+            assert len(age_cols) == 1
+            col = age_cols[0]
+
         plot_iqr(fig, report, col, row_idx, col_idx)
         fig.update_yaxes(title_text=col, row=row_idx, col=col_idx)
 
@@ -256,12 +296,11 @@ def render_main_section_part3_charts(camp, profile):
     fig.update_xaxes(title_text=x_title, row=2, col=2)
 
     fig.update_traces(mode='lines')
-    fig.update_layout(height=1050,
-                      title_text='Plots of changes in symptomatically infected cases, hopitalisation cases,'
-                                 ' critical care cases and death incidents over the course of simulation days',
-                      showlegend=False)
-
-#   Plot by age
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=30, b=0),
+        height=800,
+        showlegend=False
+    )
 
     return [
         dcc.Graph(
