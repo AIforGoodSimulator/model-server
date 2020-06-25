@@ -1,4 +1,26 @@
+Models:
+  * optimize/scale network-model-python
+    - try to improve graph algos
+    - confirm correct usage
+    - scale out to run different profiles on on-demand azure instances 50-100 parallel profiles
+
+Platform:
+    - Mongo installation and integration
+    - Flask cache with memcached or redis on azure, simple local
+
+Org:
+    - intro document for db new joiners
+    - db representatives to join weekly call
+
+Compartmental model:
+    - migrate seaborn iqr chart to dash
+    - migrate rest of the notebook report to dash
+
+Misc:
+    - see todo.txt in model-server
+
 ) add more complex charts to webapp
+) clean model cache
 
 ) model run page run queue ux improvements:
   * progress

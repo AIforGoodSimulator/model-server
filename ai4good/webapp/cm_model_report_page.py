@@ -235,57 +235,40 @@ def render_main_section_part2(camp, profile):
     Output('main_section_part3', 'children'),
     [Input('_camp_param', 'children'), Input('_profile_param', 'children')],
 )
-def render_main_section_part2(camp, profile):
+def render_main_section_part3_charts(camp, profile):
     mr, profile_df, params, report = get_model_result(camp, profile)
 
-    # fig, ax = plt.subplots(1, 4, sharex='col', figsize=(16, 9), constrained_layout=True)
-    #
-    # columns_to_plot = ['Infected (symptomatic)', 'Hospitalised', 'Critical', 'Deaths']
-    # i = 0
-    # fontdict = {'fontsize': 15}
-    # for column in columns_to_plot:
-    #     sns.lineplot(x="Time", y=column, ci='iqr', data=df, ax=ax[i], estimator=np.median)
-    #     ax[i].set_title(column, fontdict)
-    #     i += 1
-    # fig.suptitle(
-    #     'Plots of changes in symptomatically infected cases, hopitalisation cases, critical care cases and death incidents over the course of simulation days',
-    #     fontsize=20)
-    #
-    # fig = make_subplots(rows=1, cols=4)
-    # columns_to_plot = ['Infected (symptomatic)', 'Hospitalised', 'Critical', 'Deaths']
-    # col = 0
-    # for column in columns_to_plot:
-    #     # sns.lineplot(x="Time", y=column, ci='iqr', data=df, ax=ax[i], estimator=np.median)
-    #     # ax[i].set_title(column, fontdict)
-    #
-    #     fig.add_trace(
-    #         go.Scatter(x=report['Time'], y=report[column]),
-    #         row=1, col=col
-    #     )
-    #     col += 1
+#   Aggregate plots
+    columns_to_plot = ['Infected (symptomatic)', 'Hospitalised', 'Critical', 'Deaths']
+    fig = make_subplots(rows=2, cols=2, shared_xaxes=True,
+                        vertical_spacing=0.05,
+                        horizontal_spacing=0.05,
+                        subplot_titles=columns_to_plot)
 
+    for i, col in enumerate(columns_to_plot):
+        row_idx = int(i % 2 + 1)
+        col_idx = int(i / 2 + 1)
+        plot_iqr(fig, report, col, row_idx, col_idx)
+        fig.update_yaxes(title_text=col, row=row_idx, col=col_idx)
 
+    x_title = 'Time, days'
+    fig.update_xaxes(title_text=x_title, row=2, col=1)
+    fig.update_xaxes(title_text=x_title, row=2, col=2)
 
-    # fig.add_trace(
-    #     go.Scatter(x=[1, 2, 3], y=[4, 5, 6]),
-    #     row=1, col=1
-    # )
-    #
-    # fig.add_trace(
-    #     go.Scatter(x=[20, 30, 40], y=[50, 60, 70]),
-    #     row=1, col=2
-    # )
+    fig.update_traces(mode='lines')
+    fig.update_layout(height=1050,
+                      title_text='Plots of changes in symptomatically infected cases, hopitalisation cases,'
+                                 ' critical care cases and death incidents over the course of simulation days',
+                      showlegend=False)
 
-    # fig.update_layout(height=600, width=800, title_text="Side By Side Subplots")
-
-
-    #fig = go.Figure(data=[go.Scatter(x=[1, 2, 3], y=[4, 1, 2])])
+#   Plot by age
 
     return [
-        # dcc.Graph(
-        #     id='example-graph-2',
-        #     figure=fig
-        # )
+        dcc.Graph(
+            id='plot_all_fig',
+            figure=fig,
+            style={'width': '100%'}
+        )
     ]
 
 
@@ -969,5 +952,27 @@ def find_six_months(df):
 
 
 def _merge(dict1, dict2):
-	res = {**dict1, **dict2}
-	return res
+    res = {**dict1, **dict2}
+    return res
+
+
+def plot_iqr(fig: go.Figure, df: pd.DataFrame, y_col: str, row: int, col=1,
+             x_col='Time', estimator=np.median, estimator_name='median', iqr_low=0.25, iqr_high=0.75):
+    grouped = df.groupby(x_col)[y_col]
+    est = grouped.agg(estimator)
+    cis = pd.DataFrame(np.c_[grouped.quantile(iqr_low), grouped.quantile(iqr_high)], index=est.index,
+                       columns=["low", "high"]).stack().reset_index()
+
+    x = est.index.values.tolist()
+    x_rev = x[::-1]
+
+    y_upper = cis[cis['level_1'] == 'high'][0].values.tolist()
+    y_lower = cis[cis['level_1'] == 'low'][0].values.tolist()
+    y_lower = y_lower[::-1]
+
+    fig.add_trace(go.Scatter(x=x + x_rev, y=y_upper + y_lower, fill='toself', fillcolor='rgba(0, 176, 246, 0.2)',
+                             line_color='rgba(255, 255, 255,0)', name=f'{iqr_low*100}% to {iqr_high*100}% interval'),
+                  row=row, col=col)
+    fig.add_trace(go.Scatter(x=x, y=est, line_color='rgb(0, 176, 246)', name=f'{y_col} {estimator_name}'),
+                  row=row, col=col)
+    return fig
