@@ -5,15 +5,21 @@ from flask_caching import Cache
 from dask.distributed import Client
 from ai4good.runner.facade import Facade
 from ai4good.webapp.model_runner import ModelRunner
+import ai4good.utils.path_utils as pu
 
 flask_app = Flask(__name__)
 
 
-cache = Cache(flask_app, config={  # todo: Move to redis or memcached
+fast_cache = Cache(flask_app, config={  # todo: Move to redis or memcached
     'CACHE_TYPE': 'simple'
 })
 
-cache_timeout = 300  # In seconds
+cache = Cache(flask_app, config={  # todo: Move to redis or memcached
+    'CACHE_TYPE': 'filesystem',
+    'CACHE_DIR':  pu.cache_path()
+})
+
+cache_timeout = 60*60*2  # In seconds
 
 
 dash_app = dash.Dash(

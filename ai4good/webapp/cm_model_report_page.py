@@ -11,10 +11,11 @@ import dash_bootstrap_components as dbc
 
 from ai4good.models.cm.cm_model import CompartmentalModel
 from ai4good.models.cm.initialise_parameters import Parameters
-from ai4good.webapp.apps import dash_app, facade, model_runner, cache, cache_timeout
+from ai4good.webapp.apps import dash_app, facade, model_runner, cache, fast_cache, cache_timeout
 from ai4good.webapp.cm_model_report_utils import *
 
 
+@cache.memoize(timeout=cache_timeout)
 def layout(camp, profile, cmp_profiles):
 
     _, profile_df, params, _ = get_model_result(camp, profile)
@@ -101,7 +102,7 @@ def overview_population(params: Parameters):
     ]
 
 
-@cache.memoize(timeout=cache_timeout)
+@fast_cache.memoize(timeout=cache_timeout)
 def get_model_result(camp: str, profile: str):
     logging.info("Reading data for: " + camp + ", " + profile)
     mr = model_runner.get_result(CompartmentalModel.ID, profile, camp)
@@ -116,6 +117,7 @@ def get_model_result(camp: str, profile: str):
     Output('main_section_part1', 'children'),
     [Input('_camp_param', 'children'), Input('_profile_param', 'children')],
 )
+@cache.memoize(timeout=cache_timeout)
 def render_main_section_part1(camp, profile):
     mr, profile_df, params, report = get_model_result(camp, profile)
 
@@ -221,6 +223,7 @@ def render_profile_df(df, params):
     Output('main_section_part2', 'children'),
     [Input('_camp_param', 'children'), Input('_profile_param', 'children')],
 )
+@cache.memoize(timeout=cache_timeout)
 def render_main_section_part2(camp, profile):
     mr, profile_df, params, report = get_model_result(camp, profile)
 
@@ -361,6 +364,7 @@ def render_main_section_charts(camp, profile, age_to_plot):
     Output('cmp_section', 'children'),
     [Input('_camp_param', 'children'), Input('_profile_param', 'children'), Input('_cmp_profiles', 'children')],
 )
+@cache.memoize(timeout=cache_timeout)
 def interventions(camp, profile, cmp_profiles):
 
     _, base_profile, base_params, base_df = get_model_result(camp, profile)

@@ -13,6 +13,7 @@ __pycache__/
 fs/figs/
 fs/model_results/
 fs/reports/
+fs/cache/
 dask-worker-space/
 .DS_Store
 workbook.ipynb

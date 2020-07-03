@@ -19,6 +19,7 @@ Compartmental model:
 Misc:
     - see todo.txt in model-server
 
+) optimize report page / remove request timeout
 ) model run page run queue ux improvements:
   * progress
   * nicer table
