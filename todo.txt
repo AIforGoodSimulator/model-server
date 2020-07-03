@@ -19,9 +19,6 @@ Compartmental model:
 Misc:
     - see todo.txt in model-server
 
-) add more complex charts to webapp
-) clean model cache
-
 ) model run page run queue ux improvements:
   * progress
   * nicer table
@@ -48,6 +45,12 @@ B) parameter generator to populate into Mongo
 
 
 Completed/in progress:
+
+
+) add more complex charts to webapp
+) cleanup report page
+) add scenario description
+) clean model cache
 abstract params
 abstract models a bit
 cleanup data input / profile

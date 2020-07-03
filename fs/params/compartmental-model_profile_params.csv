@@ -53,3 +53,12 @@ shielding,remove_high_risk_categories,<no_edit>,<no_edit>,2
 shielding,t_sim,<no_edit>,<no_edit>,200
 shielding,numberOfIterations,<no_edit>,<no_edit>,1000
 shielding,nProcesses,<no_edit>,<no_edit>,4
+better hygiene_kostya,better_hygiene,0,20,0.7
+better hygiene_kostya,ICU_capacity,<no_edit>,<no_edit>,6
+better hygiene_kostya,remove_symptomatic,0,0,10
+better hygiene_kostya,shielding,<no_edit>,<no_edit>,False
+better hygiene_kostya,remove_high_risk,0,0,20
+better hygiene_kostya,remove_high_risk_categories,<no_edit>,<no_edit>,2
+better hygiene_kostya,t_sim,<no_edit>,<no_edit>,200
+better hygiene_kostya,numberOfIterations,<no_edit>,<no_edit>,1000
+better hygiene_kostya,nProcesses,<no_edit>,<no_edit>,4

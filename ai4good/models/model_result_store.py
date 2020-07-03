@@ -1,5 +1,5 @@
 from typeguard import typechecked
-from typing import Any
+from typing import Any, List
 from abc import ABC, abstractmethod
 import os
 import pickle
@@ -18,6 +18,14 @@ class ModelResultStore(ABC):
 
     @abstractmethod
     def exists(self, model_id: str, result_id: str) -> bool:
+        pass
+
+    @abstractmethod
+    def list(self, model_id: str) -> List[str]:
+        pass
+
+    @abstractmethod
+    def remove_all(self, model_id: str):
         pass
 
 
@@ -41,3 +49,12 @@ class SimpleModelResultStore(ModelResultStore):
     @staticmethod
     def _path(name: str) -> str:
         return pu.model_results_path(name)
+
+    def list(self, model_id: str) -> List[str]:
+        return pu.list_models(f"{model_id}_*")
+
+    def remove_all(self, model_id: str):
+        files = pu.list_models(f"{model_id}_*")
+        for f in files:
+            os.remove(f)
+

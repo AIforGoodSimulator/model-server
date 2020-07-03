@@ -91,7 +91,7 @@ def model_run_buttons():
         dbc.Button("See Results", id="model_results_button", color="success", className="mr-1",
                    target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'),
         dbc.Button("See Report", id="model_report_button", color="success", className="mr-1",
-                   target="_blank", disabled=True, external_link=True, href='none', key='model_report_button_key'),
+                   disabled=True, key='model_report_button_key'),
         dbc.Toast(
             [],
             id="run_model_toast",
@@ -101,7 +101,23 @@ def model_run_buttons():
             dismissable=True,
             is_open=False
         ),
-        html.Div([], id='model_run_tooltip_holder')
+        html.Div([], id='model_run_tooltip_holder'),
+        dbc.Modal([
+            dbc.ModalHeader(id='show_report_header'),
+            dbc.ModalBody([
+                html.Div("Select intervention profiles to compare:"),
+                dbc.Checklist(options=[], value=[], id="show_report_intervention_checklist")
+            ]),
+            dbc.ModalFooter([
+                dbc.Button(
+                    "OK", id="do_show_report", className="ml-auto", target="_blank", external_link=True, href='none'
+                ),
+                dbc.Button(
+                    "Cancel", id="cancel_show_report", className="ml-auto"
+                )
+            ]),
+        ], id="show_report_dialog", centered=True)
+
     ], id='run_buttons_div')
 
 
@@ -248,7 +264,6 @@ def update_history(n):
         Output('model_results_button', 'disabled'),
         Output('model_results_button', 'href'),
         Output('model_report_button', 'disabled'),
-        Output('model_report_button', 'href'),
         Output("model_run_tooltip_holder", "children")
     ],
     [
@@ -263,16 +278,61 @@ def on_see_results_click_and_state_update(n, camp, model, profile):
     if camp is None or model is None or profile is None:
         return True, \
                True, '', \
-               True, '', \
+               True, \
                dbc.Tooltip('Select camp, model and profile to see results', id='_mr_tt', target="run_buttons_div")
     else:
         if model_runner.results_exist(model, profile, camp):
             return False, \
                    False, f'/sim/results?model={model}&profile={profile}&camp={camp}', \
-                   False, f'/sim/report?model={model}&profile={profile}&camp={camp}', \
+                   False, \
                    []
         else:
             return False, \
                    True, '', \
-                   True, '', \
+                   True, \
                    dbc.Tooltip('No cached results, please run model first', id='_mr_tt', target='run_buttons_div'),
+
+
+@dash_app.callback(
+    [Output("show_report_dialog", "is_open"),
+     Output('show_report_header', 'children'),
+     Output('show_report_intervention_checklist', 'options'),
+     Output('show_report_intervention_checklist', 'value')
+    ],
+    [Input("model_report_button", "n_clicks"), Input("do_show_report", "n_clicks"), Input("cancel_show_report", "n_clicks")],
+    [State("show_report_dialog", "is_open"), State('model-dropdown', 'value'),
+     State('profile-dropdown', 'value'), State('camp-dropdown', 'value')]
+)
+def on_run_report_button_click(n_open, n_show, n_cancel, is_open, model, profile, camp):
+
+    def is_enabled(p):
+        return (p != profile) and model_runner.results_exist(model, p, camp)
+
+    ctx = dash.callback_context
+    if ctx.triggered and (n_open or n_show or n_cancel):
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        if button_id == 'do_show_report':
+            return False, [], [], []
+        elif button_id == 'cancel_show_report':
+            return False, [], [], []
+        elif button_id == 'model_report_button':
+            profiles = facade.ps.get_profiles(model)
+            selected_profiles = [p for p in profiles if is_enabled(p)]
+            profile_options = [{'label': p, 'value': p} for p in selected_profiles]
+
+            if len(selected_profiles) == 0:
+                profile_options = [{'label': 'No model runs available', 'value': 'None', 'disabled': True}]
+            return True, f'Report for {profile} profile', profile_options, selected_profiles
+    else:
+        return is_open, dash.no_update, dash.no_update, dash.no_update
+
+
+@dash_app.callback(
+    Output("do_show_report", "href"),
+    [Input("show_report_intervention_checklist", "value")],
+    [State('model-dropdown', 'value'), State('profile-dropdown', 'value'), State('camp-dropdown', 'value')]
+)
+def update_run_report_link(interventions, model, profile, camp):
+    p = "&".join(map(lambda i: f'intervention={i}', interventions))
+    return f'/sim/report?model={model}&profile={profile}&camp={camp}&{p}',
+
