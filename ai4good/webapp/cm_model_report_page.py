@@ -403,7 +403,7 @@ def intervention(camp, cmp_profile_name, idx, base_df, base_params, base_profile
             ], width=4)
         ]),
         dcc.Markdown(textwrap.dedent(f'''
-        ####Comparison results
+        #### Comparison results
         ''')),
         dbc.Row([
             dbc.Col([
