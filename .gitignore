@@ -8,6 +8,7 @@ env/
 .idea/
 __pycache__/
 *.pyo
+*.pyc
 .DS_Store
 fs/figs/
 fs/model_results/
