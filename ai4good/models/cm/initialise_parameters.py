@@ -217,27 +217,21 @@ class Parameters:
         self.generated_disease_vectors = self.ps.get_generated_disease_param_vectors()
 
     def sha1_hash(self) -> str:
-        # hash_params = [
-        #     {i: self.control_dict[i] for i in self.control_dict if i != 'nProcesses'},
-        #     self.infection_matrix.tolist(),
-        #     self.im_beta_list.tolist(),
-        #     self.largest_eigenvalue,
-        #     self.generated_disease_vectors.to_dict('records'),
-        #     self.population_frame.to_dict('records'),
-        #     self.population,
-        #     self.camp,
-        #     self.calculated_categories,
-        #     self.model_params.to_dict('records')
-        # ]
-        # serialized_params = json.dumps(hash_params, sort_keys=True)
-        # hash_object = hashlib.sha1(serialized_params.encode('UTF-8'))
-        # _hash = hash_object.hexdigest()
-
-        #change hash temporarily to change the resid output for better readability
-        control_params = {i: self.control_dict[i] for i in self.control_dict if i != 'nProcesses' and i != 't_sim' and i != 'numberOfIterations'}
-        print(control_params)
-        params_string=f"hyg_{control_params['better_hygiene']['value']}_{control_params['better_hygiene']['timing']}" + "_" + f"ICU_{control_params['ICU_capacity']['value']:.5f}" + "_" + f"rmSym_{control_params['remove_symptomatic']['timing']}_{control_params['remove_symptomatic']['rate']:.5f}" + "_" + f"shield_{control_params['shielding']['used']}" + "_" + f"rmRisky{control_params['remove_high_risk']['timing']}_{control_params['remove_high_risk']['rate']:.5f}"
-        _hash=self.camp+'_'+params_string
+        hash_params = [
+            {i: self.control_dict[i] for i in self.control_dict if i != 'nProcesses'},
+            self.infection_matrix.tolist(),
+            self.im_beta_list.tolist(),
+            self.largest_eigenvalue,
+            self.generated_disease_vectors.to_dict('records'),
+            self.population_frame.to_dict('records'),
+            self.population,
+            self.camp,
+            self.calculated_categories,
+            self.model_params.to_dict('records')
+        ]
+        serialized_params = json.dumps(hash_params, sort_keys=True)
+        hash_object = hashlib.sha1(serialized_params.encode('UTF-8'))
+        _hash = hash_object.hexdigest()
         return _hash
 
     def load_control_dict(self, profile, profile_override_dict):
@@ -312,9 +306,7 @@ class Parameters:
         # make sure population frame.value sum to 100
         # population_frame.loc[:,'Population'] = population_frame.Population/sum(population_frame.Population)
 
-        population_size = np.float(population_frame.reset_index()['Total_population'][0])
-
-        print(population_size)
+        population_size = np.float(population_frame.Total_population[1])
 
         return population_frame, population_size
 
