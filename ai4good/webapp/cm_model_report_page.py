@@ -121,10 +121,10 @@ def get_model_result(camp: str, profile: str):
 def render_main_section_part1(camp, profile):
     mr, profile_df, params, report = get_model_result(camp, profile)
 
-    prevalence = prevalence_all_table(report)
+    prevalence = mr.get('prevalence_all')
     peak_critical_care_demand = prevalence[prevalence['Outcome'] == 'Critical Care Demand']['Peak Number IQR'].iloc[0]
 
-    prevalence_age = prevalence_age_table(report).reset_index()
+    prevalence_age = prevalence = mr.get('prevalence_age').reset_index()
     prevalence_age = prevalence_age.rename(columns={"level_1": "Age"})
 
     return [
@@ -228,8 +228,9 @@ def render_main_section_part2(camp, profile):
     mr, profile_df, params, report = get_model_result(camp, profile)
 
     t_sim = params.control_dict['t_sim']
-    cumulative_all = cumulative_all_table(report, params.population)
-    cumulative_age = cumulative_age_table(report).reset_index()
+
+    cumulative_all = mr.get('cumulative_all')
+    cumulative_age = mr.get('cumulative_age').reset_index()
     cumulative_age = cumulative_age.rename(columns={"level_1": "Age"})
 
     return [

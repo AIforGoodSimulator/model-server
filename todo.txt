@@ -18,8 +18,7 @@ Compartmental model:
 Misc:
     - see todo.txt in model-server
 
-) optimize report page / remove request timeout / move expensive tables to result compute stage
-) console info for cached data
+
 ) model run page run queue ux improvements:
   * progress
   * nicer table
@@ -48,6 +47,8 @@ B) parameter generator to populate into Mongo
 Completed/in progress:
 
 
+) optimize report page / remove request timeout / move expensive tables to result compute stage
+) console info for cached data
 ) add more complex charts to webapp
 ) cleanup report page
 ) add scenario description

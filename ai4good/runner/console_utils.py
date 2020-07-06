@@ -2,7 +2,6 @@ import argparse
 import logging
 from enum import Enum
 from ai4good.models.model_registry import get_models, create_params
-from ai4good.models.model_registry import get_models
 from ai4good.runner.facade import Facade
 from ai4good.models.model import ModelResult
 

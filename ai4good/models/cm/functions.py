@@ -1,14 +1,12 @@
 #from ai4good.models.cm.initialise_parameters import params, control_data, categories, calculated_categories, change_in_categories
 
 from ai4good.models.cm.initialise_parameters import Parameters
-from math import exp, ceil, log, floor, sqrt
+from math import ceil, floor
 import numpy as np
 from scipy.integrate import ode
-from scipy.stats import norm, gamma
 import pandas as pd
 import statistics
-import os
-import pickle
+import logging
 from tqdm import tqdm
 import dask
 from dask.diagnostics import ProgressBar
@@ -360,10 +358,11 @@ class Simulator:
 
 
     def simulate_over_parameter_range_parallel(self, numberOfIterations, t_stop, n_processes):
-
+        logging.info(f"Running parallel simulation with {n_processes} processes")
         lazy_sols = []
         config_dict = []
         sols_raw = {}
+
         for ii in range(min(numberOfIterations,len(self.params.generated_disease_vectors))):
             latentRate  = 1/self.params.generated_disease_vectors.LatentPeriod[ii]
             removalRate = 1/self.params.generated_disease_vectors.RemovalPeriod[ii]
@@ -394,7 +393,7 @@ class Simulator:
             config_dict.append(Dict)
             #TODO: sols_raw[(self.params.generated_disease_vectors.R0[ii],latentRate,removalRate,hospRate,deathRateICU,deathRateNoIcu)]=result
 
-        with dask.config.set(scheduler='processes', n_processes=n_processes):
+        with dask.config.set(scheduler='processes', num_workers=n_processes):
             with ProgressBar():
                 sols = dask.compute(*lazy_sols)
 
