@@ -306,7 +306,7 @@ class Parameters:
         # make sure population frame.value sum to 100
         # population_frame.loc[:,'Population'] = population_frame.Population/sum(population_frame.Population)
 
-        population_size = np.float(population_frame.Total_population[1])
+        population_size = np.float(population_frame.reset_index()['Total_population'][0])
 
         return population_frame, population_size
 
