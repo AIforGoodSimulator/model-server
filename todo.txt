@@ -13,13 +13,13 @@ Org:
     - db representatives to join weekly call
 
 Compartmental model:
-    - migrate seaborn iqr chart to dash
-    - migrate rest of the notebook report to dash
+    - report page optimize
 
 Misc:
     - see todo.txt in model-server
 
-) optimize report page / remove request timeout
+) optimize report page / remove request timeout / move expensive tables to result compute stage
+) console info for cached data
 ) model run page run queue ux improvements:
   * progress
   * nicer table

@@ -7,7 +7,6 @@ readme_local.txt
 env/
 .idea/
 __pycache__/
-*.pyc
 *.pyo
 .DS_Store
 fs/figs/
