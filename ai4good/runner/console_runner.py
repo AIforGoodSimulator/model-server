@@ -65,8 +65,7 @@ def save_plots(mr, res_id, is_save_plots, is_show_plots):
 def save_report(mr, res_id):
     logging.info("Saving report")
     df = mr.get('report')
-    df.to_csv(f"/Users/billyzhaoyh/Desktop/AIforGoodSimulator/model-server/fs/reports/{res_id}.csv")
-    # df.to_csv(pu.reports_path(f"{res_id}.csv"))
+    df.to_csv(pu.reports_path(f"all_R0_{res_id}.csv"))
 
 
 if __name__ == '__main__':
