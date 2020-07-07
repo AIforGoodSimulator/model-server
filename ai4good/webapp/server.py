@@ -11,7 +11,7 @@ import ai4good.webapp.cm_admin_page as cm_admin_page
 from ai4good.webapp.apps import flask_app, dash_app
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 @flask_app.route("/")

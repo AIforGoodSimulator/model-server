@@ -11,7 +11,7 @@ import dash_bootstrap_components as dbc
 
 from ai4good.models.cm.cm_model import CompartmentalModel
 from ai4good.models.cm.initialise_parameters import Parameters
-from ai4good.webapp.apps import dash_app, facade, model_runner, cache, fast_cache, cache_timeout
+from ai4good.webapp.apps import dash_app, facade, model_runner, cache, local_cache, cache_timeout
 from ai4good.webapp.cm_model_report_utils import *
 
 
@@ -102,7 +102,7 @@ def overview_population(params: Parameters):
     ]
 
 
-@fast_cache.memoize(timeout=cache_timeout)
+@local_cache.memoize(timeout=cache_timeout)
 def get_model_result(camp: str, profile: str):
     logging.info("Reading data for: " + camp + ", " + profile)
     mr = model_runner.get_result(CompartmentalModel.ID, profile, camp)

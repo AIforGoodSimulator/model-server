@@ -720,6 +720,8 @@ def effectiveness_peak_table(baseline, intervention):
         interventionPeak_baseline.loc[:, 'Peak Number IQR'].apply(lambda x: [int(i) for i in x.split('-')]).tolist(),
         columns=['25%', '75%'])
 
+
+
     comparisonSubdict = {}
     interventionPeak = prevalence_all_table(intervention)
     peakDay = pd.DataFrame(
@@ -729,6 +731,8 @@ def effectiveness_peak_table(baseline, intervention):
         interventionPeak.loc[:, 'Peak Number IQR'].apply(lambda x: [int(i) for i in x.split('-')]).tolist(),
         columns=['25%', '75%'])
     differenceDay = (peakDay - peakDay_baseline)
+    peakNumber_baseline = peakNumber_baseline + 0.01 # Shift to avoid div/0
+    peakNumber = peakNumber + 0.01
     differenceNumberPercentage = (peakNumber_baseline - peakNumber) / peakNumber_baseline * 100
     prettyOutputDay = []
     prettyOutputNumber = []
