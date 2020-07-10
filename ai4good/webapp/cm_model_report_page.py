@@ -371,7 +371,7 @@ def interventions(camp, profile, cmp_profiles):
     _, base_profile, base_params, base_df = get_model_result(camp, profile)
     profiles = cmp_profiles.split('¬')
 
-    if len(profiles) == 0:
+    if len(profiles) == 0 or (len(profiles) == 1 and len(profiles[0].strip()) == 0):
         return []
 
     intervention_content = [intervention(camp, p, i+1, base_df, base_params, base_profile, profile) for i, p in enumerate(profiles)]
