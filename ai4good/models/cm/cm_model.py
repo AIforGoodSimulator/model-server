@@ -29,7 +29,10 @@ class CompartmentalModel(Model):
 
         # Precompute some reports
         logging.info("Generating main report")
-        report = generate_csv(sols_raw, p, input_type='raw')
+        report_raw = generate_csv(sols_raw, p, input_type='raw')
+
+        report = normalize_report(report_raw, p)
+
         logging.info("Computing prevalence_age_table")
         prevalence_age = prevalence_age_table(report)
         logging.info("Computing prevalence_all_table")
@@ -46,7 +49,7 @@ class CompartmentalModel(Model):
             'percentiles': percentiles,
             'config_dict': config_dict,
             'params': p,
-            'report': report,
+            'report': report_raw,
             'prevalence_age': prevalence_age,
             'prevalence_all': prevalence_all,
             'cumulative_all': cumulative_all,

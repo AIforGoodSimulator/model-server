@@ -22,5 +22,18 @@ class TestEndToEndRuns(unittest.TestCase):
         )
         actual_report_df = mr.get('report')
         expected_df = pd.read_csv(pu._path('../runner/tests', 'expected_report.csv'))
-        pdt.assert_frame_equal(expected_df, actual_report_df)
+        pdt.assert_frame_equal(expected_df, actual_report_df, check_exact=False, check_less_precise=1)
+
+        check(mr.get('prevalence_age'), 'expected_page.csv')
+        check(mr.get('prevalence_all'), 'expected_pall.csv')
+        check(mr.get('cumulative_all'), 'expected_call.csv')
+        check(mr.get('cumulative_age'), 'expected_cage.csv')
+
+
+def check(actual, expected):
+    actual = actual.reset_index()
+    expected_df = pd.read_csv(pu._path('../runner/tests', expected))
+    pdt.assert_frame_equal(expected_df, actual, check_exact=False, check_less_precise=5)
+
+
 
