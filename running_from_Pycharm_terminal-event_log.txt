@@ -1,0 +1,364 @@
+Microsoft Windows [Version 10.0.18362.720]
+(c) 2019 Microsoft Corporation. All rights reserved.
+C:\Users\CT\Documents\GitHub\AIforGoodSimulator\model-server>py -m venv env
+C:\Users\CT\Documents\GitHub\AIforGoodSimulator\model-server>.\env\Scripts\activate
+(env) C:\Users\CT\Documents\GitHub\AIforGoodSimulator\model-server>pip install -r requirements.txt
+Collecting attrs==19.3.0 (from -r requirements.txt (line 1))
+  Using cached https://files.pythonhosted.org/packages/a2/db/4313ab3be961f7a763066401fb77f7748373b6094076ae2bda2806988af6/attrs-19.3.0-py2.py3-none-any.whl
+Collecting backcall==0.1.0 (from -r requirements.txt (line 2))
+  Using cached https://files.pythonhosted.org/packages/84/71/c8ca4f5bb1e08401b916c68003acf0a0655df935d74d93bf3f3364b310e0/backcall-0.1.0.tar.gz
+Collecting bleach==3.1.5 (from -r requirements.txt (line 3))
+  Using cached https://files.pythonhosted.org/packages/9a/1e/7d6cb3b27cd2c490558349ca5d5cc05b390b017da1c704cac807ac8bd9fb/bleach-3.1.5-py2.py3-none-any.whl
+Collecting bokeh==2.0.2 (from -r requirements.txt (line 4))
+  Using cached https://files.pythonhosted.org/packages/30/cf/9bef843880084b646cf5e6988e8f0aa081dccdf09f1617cfc6755f9a3353/bokeh-2.0.2.tar.gz
+Collecting Brotli==1.0.7 (from -r requirements.txt (line 5))
+  Using cached https://files.pythonhosted.org/packages/49/d7/9915ff9bbd0fa467decf5139e08997e1ea2e10f270fb9aa9ef5a592b4735/Brotli-1.0.7-cp38-cp38-win_amd64.whl
+Collecting certifi==2020.4.5.1 (from -r requirements.txt (line 6))
+  Using cached https://files.pythonhosted.org/packages/57/2b/26e37a4b034800c960a00c4e1b3d9ca5d7014e983e6e729e33ea2f36426c/certifi-2020.4.5.1-py2.py3-none-any.whl
+Collecting cffi==1.14.0 (from -r requirements.txt (line 7))
+  Using cached https://files.pythonhosted.org/packages/b4/78/eefed9f51baa2b2c891915b4590a237ed6bc6d02beec177fc503bae8eb53/cffi-1.14.0-cp38-cp38-win_amd64.whl
+Collecting chardet==3.0.4 (from -r requirements.txt (line 8))
+  Using cached https://files.pythonhosted.org/packages/bc/a9/01ffebfb562e4274b6487b4bb1ddec7ca55ec7510b22e4c51f14098443b8/chardet-3.0.4-py2.py3-none-any.whl
+Collecting click==7.1.2 (from -r requirements.txt (line 9))
+  Using cached https://files.pythonhosted.org/packages/d2/3d/fa76db83bf75c4f8d338c2fd15c8d33fdd7ad23a9b5e57eb6c5de26b430e/click-7.1.2-py2.py3-none-any.whl
+Collecting cloudpickle==1.4.1 (from -r requirements.txt (line 10))
+  Using cached https://files.pythonhosted.org/packages/c6/a5/bb99276ec2685e11d34e4aefc0d9238626843ea51f974aa59c68317d34b2/cloudpickle-1.4.1-py3-none-any.whl
+Collecting colorama==0.4.3 (from -r requirements.txt (line 11))
+  Using cached https://files.pythonhosted.org/packages/c9/dc/45cdef1b4d119eb96316b3117e6d5708a08029992b2fee2c143c7a0a5cc5/colorama-0.4.3-py2.py3-none-any.whl
+Collecting contextvars==2.4 (from -r requirements.txt (line 12))
+  Using cached https://files.pythonhosted.org/packages/83/96/55b82d9f13763be9d672622e1b8106c85acb83edd7cc2fa5bc67cd9877e9/contextvars-2.4.tar.gz
+Collecting cycler==0.10.0 (from -r requirements.txt (line 13))
+  Using cached https://files.pythonhosted.org/packages/f7/d2/e07d3ebb2bd7af696440ce7e754c59dd546ffe1bbe732c8ab68b9c834e61/cycler-0.10.0-py2.py3-none-any.whl
+Collecting dash==1.11.0 (from -r requirements.txt (line 14))
+  Using cached https://files.pythonhosted.org/packages/08/d9/bdd129751f94b6d2e5a4e400556e37a76491e7db0a38d1209bddbd09ca0d/dash-1.11.0.tar.gz
+Collecting dash-bootstrap-components==0.9.2 (from -r requirements.txt (line 15))
+Collecting dash-renderer==1.4.0 (from -r requirements.txt (line 18))
+  Using cached https://files.pythonhosted.org/packages/ef/fa/2f59a76d0e2b179dd5cb7b9d3529f898b24c1ae9ef918af42b30cc9fdb6c/dash_renderer-1.4.0.tar.gz
+Collecting dash-table==4.6.2 (from -r requirements.txt (line 19))
+  Using cached https://files.pythonhosted.org/packages/48/a5/2574879216fa62ba04fbf6750a8da822c559d958e86a5439a0788e9830a9/dash_table-4.6.2.tar.gz
+Collecting dask==2.18.0 (from -r requirements.txt (line 20))
+  Using cached https://files.pythonhosted.org/packages/a2/8a/e388bad377b187e0eb48598b6188646358c7a5d499aa5a8fb377b25419e7/dask-2.18.0-py3-none-any.whl
+Collecting decorator==4.4.2 (from -r requirements.txt (line 21))
+  Using cached https://files.pythonhosted.org/packages/ed/1b/72a1821152d07cf1d8b6fce298aeb06a7eb90f4d6d41acec9861e7cc6df0/decorator-4.4.2-py2.py3-none-any.whl
+Collecting defusedxml==0.6.0 (from -r requirements.txt (line 22))
+  Using cached https://files.pythonhosted.org/packages/06/74/9b387472866358ebc08732de3da6dc48e44b0aacd2ddaa5cb85ab7e986a2/defusedxml-0.6.0-py2.py3-none-any.whl
+Collecting distributed==2.18.0 (from -r requirements.txt (line 23))
+  Using cached https://files.pythonhosted.org/packages/72/41/faf6df58e4e7955622266682334357870b7712483b85b96dfe8f18183f55/distributed-2.18.0-py3-none-any.whl
+Collecting entrypoints==0.3 (from -r requirements.txt (line 24))
+  Using cached https://files.pythonhosted.org/packages/ac/c6/44694103f8c221443ee6b0041f69e2740d89a25641e62fb4f2ee568f2f9c/entrypoints-0.3-py2.py3-none-any.whl
+Collecting Flask==1.1.1 (from -r requirements.txt (line 25))
+  Using cached https://files.pythonhosted.org/packages/9b/93/628509b8d5dc749656a9641f4caf13540e2cdec85276964ff8f43bbb1d3b/Flask-1.1.1-py2.py3-none-any.whl
+Collecting Flask-Caching==1.9.0 (from -r requirements.txt (line 26))
+  Using cached https://files.pythonhosted.org/packages/d1/9f/135bcf47fdb585dffcf9f918664ab9d63585aae8e722948b2abca041312f/Flask_Caching-1.9.0-py2.py3-none-any.whl
+Collecting Flask-Compress==1.5.0 (from -r requirements.txt (line 27))
+  Using cached https://files.pythonhosted.org/packages/a0/96/cd684c1ffe97b513303b5bfd4bbfb4114c5f4a5ea8a737af6fd813273df8/Flask-Compress-1.5.0.tar.gz
+Collecting fsspec==0.7.4 (from -r requirements.txt (line 28))
+  Using cached https://files.pythonhosted.org/packages/0f/31/f27a81686b2f1b2f6776bd5db10efc7d88f28a50e8888f55409ef6501a50/fsspec-0.7.4-py3-none-any.whl
+Collecting future==0.18.2 (from -r requirements.txt (line 29))
+  Using cached https://files.pythonhosted.org/packages/45/0b/38b06fd9b92dc2b68d58b75f900e97884c45bedd2ff83203d933cf5851c9/future-0.18.2.tar.gz
+Collecting gevent==1.5.0 (from -r requirements.txt (line 30))
+  Using cached https://files.pythonhosted.org/packages/47/6a/1b4b009e2568c6c429a22db6c786391969a877a1d67ff1209603fad3c8f2/gevent-1.5.0-cp38-cp38-win_amd64.whl
+Collecting greenlet==0.4.16 (from -r requirements.txt (line 31))
+  Using cached https://files.pythonhosted.org/packages/25/b6/ff77f68063fb850714fdbe0c420f54d5ba51b33f10545eba45ea3aaa3cce/greenlet-0.4.16-cp38-cp38-win_amd64.whl
+Collecting HeapDict==1.0.1 (from -r requirements.txt (line 32))
+  Using cached https://files.pythonhosted.org/packages/b6/9d/cd4777dbcf3bef9d9627e0fe4bc43d2e294b1baeb01d0422399d5e9de319/HeapDict-1.0.1-py3-none-any.whl
+Collecting idna==2.9 (from -r requirements.txt (line 33))
+  Using cached https://files.pythonhosted.org/packages/89/e3/afebe61c546d18fb1709a61bee788254b40e736cff7271c7de5de2dc4128/idna-2.9-py2.py3-none-any.whl
+Collecting immutables==0.14 (from -r requirements.txt (line 34))
+  Using cached https://files.pythonhosted.org/packages/96/4a/0e8fbc4a67b66b24e3a2bdcc7ab219df4f0d6dda174d74354b955a6b078e/immutables-0.14-cp38-cp38-win_amd64.whl
+Collecting importlib-metadata==1.6.0 (from -r requirements.txt (line 35))
+  Using cached https://files.pythonhosted.org/packages/ad/e4/891bfcaf868ccabc619942f27940c77a8a4b45fd8367098955bb7e152fb1/importlib_metadata-1.6.0-py2.py3-none-any.whl
+Collecting ipykernel==5.3.0 (from -r requirements.txt (line 36))
+  Using cached https://files.pythonhosted.org/packages/61/18/f2350f0396fca562c22f880e25d668eaf6de129b6a56bf5b6786796a12e1/ipykernel-5.3.0-py3-none-any.whl
+Collecting ipython==7.15.0 (from -r requirements.txt (line 37))
+  Using cached https://files.pythonhosted.org/packages/aa/e8/47fda10c3ab103d9d4a667b40da9afd542c4e50aeb00c861b4eee5bb4e8f/ipython-7.15.0-py3-none-any.whl
+Collecting ipython-genutils==0.2.0 (from -r requirements.txt (line 38))
+  Using cached https://files.pythonhosted.org/packages/fa/bc/9bd3b5c2b4774d5f33b2d544f1460be9df7df2fe42f352135381c347c69a/ipython_genutils-0.2.0-py2.py3-none-any.whl
+Collecting ipywidgets==7.5.1 (from -r requirements.txt (line 39))
+  Using cached https://files.pythonhosted.org/packages/56/a0/dbcf5881bb2f51e8db678211907f16ea0a182b232c591a6d6f276985ca95/ipywidgets-7.5.1-py2.py3-none-any.whl
+Collecting itsdangerous==1.1.0 (from -r requirements.txt (line 40))
+  Using cached https://files.pythonhosted.org/packages/76/ae/44b03b253d6fade317f32c24d100b3b35c2239807046a4c953c7b89fa49e/itsdangerous-1.1.0-py2.py3-none-any.whl
+Collecting jedi==0.17.0 (from -r requirements.txt (line 41))
+  Using cached https://files.pythonhosted.org/packages/f3/3f/67f027e18c60a800875df1a0894a2436ce9053637fa39725766e937c0a71/jedi-0.17.0-py2.py3-none-any.whl
+Collecting Jinja2==2.11.2 (from -r requirements.txt (line 42))
+  Using cached https://files.pythonhosted.org/packages/30/9e/f663a2aa66a09d838042ae1a2c5659828bb9b41ea3a6efa20a20fd92b121/Jinja2-2.11.2-py2.py3-none-any.whl
+Collecting jsonschema==3.2.0 (from -r requirements.txt (line 43))
+  Using cached https://files.pythonhosted.org/packages/c5/8f/51e89ce52a085483359217bc72cdbf6e75ee595d5b1d4b5ade40c7e018b8/jsonschema-3.2.0-py2.py3-none-any.whl
+Collecting jupyter-client==6.1.3 (from -r requirements.txt (line 44))
+  Using cached https://files.pythonhosted.org/packages/34/0b/2ebddf775f558158ca8df23b35445fb15d4b1558a9e4a03bc7e75b13476e/jupyter_client-6.1.3-py3-none-any.whl
+Collecting jupyter-core==4.6.3 (from -r requirements.txt (line 45))
+  Using cached https://files.pythonhosted.org/packages/63/0d/df2d17cdf389cea83e2efa9a4d32f7d527ba78667e0153a8e676e957b2f7/jupyter_core-4.6.3-py2.py3-none-any.whl
+Collecting kiwisolver==1.2.0 (from -r requirements.txt (line 46))
+  Using cached https://files.pythonhosted.org/packages/37/97/cec83ff97d2c5190094e1331e32900b3c51623abbb1d8de229c119588375/kiwisolver-1.2.0-cp38-none-win_amd64.whl
+Collecting locket==0.2.0 (from -r requirements.txt (line 47))
+  Using cached https://files.pythonhosted.org/packages/d0/22/3c0f97614e0be8386542facb3a7dcfc2584f7b83608c02333bced641281c/locket-0.2.0.tar.gz
+Collecting MarkupSafe==1.1.1 (from -r requirements.txt (line 48))
+  Using cached https://files.pythonhosted.org/packages/4f/8b/da8a2ae5780d38271ac6e691756fc938cf4df8f225eb8aaced0204304932/MarkupSafe-1.1.1-cp38-cp38-win_amd64.whl
+Collecting matplotlib==3.1.3 (from -r requirements.txt (line 49))
+  Using cached https://files.pythonhosted.org/packages/83/b0/3698088013dce1b7f7d557582a9f247ff70c5ebf205faaa421b2c555253b/matplotlib-3.1.3-cp38-cp38-win_amd64.whl
+Collecting mistune==0.8.4 (from -r requirements.txt (line 50))
+  Using cached https://files.pythonhosted.org/packages/09/ec/4b43dae793655b7d8a25f76119624350b4d65eb663459eb9603d7f1f0345/mistune-0.8.4-py2.py3-none-any.whl
+Collecting msgpack==1.0.0 (from -r requirements.txt (line 51))
+  Using cached https://files.pythonhosted.org/packages/54/df/51af837ceaeda25563c99e13f772859784dd64fe6add68bfeade022b6aee/msgpack-1.0.0-cp38-cp38-win_amd64.whl
+Collecting nbconvert==5.6.1 (from -r requirements.txt (line 52))
+  Using cached https://files.pythonhosted.org/packages/79/6c/05a569e9f703d18aacb89b7ad6075b404e8a4afde2c26b73ca77bb644b14/nbconvert-5.6.1-py2.py3-none-any.whl
+Collecting nbformat==5.0.6 (from -r requirements.txt (line 53))
+  Using cached https://files.pythonhosted.org/packages/d5/3c/251cfe5e3c9545ece107d342909ee3822d8cd9f3f11a591df37baeff2089/nbformat-5.0.6-py3-none-any.whl
+Collecting notebook==6.0.3 (from -r requirements.txt (line 54))
+  Using cached https://files.pythonhosted.org/packages/b1/f1/0a67f09ef53a342403ffa66646ee39273e0ac79ffa5de5dbe2f3e28b5bdf/notebook-6.0.3-py3-none-any.whl
+Collecting numpy==1.18.1 (from -r requirements.txt (line 55))
+  Using cached https://files.pythonhosted.org/packages/95/47/ea0ae5a778aae07ede486f3dc7cd4b788dc53e11b01a17251b020f76a01d/numpy-1.18.1-cp38-cp38-win_amd64.whl
+Collecting packaging==20.4 (from -r requirements.txt (line 56))
+  Using cached https://files.pythonhosted.org/packages/46/19/c5ab91b1b05cfe63cccd5cfc971db9214c6dd6ced54e33c30d5af1d2bc43/packaging-20.4-py2.py3-none-any.whl
+Collecting pandas==1.0.4 (from -r requirements.txt (line 57))
+  Using cached https://files.pythonhosted.org/packages/6a/29/b5440a29f473bf2896bf7f8cbc0a6499961d54efdafe10ed64caabde8680/pandas-1.0.4-cp38-cp38-win_amd64.whl
+Collecting pandocfilters==1.4.2 (from -r requirements.txt (line 58))
+  Using cached https://files.pythonhosted.org/packages/4c/ea/236e2584af67bb6df960832731a6e5325fd4441de001767da328c33368ce/pandocfilters-1.4.2.tar.gz
+Collecting parso==0.7.0 (from -r requirements.txt (line 59))
+  Using cached https://files.pythonhosted.org/packages/b5/61/998cce9e7476de000d031874df26a18f67cb73448164fc44a98f0c55920b/parso-0.7.0-py2.py3-none-any.whl
+Collecting partd==1.1.0 (from -r requirements.txt (line 60))
+  Using cached https://files.pythonhosted.org/packages/44/e1/68dbe731c9c067655bff1eca5b7d40c20ca4b23fd5ec9f3d17e201a6f36b/partd-1.1.0-py3-none-any.whl
+Collecting pickleshare==0.7.5 (from -r requirements.txt (line 61))
+  Using cached https://files.pythonhosted.org/packages/9a/41/220f49aaea88bc6fa6cba8d05ecf24676326156c23b991e80b3f2fc24c77/pickleshare-0.7.5-py2.py3-none-any.whl
+Collecting Pillow==7.1.2 (from -r requirements.txt (line 62))
+  Using cached https://files.pythonhosted.org/packages/91/9e/1b45eed618c35010d8cc3ba57f12baf09af37054665b7cdf79aafa93ed75/Pillow-7.1.2-cp38-cp38-win_amd64.whl
+Collecting plotly==4.5.2 (from -r requirements.txt (line 63))
+  Using cached https://files.pythonhosted.org/packages/a9/12/7d795064f87d1070975e55daa443ff5e5ee7eb6c8a9eaf41f3d6a5f91a91/plotly-4.5.2-py2.py3-none-any.whl
+Collecting prometheus-client==0.8.0 (from -r requirements.txt (line 64))
+  Using cached https://files.pythonhosted.org/packages/3f/0e/554a265ffdc56e1494ef08e18f765b0cdec78797f510c58c45cf37abb4f4/prometheus_client-0.8.0-py2.py3-none-any.whl
+Collecting prompt-toolkit==3.0.5 (from -r requirements.txt (line 65))
+  Using cached https://files.pythonhosted.org/packages/e4/a7/81b39aa50e9284fe2cb21cc7fb7de7817b224172d42793fd57451d38842b/prompt_toolkit-3.0.5-py3-none-any.whl
+Collecting psutil==5.7.0 (from -r requirements.txt (line 66))
+  Using cached https://files.pythonhosted.org/packages/86/fe/9f1d1f8c1c8138d42fc0e7c06ca5004e01f38e86e61342374d8e0fa919e4/psutil-5.7.0-cp38-cp38-win_amd64.whl
+Collecting pycparser==2.20 (from -r requirements.txt (line 67))
+  Using cached https://files.pythonhosted.org/packages/ae/e7/d9c3a176ca4b02024debf82342dab36efadfc5776f9c8db077e8f6e71821/pycparser-2.20-py2.py3-none-any.whl
+Collecting Pygments==2.6.1 (from -r requirements.txt (line 68))
+  Using cached https://files.pythonhosted.org/packages/2d/68/106af3ae51daf807e9cdcba6a90e518954eb8b70341cee52995540a53ead/Pygments-2.6.1-py3-none-any.whl
+Collecting pyparsing==2.4.7 (from -r requirements.txt (line 69))
+  Using cached https://files.pythonhosted.org/packages/8a/bb/488841f56197b13700afd5658fc279a2025a39e22449b7cf29864669b15d/pyparsing-2.4.7-py2.py3-none-any.whl
+Collecting pyrsistent==0.16.0 (from -r requirements.txt (line 70))
+  Using cached https://files.pythonhosted.org/packages/9f/0d/cbca4d0bbc5671822a59f270e4ce3f2195f8a899c97d0d5abb81b191efb5/pyrsistent-0.16.0.tar.gz
+Collecting python-dateutil==2.8.1 (from -r requirements.txt (line 71))
+  Using cached https://files.pythonhosted.org/packages/d4/70/d60450c3dd48ef87586924207ae8907090de0b306af2bce5d134d78615cb/python_dateutil-2.8.1-py2.py3-none-any.whl
+Collecting pytz==2020.1 (from -r requirements.txt (line 72))
+  Using cached https://files.pythonhosted.org/packages/4f/a4/879454d49688e2fad93e59d7d4efda580b783c745fd2ec2a3adf87b0808d/pytz-2020.1-py2.py3-none-any.whl
+Collecting PyYAML==5.3.1 (from -r requirements.txt (line 73))
+  Using cached https://files.pythonhosted.org/packages/7b/1d/3cf27312e162ff8bf3a9ae8c7472bb28ca6ae7f86e7130c23b798ec4c12a/PyYAML-5.3.1-cp38-cp38-win_amd64.whl
+Collecting pyzmq==19.0.1 (from -r requirements.txt (line 74))
+  Using cached https://files.pythonhosted.org/packages/92/f5/4dd87c3646604f97c73675af8e1379dd3e9a0957dedd2f772927b3799ae0/pyzmq-19.0.1-cp38-cp38-win_amd64.whl
+Collecting redis==3.5.3 (from -r requirements.txt (line 75))
+  Using cached https://files.pythonhosted.org/packages/a7/7c/24fb0511df653cf1a5d938d8f5d19802a88cef255706fdda242ff97e91b7/redis-3.5.3-py2.py3-none-any.whl
+Collecting requests==2.23.0 (from -r requirements.txt (line 76))
+  Using cached https://files.pythonhosted.org/packages/1a/70/1935c770cb3be6e3a8b78ced23d7e0f3b187f5cbfab4749523ed65d7c9b1/requests-2.23.0-py2.py3-none-any.whl
+Collecting retrying==1.3.3 (from -r requirements.txt (line 77))
+  Using cached https://files.pythonhosted.org/packages/44/ef/beae4b4ef80902f22e3af073397f079c96969c69b2c7d52a57ea9ae61c9d/retrying-1.3.3.tar.gz
+Collecting scipy==1.4.1 (from -r requirements.txt (line 78))
+  Using cached https://files.pythonhosted.org/packages/f8/b9/98a75846fdda3756ce75705b518dde4c599ba419d11415ce3fe1ebc4a885/scipy-1.4.1-cp38-cp38-win_amd64.whl
+Collecting seaborn==0.10.1 (from -r requirements.txt (line 79))
+  Using cached https://files.pythonhosted.org/packages/c7/e6/54aaaafd0b87f51dfba92ba73da94151aa3bc179e5fe88fc5dfb3038e860/seaborn-0.10.1-py3-none-any.whl
+Collecting Send2Trash==1.5.0 (from -r requirements.txt (line 80))
+  Using cached https://files.pythonhosted.org/packages/49/46/c3dc27481d1cc57b9385aff41c474ceb7714f7935b1247194adae45db714/Send2Trash-1.5.0-py3-none-any.whl
+Collecting six==1.15.0 (from -r requirements.txt (line 81))
+  Using cached https://files.pythonhosted.org/packages/ee/ff/48bde5c0f013094d729fe4b0316ba2a24774b3ff1c52d924a8a4cb04078a/six-1.15.0-py2.py3-none-any.whl
+Collecting sortedcontainers==2.1.0 (from -r requirements.txt (line 82))
+  Using cached https://files.pythonhosted.org/packages/13/f3/cf85f7c3a2dbd1a515d51e1f1676d971abe41bba6f4ab5443240d9a78e5b/sortedcontainers-2.1.0-py2.py3-none-any.whl
+Collecting tblib==1.6.0 (from -r requirements.txt (line 83))
+  Using cached https://files.pythonhosted.org/packages/0d/de/dca3e651ca62e59c08d324f4a51467fa4b8cbeaafb883b5e83720b4d4a47/tblib-1.6.0-py2.py3-none-any.whl
+Collecting terminado==0.8.3 (from -r requirements.txt (line 84))
+  Using cached https://files.pythonhosted.org/packages/ff/96/1d9a2c23990aea8f8e0b5c3b6627d03196a73771a17a2d9860bbe9823ab6/terminado-0.8.3-py2.py3-none-any.whl
+Collecting testpath==0.4.4 (from -r requirements.txt (line 85))
+  Using cached https://files.pythonhosted.org/packages/1b/9e/1a170feaa54f22aeb5a5d16c9015e82234275a3c8ab630b552493f9cb8a9/testpath-0.4.4-py2.py3-none-any.whl
+Collecting toolz==0.10.0 (from -r requirements.txt (line 86))
+  Using cached https://files.pythonhosted.org/packages/22/8e/037b9ba5c6a5739ef0dcde60578c64d49f45f64c5e5e886531bfbc39157f/toolz-0.10.0.tar.gz
+Collecting tornado==6.0.4 (from -r requirements.txt (line 87))
+  Using cached https://files.pythonhosted.org/packages/0c/04/48f7aca638106a57a94f9f3921fae27a9010076bccc9d31eef99c62ffaf5/tornado-6.0.4-cp38-cp38-win_amd64.whl
+Collecting tqdm==4.42.0 (from -r requirements.txt (line 88))
+  Using cached https://files.pythonhosted.org/packages/cc/2e/4307206db63f05ed37e21d4c0d843d0fbcacd62479f8ce99ba0f2c0875e0/tqdm-4.42.0-py2.py3-none-any.whl
+Collecting traitlets==4.3.3 (from -r requirements.txt (line 89))
+  Using cached https://files.pythonhosted.org/packages/ca/ab/872a23e29cec3cf2594af7e857f18b687ad21039c1f9b922fac5b9b142d5/traitlets-4.3.3-py2.py3-none-any.whl
+Collecting typeguard==2.8.0 (from -r requirements.txt (line 90))
+  Using cached https://files.pythonhosted.org/packages/23/ae/940f4e52db459b0bbbf912a23c7387693f31663f9193fc607635f296b6cb/typeguard-2.8.0-py3-none-any.whl
+Collecting typing-extensions==3.7.4.2 (from -r requirements.txt (line 91))
+  Using cached https://files.pythonhosted.org/packages/0c/0e/3f026d0645d699e7320b59952146d56ad7c374e9cd72cd16e7c74e657a0f/typing_extensions-3.7.4.2-py3-none-any.whl
+Collecting urllib3==1.25.9 (from -r requirements.txt (line 92))
+  Using cached https://files.pythonhosted.org/packages/e1/e5/df302e8017440f111c11cc41a6b432838672f5a70aa29227bf58149dc72f/urllib3-1.25.9-py2.py3-none-any.whl
+Collecting wcwidth==0.2.3 (from -r requirements.txt (line 93))
+  Using cached https://files.pythonhosted.org/packages/1b/7b/de30a3962d8fbebbf8d748bfbf20c05c0a7c495df6716e82af109143ba00/wcwidth-0.2.3-py2.py3-none-any.whl
+Collecting webencodings==0.5.1 (from -r requirements.txt (line 94))
+  Using cached https://files.pythonhosted.org/packages/f4/24/2a3e3df732393fed8b3ebf2ec078f05546de641fe1b667ee316ec1dcf3b7/webencodings-0.5.1-py2.py3-none-any.whl
+Collecting Werkzeug==1.0.1 (from -r requirements.txt (line 95))
+  Using cached https://files.pythonhosted.org/packages/cc/94/5f7079a0e00bd6863ef8f1da638721e9da21e5bacee597595b318f71d62e/Werkzeug-1.0.1-py2.py3-none-any.whl
+Collecting widgetsnbextension==3.5.1 (from -r requirements.txt (line 96))
+  Using cached https://files.pythonhosted.org/packages/6c/7b/7ac231c20d2d33c445eaacf8a433f4e22c60677eb9776c7c5262d7ddee2d/widgetsnbextension-3.5.1-py2.py3-none-any.whl
+Collecting zict==2.0.0 (from -r requirements.txt (line 97))
+  Using cached https://files.pythonhosted.org/packages/5a/65/0f743c740c30cace984ef8ff96fd1e991083fa884900a8aad3efff3252b9/zict-2.0.0-py3-none-any.whl
+Collecting zipp==3.1.0 (from -r requirements.txt (line 98))
+  Using cached https://files.pythonhosted.org/packages/b2/34/bfcb43cc0ba81f527bc4f40ef41ba2ff4080e047acb0586b56b3d017ace4/zipp-3.1.0-py3-none-any.whl
+Requirement already satisfied: setuptools in c:\users\ct\documents\github\aiforgoodsimulator\model-server\env\lib\site-packages (from distributed==2.18.0->-r requirements.txt (line 23)) (
+41.2.0)
+Collecting pywin32>=1.0; sys_platform == "win32" (from jupyter-core==4.6.3->-r requirements.txt (line 45))
+  Using cached https://files.pythonhosted.org/packages/d6/ef/db6c352b19eee9f944c03a6ae304ac7c5f96ef3b8429ec905b3e2c64a4af/pywin32-228-cp38-cp38-win_amd64.whl
+Collecting pywinpty>=0.5; os_name == "nt" (from terminado==0.8.3->-r requirements.txt (line 84))
+  Using cached https://files.pythonhosted.org/packages/f8/9f/cb2a929f18cd2a3cf6242cf57b4d723ecf45b97653795475825d6af218a4/pywinpty-0.5.7-cp38-cp38-win_amd64.whl
+Installing collected packages: attrs, backcall, webencodings, six, pyparsing, packaging, bleach, PyYAML, python-dateutil, MarkupSafe, Jinja2, numpy, Pillow, tornado, typing-extensions, bo
+keh, Brotli, certifi, pycparser, cffi, chardet, click, cloudpickle, colorama, immutables, contextvars, cycler, Werkzeug, itsdangerous, Flask, Flask-Compress, retrying, plotly, dash-render
+er, dash-core-components, dash-html-components, dash-table, future, dash, dash-bootstrap-components, dask, decorator, defusedxml, toolz, tblib, HeapDict, zict, sortedcontainers, psutil, m
+sgpack, distributed, entrypoints, Flask-Caching, fsspec, greenlet, gevent, idna, zipp, importlib-metadata, parso, jedi, ipython-genutils, traitlets, wcwidth, prompt-toolkit, pickleshare,
+Pygments, ipython, pyzmq, pywin32, jupyter-core, jupyter-client, ipykernel, Send2Trash, testpath, mistune, pyrsistent, jsonschema, nbformat, pandocfilters, nbconvert, pywinpty, terminado,
+ prometheus-client, notebook, widgetsnbextension, ipywidgets, kiwisolver, locket, matplotlib, pytz, pandas, partd, redis, urllib3, requests, scipy, seaborn, tqdm, typeguard
+  Running setup.py install for backcall ... done
+  Running setup.py install for bokeh ... done
+  Running setup.py install for contextvars ... done
+  Running setup.py install for Flask-Compress ... done
+  Running setup.py install for retrying ... done
+  Running setup.py install for dash-renderer ... done
+  Running setup.py install for dash-core-components ... done
+  Running setup.py install for dash-html-components ... done
+  Running setup.py install for dash-table ... done
+  Running setup.py install for future ... done
+  Running setup.py install for dash ... done
+  Running setup.py install for toolz ... done
+  Running setup.py install for pyrsistent ... done
+  Running setup.py install for pandocfilters ... done
+  Running setup.py install for locket ... done
+Successfully installed Brotli-1.0.7 Flask-1.1.1 Flask-Caching-1.9.0 Flask-Compress-1.5.0 HeapDict-1.0.1 Jinja2-2.11.2 MarkupSafe-1.1.1 Pillow-7.1.2 PyYAML-5.3.1 Pygments-2.6.1 Send2Trash-
+1.5.0 Werkzeug-1.0.1 attrs-19.3.0 backcall-0.1.0 bleach-3.1.5 bokeh-2.0.2 certifi-2020.4.5.1 cffi-1.14.0 chardet-3.0.4 click-7.1.2 cloudpickle-1.4.1 colorama-0.4.3 contextvars-2.4 cycler-
+0.10.0 dash-1.11.0 dash-bootstrap-components-0.9.2 dash-core-components-1.9.1 dash-html-components-1.0.3 dash-renderer-1.4.0 dash-table-4.6.2 dask-2.18.0 decorator-4.4.2 defusedxml-0.6.0
+distributed-2.18.0 entrypoints-0.3 fsspec-0.7.4 future-0.18.2 gevent-1.5.0 greenlet-0.4.16 idna-2.9 immutables-0.14 importlib-metadata-1.6.0 ipykernel-5.3.0 ipython-7.15.0 ipython-genutil
+s-0.2.0 ipywidgets-7.5.1 itsdangerous-1.1.0 jedi-0.17.0 jsonschema-3.2.0 jupyter-client-6.1.3 jupyter-core-4.6.3 kiwisolver-1.2.0 locket-0.2.0 matplotlib-3.1.3 mistune-0.8.4 msgpack-1.0.0
+ nbconvert-5.6.1 nbformat-5.0.6 notebook-6.0.3 numpy-1.18.1 packaging-20.4 pandas-1.0.4 pandocfilters-1.4.2 parso-0.7.0 partd-1.1.0 pickleshare-0.7.5 plotly-4.5.2 prometheus-client-0.8.0
+prompt-toolkit-3.0.5 psutil-5.7.0 pycparser-2.20 pyparsing-2.4.7 pyrsistent-0.16.0 python-dateutil-2.8.1 pytz-2020.1 pywin32-228 pywinpty-0.5.7 pyzmq-19.0.1 redis-3.5.3 requests-2.23.0 re
+trying-1.3.3 scipy-1.4.1 seaborn-0.10.1 six-1.15.0 sortedcontainers-2.1.0 tblib-1.6.0 terminado-0.8.3 testpath-0.4.4 toolz-0.10.0 tornado-6.0.4 tqdm-4.42.0 traitlets-4.3.3 typeguard-2.8.0
+ typing-extensions-3.7.4.2 urllib3-1.25.9 wcwidth-0.2.3 webencodings-0.5.1 widgetsnbextension-3.5.1 zict-2.0.0 zipp-3.1.0
+WARNING: You are using pip version 19.2.3, however version 20.1.1 is available.
+You should consider upgrading via the 'python -m pip install --upgrade pip' command.
+
+(env) C:\Users\CT\Documents\GitHub\AIforGoodSimulator\model-server>py -m pip install --upgrade pip
+Collecting pip
+  Using cached https://files.pythonhosted.org/packages/43/84/23ed6a1796480a6f1a2d38f2802901d078266bda38388954d01d3f2e821d/pip-20.1.1-py2.py3-none-any.whl
+Installing collected packages: pip
+  Found existing installation: pip 19.2.3
+    Uninstalling pip-19.2.3:
+      Successfully uninstalled pip-19.2.3
+Successfully installed pip-20.1.1
+
+(env) C:\Users\CT\Documents\GitHub\AIforGoodSimulator\model-server>set PYTHONPATH=%PYTHONPATH%;.
+
+(env) C:\Users\CT\Documents\GitHub\AIforGoodSimulator\model-server>py ai4good/runner/console_runner.py -h
+usage: console_runner.py [-h] [--model {compartmental-model}] [--profile PROFILE | --run_all_profiles] [--camp CAMP] [--do_not_load_from_model_result_cache]
+                         [--do_not_save_to_model_result_cache] [--save_plots] [--show_plots] [--save_report] [--profile_overrides PROFILE_OVERRIDES]
+
+AI4Good model runner
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --model {compartmental-model}
+                        Model to run
+  --profile PROFILE     Model profile to run, by default first one will be run
+  --run_all_profiles    Run all profiles in the model
+  --camp CAMP           Camp to run model for
+  --do_not_load_from_model_result_cache
+                        Do not load from cache, re-compute everything
+  --do_not_save_to_model_result_cache
+                        Do save results to cache
+  --save_plots          Save plots
+  --show_plots          Show plots
+  --save_report         Save model report
+  --profile_overrides PROFILE_OVERRIDES
+                        Model specific profile overrides as JSON
+
+(env) C:\Users\CT\Documents\GitHub\AIforGoodSimulator\model-server>py ai4good/runner/console_runner.py --run_all_profiles --save_report  --camp Haman-al-Alil
+INFO:root:Running compartmental-model model with baseline profile
+INFO:root:Running model for camp Haman-al-Alil
+INFO:root:Running parallel simulation with 4 processes
+[########################################] | 100% Completed |  1min 50.8s
+INFO:root:Generating main report
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 971/971 [01:31<00:00, 10.58it/s]
+INFO:root:Computing prevalence_age_table
+INFO:root:Computing prevalence_all_table
+INFO:root:Computing cumulative_all_table
+INFO:root:Computing cumulative_age_table
+INFO:root:Model result ready
+INFO:root:Saving model result to cache
+INFO:root:Saving report
+INFO:root:Running compartmental-model model with better_hygiene profile
+INFO:root:Running model for camp Haman-al-Alil
+INFO:root:Running parallel simulation with 4 processes
+[########################################] | 100% Completed |  1min 19.9s
+INFO:root:Generating main report
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 971/971 [01:08<00:00, 14.23it/s]
+INFO:root:Computing prevalence_age_table
+INFO:root:Computing prevalence_all_table
+INFO:root:Computing cumulative_all_table
+INFO:root:Computing cumulative_age_table
+INFO:root:Model result ready
+INFO:root:Saving model result to cache
+INFO:root:Saving report
+INFO:root:Running compartmental-model model with custom profile
+INFO:root:Running model for camp Haman-al-Alil
+INFO:root:Running parallel simulation with 4 processes
+[########################################] | 100% Completed | 37min 26.5s
+INFO:root:Generating main report
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 971/971 [02:07<00:00,  7.63it/s]
+INFO:root:Computing prevalence_age_table
+INFO:root:Computing prevalence_all_table
+INFO:root:Computing cumulative_all_table
+INFO:root:Computing cumulative_age_table
+INFO:root:Model result ready
+INFO:root:Saving model result to cache
+INFO:root:Saving report
+INFO:root:Running compartmental-model model with remove_highrisk profile
+INFO:root:Running model for camp Haman-al-Alil
+INFO:root:Running parallel simulation with 4 processes
+[########################################] | 100% Completed |  9hr 59min 17.0s
+INFO:root:Generating main report
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 971/971 [01:05<00:00, 14.88it/s]
+INFO:root:Computing prevalence_age_table
+INFO:root:Computing prevalence_all_table
+INFO:root:Computing cumulative_all_table
+INFO:root:Computing cumulative_age_table
+INFO:root:Model result ready
+INFO:root:Saving model result to cache
+INFO:root:Saving report
+INFO:root:Running compartmental-model model with remove_symptomatic profile
+INFO:root:Running model for camp Haman-al-Alil
+INFO:root:Running parallel simulation with 4 processes
+[########################################] | 100% Completed |  1min 43.9s
+INFO:root:Generating main report
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 971/971 [01:09<00:00, 14.05it/s]
+INFO:root:Computing prevalence_age_table
+INFO:root:Computing prevalence_all_table
+INFO:root:Computing cumulative_all_table
+INFO:root:Computing cumulative_age_table
+INFO:root:Model result ready
+INFO:root:Saving model result to cache
+INFO:root:Saving report
+INFO:root:Running compartmental-model model with shielding profile
+INFO:root:Running model for camp Haman-al-Alil
+INFO:root:Running parallel simulation with 4 processes
+[########################################] | 100% Completed |  1min 59.8s
+INFO:root:Generating main report
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 971/971 [01:09<00:00, 13.89it/s]
+INFO:root:Computing prevalence_age_table
+INFO:root:Computing prevalence_all_table
+INFO:root:Computing cumulative_all_table
+INFO:root:Computing cumulative_age_table
+INFO:root:Model result ready
+INFO:root:Saving model result to cache
+INFO:root:Saving report
+INFO:root:Running compartmental-model model with better hygiene_kostya profile
+INFO:root:Running model for camp Haman-al-Alil
+INFO:root:Running parallel simulation with 4 processes
+[########################################] | 100% Completed |  1min 17.6s
+INFO:root:Generating main report
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 971/971 [01:08<00:00, 14.27it/s]
+INFO:root:Computing prevalence_age_table
+INFO:root:Computing prevalence_all_table
+INFO:root:Computing cumulative_all_table
+INFO:root:Computing cumulative_age_table
+INFO:root:Model result ready
+INFO:root:Saving model result to cache
+INFO:root:Saving report
+INFO:root:Model Runner finished normally
+
+(env) C:\Users\CT\Documents\GitHub\AIforGoodSimulator\model-server>
