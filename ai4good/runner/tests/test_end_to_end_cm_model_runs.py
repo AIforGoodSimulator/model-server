@@ -21,6 +21,7 @@ class TestEndToEndRuns(unittest.TestCase):
             overrides='{"numberOfIterations": 4, "nProcesses": 1}'
         )
         actual_report_df = mr.get('report')
+        actual_report_df.to_csv('x.csv', index=False)
         expected_df = pd.read_csv(pu._path('../runner/tests', 'expected_report.csv'))
         pdt.assert_frame_equal(expected_df, actual_report_df)
 
