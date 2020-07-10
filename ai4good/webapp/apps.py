@@ -6,6 +6,8 @@ from dask.distributed import Client
 from ai4good.runner.facade import Facade
 from ai4good.webapp.model_runner import ModelRunner
 import redis
+import socket
+
 
 flask_app = Flask(__name__)
 
@@ -22,7 +24,8 @@ cache = Cache(flask_app, config={
     'DEBUG': True,
     'CACHE_DEFAULT_TIMEOUT': cache_timeout,
     'CACHE_TYPE': 'redis',
-    'CACHE_REDIS_URL': REDIS_URL
+    'CACHE_REDIS_URL': REDIS_URL,
+    'CACHE_KEY_PREFIX': socket.gethostname()
 })
 
 

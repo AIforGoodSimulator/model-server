@@ -119,7 +119,7 @@ def get_model_result(camp: str, profile: str):
 )
 @cache.memoize(timeout=cache_timeout)
 def render_main_section_part1(camp, profile):
-    mr, profile_df, params, report = get_model_result(camp, profile)
+    mr, profile_df, params, _ = get_model_result(camp, profile)
 
     prevalence = mr.get('prevalence_all')
     peak_critical_care_demand = prevalence[prevalence['Outcome'] == 'Critical Care Demand']['Peak Number IQR'].iloc[0]
@@ -225,7 +225,7 @@ def render_profile_df(df, params):
 )
 @cache.memoize(timeout=cache_timeout)
 def render_main_section_part2(camp, profile):
-    mr, profile_df, params, report = get_model_result(camp, profile)
+    mr, _, params, _ = get_model_result(camp, profile)
 
     t_sim = params.control_dict['t_sim']
 

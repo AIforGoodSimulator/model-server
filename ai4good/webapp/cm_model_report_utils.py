@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+DIGIT_SEP = ' to '  # em dash to separate from minus sign
+
 
 def load_report(mr, params) -> pd.DataFrame:
     return normalize_report(mr.get('report'), params)
@@ -47,8 +49,8 @@ def prevalence_all_table(df):
     peak_number = []
     for param in table_params:
         outcome.append(table_columns[param])
-        peak_day.append(f'{iqr_table[param][0][0]}-{iqr_table[param][0][1]}')
-        peak_number.append(f'{iqr_table[param][1][0]}-{iqr_table[param][1][1]}')
+        peak_day.append(f'{iqr_table[param][0][0]}{DIGIT_SEP}{iqr_table[param][0][1]}')
+        peak_number.append(f'{iqr_table[param][1][0]}{DIGIT_SEP}{iqr_table[param][1][1]}')
     data = {'Outcome': outcome, 'Peak Day IQR': peak_day, 'Peak Number IQR': peak_number}
     return pd.DataFrame.from_dict(data)
 
@@ -100,94 +102,94 @@ def prevalence_age_table(df):
     peak_number = np.empty(27, dtype="S10")
     for key, item in iqr_table_age.items():
         if key == 'Infected (symptomatic)':
-            peak_day[0] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-            peak_number[0] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+            peak_day[0] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+            peak_number[0] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
         elif key == 'Hospitalised':
-            peak_day[9] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-            peak_number[9] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+            peak_day[9] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+            peak_number[9] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
         elif key == 'Critical':
-            peak_day[18] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-            peak_number[18] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+            peak_day[18] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+            peak_number[18] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
         elif '0-9' in key:
             if key.startswith('Infected (symptomatic)'):
-                peak_day[1] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[1] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[1] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[1] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Hospitalised'):
-                peak_day[10] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[10] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[10] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[10] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Critical'):
-                peak_day[19] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[19] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[19] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[19] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
         elif '10-19' in key:
             if key.startswith('Infected (symptomatic)'):
-                peak_day[2] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[2] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[2] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[2] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Hospitalised'):
-                peak_day[11] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[11] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[11] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[11] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Critical'):
-                peak_day[20] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[20] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[20] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[20] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
         elif '20-29' in key:
             if key.startswith('Infected (symptomatic)'):
-                peak_day[3] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[3] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[3] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[3] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Hospitalised'):
-                peak_day[12] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[12] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[12] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[12] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Critical'):
-                peak_day[21] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[21] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[21] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[21] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
         elif '30-39' in key:
             if key.startswith('Infected (symptomatic)'):
-                peak_day[4] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[4] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[4] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[4] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Hospitalised'):
-                peak_day[13] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[13] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[13] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[13] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Critical'):
-                peak_day[22] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[22] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[22] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[22] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
         elif '40-49' in key:
             if key.startswith('Infected (symptomatic)'):
-                peak_day[5] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[5] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[5] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[5] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Hospitalised'):
-                peak_day[14] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[14] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[14] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[14] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Critical'):
-                peak_day[23] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[23] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[23] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[23] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
         elif '50-59' in key:
             if key.startswith('Infected (symptomatic)'):
-                peak_day[6] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[6] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[6] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[6] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Hospitalised'):
-                peak_day[15] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[15] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[15] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[15] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Critical'):
-                peak_day[24] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[24] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[24] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[24] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
         elif '60-69' in key:
             if key.startswith('Infected (symptomatic)'):
-                peak_day[7] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[7] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[7] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[7] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Hospitalised'):
-                peak_day[16] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[16] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[16] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[16] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Critical'):
-                peak_day[25] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[25] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[25] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[25] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
         elif '70+' in key:
             if key.startswith('Infected (symptomatic)'):
-                peak_day[8] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[8] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[8] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[8] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Hospitalised'):
-                peak_day[17] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[17] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[17] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[17] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
             elif key.startswith('Critical'):
-                peak_day[26] = f'{iqr_table_age[key][0][0]}-{iqr_table_age[key][0][1]}'
-                peak_number[26] = f'{iqr_table_age[key][1][0]}-{iqr_table_age[key][1][1]}'
+                peak_day[26] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
+                peak_number[26] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
     d = {'Peak Day, IQR': peak_day.astype(str), 'Peak Number, IQR': peak_number.astype(str)}
     return pd.DataFrame(data=d, index=arrays)
 
@@ -234,7 +236,7 @@ def cumulative_all_table(df, N):
         for elem in cumulative_all.values():
             count.append(elem[param])
         q75_count, q25_count = np.percentile(count, [75, 25])
-        cumulative_count.append(f'{int(round(q25_count))}-{int(round(q75_count))}')
+        cumulative_count.append(f'{int(round(q25_count))}{DIGIT_SEP}{int(round(q75_count))}')
     data = {'Totals': ['Symptomatic Cases', 'Hospital Person-Days', 'Critical Person-days', 'Deaths'],
             'Counts': cumulative_count}
     return pd.DataFrame.from_dict(data)
@@ -401,249 +403,249 @@ def cumulative_age_table(df):
     first_month_count = np.empty(36, dtype="S15")
     for key, item in first_month.items():
         if key == 'Susceptible':
-            first_month_count[0] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+            first_month_count[0] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
         elif key == 'Hospitalised':
-            first_month_count[9] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+            first_month_count[9] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
         elif key == 'Critical':
-            first_month_count[18] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+            first_month_count[18] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
         elif key == 'Deaths':
-            first_month_count[27] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+            first_month_count[27] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
         elif '0-9' in key:
             if key.startswith('Susceptible'):
-                first_month_count[1] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[1] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                first_month_count[10] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[10] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                first_month_count[19] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[19] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                first_month_count[28] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[28] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
         elif '10-19' in key:
             if key.startswith('Susceptible'):
-                first_month_count[2] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[2] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                first_month_count[11] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[11] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                first_month_count[20] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[20] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                first_month_count[29] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[29] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
         elif '20-29' in key:
             if key.startswith('Susceptible'):
-                first_month_count[3] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[3] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                first_month_count[12] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[12] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                first_month_count[21] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[21] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                first_month_count[30] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[30] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
         elif '30-39' in key:
             if key.startswith('Susceptible'):
-                first_month_count[4] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[4] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                first_month_count[13] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[13] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                first_month_count[22] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[22] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                first_month_count[31] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[31] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
         elif '40-49' in key:
             if key.startswith('Susceptible'):
-                first_month_count[5] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[5] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                first_month_count[14] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[14] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                first_month_count[23] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[23] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                first_month_count[32] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[32] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
         elif '50-59' in key:
             if key.startswith('Susceptible'):
-                first_month_count[6] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[6] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                first_month_count[15] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[15] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                first_month_count[24] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[24] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                first_month_count[33] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[33] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
         elif '60-69' in key:
             if key.startswith('Susceptible'):
-                first_month_count[7] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[7] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                first_month_count[16] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[16] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                first_month_count[25] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[25] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                first_month_count[34] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[34] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
         elif '70+' in key:
             if key.startswith('Susceptible'):
-                first_month_count[8] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[8] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                first_month_count[17] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[17] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                first_month_count[26] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[26] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                first_month_count[35] = f'{int(round(first_month[key][0.25]))}-{int(round(first_month[key][0.75]))}'
+                first_month_count[35] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
     three_month_count = np.empty(36, dtype="S15")
     for key, item in third_month.items():
         if key == 'Susceptible':
-            three_month_count[0] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+            three_month_count[0] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
         elif key == 'Hospitalised':
-            three_month_count[9] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+            three_month_count[9] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
         elif key == 'Critical':
-            three_month_count[18] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+            three_month_count[18] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
         elif key == 'Deaths':
-            three_month_count[27] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+            three_month_count[27] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
         elif '0-9' in key:
             if key.startswith('Susceptible'):
-                three_month_count[1] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[1] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                three_month_count[10] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[10] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                three_month_count[19] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[19] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                three_month_count[28] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[28] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
         elif '10-19' in key:
             if key.startswith('Susceptible'):
-                three_month_count[2] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[2] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                three_month_count[11] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[11] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                three_month_count[20] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[20] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                three_month_count[29] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[29] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
         elif '20-29' in key:
             if key.startswith('Susceptible'):
-                three_month_count[3] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[3] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                three_month_count[12] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[12] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                three_month_count[21] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[21] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                three_month_count[30] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[30] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
         elif '30-39' in key:
             if key.startswith('Susceptible'):
-                three_month_count[4] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[4] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                three_month_count[13] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[13] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                three_month_count[22] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[22] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                three_month_count[31] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[31] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
         elif '40-49' in key:
             if key.startswith('Susceptible'):
-                three_month_count[5] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[5] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                three_month_count[14] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[14] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                three_month_count[23] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[23] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                three_month_count[32] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[32] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
         elif '50-59' in key:
             if key.startswith('Susceptible'):
-                three_month_count[6] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[6] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                three_month_count[15] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[15] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                three_month_count[24] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[24] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                three_month_count[33] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[33] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
         elif '60-69' in key:
             if key.startswith('Susceptible'):
-                three_month_count[7] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[7] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                three_month_count[16] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[16] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                three_month_count[25] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[25] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                three_month_count[34] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[34] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
         elif '70+' in key:
             if key.startswith('Susceptible'):
-                three_month_count[8] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[8] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                three_month_count[17] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[17] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                three_month_count[26] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[26] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                three_month_count[35] = f'{int(round(third_month[key][0.25]))}-{int(round(third_month[key][0.75]))}'
+                three_month_count[35] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
     six_month_count = np.empty(36, dtype="S10")
     for key, item in sixth_month.items():
         if key == 'Susceptible':
-            six_month_count[0] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+            six_month_count[0] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
         elif key == 'Hospitalised':
-            six_month_count[9] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+            six_month_count[9] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
         elif key == 'Critical':
-            six_month_count[18] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+            six_month_count[18] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
         elif key == 'Deaths':
-            six_month_count[27] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+            six_month_count[27] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
         elif '0-9' in key:
             if key.startswith('Susceptible'):
-                six_month_count[1] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[1] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                six_month_count[10] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[10] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                six_month_count[19] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[19] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                six_month_count[28] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[28] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
         elif '10-19' in key:
             if key.startswith('Susceptible'):
-                six_month_count[2] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[2] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                six_month_count[11] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[11] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                six_month_count[20] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[20] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                six_month_count[29] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[29] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
         elif '20-29' in key:
             if key.startswith('Susceptible'):
-                six_month_count[3] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[3] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                six_month_count[12] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[12] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                six_month_count[21] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[21] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                six_month_count[30] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[30] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
         elif '30-39' in key:
             if key.startswith('Susceptible'):
-                six_month_count[4] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[4] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                six_month_count[13] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[13] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                six_month_count[22] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[22] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                six_month_count[31] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[31] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
         elif '40-49' in key:
             if key.startswith('Susceptible'):
-                six_month_count[5] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[5] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                six_month_count[14] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[14] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                six_month_count[23] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[23] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                six_month_count[32] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[32] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
         elif '50-59' in key:
             if key.startswith('Susceptible'):
-                six_month_count[6] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[6] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                six_month_count[15] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[15] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                six_month_count[24] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[24] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                six_month_count[33] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[33] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
         elif '60-69' in key:
             if key.startswith('Susceptible'):
-                six_month_count[7] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[7] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                six_month_count[16] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[16] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                six_month_count[25] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[25] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                six_month_count[34] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[34] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
         elif '70+' in key:
             if key.startswith('Susceptible'):
-                six_month_count[8] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[8] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Hospitalised'):
-                six_month_count[17] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[17] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Critical'):
-                six_month_count[26] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[26] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
             elif key.startswith('Deaths'):
-                six_month_count[35] = f'{int(round(sixth_month[key][0.25]))}-{int(round(sixth_month[key][0.75]))}'
+                six_month_count[35] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
     d = {'First month': first_month_count.astype(str), 'First three months': three_month_count.astype(str),
          'First six months': six_month_count.astype(str)}
     return pd.DataFrame(data=d, index=arrays)
@@ -685,13 +687,17 @@ def diff_table(baseline, intervention, N):
 def effectiveness_cum_table(baseline, intervention, N):
     table_params = ['Symptomatic Cases', 'Hospital Person-Days', 'Critical Person-days', 'Deaths']
     cum_table_baseline = cumulative_all_table(baseline, N)
-    baseline_numbers = cum_table_baseline.loc[:, 'Counts'].apply(lambda x: [int(i) for i in x.split('-')])
+    #print("CUM: "+str(cum_table_baseline.loc[:, 'Counts']))
+    baseline_numbers = cum_table_baseline.loc[:, 'Counts'].apply(lambda x: [int(i) for i in x.split(DIGIT_SEP)])
+
     baseline_numbers_separate = pd.DataFrame(baseline_numbers.tolist(), columns=['25%', '75%'])
     comparisonTable = {}
 
     cumTable = cumulative_all_table(intervention, N)
+    #print("Counts: \n"+str(cumTable.loc[:, 'Counts']))
+
     intervention_numbers = pd.DataFrame(
-        cumTable.loc[:, 'Counts'].apply(lambda x: [int(i) for i in x.split('-')]).tolist(), columns=['25%', '75%'])
+        cumTable.loc[:, 'Counts'].apply(lambda x: [int(i) for i in x.split(DIGIT_SEP)]).tolist(), columns=['25%', '75%'])
     differencePercentage = (baseline_numbers_separate - intervention_numbers) / baseline_numbers_separate * 100
     prettyOutput = []
     for _, row in differencePercentage.round(0).astype(int).iterrows():
@@ -718,10 +724,10 @@ def effectiveness_peak_table(baseline, intervention):
     interventionPeak_baseline = prevalence_all_table(baseline)
     table_columns = interventionPeak_baseline.Outcome.tolist()
     peakDay_baseline = pd.DataFrame(
-        interventionPeak_baseline.loc[:, 'Peak Day IQR'].apply(lambda x: [int(i) for i in x.split('-')]).tolist(),
+        interventionPeak_baseline.loc[:, 'Peak Day IQR'].apply(lambda x: [int(i) for i in x.split(DIGIT_SEP)]).tolist(),
         columns=['25%', '75%'])
     peakNumber_baseline = pd.DataFrame(
-        interventionPeak_baseline.loc[:, 'Peak Number IQR'].apply(lambda x: [int(i) for i in x.split('-')]).tolist(),
+        interventionPeak_baseline.loc[:, 'Peak Number IQR'].apply(lambda x: [int(i) for i in x.split(DIGIT_SEP)]).tolist(),
         columns=['25%', '75%'])
 
 
@@ -729,15 +735,18 @@ def effectiveness_peak_table(baseline, intervention):
     comparisonSubdict = {}
     interventionPeak = prevalence_all_table(intervention)
     peakDay = pd.DataFrame(
-        interventionPeak.loc[:, 'Peak Day IQR'].apply(lambda x: [int(i) for i in x.split('-')]).tolist(),
+        interventionPeak.loc[:, 'Peak Day IQR'].apply(lambda x: [int(i) for i in x.split(DIGIT_SEP)]).tolist(),
         columns=['25%', '75%'])
     peakNumber = pd.DataFrame(
-        interventionPeak.loc[:, 'Peak Number IQR'].apply(lambda x: [int(i) for i in x.split('-')]).tolist(),
+        interventionPeak.loc[:, 'Peak Number IQR'].apply(lambda x: [int(i) for i in x.split(DIGIT_SEP)]).tolist(),
         columns=['25%', '75%'])
     differenceDay = (peakDay - peakDay_baseline)
 
+    peakNumber_baseline = peakNumber_baseline + 0.01 # Shift to avoid div/0
+    peakNumber = peakNumber + 0.01
+
     differenceNumberPercentage = (peakNumber_baseline - peakNumber) / peakNumber_baseline * 100
-    differenceNumberPercentage = differenceNumberPercentage.replace([np.inf, -np.inf], 100.0)
+    #differenceNumberPercentage = differenceNumberPercentage.replace([np.inf, -np.inf], 100.0)
     prettyOutputDay = []
     prettyOutputNumber = []
     for _, row in differenceDay.round(0).astype(int).iterrows():

@@ -9,6 +9,7 @@ from ai4good.models.model import Model, ModelResult
 from ai4good.models.model_registry import get_models, create_params
 from datetime import datetime
 import pickle
+import socket
 
 MAX_CONCURRENT_MODELS = 5
 HISTORY_SIZE = 10
@@ -28,7 +29,7 @@ class ModelRunResult(Enum):
 
 
 class ModelRunHistory:
-    _CACHE_KEY = 'model_run_history'
+    _CACHE_KEY = f'{socket.gethostname()}_model_run_history'
 
     def __init__(self, _redis: redis.Redis):
         self._redis = _redis
@@ -57,7 +58,7 @@ class ModelRunHistory:
 
 
 class ModelsRunningNow:
-    _CACHE_KEY = 'models_running_now'
+    _CACHE_KEY = f'{socket.gethostname()}models_running_now'
 
     def __init__(self, _redis: redis.Redis):
         self.state = dict()

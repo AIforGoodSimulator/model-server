@@ -44,7 +44,7 @@ class CompartmentalModel(Model):
 
         logging.info("Model result ready")
         return ModelResult(self.result_id(p), {
-            'sols_raw': sols_raw,
+            #'sols_raw': sols_raw,
             'standard_sol': standard_sol,
             'percentiles': percentiles,
             'config_dict': config_dict,
