@@ -39,9 +39,7 @@ class Simulator:
         dydt = np.zeros(y.shape)
 
         I_vec = [y[params.I_ind + i * params.number_compartments] for i in range(age_categories)]
-        # H_vec = [ y[params.H_ind+i*params.number_compartments] for i in range(age_categories)]
-        C_vec = [y[params.C_ind + i * params.number_compartments] for i in range(age_categories)]
-
+        H_vec = [y[params.H_ind + i * params.number_compartments] for i in range(age_categories)]
         A_vec = [y[params.A_ind + i * params.number_compartments] for i in range(age_categories)]
 
         total_I = sum(I_vec)
@@ -79,9 +77,9 @@ class Simulator:
                 remove_high_risk_people = 0
 
             # ICU capacity
-            if sum(C_vec) > 0:  # can't divide by 0
-                ICU_for_this_age = ICU_capacity['value'] * y[params.C_ind + i * params.number_compartments] / sum(
-                    C_vec)  # hospital beds allocated on a first come, first served basis
+            if sum(H_vec)>0: # can't divide by 0
+                ICU_for_this_age = ICU_capacity['value'] * y[params.H_ind + i*params.number_compartments]/sum(H_vec) 
+                # ICU beds allocated on a first come, first served basis based on the numbers in hospital
             else:
                 ICU_for_this_age = ICU_capacity['value']
 
@@ -119,30 +117,26 @@ class Simulator:
                         # proportion of removed people who were hospitalised once returned
                         )
             # Critical care (ICU)
-            dydt[params.C_ind + i * params.number_compartments] = (
-                        min(hospRate * (critical_prob[i]) * y[params.H_ind + i * params.number_compartments],
-                            max(0,
-                                ICU_for_this_age - y[params.C_ind + i * params.number_compartments]
-                                + deathRateICU * y[params.C_ind + i * params.number_compartments]  # with ICU treatment
-                                )
-                            )  # amount entering is minimum of: amount of beds available**/number needing it
-                        # **including those that will be made available by new deaths
-                        - deathRateICU * y[params.C_ind + i * params.number_compartments]  # with ICU treatment
-                        )
+            dydt[params.C_ind + i*params.number_compartments] = ( min(hospRate  * (critical_prob[i]) * y[params.H_ind + i*params.number_compartments], ICU_for_this_age - y[params.C_ind + i*params.number_compartments] + deathRateICU * y[params.C_ind + i*params.number_compartments]  
+                # with ICU treatment 
+                # max(0, 
+                # )
+                ) 
+                # amount entering is minimum of: amount of beds available**/number needing it
+                # **including those that will be made available by new deaths
+                - deathRateICU * y[params.C_ind + i*params.number_compartments]  # with ICU treatment
+                )
 
             # Uncared - no ICU
-            dydt[params.U_ind + i * params.number_compartments] = (hospRate * (critical_prob[i]) * y[
-                params.H_ind + i * params.number_compartments]  # number needing care
-                                                                   - min(
-                        hospRate * (critical_prob[i]) * y[params.H_ind + i * params.number_compartments],
-                        max(0,
-                            ICU_for_this_age - y[params.C_ind + i * params.number_compartments]
-                            + deathRateICU * y[params.C_ind + i * params.number_compartments]
-                            ))  # minus number who get it (these entered category C)
-                                                                   - deathRateNoIcu * y[
-                                                                       params.U_ind + i * params.number_compartments]
-                                                                   # without ICU treatment
-                                                                   )
+            dydt[params.U_ind + i * params.number_compartments] = (hospRate  * (critical_prob[i]) * y[params.H_ind + i * params.number_compartments] # number needing care
+                - min(hospRate  * (critical_prob[i]) * y[params.H_ind + i*params.number_compartments],
+                ICU_for_this_age - y[params.C_ind + i*params.number_compartments]
+                + deathRateICU * y[params.C_ind + i*params.number_compartments] 
+                # max(0,
+                # )
+                ) # minus number who get it (these entered category C) 
+                - deathRateNoIcu * y[params.U_ind + i*params.number_compartments] # without ICU treatment
+                )
 
             # R
             dydt[params.R_ind + i * params.number_compartments] = (
