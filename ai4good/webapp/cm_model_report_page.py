@@ -124,7 +124,7 @@ def render_main_section_part1(camp, profile):
     prevalence = mr.get('prevalence_all')
     peak_critical_care_demand = prevalence[prevalence['Outcome'] == 'Critical Care Demand']['Peak Number IQR'].iloc[0]
 
-    prevalence_age = prevalence = mr.get('prevalence_age').reset_index()
+    prevalence_age = mr.get('prevalence_age').reset_index()
     prevalence_age = prevalence_age.rename(columns={"level_1": "Age"})
 
     return [
