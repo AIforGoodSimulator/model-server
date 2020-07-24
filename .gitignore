@@ -23,3 +23,5 @@ notebook.cmd
 removal_log.txt
 /COVID19 report Moria V1.ipynb
 old/
+ai4good/models/am/*
+temp/

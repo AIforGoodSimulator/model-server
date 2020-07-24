@@ -11,7 +11,7 @@ from datetime import datetime
 import pickle
 import socket
 
-MAX_CONCURRENT_MODELS = 5
+MAX_CONCURRENT_MODELS = 3
 HISTORY_SIZE = 10
 
 
