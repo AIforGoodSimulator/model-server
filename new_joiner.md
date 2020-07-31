@@ -40,4 +40,7 @@ Model server is setup to deploy on commit, see https://github.com/AIforGoodSimul
 for details how to deploy.
 
 
-
+# High level plan
+Our minimal aim should be to migrate all existing useful models to model server and ensure these 
+can be used by target audience on the ground. We already have compartmental model migrated, next
+up are network and agent models as well as some infrastructure work.
