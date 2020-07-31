@@ -67,3 +67,49 @@ First add azure remote
 
 enter credentials when prompted.
     
+### Design overview
+
+Model-server consists of following top level packages:
+
+* models - various COVID-19 models and model registry
+* params - parameter storage and retrieval
+* runner - console runner
+* webapp - web application runner / viewer
+
+ #### models
+ Every model needs to implement ai4good.models.model.Model abstract base class and basically just needs
+ to implement run(params) method, where params object can be chosen by the model itself and usually 
+ contains general parameters, camp specific parameters and model profile parameters. Model profiles
+ are there to investigate and compare various regimes of the model and to help user to select best
+ intervention scenario that mitigates COVID-19 spread.
+ 
+ Model also responsible to provide hash of it's own parameter object so that model results can cached. 
+ This functionality of saving/retrieving model result is provided by ModelResultStore and currently 
+ stored on filesystem.  
+ 
+ Model result is represented by ModelResult object which effectively just a free-from dictionary and
+ can include some precomputed aggregations to speed up result rending later.
+ 
+ 
+ 
+#### params
+Provides abstract interface to parameter storage which is at the moment is based on csv files 
+stored on local file system.  
+ 
+    
+#### runner
+
+Contains console runner that can run a model for single profile or all profiles/camps in a batch.
+Also contains console_utils to list currently cached models with human readable names.
+
+
+#### webapp
+
+Web application is built with dash/plotly and runs on Azure via gunicorn with multiple workers. There is also Redis
+instance used to store some shared state, such as models currently executing and also hosting some page cache. There is
+also cache on local disk that is used to store larger amounts of data. Webapp has model runner page and report pages.
+Report page is model specific and allows to compare various intervention scenarios.  
+
+
+### Tests
+use run_tests cmd/sh to execute all tests
