@@ -38,7 +38,7 @@ class Parameters:
 
         death_prob_with_ICU = np.float(model_params[model_params['Name'] == 'death prob with ICU'].Value)
 
-        number_of_compartments = int(model_params[model_params['Name'] == 'number_compartments'].Value)
+        number_compartments = int(model_params[model_params['Name'] == 'number_compartments'].Value)
 
         beta_list = [R_0 * removal_rate for R_0 in R_0_list]  # R_0 mu/N, N=1
 
@@ -54,7 +54,7 @@ class Parameters:
         self.shield_increase = shield_increase
         self.shield_decrease = shield_decrease
         self.better_hygiene  = better_hygiene
-        self.number_of_compartments = number_of_compartments
+        self.number_compartments = number_compartments
         self.AsymptInfectiousFactor = AsymptInfectiousFactor
         self.latent_rate = latent_rate
         self.removal_rate = removal_rate
@@ -66,15 +66,15 @@ class Parameters:
 
         categs = pd.read_csv(pu.cm_params_path('categories.csv'), delimiter=';', skipinitialspace=True)
         self.calculated_categories = categs['category'].to_list()
-        categs['index'] = np.arange(self.number_of_compartments)
+        categs['index'] = np.arange(self.number_compartments)
 
         change_categs = pd.read_csv(pu.cm_params_path('change_categories.csv'), delimiter=';', skipinitialspace=True)
         self.change_in_categories = categs['category'].to_list()
-        change_categs['index'] = np.arange(len(categs), 2*self.number_of_compartments)
+        change_categs['index'] = np.arange(len(categs), 2 * self.number_compartments)
 
         new_infected_category = {'category': 'Ninf', 'shortname': 'New Infected',
                         'longname': 'Change in total active infections',
-                        'colour_code': 'rgb(255,125,100)', 'colour': '', 'index': 2*self.number_of_compartments}
+                        'colour_code': 'rgb(255,125,100)', 'colour': '', 'index': 2*self.number_compartments}
 
         all_categs = pd.concat([categs, change_categs, pd.DataFrame([new_infected_category])])
         all_categs['fill_colour'] = all_categs.apply(lambda row: 'rgba' + row['colour_code'][3:-1] + ',0.1)', axis=1)
