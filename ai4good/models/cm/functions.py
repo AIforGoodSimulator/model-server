@@ -199,23 +199,12 @@ class Simulator:
         
         age_categories = int(population_frame.shape[0])
 
-        y0 = np.zeros(self.params.number_compartments*age_categories)
+        population_vector = population_frame.Population_structure.to_numpy()
+        seirvars = np.array([S0, E0, I0, A0, R0, H0, C0, D0, O0, Q0, U0]).reshape(self.params.number_compartments, 1);
 
-        population_vector = np.asarray(population_frame.Population_structure)
-
+        y1 = np.dot(seirvars, population_vector.reshape(1, age_categories)/100)
         # initial conditions
-        for i in range(age_categories):
-            y0[self.params.S_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * S0
-            y0[self.params.E_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * E0
-            y0[self.params.I_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * I0
-            y0[self.params.A_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * A0
-            y0[self.params.R_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * R0
-            y0[self.params.H_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * H0
-            y0[self.params.C_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * C0
-            y0[self.params.D_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * D0
-            y0[self.params.O_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * O0
-            y0[self.params.Q_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * Q0
-            y0[self.params.U_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * U0
+        y0 = y1.T.reshape(self.params.number_compartments*age_categories)
 
         symptomatic_prob = np.asarray(population_frame.p_symptomatic)
         hospital_prob = np.asarray(population_frame.p_hospitalised)
