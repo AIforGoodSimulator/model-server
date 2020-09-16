@@ -136,7 +136,7 @@ def figure_generator(sols, params, cats_to_plot):
                     annotations=annots,
                     font = dict(size= font_size), #'12em'),
                     margin=dict(t=5, b=5, l=10, r=10,pad=15),
-                    hovermode='x',
+                    hovermode='x-unified',
                     xaxis= dict(
                             title='Days',
                             
@@ -362,7 +362,7 @@ def uncertainty_plot(sols, params, cats_to_plot, confidence_range=None):
                     annotations=annots,
                     font = dict(size= font_size), #'12em'),
                    margin=dict(t=5, b=5, l=10, r=10,pad=15),
-                   hovermode='x',
+                   hovermode='x-unified',
                    xaxis= dict(
                         title='Days',
                         
@@ -554,7 +554,7 @@ def age_structure_plot(sols, params, cats_to_plot): # ,confidence_range=None
                     annotations=annots,
                     font = dict(size= font_size), #'12em'),
                    margin=dict(t=5, b=5, l=10, r=10,pad=15),
-                   hovermode='x',
+                   hovermode='x-unified',
                     xaxis= dict(
                         title='Days',
                         
