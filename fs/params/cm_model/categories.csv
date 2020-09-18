@@ -1,4 +1,4 @@
-category;shortname;longname;colour_code;colour
+category;shortname;longname;colour;colour_name
 S;   Sus.;Susceptible;rgb(0,0,255);  blue
 E;  Exp.;Exposed;rgb(255,150,255);  pink
 I;  Inf. (symp.);Infected (symptomatic);rgb(255,150,50);   orange
