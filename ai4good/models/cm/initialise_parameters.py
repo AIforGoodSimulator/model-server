@@ -73,11 +73,11 @@ class Parameters:
         change_categs['index'] = np.arange(len(categs), 2 * self.number_compartments)
 
         new_infected_category = {'category': 'Ninf', 'shortname': 'New Infected',
-                        'longname': 'Change in total active infections',
-                        'colour_code': 'rgb(255,125,100)', 'colour': '', 'index': 2*self.number_compartments}
+                                 'longname': 'Change in total active infections', 'colour': 'rgb(255,125,100)',
+                                 'colour_name': '', 'index': 2*self.number_compartments}
 
         all_categs = pd.concat([categs, change_categs, pd.DataFrame([new_infected_category])])
-        all_categs['fill_colour'] = all_categs.apply(lambda row: 'rgba' + row['colour_code'][3:-1] + ',0.1)', axis=1)
+        all_categs['fill_colour'] = all_categs.apply(lambda row: 'rgba' + row['colour'][3:-1] + ',0.1)', axis=1)
         self.categories: dict = all_categs.set_index(all_categs['category']).transpose().to_dict()
 
         self.population_frame, self.population = self.prepare_population_frame(camp_params)

@@ -1,4 +1,4 @@
-category;shortname;longname;colour_code;colour
+category;shortname;longname;colour;colour_name
 CS;     Change in Sus.;    Change in Susceptible;rgb(0,0,255);  blue
 CE;     Change in Exp.;    Change in Exposed;rgb(255,150,255);  pink
 CI;     Change in Inf. (symp.);    Change in Infected (symptomatic);rgb(255,150,50);   orange
