@@ -29,6 +29,131 @@ class Simulator:
     def __init__(self, params: Parameters):
         self.params = params
 
+    def ode_system2d(self, t, y,  # state of system
+                   infection_matrix, age_categories, symptomatic_prob, hospital_prob, critical_prob, beta,  # params
+                   latentRate, removalRate, hospRate, deathRateICU, deathRateNoIcu,  # more params
+                   better_hygiene, remove_symptomatic, remove_high_risk, ICU_capacity  # control
+                   ):
+        ##
+        params = self.params
+
+        y2d = y.reshape(age_categories, self.params.number_compartments).T
+        dydt2d = np.zeros(y2d.shape)
+
+        index_I = params.categories['I']['index']
+        index_S = params.categories['S']['index']
+        index_E = params.categories['E']['index']
+        index_C = params.categories['C']['index']
+        index_Q = params.categories['Q']['index']
+        index_U = params.categories['U']['index']
+        index_H = params.categories['H']['index']
+        index_A = params.categories['A']['index']
+
+        I_vec = y2d[index_I, :]
+        H_vec = y2d[index_H, :]
+        A_vec = y2d[index_A, :]
+        C_vec = y2d[index_C, :]
+        S_vec = y2d[index_S, :]
+
+        E_latent = latentRate * y2d[index_E, :]
+        I_removed = removalRate * I_vec
+        Q_qarantined = params.quarant_rate * y2d[index_Q, :]
+
+        total_I = sum(I_vec)
+        total_H = sum(H_vec)
+
+        # better hygiene
+        if timing_function(t, better_hygiene['timing']):  # control in place
+            control_factor = better_hygiene['value']
+        else:
+            control_factor = 1
+
+        # removing symptomatic individuals
+        if timing_function(t, remove_symptomatic['timing']):  # control in place
+            remove_symptomatic_rate = min(total_I, remove_symptomatic['rate'])  # if total_I too small then can't take this many off site at once
+        else:
+            remove_symptomatic_rate = 0
+
+        first_high_risk_category_n = age_categories - remove_high_risk['n_categories_removed']
+        S_removal = sum(y2d[index_S, first_high_risk_category_n:])  # add all old people to remove
+        # removing symptomatic individuals
+        # these are put into Q ('quarantine');
+        quarantine_sicks = (remove_symptomatic_rate / total_I) * I_vec  # no age bias in who is moved
+
+        # removing susceptible high risk individuals
+        # these are moved into O ('offsite')
+        high_risk_people_removal_rates = np.zeros(age_categories);
+        if timing_function(t, remove_high_risk['timing']):
+            high_risk_people_removal_rates[first_high_risk_category_n:] = min(remove_high_risk['rate'],
+                                      S_removal)  # only removing high risk (within time control window). Can't remove more than we have
+
+        # ICU capacity
+        if total_H > 0: # can't divide by 0
+            hospitalized_on_icu = ICU_capacity['value'] / total_H * H_vec
+            # ICU beds allocated on a first come, first served basis based on the numbers in hospital
+        else:
+            hospitalized_on_icu = np.full(age_categories, ICU_capacity['value'])
+
+        # ODE system:
+        # S
+        infection_I = np.dot(infection_matrix, I_vec)
+        infection_A = np.dot(infection_matrix, A_vec)
+        infection_total = (infection_I + params.AsymptInfectiousFactor * infection_A)
+        offsite = high_risk_people_removal_rates / S_removal * S_vec
+        dydt2d[index_S, :] = (- control_factor * beta * S_vec * infection_total - offsite)
+
+        # E
+        dydt2d[index_E, :] = (control_factor * beta * S_vec * infection_total - E_latent)
+
+        # I
+        dydt2d[index_I, :] = ((1 - symptomatic_prob) * E_latent - I_removed- quarantine_sicks)
+
+        # A
+        A_removed = removalRate * A_vec
+        dydt2d[index_A, :] = (symptomatic_prob * E_latent- A_removed)
+
+        # H
+        dydt2d[index_H, :] = (hospital_prob * I_removed - hospRate * H_vec
+                + deathRateICU * (1 - params.death_prob_with_ICU) *
+                np.minimum(C_vec, hospitalized_on_icu)  # recovered from ICU
+                + hospital_prob * Q_qarantined          # proportion of removed people who were hospitalised once returned
+        )
+
+        # Critical care (ICU)
+        deaths_on_icu = deathRateICU * C_vec
+        without_deaths_on_icu = C_vec - deaths_on_icu
+        needing_care = hospRate * critical_prob * H_vec # number needing care
+
+        # number who get icu care (these entered category C)
+        icu_cared = np.minimum(needing_care, hospitalized_on_icu - without_deaths_on_icu)
+
+        # amount entering is minimum of: amount of beds available**/number needing it
+        # **including those that will be made available by new deaths
+        # without ICU treatment
+        dydt2d[index_C, :] = (icu_cared - deaths_on_icu)
+
+        # Uncared - no ICU
+        deaths_without_icu = deathRateNoIcu * y2d[index_U, :] # died without ICU treatment (all cases that don't get treatment die)
+        dydt2d[index_U, :] = (needing_care - icu_cared - deaths_without_icu)  # without ICU treatment
+
+        # R
+        # proportion of removed people who recovered once returned
+        dydt2d[params.categories['R']['index'], :] = (
+                (1 - hospital_prob) * I_removed + A_removed + hospRate * (1 - critical_prob) * H_vec + (1 - hospital_prob) * Q_qarantined
+        )
+
+        # D
+        dydt2d[params.categories['D']['index'], :] = (
+                    deaths_without_icu + params.death_prob_with_ICU * deaths_on_icu # died despite attempted ICU treatment
+        )
+        # O
+        dydt2d[params.categories['O']['index'], :] = offsite
+
+        # Q
+        dydt2d[index_Q, :] = quarantine_sicks - Q_qarantined
+
+        return dydt2d.T.reshape(y.shape)
+
     def ode_system(self, t, y,  # state of system
                    infection_matrix, age_categories, symptomatic_prob, hospital_prob, critical_prob, beta,  # params
                    latentRate, removalRate, hospRate, deathRateICU, deathRateNoIcu,  # more params
@@ -181,26 +306,25 @@ class Simulator:
             death_rate_ICU = self.params.death_rate_with_ICU
         if death_rate_no_ICU is None:
             death_rate_no_ICU = self.params.death_rate  # more params
-        
-        E0 = 0 # exposed
-        I0 = 1/population # sympt
-        A0 = 1/population # asympt
-        R0 = 0 # recovered
-        H0 = 0 # hospitalised/needing hospital care
-        C0 = 0 # critical (cared)
-        D0 = 0 # dead
-        O0 = 0 # offsite
-        Q0 = 0 # quarantined
-        U0 = 0 # critical (uncared)
 
+        seirvars = np.zeros((self.params.number_compartments, 1));
 
+        seirvars[self.params.categories['E']['index'], 0] = 0  # exposed
+        seirvars[self.params.categories['I']['index'], 0] = 1 / population  # sympt
+        seirvars[self.params.categories['A']['index'], 0] = 1 / population  # asympt
+        seirvars[self.params.categories['R']['index'], 0] = 0  # recovered
+        seirvars[self.params.categories['H']['index'], 0] = 0  # hospitalised/needing hospital care
+        seirvars[self.params.categories['C']['index'], 0] = 0  # critical (cared)
+        seirvars[self.params.categories['D']['index'], 0] = 0  # dead
+        seirvars[self.params.categories['O']['index'], 0] = 0  # offsite
+        seirvars[self.params.categories['Q']['index'], 0] = 0  # quarantined
+        seirvars[self.params.categories['U']['index'], 0] = 0  # critical (uncared)
 
-        S0 = 1 - I0 - R0 - C0 - H0 - D0 - O0 - Q0 - U0
-        
+        seirvars[self.params.categories['S']['index'], 0] = 1-seirvars.sum()
+
         age_categories = int(population_frame.shape[0])
 
         population_vector = population_frame.Population_structure.to_numpy()
-        seirvars = np.array([S0, E0, I0, A0, R0, H0, C0, D0, O0, Q0, U0]).reshape(self.params.number_compartments, 1);
 
         y1 = np.dot(seirvars, population_vector.reshape(1, age_categories)/100)
         # initial conditions
@@ -210,7 +334,7 @@ class Simulator:
         hospital_prob = np.asarray(population_frame.p_hospitalised)
         critical_prob = np.asarray(population_frame.p_critical)
 
-        sol = ode(self.ode_system).set_f_params(
+        sol = ode(self.ode_system2d).set_f_params(
             self.params.infection_matrix,
             age_categories,
             symptomatic_prob,
