@@ -93,37 +93,6 @@ def figure_generator(sols, params, cats_to_plot):
     shapes = []
     annots = []
 
-    # if control_time[0]!=control_time[1] and not no_control:
-    #     shapes.append(dict(
-    #             # filled Blue Control Rectangle
-    #             type="rect",
-    #             x0= control_time[0],
-    #             y0=0,
-    #             x1= control_time[1],
-    #             y1= yax['range'][1],
-    #             line=dict(
-    #                 color="LightSkyBlue",
-    #                 width=0,
-    #             ),
-    #             fillcolor="LightSkyBlue",
-    #             opacity= 0.15
-    #         ))
-
-    #     annots.append(dict(
-    #             x  = 0.5*(control_time[0] + control_time[1]),
-    #             y  = 0.5,
-    #             text="<b>Control<br>" + "<b> In <br>" + "<b> Place",
-    #             textangle=0,
-    #             font=dict(
-    #                 size= font_size*(30/24),
-    #                 color="blue"
-    #             ),
-    #             showarrow=False,
-    #             opacity=0.4,
-    #             xshift= 0,
-    #             xref = 'x',
-    #             yref = 'paper',
-    #     ))
 
     layout = go.Layout(
         template="simple_white",

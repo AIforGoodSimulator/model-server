@@ -34,28 +34,30 @@ def charts(mr):
                 html.P(
                     'This plot illustrates the disease spread spread for the associated categories'),
                 dcc.Graph(id='fig_multi_lines', figure=fig_multi_lines)
-            ]), width=6),
-            dbc.Col(html.Div([
-                html.H6('Age Structure'),
-                html.P(
-                    'This plot illustrates the age structure distribution for the selected category'),
-                dcc.Graph(id='fig_age_structure', figure=fig_age_structure)
-            ]), width=6)
-        ], style={'margin': 10}),
+            ]), width=20)
+
+        ], style={'marginLeft': 'auto','marginRight': 'auto','width':'50%'}),
+
         dbc.Row([
             dbc.Col(html.Div([
                 html.H6('Age Structure (Bar chart)'),
                 html.P(
                     'This plot illustrates the age structure distribution for the selected category'),
                 dcc.Graph(id='fig_bar_chart', figure=fig_bar_chart)
-            ]), width=6),
+            ]), width=20),
+
+        ], style={'marginLeft': 'auto','marginRight': 'auto','width':'50%'}),
+
+        dbc.Row([
             dbc.Col(html.Div([
                 html.H6('Uncertainty'),
                 html.P(
                     'This plot models the uncertainty in the population distribution for the selected category'),
                 dcc.Graph(id='fig_uncertainty', figure=fig_uncertainty)
-            ]), width=6)
-        ], style={'margin': 10}),
+            ]), width=20)
+
+        ], style={'marginLeft': 'auto','marginRight': 'auto','width':'50%'})
+
     ])
 
 
