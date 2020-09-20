@@ -57,7 +57,7 @@ class Simulator:
 
         E_latent = latentRate * y2d[index_E, :]
         I_removed = removalRate * I_vec
-        Q_qarantined = params.quarant_rate * y2d[index_Q, :]
+        Q_quarantined = params.quarant_rate * y2d[index_Q, :]
 
         total_I = sum(I_vec)
         total_H = sum(H_vec)
@@ -116,7 +116,7 @@ class Simulator:
         dydt2d[index_H, :] = (hospital_prob * I_removed - hospRate * H_vec
                 + deathRateICU * (1 - params.death_prob_with_ICU) *
                 np.minimum(C_vec, hospitalized_on_icu)  # recovered from ICU
-                + hospital_prob * Q_qarantined          # proportion of removed people who were hospitalised once returned
+                + hospital_prob * Q_quarantined          # proportion of removed people who were hospitalised once returned
         )
 
         # Critical care (ICU)
@@ -139,7 +139,7 @@ class Simulator:
         # R
         # proportion of removed people who recovered once returned
         dydt2d[params.categories['R']['index'], :] = (
-                (1 - hospital_prob) * I_removed + A_removed + hospRate * (1 - critical_prob) * H_vec + (1 - hospital_prob) * Q_qarantined
+                (1 - hospital_prob) * I_removed + A_removed + hospRate * (1 - critical_prob) * H_vec + (1 - hospital_prob) * Q_quarantined
         )
 
         # D
@@ -150,10 +150,11 @@ class Simulator:
         dydt2d[params.categories['O']['index'], :] = offsite
 
         # Q
-        dydt2d[index_Q, :] = quarantine_sicks - Q_qarantined
+        dydt2d[index_Q, :] = quarantine_sicks - Q_quarantined
 
         return dydt2d.T.reshape(y.shape)
 
+    # deprecated: old slow function. you should use ode_system2d
     def ode_system(self, t, y,  # state of system
                    infection_matrix, age_categories, symptomatic_prob, hospital_prob, critical_prob, beta,  # params
                    latentRate, removalRate, hospRate, deathRateICU, deathRateNoIcu,  # more params
@@ -246,7 +247,7 @@ class Simulator:
                 # with ICU treatment 
                 # max(0, 
                 # )
-                ) 
+                )
                 # amount entering is minimum of: amount of beds available**/number needing it
                 # **including those that will be made available by new deaths
                 - deathRateICU * y[params.categories['C']['index'] + i*params.number_compartments]  # with ICU treatment
@@ -259,7 +260,7 @@ class Simulator:
                 + deathRateICU * y[params.categories['C']['index'] + i*params.number_compartments]
                 # max(0,
                 # )
-                ) # minus number who get it (these entered category C) 
+                ) # minus number who get it (these entered category C)
                 - deathRateNoIcu * y[params.categories['U']['index'] + i*params.number_compartments] # without ICU treatment
                 )
 
@@ -345,13 +346,13 @@ class Simulator:
             control_dict['better_hygiene'],control_dict['remove_symptomatic'],control_dict['remove_high_risk'],control_dict['ICU_capacity']
         )
 
-        
+
         tim = np.linspace(0,T_stop, T_stop+1) # 1 time value per day
-        
+
         sol.set_initial_value(y0,tim[0])
 
         y_out = np.zeros((len(y0),len(tim)))
-        
+
         i2 = 0
         y_out[:,0] = sol.y
         for t in tim[1:]:
@@ -372,14 +373,14 @@ class Simulator:
         for name in self.params.change_in_categories: # daily change in
             name_changed_var = name[-1] # name of the variable we want daily change of
             y_plot[self.params.categories[name]['index'],:] = np.concatenate([[0],np.diff(y_plot[self.params.categories[name_changed_var]['index'],:])])
-        
+
         # finally, 
         E = y_plot[self.params.categories['CE']['index'],:]
         I = y_plot[self.params.categories['CI']['index'],:]
         A = y_plot[self.params.categories['CA']['index'],:]
 
         y_plot[self.params.categories['Ninf']['index'],:] = [E[i] + I[i] + A[i] for i in range(len(E))] # change in total number of people with active infection
-        
+
         return {'y': y_out,'t': tim, 'y_plot': y_plot}
 
 #--------------------------------------------------------------------
@@ -532,7 +533,7 @@ def generate_csv(data_to_save, params: Parameters,  input_type=None, time_vec=No
         col_names = []
         for i in range(csv_sol.shape[1]):
             col_names.append(params.categories[category_map[str(i)]]['longname'])
-            
+
 
         solution_csv.columns = col_names
         solution_csv['Time'] = time_vec
@@ -561,7 +562,7 @@ def generate_csv(data_to_save, params: Parameters,  input_type=None, time_vec=No
 
             for j in range(len(params.categories.keys())): # params.number_compartments
                 solution_csv[params.categories[category_map[str(j)]]['longname']] = value['y_plot'][j] # summary/non age-structured
-            
+
             (R0,latentRate,removalRate,hospRate,deathRateICU,deathRateNoIcu)=key
             solution_csv['R0']=[R0]*solution_csv.shape[0]
             solution_csv['latentRate']=[latentRate]*solution_csv.shape[0]
@@ -585,7 +586,7 @@ def generate_csv(data_to_save, params: Parameters,  input_type=None, time_vec=No
         for i in range(number_categories_with_age):
             ii = i % params.number_compartments
             jj = floor(i/params.number_compartments)
-            
+
             col_names.append(params.categories[category_map[str(ii)]]['longname'] +  ': ' + str(np.asarray(params.population_frame.Age)[jj]) )
 
         solution_csv.columns = col_names
