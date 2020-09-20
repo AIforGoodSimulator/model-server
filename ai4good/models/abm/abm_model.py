@@ -6,6 +6,7 @@ from ai4good.models.abm.initialise_parameters import Parameters
 import logging
 import abm
 import numpy as np
+import pandas as pd
 
 
 @typechecked
@@ -70,14 +71,30 @@ class ABM(Model):
             p.quarantine_back = np.logical_and(p.population[:, 1] == 13, p.population[:, 3] >= p.clearday)
             p.population[p.quarantine_back, 1] = 6
 
+            # placeholders for the report
             standard_sol = [{'t': range(p.number_of_steps)}]
-            percentiles = [[0,0,0,0,0] for _ in range(p.number_of_steps)]
-        
-        
+            perc = [0] * p.number_of_steps
+            percentiles = [perc, perc, perc, perc, perc]
+            config_dict = []
+            [config_dict.append(dict(
+                                beta           = 0,
+                                latentRate     = 0,
+                                removalRate    = 0,
+                                hospRate       = 0,
+                                deathRateICU   = 0,
+                                deathRateNoIcu = 0
+                            )) for _ in range(p.number_of_steps)]
+
+        report_raw = [[0]]
+        prevalence_age = pd.DataFrame([[0]])
+        prevalence_all = pd.DataFrame([[0]])
+        cumulative_all = pd.DataFrame([[0]])
+        cumulative_age = pd.DataFrame([[0]])
+
         return ModelResult(self.result_id(p), {
             'standard_sol': standard_sol,
             'percentiles': percentiles,
-            # 'config_dict': config_dict,
+            'config_dict': config_dict,
             'params': p,
             'report': report_raw,
             'prevalence_age': prevalence_age,
