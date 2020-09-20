@@ -60,15 +60,29 @@ def overview1(camp: str, params: Parameters):
     return textwrap.dedent(f'''
     ## 1. Overview
     This report provides simulation-based estimates for COVID-19 epidemic scenarios for the {camp} camp. 
-    There are an estimated {int(params.population)} people currently living in the camp. Through epidemiology simulations, 
-    we estimated peak counts, the timing of peak counts as well as cumulative counts for new symptomatic cases, hospitalisation demand person-days, 
-    critical care demand person-days and deaths for an unmitigated epidemic.  Then we compare the results with different combinations 
-    of intervention strategies in place to:
-    * Compare the potential efficacies of different interventions and prioritise the ones that are going to help contain the virus.
-    * Have a realistic estimate of the clinic capacity, PPE, ICU transfer and other supplies and logistical measures needed
-
+    There are an estimated {int(params.population)} people currently living in the camp. 
+    We developed the first agent-based model of an epidemic in a displacement camp setting and applied it to evaluate potential interventions to combat the spread of COVID-19. 
+    The model tracks individuals as they undertake daily activities in a simulated camp. COVID-19 can be transmitted when infected and susceptible individuals interact. 
+    The demographics and spatial structure of the model camp simulate Moria, and the parameters that control COVID-19 transmission rates and disease progression are estimated from the literature. 
+    We modelled COVID-19 outbreaks without interventions and in the presence of four interventions feasible for displacement camps: 
+    i) sectoring, 
+    ii) transmission reduction,
+    iii) remove-and-isolate, 
+    iv) lockdown. 
+    In sectoring, the central food line is eliminated and the camp is divided into sectors. Each sector has its own food line, and each individual uses the food line in the sector in which it lives. Thus, time spent in the food line is reduced and transmission in the food line becomes local rather than global. 
+    Transmission reduction could be any policy or behaviour that reduces the probability of transmission when individuals interact (e.g., the use of face masks, frequent hand washing, maintaining safe distances from others). Frequent hand-washing and maintaining safe distances from others are likely to be impossible in Moria, but residents have been provided with face masks.
+    Therefore, we simulated face mask use; in remove-and-isolate, households with symptomatic individuals are moved to an isolation facility to prevent onward transmission of the infection. Finally, in lockdown, individuals are constrained to remain within some distance of their homes, except when visiting shared toilets or food lines.
+    A small proportion of the population violates the lockdown rule. For each intervention or combination of interventions, we conducted simulations in which we introduced an infected individual into the population, and we recorded the proportion of times that an epidemic occurred (i.e., 20 or more people became infected). 
+    If an epidemic occurred, we recorded 
+    i) the peak proportion of the population infected, 
+    ii) the time from the introduction of the first case until peak infection, 
+    iii) the total proportion of the population that became infected. 
+    For remove-and-isolate interventions, we also recorded the maximum number of individuals kept in isolation to assess the feasibility of the intervention
+    
+    
     The graph below represents the disease transition dynamics for each individual included in the modelling studies. 
-    The model we use is a deterministic, age-specific compartment model. We produce the analysis based on 
+    The model we use is a deterministic, age-specific compartment model.FIND MEANINGFUL GRAPH (LIKE pag. & paper??)
+    We produce the analysis based on 
     {params.control_dict['numberOfIterations']} simulation runs over a range of possible parameters.
     ''')
 
