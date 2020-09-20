@@ -79,15 +79,16 @@ def overview1(camp: str, params: Parameters):
     iii) the total proportion of the population that became infected. 
     For remove-and-isolate interventions, we also recorded the maximum number of individuals kept in isolation to assess the feasibility of the intervention
     
-    
+    GS: FIND MEANINGFUL GRAPH (LIKE pag.7  paper??)
     The graph below represents the disease transition dynamics for each individual included in the modelling studies. 
-    The model we use is a deterministic, age-specific compartment model.FIND MEANINGFUL GRAPH (LIKE pag. & paper??)
+    The model we use is a deterministic, age-specific compartment model.
     We produce the analysis based on 
     {params.control_dict['numberOfIterations']} simulation runs over a range of possible parameters.
     ''')
 
 
 def overview_population(params: Parameters):
+    # GS: in this section SUMMARY OF POPULATION AND HOUSEHOLD STRUCTURE, i.e. # in isoboxes/tents, #ethnical backgrounds. CAN WE PUT Fig 3 pag 14 from the paper?
     df = params.population_frame.copy()
     df['Population structure'] = df['Population_structure'].map('{:,.1f}%'.format)
     df['Number of residents'] = df['Population_structure'] * params.population / 100.0
@@ -96,9 +97,15 @@ def overview_population(params: Parameters):
 
     return [
         dcc.Markdown(textwrap.dedent(f'''
-        The deterministic compartmental model requires:
-        * Camp specific parameters: population size and age structure of the residents.
-        * COVID specific parameters: asymptomatic infection rate, days remaining infectious, etc.
+        The ABM model describe the population and the camp:
+        * Population specific parameters: population size,age, sex, condition (healty or with pre-existing condition), disease state.
+        * Camp specific parameters: each individual is a member of a household that occupies either an isobox or a tent each characterized by a mean occupancy in the camp.The exact occupancy of each isobox or tent is drawn from a Poisson distribution, and
+          individuals are assigned to isoboxes or tents randomly without regard to sex or age. The camp covers a 1 x 1 (e.g., km) square (figure 3). Isoboxes are assigned to random
+          locations in a central square that covers one half of the area of the camp. Tents are assigned to random locations in the camp outside of the central square. There are 144 toilets evenly
+          distributed throughout the camp. Toilets are placed at the centres of the squares that form a 12 x 12 grid covering the camp. The camp has one food line. The position of the food line is
+          not explicitly modelled.  
+          In Moria, the homes of people with the same ethnic or national background are spatially clustered, and people interact more frequently with others from the same background as
+          themselves                
         ''')),
         dbc.Row([
             dbc.Col([
@@ -107,11 +114,7 @@ def overview_population(params: Parameters):
             ], width=4)
         ]),
         dcc.Markdown(textwrap.dedent(f'''
-        Epidemiology simulations produce peak prevalence, the timing of peak prevalence as well as cumulative incidences for:
-        * Symptomatic cases of infection
-        * Hospitalisation demand person-days
-        * Critical care demand person-days
-        * Deaths
+        The parameter values that describe disease progression and transmission are drawn from the literature.If an individual becomes infected, the infection progresses through a series of disease states according to a predefined probability
         '''))
     ]
 
