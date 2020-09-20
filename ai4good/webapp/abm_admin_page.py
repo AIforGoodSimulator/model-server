@@ -10,7 +10,7 @@ def layout():
         [
             html.H3('Admin page'),
             html.Div([
-                html.B("CM Model Cache"),
+                html.B("ABM Model Cache"),
                 html.Pre(f'{facade.rs.list(CompartmentalModel.ID)}', id='cache_contents'),
                 html.Button('Clear', id='clear_button'),
             ]),

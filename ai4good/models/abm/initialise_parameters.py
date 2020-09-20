@@ -7,7 +7,7 @@ import pandas as pd
 import json
 import hashlib
 from ai4good.params.param_store import ParamStore
-import abm
+from . import abm
 
 
 class Parameters:

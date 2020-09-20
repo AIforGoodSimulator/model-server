@@ -9,8 +9,8 @@ import dash_html_components as html
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 
-from ai4good.models.cm.cm_model import CompartmentalModel
-from ai4good.models.cm.initialise_parameters import Parameters
+from ai4good.models.abm.abm_model import ABM
+from ai4good.models.abm.initialise_parameters import Parameters
 from ai4good.webapp.apps import dash_app, facade, model_runner, cache, local_cache, cache_timeout
 from ai4good.webapp.abm_model_report_utils import *
 
@@ -105,9 +105,9 @@ def overview_population(params: Parameters):
 @local_cache.memoize(timeout=cache_timeout)
 def get_model_result(camp: str, profile: str):
     logging.info("Reading data for: " + camp + ", " + profile)
-    mr = model_runner.get_result(CompartmentalModel.ID, profile, camp)
+    mr = model_runner.get_result(ABM.ID, profile, camp)
     assert mr is not None
-    profile_df = facade.ps.get_params(CompartmentalModel.ID, profile).drop(columns=['Profile'])
+    profile_df = facade.ps.get_params(ABM.ID, profile).drop(columns=['Profile'])
     params = Parameters(facade.ps, camp, profile_df, {})
     report = load_report(mr, params)
     return mr, profile_df, params, report
