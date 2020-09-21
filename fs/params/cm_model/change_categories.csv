@@ -1,0 +1,12 @@
+category;shortname;longname;colour;colour_name
+CS;     Change in Sus.;    Change in Susceptible;rgb(0,0,255);  blue
+CE;     Change in Exp.;    Change in Exposed;rgb(255,150,255);  pink
+CI;     Change in Inf. (symp.);    Change in Infected (symptomatic);rgb(255,150,50);   orange
+CA;     Change in Asym.;   Change in Asymptomatically Infected;rgb(255,50,50);    dunno
+CR;     Change in Rec.;    Change in Recovered;rgb(0,255,0);  green
+CH;     Change in Hosp.;   Change in Hospitalised;rgb(255,0,0);  red
+CC;     Change in Crit.;   Change in Critical;rgb(50,50,50);     black
+CD;     Change in Deaths;  Change in Deaths;rgb(130,0,255);    purple
+CO;     Change in Offsite;     Change in Offsite;rgb(130,100,150);  dunno
+CQ;     Change in Quar.;   Change in Quarantined;rgb(150,130,100);  dunno
+CU;     Change in No ICU;  Change in No ICU Care;rgb(150,100,150);  dunno
