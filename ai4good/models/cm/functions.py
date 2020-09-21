@@ -29,6 +29,132 @@ class Simulator:
     def __init__(self, params: Parameters):
         self.params = params
 
+    def ode_system2d(self, t, y,  # state of system
+                   infection_matrix, age_categories, symptomatic_prob, hospital_prob, critical_prob, beta,  # params
+                   latentRate, removalRate, hospRate, deathRateICU, deathRateNoIcu,  # more params
+                   better_hygiene, remove_symptomatic, remove_high_risk, ICU_capacity  # control
+                   ):
+        ##
+        params = self.params
+
+        y2d = y.reshape(age_categories, self.params.number_compartments).T
+        dydt2d = np.zeros(y2d.shape)
+
+        index_I = params.categories['I']['index']
+        index_S = params.categories['S']['index']
+        index_E = params.categories['E']['index']
+        index_C = params.categories['C']['index']
+        index_Q = params.categories['Q']['index']
+        index_U = params.categories['U']['index']
+        index_H = params.categories['H']['index']
+        index_A = params.categories['A']['index']
+
+        I_vec = y2d[index_I, :]
+        H_vec = y2d[index_H, :]
+        A_vec = y2d[index_A, :]
+        C_vec = y2d[index_C, :]
+        S_vec = y2d[index_S, :]
+
+        E_latent = latentRate * y2d[index_E, :]
+        I_removed = removalRate * I_vec
+        Q_quarantined = params.quarant_rate * y2d[index_Q, :]
+
+        total_I = sum(I_vec)
+        total_H = sum(H_vec)
+
+        # better hygiene
+        if timing_function(t, better_hygiene['timing']):  # control in place
+            control_factor = better_hygiene['value']
+        else:
+            control_factor = 1
+
+        # removing symptomatic individuals
+        if timing_function(t, remove_symptomatic['timing']):  # control in place
+            remove_symptomatic_rate = min(total_I, remove_symptomatic['rate'])  # if total_I too small then can't take this many off site at once
+        else:
+            remove_symptomatic_rate = 0
+
+        first_high_risk_category_n = age_categories - remove_high_risk['n_categories_removed']
+        S_removal = sum(y2d[index_S, first_high_risk_category_n:])  # add all old people to remove
+        # removing symptomatic individuals
+        # these are put into Q ('quarantine');
+        quarantine_sicks = (remove_symptomatic_rate / total_I) * I_vec  # no age bias in who is moved
+
+        # removing susceptible high risk individuals
+        # these are moved into O ('offsite')
+        high_risk_people_removal_rates = np.zeros(age_categories);
+        if timing_function(t, remove_high_risk['timing']):
+            high_risk_people_removal_rates[first_high_risk_category_n:] = min(remove_high_risk['rate'],
+                                      S_removal)  # only removing high risk (within time control window). Can't remove more than we have
+
+        # ICU capacity
+        if total_H > 0: # can't divide by 0
+            hospitalized_on_icu = ICU_capacity['value'] / total_H * H_vec
+            # ICU beds allocated on a first come, first served basis based on the numbers in hospital
+        else:
+            hospitalized_on_icu = np.full(age_categories, ICU_capacity['value'])
+
+        # ODE system:
+        # S
+        infection_I = np.dot(infection_matrix, I_vec)
+        infection_A = np.dot(infection_matrix, A_vec)
+        infection_total = (infection_I + params.AsymptInfectiousFactor * infection_A)
+        offsite = high_risk_people_removal_rates / S_removal * S_vec
+        dydt2d[index_S, :] = (- control_factor * beta * S_vec * infection_total - offsite)
+
+        # E
+        dydt2d[index_E, :] = (control_factor * beta * S_vec * infection_total - E_latent)
+
+        # I
+        dydt2d[index_I, :] = ((1 - symptomatic_prob) * E_latent - I_removed- quarantine_sicks)
+
+        # A
+        A_removed = removalRate * A_vec
+        dydt2d[index_A, :] = (symptomatic_prob * E_latent- A_removed)
+
+        # H
+        dydt2d[index_H, :] = (hospital_prob * I_removed - hospRate * H_vec
+                + deathRateICU * (1 - params.death_prob_with_ICU) *
+                np.minimum(C_vec, hospitalized_on_icu)  # recovered from ICU
+                + hospital_prob * Q_quarantined          # proportion of removed people who were hospitalised once returned
+        )
+
+        # Critical care (ICU)
+        deaths_on_icu = deathRateICU * C_vec
+        without_deaths_on_icu = C_vec - deaths_on_icu
+        needing_care = hospRate * critical_prob * H_vec # number needing care
+
+        # number who get icu care (these entered category C)
+        icu_cared = np.minimum(needing_care, hospitalized_on_icu - without_deaths_on_icu)
+
+        # amount entering is minimum of: amount of beds available**/number needing it
+        # **including those that will be made available by new deaths
+        # without ICU treatment
+        dydt2d[index_C, :] = (icu_cared - deaths_on_icu)
+
+        # Uncared - no ICU
+        deaths_without_icu = deathRateNoIcu * y2d[index_U, :] # died without ICU treatment (all cases that don't get treatment die)
+        dydt2d[index_U, :] = (needing_care - icu_cared - deaths_without_icu)  # without ICU treatment
+
+        # R
+        # proportion of removed people who recovered once returned
+        dydt2d[params.categories['R']['index'], :] = (
+                (1 - hospital_prob) * I_removed + A_removed + hospRate * (1 - critical_prob) * H_vec + (1 - hospital_prob) * Q_quarantined
+        )
+
+        # D
+        dydt2d[params.categories['D']['index'], :] = (
+                    deaths_without_icu + params.death_prob_with_ICU * deaths_on_icu # died despite attempted ICU treatment
+        )
+        # O
+        dydt2d[params.categories['O']['index'], :] = offsite
+
+        # Q
+        dydt2d[index_Q, :] = quarantine_sicks - Q_quarantined
+
+        return dydt2d.T.reshape(y.shape)
+
+    # deprecated: old slow function. you should use ode_system2d
     def ode_system(self, t, y,  # state of system
                    infection_matrix, age_categories, symptomatic_prob, hospital_prob, critical_prob, beta,  # params
                    latentRate, removalRate, hospRate, deathRateICU, deathRateNoIcu,  # more params
@@ -38,9 +164,9 @@ class Simulator:
         params = self.params
         dydt = np.zeros(y.shape)
 
-        I_vec = [y[params.I_ind + i * params.number_compartments] for i in range(age_categories)]
-        H_vec = [y[params.H_ind + i * params.number_compartments] for i in range(age_categories)]
-        A_vec = [y[params.A_ind + i * params.number_compartments] for i in range(age_categories)]
+        I_vec = [y[params.categories['I']['index'] + i * params.number_compartments] for i in range(age_categories)]
+        H_vec = [y[params.categories['H']['index'] + i * params.number_compartments] for i in range(age_categories)]
+        A_vec = [y[params.categories['A']['index'] + i * params.number_compartments] for i in range(age_categories)]
 
         total_I = sum(I_vec)
 
@@ -59,13 +185,13 @@ class Simulator:
 
         S_removal = 0
         for i in range(age_categories - remove_high_risk['n_categories_removed'], age_categories):
-            S_removal += y[params.S_ind + i * params.number_compartments]  # add all old people to remove
+            S_removal += y[params.categories['S']['index'] + i * params.number_compartments]  # add all old people to remove
 
         for i in range(age_categories):
             # removing symptomatic individuals
             # these are put into Q ('quarantine');
             quarantine_sick = remove_symptomatic_rate * y[
-                params.I_ind + i * params.number_compartments] / total_I  # no age bias in who is moved
+                params.categories['I']['index'] + i * params.number_compartments] / total_I  # no age bias in who is moved
 
             # removing susceptible high risk individuals
             # these are moved into O ('offsite')
@@ -78,90 +204,90 @@ class Simulator:
 
             # ICU capacity
             if sum(H_vec)>0: # can't divide by 0
-                ICU_for_this_age = ICU_capacity['value'] * y[params.H_ind + i*params.number_compartments]/sum(H_vec) 
+                ICU_for_this_age = ICU_capacity['value'] * y[params.categories['H']['index'] + i*params.number_compartments]/sum(H_vec)
                 # ICU beds allocated on a first come, first served basis based on the numbers in hospital
             else:
                 ICU_for_this_age = ICU_capacity['value']
 
             # ODE system:
             # S
-            dydt[params.S_ind + i * params.number_compartments] = (
-                        - y[params.S_ind + i * params.number_compartments] * control_factor * beta * (
+            dydt[params.categories['S']['index'] + i * params.number_compartments] = (
+                        - y[params.categories['S']['index'] + i * params.number_compartments] * control_factor * beta * (
                             np.dot(infection_matrix[i, :], I_vec) + params.AsymptInfectiousFactor * np.dot(
                         infection_matrix[i, :], A_vec))
-                        - remove_high_risk_people * y[params.S_ind + i * params.number_compartments] / S_removal)
+                        - remove_high_risk_people * y[params.categories['S']['index'] + i * params.number_compartments] / S_removal)
             # E
-            dydt[params.E_ind + i * params.number_compartments] = (
-                        y[params.S_ind + i * params.number_compartments] * control_factor * beta * (
+            dydt[params.categories['E']['index'] + i * params.number_compartments] = (
+                        y[params.categories['S']['index'] + i * params.number_compartments] * control_factor * beta * (
                             np.dot(infection_matrix[i, :], I_vec) + params.AsymptInfectiousFactor * np.dot(
                         infection_matrix[i, :], A_vec))
-                        - latentRate * y[params.E_ind + i * params.number_compartments])
+                        - latentRate * y[params.categories['E']['index'] + i * params.number_compartments])
             # I
-            dydt[params.I_ind + i * params.number_compartments] = (
-                        latentRate * (1 - symptomatic_prob[i]) * y[params.E_ind + i * params.number_compartments]
-                        - removalRate * y[params.I_ind + i * params.number_compartments]
+            dydt[params.categories['I']['index'] + i * params.number_compartments] = (
+                        latentRate * (1 - symptomatic_prob[i]) * y[params.categories['E']['index'] + i * params.number_compartments]
+                        - removalRate * y[params.categories['I']['index'] + i * params.number_compartments]
                         - quarantine_sick
                         )
             # A
-            dydt[params.A_ind + i * params.number_compartments] = (
-                        latentRate * symptomatic_prob[i] * y[params.E_ind + i * params.number_compartments]
-                        - removalRate * y[params.A_ind + i * params.number_compartments])
+            dydt[params.categories['A']['index'] + i * params.number_compartments] = (
+                        latentRate * symptomatic_prob[i] * y[params.categories['E']['index'] + i * params.number_compartments]
+                        - removalRate * y[params.categories['A']['index'] + i * params.number_compartments])
             # H
-            dydt[params.H_ind + i * params.number_compartments] = (
-                        removalRate * (hospital_prob[i]) * y[params.I_ind + i * params.number_compartments]
-                        - hospRate * y[params.H_ind + i * params.number_compartments]
-                        #  + deathRateNoIcu * (1 - params.death_prob) * max(0,y[params.C_ind + i*params.number_compartments] - ICU_for_this_age) # recovered despite no ICU (0, since now assume death_prob is 1)
+            dydt[params.categories['H']['index'] + i * params.number_compartments] = (
+                        removalRate * (hospital_prob[i]) * y[params.categories['I']['index'] + i * params.number_compartments]
+                        - hospRate * y[params.categories['H']['index'] + i * params.number_compartments]
+                        #  + deathRateNoIcu * (1 - params.death_prob) * max(0,y[params.categories['C']['index'] + i*params.number_compartments] - ICU_for_this_age) # recovered despite no ICU (0, since now assume death_prob is 1)
                         + deathRateICU * (1 - params.death_prob_with_ICU) * min(
-                    y[params.C_ind + i * params.number_compartments], ICU_for_this_age)  # recovered from ICU
-                        + (hospital_prob[i]) * params.quarant_rate * y[params.Q_ind + i * params.number_compartments]
+                    y[params.categories['C']['index'] + i * params.number_compartments], ICU_for_this_age)  # recovered from ICU
+                        + (hospital_prob[i]) * params.quarant_rate * y[params.categories['Q']['index'] + i * params.number_compartments]
                         # proportion of removed people who were hospitalised once returned
                         )
             # Critical care (ICU)
-            dydt[params.C_ind + i*params.number_compartments] = ( min(hospRate  * (critical_prob[i]) * y[params.H_ind + i*params.number_compartments], ICU_for_this_age - y[params.C_ind + i*params.number_compartments] + deathRateICU * y[params.C_ind + i*params.number_compartments]  
+            dydt[params.categories['C']['index'] + i*params.number_compartments] = ( min(hospRate  * (critical_prob[i]) * y[params.categories['H']['index'] + i*params.number_compartments], ICU_for_this_age - y[params.categories['C']['index'] + i*params.number_compartments] + deathRateICU * y[params.categories['C']['index'] + i*params.number_compartments]
                 # with ICU treatment 
                 # max(0, 
                 # )
-                ) 
+                )
                 # amount entering is minimum of: amount of beds available**/number needing it
                 # **including those that will be made available by new deaths
-                - deathRateICU * y[params.C_ind + i*params.number_compartments]  # with ICU treatment
+                - deathRateICU * y[params.categories['C']['index'] + i*params.number_compartments]  # with ICU treatment
                 )
 
             # Uncared - no ICU
-            dydt[params.U_ind + i * params.number_compartments] = (hospRate  * (critical_prob[i]) * y[params.H_ind + i * params.number_compartments] # number needing care
-                - min(hospRate  * (critical_prob[i]) * y[params.H_ind + i*params.number_compartments],
-                ICU_for_this_age - y[params.C_ind + i*params.number_compartments]
-                + deathRateICU * y[params.C_ind + i*params.number_compartments] 
+            dydt[params.categories['U']['index'] + i * params.number_compartments] = (hospRate  * (critical_prob[i]) * y[params.categories['H']['index'] + i * params.number_compartments] # number needing care
+                - min(hospRate  * (critical_prob[i]) * y[params.categories['H']['index'] + i*params.number_compartments],
+                ICU_for_this_age - y[params.categories['C']['index'] + i*params.number_compartments]
+                + deathRateICU * y[params.categories['C']['index'] + i*params.number_compartments]
                 # max(0,
                 # )
-                ) # minus number who get it (these entered category C) 
-                - deathRateNoIcu * y[params.U_ind + i*params.number_compartments] # without ICU treatment
+                ) # minus number who get it (these entered category C)
+                - deathRateNoIcu * y[params.categories['U']['index'] + i*params.number_compartments] # without ICU treatment
                 )
 
             # R
-            dydt[params.R_ind + i * params.number_compartments] = (
-                        removalRate * (1 - hospital_prob[i]) * y[params.I_ind + i * params.number_compartments]
-                        + removalRate * y[params.A_ind + i * params.number_compartments]
-                        + hospRate * (1 - critical_prob[i]) * y[params.H_ind + i * params.number_compartments]
+            dydt[params.categories['R']['index'] + i * params.number_compartments] = (
+                        removalRate * (1 - hospital_prob[i]) * y[params.categories['I']['index'] + i * params.number_compartments]
+                        + removalRate * y[params.categories['A']['index'] + i * params.number_compartments]
+                        + hospRate * (1 - critical_prob[i]) * y[params.categories['H']['index'] + i * params.number_compartments]
                         + (1 - hospital_prob[i]) * params.quarant_rate * y[
-                            params.Q_ind + i * params.number_compartments]
+                            params.categories['Q']['index'] + i * params.number_compartments]
                         # proportion of removed people who recovered once returned
                         )
 
             # D
-            dydt[params.D_ind + i * params.number_compartments] = (deathRateNoIcu * y[
-                params.U_ind + i * params.number_compartments]  # died without ICU treatment (all cases that don't get treatment die)
+            dydt[params.categories['D']['index'] + i * params.number_compartments] = (deathRateNoIcu * y[
+                params.categories['U']['index'] + i * params.number_compartments]  # died without ICU treatment (all cases that don't get treatment die)
                                                                    + deathRateICU * (params.death_prob_with_ICU) * y[
-                                                                       params.C_ind + i * params.number_compartments]
+                                                                       params.categories['C']['index'] + i * params.number_compartments]
                                                                    # died despite attempted ICU treatment
                                                                    )
             # O
-            dydt[params.O_ind + i * params.number_compartments] = remove_high_risk_people * y[
-                params.S_ind + i * params.number_compartments] / S_removal
+            dydt[params.categories['O']['index'] + i * params.number_compartments] = remove_high_risk_people * y[
+                params.categories['S']['index'] + i * params.number_compartments] / S_removal
 
             # Q
-            dydt[params.Q_ind + i * params.number_compartments] = quarantine_sick - params.quarant_rate * y[
-                params.Q_ind + i * params.number_compartments]
+            dydt[params.categories['Q']['index'] + i * params.number_compartments] = quarantine_sick - params.quarant_rate * y[
+                params.categories['Q']['index'] + i * params.number_compartments]
         return dydt
     ##
     #--------------------------------------------------------------------
@@ -181,47 +307,35 @@ class Simulator:
             death_rate_ICU = self.params.death_rate_with_ICU
         if death_rate_no_ICU is None:
             death_rate_no_ICU = self.params.death_rate  # more params
-        
-        E0 = 0 # exposed
-        I0 = 1/population # sympt
-        A0 = 1/population # asympt
-        R0 = 0 # recovered
-        H0 = 0 # hospitalised/needing hospital care
-        C0 = 0 # critical (cared)
-        D0 = 0 # dead
-        O0 = 0 # offsite
-        Q0 = 0 # quarantined
-        U0 = 0 # critical (uncared)
 
+        seirvars = np.zeros((self.params.number_compartments, 1));
 
+        seirvars[self.params.categories['E']['index'], 0] = 0  # exposed
+        seirvars[self.params.categories['I']['index'], 0] = 1 / population  # sympt
+        seirvars[self.params.categories['A']['index'], 0] = 1 / population  # asympt
+        seirvars[self.params.categories['R']['index'], 0] = 0  # recovered
+        seirvars[self.params.categories['H']['index'], 0] = 0  # hospitalised/needing hospital care
+        seirvars[self.params.categories['C']['index'], 0] = 0  # critical (cared)
+        seirvars[self.params.categories['D']['index'], 0] = 0  # dead
+        seirvars[self.params.categories['O']['index'], 0] = 0  # offsite
+        seirvars[self.params.categories['Q']['index'], 0] = 0  # quarantined
+        seirvars[self.params.categories['U']['index'], 0] = 0  # critical (uncared)
 
-        S0 = 1 - I0 - R0 - C0 - H0 - D0 - O0 - Q0 - U0
-        
+        seirvars[self.params.categories['S']['index'], 0] = 1-seirvars.sum()
+
         age_categories = int(population_frame.shape[0])
 
-        y0 = np.zeros(self.params.number_compartments*age_categories)
+        population_vector = population_frame.Population_structure.to_numpy()
 
-        population_vector = np.asarray(population_frame.Population_structure)
-
+        y1 = np.dot(seirvars, population_vector.reshape(1, age_categories)/100)
         # initial conditions
-        for i in range(age_categories):
-            y0[self.params.S_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * S0
-            y0[self.params.E_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * E0
-            y0[self.params.I_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * I0
-            y0[self.params.A_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * A0
-            y0[self.params.R_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * R0
-            y0[self.params.H_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * H0
-            y0[self.params.C_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * C0
-            y0[self.params.D_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * D0
-            y0[self.params.O_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * O0
-            y0[self.params.Q_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * Q0
-            y0[self.params.U_ind + i * self.params.number_compartments] = (population_vector[i] / 100) * U0
+        y0 = y1.T.reshape(self.params.number_compartments*age_categories)
 
         symptomatic_prob = np.asarray(population_frame.p_symptomatic)
         hospital_prob = np.asarray(population_frame.p_hospitalised)
         critical_prob = np.asarray(population_frame.p_critical)
 
-        sol = ode(self.ode_system).set_f_params(
+        sol = ode(self.ode_system2d).set_f_params(
             self.params.infection_matrix,
             age_categories,
             symptomatic_prob,
@@ -232,13 +346,13 @@ class Simulator:
             control_dict['better_hygiene'],control_dict['remove_symptomatic'],control_dict['remove_high_risk'],control_dict['ICU_capacity']
         )
 
-        
+
         tim = np.linspace(0,T_stop, T_stop+1) # 1 time value per day
-        
+
         sol.set_initial_value(y0,tim[0])
 
         y_out = np.zeros((len(y0),len(tim)))
-        
+
         i2 = 0
         y_out[:,0] = sol.y
         for t in tim[1:]:
@@ -259,14 +373,14 @@ class Simulator:
         for name in self.params.change_in_categories: # daily change in
             name_changed_var = name[-1] # name of the variable we want daily change of
             y_plot[self.params.categories[name]['index'],:] = np.concatenate([[0],np.diff(y_plot[self.params.categories[name_changed_var]['index'],:])])
-        
+
         # finally, 
         E = y_plot[self.params.categories['CE']['index'],:]
         I = y_plot[self.params.categories['CI']['index'],:]
         A = y_plot[self.params.categories['CA']['index'],:]
 
         y_plot[self.params.categories['Ninf']['index'],:] = [E[i] + I[i] + A[i] for i in range(len(E))] # change in total number of people with active infection
-        
+
         return {'y': y_out,'t': tim, 'y_plot': y_plot}
 
 #--------------------------------------------------------------------
@@ -419,7 +533,7 @@ def generate_csv(data_to_save, params: Parameters,  input_type=None, time_vec=No
         col_names = []
         for i in range(csv_sol.shape[1]):
             col_names.append(params.categories[category_map[str(i)]]['longname'])
-            
+
 
         solution_csv.columns = col_names
         solution_csv['Time'] = time_vec
@@ -448,7 +562,7 @@ def generate_csv(data_to_save, params: Parameters,  input_type=None, time_vec=No
 
             for j in range(len(params.categories.keys())): # params.number_compartments
                 solution_csv[params.categories[category_map[str(j)]]['longname']] = value['y_plot'][j] # summary/non age-structured
-            
+
             (R0,latentRate,removalRate,hospRate,deathRateICU,deathRateNoIcu)=key
             solution_csv['R0']=[R0]*solution_csv.shape[0]
             solution_csv['latentRate']=[latentRate]*solution_csv.shape[0]
@@ -472,7 +586,7 @@ def generate_csv(data_to_save, params: Parameters,  input_type=None, time_vec=No
         for i in range(number_categories_with_age):
             ii = i % params.number_compartments
             jj = floor(i/params.number_compartments)
-            
+
             col_names.append(params.categories[category_map[str(ii)]]['longname'] +  ': ' + str(np.asarray(params.population_frame.Age)[jj]) )
 
         solution_csv.columns = col_names

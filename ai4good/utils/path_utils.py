@@ -29,6 +29,10 @@ def cache_path() -> str:
     return _path(f'{base}/cache')
 
 
+def cm_params_path(name: str) -> str:
+    return _path(f'{base}/params/cm_model', name)
+
+
 def _path(suffix: str, name: str = None) -> str:
     __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
     base_dir = os.path.join(__location__, suffix)
