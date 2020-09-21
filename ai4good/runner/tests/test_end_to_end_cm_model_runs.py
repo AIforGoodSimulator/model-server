@@ -33,14 +33,14 @@ class TestEndToEndRuns(unittest.TestCase):
     def test_custom_run_ABM(self):
         mr = cr.run_model(
             _model=ABM.ID,
-            _profile='custom',
+            _profile='small',
             camp='Moria',
             load_from_cache=False,
             save_to_cache=False,
             is_save_plots=False,
             is_show_plots=False,
             is_save_report=False,
-            overrides='{"numberOfIterations": 4, "nProcesses": 1}'
+            overrides='{"numberOfIterations": 1, "nProcesses": 1}'
         )
         actual_report_df = mr.get('report')
         expected_df = pd.read_csv(pu._path('../runner/tests', 'expected_report.csv'))
