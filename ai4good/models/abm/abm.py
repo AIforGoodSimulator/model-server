@@ -18,7 +18,7 @@ def read_age_gender(num_ppl):
         out : Numpy array of size (`num_ppl`, 2) containing rows: (age, gender)
 
     """
-    path_to_file = 'tucker/age_and_sex.csv'
+    path_to_file = 'age_and_sex.csv'
     
     # Data frame. V1 = age, V2 is sex (1 = male?, 0  = female?).
     age_and_gender = pd.read_csv(path_to_file)

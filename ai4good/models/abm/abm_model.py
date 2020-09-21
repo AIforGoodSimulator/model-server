@@ -27,9 +27,9 @@ class ABM(Model):
     
         for i in range(p.number_of_steps):
     
-            p.track_states[i, :] = np.bincount(self.population[:, 1].astype(int), minlength=14)
+            p.track_states[i, :] = np.bincount(p.population[:, 1].astype(int), minlength=14)
 
-            if abm.epidemic_finish(np.concatenate((self.track_states[i, 1:6], self.track_states[i, 7:self.number_of_states])), i):
+            if abm.epidemic_finish(np.concatenate((p.track_states[i, 1:6], p.track_states[i, 7:p.number_of_states])), i):
                 return
 
             if (p.ACTIVATE_INTERVENTION and (i > 0)):

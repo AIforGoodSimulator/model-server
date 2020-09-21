@@ -64,14 +64,14 @@ class ParamStore(ABC):
 class SimpleParamStore(ParamStore):
 
     def get_models(self) -> List[str]:
-        return ['compartmental-model']
+        return ['compartmental-model','agent-based-model']
 
     def get_profiles(self, model: str) -> List[str]:
         df = self._read_csv(model + "_profile_params.csv")
         return df['Profile'].unique().tolist()
 
     def get_params(self, model: str, profile: str) -> pd.DataFrame:
-        df = self._read_csv(model+"_profile_params.csv")
+        df = self._read_csv(model + "_profile_params.csv")
         return df[df['Profile'] == profile].copy()
 
     def store_params(self, model: str, profile: str, profile_df: pd.DataFrame):

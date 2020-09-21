@@ -8,6 +8,7 @@ import json
 import hashlib
 from ai4good.params.param_store import ParamStore
 from . import abm
+import math
 
 
 class Parameters:
@@ -23,49 +24,53 @@ class Parameters:
         model_params = model_params.loc[:, ['Name', 'Value']]
         control_data = parameter_csv[parameter_csv['Type'] == 'Control']
         self.model_params = model_params
+
+        profile.set_index('Parameter', inplace=True)
         
-        self.number_of_people_in_isoboxes = self.model_params['number_of_people_in_isoboxes']
-        self.number_of_people_in_one_isobox = self.model_params['number_of_people_in_one_isobox']
+        self.number_of_people_in_isoboxes = int(profile.loc['number_of_people_in_isoboxes','Value'])
+        self.number_of_people_in_one_isobox = int(profile.loc['number_of_people_in_one_isobox','Value'])
         self.number_of_isoboxes = self.number_of_people_in_isoboxes / self.number_of_people_in_one_isobox
 
-        self.number_of_people_in_tents = self.model_params['number_of_people_in_tents']
-        self.number_of_people_in_one_tent = self.model_params['number_of_people_in_one_tent']
+        self.number_of_people_in_tents = int(profile.loc['number_of_people_in_tents','Value'])
+        self.number_of_people_in_one_tent = int(profile.loc['number_of_people_in_one_tent','Value'])
         self.number_of_tents = self.number_of_people_in_tents / self.number_of_people_in_one_tent
 
         self.total_population = self.number_of_people_in_isoboxes + self.number_of_people_in_tents
-        self.permanently_asymptomatic_cases = self.model_params['permanently_asymptomatic_cases']
+        self.permanently_asymptomatic_cases = float(profile.loc['permanently_asymptomatic_cases','Value'])
         self.age_and_gender = abm.read_age_gender(self.total_population)
 
-        self.area_covered_by_isoboxes = self.model_params['area_covered_by_isoboxes']
-        self.relative_strength_of_interaction = self.model_params['relative_strength_of_interaction']
+        self.area_covered_by_isoboxes = float(profile.loc['area_covered_by_isoboxes','Value'])
+        self.relative_strength_of_interaction = float(profile.loc['relative_strength_of_interaction','Value'])
 
-        self.smaller_movement_radius = self.model_params['smaller_movement_radius']
-        self.larger_movement_radius = self.model_params['larger_movement_radius']
-        self.overlapping_rages_radius = self.model_params['overlapping_rages_radius']
+        self.smaller_movement_radius = float(profile.loc['smaller_movement_radius','Value'])
+        self.larger_movement_radius = float(profile.loc['larger_movement_radius','Value'])
+        self.overlapping_rages_radius = float(profile.loc['overlapping_rages_radius','Value'])
 
-        self.number_of_steps = self.model_params['number_of_steps']
+        self.number_of_steps = int(profile.loc['number_of_steps','Value'])
         self.number_of_states = 14
         self.track_states = np.zeros((self.number_of_steps, self.number_of_states))
-        self.ACTIVATE_INTERVENTION = self.model_params['ACTIVATE_INTERVENTION']
-        self.total_number_of_hospitalized = self.model_params['total_number_of_hospitalized']
+        self.ACTIVATE_INTERVENTION = profile.loc['ACTIVATE_INTERVENTION','Value']
+        self.total_number_of_hospitalized = int(profile.loc['total_number_of_hospitalized','Value'])
 
-        self.num_toilet_visit = self.model_params['num_toilet_visit']
-        self.num_toilet_contact = self.model_params['num_toilet_contact']
-        self.num_food_visit = self.model_params['num_food_visit']
-        self.num_food_contact = self.model_params['num_food_contact']
-        self.pct_food_visit = self.model_params['pct_food_visit']
+        self.num_toilet_visit = int(profile.loc['num_toilet_visit','Value'])
+        self.num_toilet_contact = int(profile.loc['num_toilet_contact','Value'])
+        self.num_food_visit = int(profile.loc['num_food_visit','Value'])
+        self.num_food_contact = int(profile.loc['num_food_contact','Value'])
+        self.pct_food_visit = float(profile.loc['pct_food_visit','Value'])
 
-        self.transmission_reduction = self.model_params['transmission_reduction']
+        self.transmission_reduction = float(profile.loc['transmission_reduction','Value'])
 
-        self.probability_infecting_person_in_household_per_day = self.model_params['probability_infecting_person_in_household_per_day']
-        self.probability_infecting_person_in_foodline_per_day = self.model_params['probability_infecting_person_in_foodline_per_day']
-        self.probability_infecting_person_in_toilet_per_day = self.model_params['probability_infecting_person_in_toilet_per_day']
-        self.probability_infecting_person_in_moving_per_day = self.model_params['probability_infecting_person_in_moving_per_day']
+        self.probability_infecting_person_in_household_per_day = float(profile.loc['probability_infecting_person_in_household_per_day','Value'])
+        self.probability_infecting_person_in_foodline_per_day = float(profile.loc['probability_infecting_person_in_foodline_per_day','Value'])
+        self.probability_infecting_person_in_toilet_per_day = float(profile.loc['probability_infecting_person_in_toilet_per_day','Value'])
+        self.probability_infecting_person_in_moving_per_day = float(profile.loc['probability_infecting_person_in_moving_per_day','Value'])
 
-        self.probability_spotting_symptoms_per_day = self.model_params['probability_spotting_symptoms_per_day']
-        self.clearday = self.model_params['clearday']
-        self.toilets_blocks = self.model_params['toilets_blocks']
-        self.foodline_blocks = self.model_params['foodline_blocks']
+        self.probability_spotting_symptoms_per_day = float(profile.loc['probability_spotting_symptoms_per_day','Value'])
+        self.clearday = int(profile.loc['clearday','Value'])
+        tb = profile.loc['toilets_blocks', 'Value'].split(',')
+        self.toilets_blocks = (int(tb[0]),int(tb[1]))
+        fb = profile.loc['foodline_blocks','Value'].split(',')
+        self.foodline_blocks =(int(fb[0]),int(fb[1]))
 
         self.population = abm.form_population_matrix(
             self.total_population,
@@ -90,12 +95,15 @@ class Parameters:
         self.sev_rec = np.random.uniform(0, 1, self.total_population) > math.exp(math.log(63 / 153) / 12)  # Cai et al.
         self.pick_sick = np.random.uniform(0, 1, self.total_population)  # Get random numbers to determine health states.
 
+        self.control_dict = {}
+
+
 
     def sha1_hash(self) -> str:
         hash_params = [
             {i: self.control_dict[i] for i in self.control_dict if i != 'nProcesses'},
-            self.track_states,
-            self.population,
+            # self.track_states.tolist(),
+            self.population.tolist(),
             self.camp,
             self.model_params.to_dict('records')
         ]
