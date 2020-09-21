@@ -161,16 +161,7 @@ def nav_bar():
     return dbc.NavbarSimple(
         children=[
             dbc.NavItem(dbc.NavLink("About US", href="#")),
-            dbc.DropdownMenu(
-                children=[
-                    dbc.DropdownMenuItem("More pages", header=True),
-                    dbc.DropdownMenuItem("Contact US", href="#"),
-                    dbc.DropdownMenuItem("Teams", href="#"),
-                ],
-                nav=True,
-                in_navbar=True,
-                label="More",
-            ),
+
         ],
         brand="AIforGood",
         brand_href="#",

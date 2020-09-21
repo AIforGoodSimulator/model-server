@@ -64,7 +64,7 @@ class ParamStore(ABC):
 class SimpleParamStore(ParamStore):
 
     def get_models(self) -> List[str]:
-        return ['compartmental-model','Network-Model','Agent-Based Model']
+        return ['compartmental-model','network-Model','agent-Based Model']
 
     def get_profiles(self, model: str) -> List[str]:
         df = self._read_csv(model + "_profile_params.csv")
