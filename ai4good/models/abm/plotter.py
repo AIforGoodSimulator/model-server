@@ -18,187 +18,53 @@ def population_format(num,dp=0):
 
 # fill_cols = ['rgba(50,50,50,0.2)','rgba(50,50,50,0.2)','rgba(50,50,50,0.2)','rgba(50,0,0,0.4)']
 ########################################################################################################################
-def figure_generator(sols, params, cats_to_plot):
-    population_plot = params.population
-    categories = params.categories
-
-    if len(cats_to_plot)==0:
-        cats_to_plot=['I']
-
+def figure_generator(track_states_df, params, disease_states):
     font_size = 13
-
+    total = params.total_population
+    #
     lines_to_plot = []
+    #
+    xx = track_states_df['day']  # sols[0]['t']
 
-    xx = sols[0]['t']
+    for state in disease_states:
+        # if name in cats_to_plot:
+        #     y_plot = np.asarray(100*sol['y_plot'][categories[name]['index']])
+        # y_plot = np.asarray(100*sol['y_plot'][categories['A']['index']]) - np.asarray(100*sol['y_plot'][categories['I']['index']])
 
-    for sol in sols:
-        for name in categories.keys():
-            if name in cats_to_plot:
-                y_plot = np.asarray(100*sol['y_plot'][categories[name]['index']])
-                # y_plot = np.asarray(100*sol['y_plot'][categories['A']['index']]) - np.asarray(100*sol['y_plot'][categories['I']['index']])
-
-
-                
-                line =  {'x': xx, 'y': y_plot,
-                        'hovertemplate': '%{y:.2f}%, %{text}',
-                        'text': [population_format(i*population_plot/100) for i in y_plot],
-                        'line': {'color': str(categories[name]['colour'])},
-                        'legendgroup': name,
-                        'name': categories[name]['longname']}
-                lines_to_plot.append(line)
-         
-         
-         
-
-    ymax = 0
-    for line in lines_to_plot:
-        ymax = max(ymax,max(line['y']))
+        line = {'x': xx, 'y': track_states_df[state] / total,
+                'hovertemplate': '%{y:.2f}%',  # , %{text}
+                # 'text': [population_format(i*population_plot/100) for i in y_plot],
+                # 'line': {'color': str(categories[name]['colour'])},
+                'legendgroup': state,
+                'name': state}  # categories[name]['longname']}
+        lines_to_plot.append(line)
 
 
-    yax = dict(range= [0,min(1.1*ymax,100)])
-    ##
-
-    lines_to_plot.append(
-    dict(
-        type='scatter',
-        x = [0,xx[-1]],
-        y = [ 0, population_plot],
-        yaxis="y2",
-        opacity=0,
-        hoverinfo = 'skip',
-        showlegend=False
-    ))
-
-
-    yy2 = [0]
-    for i in range(8):
-        yy2.append(10**(i-5))
-        yy2.append(2*10**(i-5))
-        yy2.append(5*10**(i-5))
-
-    yy = [i for i in yy2]
-
-    pop_vec_lin = np.linspace(0,yy2[1],11)
-
-    for i in range(len(yy)-1):
-        if yax['range'][1]>yy[i] and yax['range'][1] <= yy[i+1]:
-            pop_vec_lin = np.linspace(0,yy2[i+1],11)
-
-    vec = [i*(population_plot) for i in pop_vec_lin]
-
-    log_bottom = -8
-    log_range = [log_bottom,np.log10(yax['range'][1])]
-
-    pop_vec_log_intermediate = np.linspace(log_range[0],ceil(np.log10(pop_vec_lin[-1])), 1+ ceil(np.log10(pop_vec_lin[-1])-log_range[0]) )
-
-    pop_log_vec = [10**(i) for i in pop_vec_log_intermediate]
-    vec2 = [i*(population_plot) for i in pop_log_vec]
-
-    shapes=[]
-    annots=[]
-
-    # if control_time[0]!=control_time[1] and not no_control:
-    #     shapes.append(dict(
-    #             # filled Blue Control Rectangle
-    #             type="rect",
-    #             x0= control_time[0],
-    #             y0=0,
-    #             x1= control_time[1],
-    #             y1= yax['range'][1],
-    #             line=dict(
-    #                 color="LightSkyBlue",
-    #                 width=0,
-    #             ),
-    #             fillcolor="LightSkyBlue",
-    #             opacity= 0.15
-    #         ))
-
-    #     annots.append(dict(
-    #             x  = 0.5*(control_time[0] + control_time[1]),
-    #             y  = 0.5,
-    #             text="<b>Control<br>" + "<b> In <br>" + "<b> Place",
-    #             textangle=0,
-    #             font=dict(
-    #                 size= font_size*(30/24),
-    #                 color="blue"
-    #             ),
-    #             showarrow=False,
-    #             opacity=0.4,
-    #             xshift= 0,
-    #             xref = 'x',
-    #             yref = 'paper',
-    #     ))
-
+    shapes = []
+    annots = []
 
     layout = go.Layout(
-                    template="simple_white",
-                    shapes=shapes,
-                    annotations=annots,
-                    font = dict(size= font_size), #'12em'),
-                    margin=dict(t=5, b=5, l=10, r=10,pad=15),
-                    hovermode='x',
-                    xaxis= dict(
-                            title='Days',
-                            
-                            automargin=True,
-                            hoverformat='.0f',
-                    ),
-                    yaxis= dict(mirror= True,
-                            title='Percentage of Total Population',
-                            range= yax['range'],
-                            
-                            automargin=True,
-                            type = 'linear'
-                    ),
-                        updatemenus = [dict(
-                                                buttons=list([
-                                                dict(
-                                                    args=[{"yaxis": {'title': 'Percentage of Total Population', 'type': 'linear', 'range': yax['range'], 'automargin': True},
-                                                    "yaxis2": {'title': 'Population','type': 'linear', 'overlaying': 'y1', 'range': yax['range'], 'ticktext': [population_format(0.01*vec[i]) for i in range(len(pop_vec_lin))], 'tickvals': [i for i in  pop_vec_lin],'automargin': True,'side':'right'}
-                                                    }], # tickformat
-                                                    label="Linear",
-                                                    method="relayout"
-                                                ),
-                                                dict(
-                                                    args=[{"yaxis": {'title': 'Percentage of Total Population', 'type': 'log', 'range': log_range,'automargin': True},
-                                                    "yaxis2": {'title': 'Population','type': 'log', 'overlaying': 'y1', 'range': log_range, 'ticktext': [population_format(0.01*vec2[i]) for i in range(len(pop_log_vec))], 'tickvals': [i for i in  pop_log_vec],'automargin': True,'side':'right'}
-                                                    }], # 'tickformat': yax_form_log,
-                                                    label="Logarithmic",
-                                                    method="relayout"
-                                                )
-                                        ]),
-                                        x= 0.5,
-                                        xanchor="right",
-                                        pad={"r": 5, "t": 30, "b": 10, "l": 5},
-                                        active=0,
-                                        y=-0.13,
-                                        showactive=True,
-                                        direction='up',
-                                        yanchor="top"
-                                        )],
-                                        legend = dict(
-                                                        font=dict(size=font_size*(20/24)),
-                                                        x = 0.5,
-                                                        y = 1.03,
-                                                        xanchor= 'center',
-                                                        yanchor= 'bottom'
-                                                    ),
-                                        legend_orientation  = 'h',
-                                        legend_title        = '<b> Key </b>',
-                                        yaxis2 = dict(
-                                                        title = 'Population',
-                                                        overlaying='y1',
-                                                        
-                                                        range = yax['range'],
-                                                        side='right',
-                                                        ticktext = [population_format(0.01*vec[i]) for i in range(len(pop_vec_lin))],
-                                                        tickvals = [i for i in  pop_vec_lin],
-                                                        automargin=True
-                                                    )
+        template="simple_white",
+        shapes=shapes,
+        annotations=annots,
+        font=dict(size=font_size),  # '12em'),
+        margin=dict(t=5, b=5, l=10, r=10, pad=15),
+        hovermode='x',
+        xaxis=dict(
+            title='Days',
 
-                            )
+            automargin=True,
+            hoverformat='.0f',
+        ),
+        yaxis=dict(mirror=True,
+                   title='Percentage of Total Population',
+                   # range= [l/100 for l in list(range(100))], #arange(total), #range(1), #yax['range'],
 
+                   automargin=True,
+                   type='linear'
+                   )
 
+    )
 
     return {'data': lines_to_plot, 'layout': layout}
 
