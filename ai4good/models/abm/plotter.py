@@ -32,8 +32,8 @@ def figure_generator(track_states_df, params, disease_states):
         # y_plot = np.asarray(100*sol['y_plot'][categories['A']['index']]) - np.asarray(100*sol['y_plot'][categories['I']['index']])
 
         line = {'x': xx, 'y': track_states_df[state] / total,
-                'hovertemplate': '%{y:.2f}%',  # , %{text}
-                # 'text': [population_format(i*population_plot/100) for i in y_plot],
+                'hovertemplate': '%{y:.2f}%, %{text}',
+                'text': track_states_df[state],
                 # 'line': {'color': str(categories[name]['colour'])},
                 'legendgroup': state,
                 'name': state}  # categories[name]['longname']}
