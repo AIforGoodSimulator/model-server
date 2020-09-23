@@ -91,13 +91,19 @@ class ABM(Model):
         cumulative_all = pd.DataFrame([[0]])
         cumulative_age = pd.DataFrame([[0]])
 
+        states = ['exposed_tl', 'presymptomatic_tl', 'symptomatic_tl', 'mild_tl', 'severe_tl', 'recovered_tl',
+         'qua_susceptible_tl', 'qua_exposed_tl', 'qua_presymptomatic_tl', 'qua_symptomatic_tl', 'qua_mild_tl',
+         'qua_severe_tl', 'qua_recovered_tl']
+        disease_state_tracker_plot = go.Figure()
+
         return ModelResult(self.result_id(p), {
             'standard_sol': standard_sol,
             'percentiles': percentiles,
             'config_dict': config_dict,
             'params': p,
             'report': report_raw,
-            'prevalence_age': prevalence_age,
+            'track_states_df': p.track_states,
+            'multiple_categories_to_plot': states,
             'prevalence_all': prevalence_all,
             'cumulative_all': cumulative_all,
             'cumulative_age': cumulative_age
