@@ -31,7 +31,10 @@ class ABM(Model):
 
             if abm.epidemic_finish(np.concatenate((p.track_states[i, 1:6], p.track_states[i, 7:p.number_of_states])), i):
                 return
-
+            p.mild_rec = np.random.uniform(0, 1, self.total_population) > math.exp(0.2 * math.log(0.1))  # Liu et al 2020 The Lancet.
+            p.sev_rec = np.random.uniform(0, 1, self.total_population) > math.exp(math.log(63 / 153) / 12)  # Cai et al.
+            p.pick_sick = np.random.uniform(0, 1, self.total_population)  # Get random numbers to determine health states.
+            
             if (p.ACTIVATE_INTERVENTION and (i > 0)):
                 p.iat1 = i
                 p.ACTIVATE_INTERVENTION = False
@@ -50,7 +53,14 @@ class ABM(Model):
                 p.sev_rec,
                 p.pick_sick,
                 p.total_number_of_hospitalized)
-
+            
+            p.population, p.total_number_of_hospitalized = abm.disease_state_update(
+                p.population,
+                p.mild_rec,
+                p.sev_rec,
+                p.pick_sick,
+                p.total_number_of_hospitalized,quarantined=True)
+            
             p.population = abm.assign_new_infections(p.population,
                                                         p.toilets_sharing,
                                                         p.foodpoints_sharing,
