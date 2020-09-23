@@ -498,6 +498,12 @@ def disease_state_update(pop_matrix, mild_rec, sev_rec, pick_sick, thosp, quaran
     # Move individuals with 6 days of symptoms to mild.
     symp_to_mild_ind=np.logical_and(pop_matrix[:,1]==(3+qua_add),pop_matrix[:,3]==6) 
     pop_matrix[symp_to_mild_ind,1] = 4+qua_add   
+    # Move Mild Symptoms to recovered
+    mild_to_recovered_ind = np.logical_and(pop_matrix[:,1]==(4+qua_add),mild_rec)
+    pop_matrix[mild_to_recovered_ind,1] = 6+qua_add                             
+    # Move Severe symptoms to recovered.
+    severe_to_recovered_ind = np.logical_and(pop_matrix[:,1]==(5+qua_add),sev_rec)
+    pop_matrix[severe_to_recovered_ind,1] = 6+qua_add     
     #  symptomatic to the “mild” or “severe”
     asp = np.array([0,.000408,.0104,.0343,.0425,.0816,.118,.166,.184])        # Verity et al. hospitalisation.
     aspc = np.array([.0101,.0209,.0410,.0642,.0721,.2173,.2483,.6921,.6987])  # Verity et al. corrected for Tuite.
@@ -515,9 +521,9 @@ def disease_state_update(pop_matrix, mild_rec, sev_rec, pick_sick, thosp, quaran
             pop_matrix[mild_to_severe_chronic_ind,1] = 5+qua_add 
         else:
             severe_ind = np.logical_and.reduce((
-                pop_matrix[:, 1] == 4 + qua_add,
-                pop_matrix[:, 3] == 6,
-                pick_sick < asp[buc],
+                pop_matrix[:, 1] == 4 + qua_add, #mild
+                pop_matrix[:, 3] == 6, #6 days
+                pick_sick < asp[buc], #probability of passage to next disease state for low risk people
                 pop_matrix[:, 5] >= 10 * buc,
                 pop_matrix[:, 5] < (10 * buc + 10)
             ))
@@ -527,7 +533,7 @@ def disease_state_update(pop_matrix, mild_rec, sev_rec, pick_sick, thosp, quaran
             severe_chronic_ind = np.logical_and.reduce((
                 pop_matrix[:, 1] == 4 + qua_add,
                 pop_matrix[:, 3] == 6,
-                pick_sick < aspc[buc],
+                pick_sick < aspc[buc], #probability of passage to next disease state for high risk people
                 pop_matrix[:, 5] >= (10 * buc),
                 pop_matrix[:, 5] < (10 * buc + 10),
                 pop_matrix[:, 7] == 1
@@ -550,12 +556,7 @@ def disease_state_update(pop_matrix, mild_rec, sev_rec, pick_sick, thosp, quaran
             # mild_to_severe_chronic_ind=np.logical_and.reduce((pop_matrix[:,1]==4+qua_add,pop_matrix[:,3]==6,pick_sick<aspc[buc],pop_matrix[:,5]>=10*buc,pop_matrix[:,5]<(10*buc+10),pop_matrix[:,7]==1))
             # thosp += np.sum(mild_to_severe_chronic_ind)
             # pop_matrix[mild_to_severe_chronic_ind,1] = 5+qua_add
-    # Move Mild Symptoms to recovered
-    mild_to_recovered_ind = np.logical_and(pop_matrix[:,1]==(4+qua_add),mild_rec)
-    pop_matrix[mild_to_recovered_ind,1] = 6+qua_add                             
-    # Move Severe symptoms to recovered.
-    severe_to_recovered_ind = np.logical_and(pop_matrix[:,1]==(5+qua_add),sev_rec)
-    pop_matrix[severe_to_recovered_ind,1] = 6+qua_add                              
+                           
     return pop_matrix,thosp
 
 def disease_state_update_for_agent(agent,mild_rec,sev_rec,pick_sick,thosp,quarantined=False):
