@@ -99,9 +99,9 @@ class Parameters:
 
     def sha1_hash(self) -> str:
         hash_params = [
-            {i: self.control_dict[i] for i in self.control_dict if i != 'nProcesses'},
+            # {i: self.control_dict[i] for i in self.control_dict if i != 'nProcesses'},
             # self.track_states.tolist(),
-            self.population.tolist(),
+            # self.population.tolist(),
             self.camp,
             self.model_params.to_dict('records')
         ]

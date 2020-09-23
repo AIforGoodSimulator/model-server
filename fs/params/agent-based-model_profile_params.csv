@@ -36,7 +36,7 @@ small,relative_strength_of_interaction,,,0.2
 small,smaller_movement_radius,,,0.02
 small,larger_movement_radius,,,0.1
 small,overlapping_rages_radius,,,0.02
-small,number_of_steps,,,200
+small,number_of_steps,,,10
 small,ACTIVATE_INTERVENTION,,,TRUE
 small,total_number_of_hospitalized,,,0
 small,num_toilet_visit,,,3
