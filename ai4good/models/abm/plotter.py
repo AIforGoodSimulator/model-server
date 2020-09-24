@@ -24,7 +24,7 @@ def figure_generator(track_states_df, params, disease_states):
     #
     lines_to_plot = []
     #
-    xx = track_states_df['day']  # sols[0]['t']
+    xx = list(range(len(track_states_df))) #['day']  # sols[0]['t']
 
     for state in disease_states:
         # if name in cats_to_plot:
