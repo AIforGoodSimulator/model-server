@@ -113,4 +113,12 @@ def overview_results(camp: str, params: Parameters):
      Interventions are applied by changing the probability of interactions in different daily activities and by dividing the camp in sectors. It is possible to test multiple combinations of interventions in different interactions scenario. Example output is presented in the pictures below, where the number of infected people (in any disease state) is presented over a 200 day period.
      ''')  
 
-
+@local_cache.memoize(timeout=cache_timeout)
+def get_model_result(camp: str, profile: str):
+    logging.info("Reading data for: " + camp + ", " + profile)
+    mr = model_runner.get_result(ABM.ID, profile, camp)
+    assert mr is not None
+    profile_df = facade.ps.get_params(ABM.ID, profile).drop(columns=['Profile'])
+    params = Parameters(facade.ps, camp, profile_df, {})
+    report = load_report(mr, params)
+    return mr, profile_df, params, report
