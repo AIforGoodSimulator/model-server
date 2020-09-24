@@ -32,9 +32,12 @@ def charts(mr):
             ]
 
     fig_multi_lines = go.Figure(figure_generator(sol, p, multiple_categories_to_plot))  # plot with lots of lines
-    fig_age_structure = go.Figure(age_structure_plot(sol, p, single_category_to_plot))
-    fig_bar_chart = go.Figure(stacked_bar_plot(sol, p, single_category_to_plot))  # bar chart (age structure)
-    fig_uncertainty = go.Figure(uncertainty_plot(sol, p, single_category_to_plot, percentiles))  # uncertainty
+    fig_age_structure = go.Figure(figure_generator(sol, p, multiple_categories_to_plot))
+        #go.Figure(age_structure_plot(sol, p, single_category_to_plot))
+    fig_bar_chart = go.Figure(figure_generator(sol, p, multiple_categories_to_plot))
+        #go.Figure(stacked_bar_plot(sol, p, single_category_to_plot))  # bar chart (age structure)
+    fig_uncertainty = go.Figure(figure_generator(sol, p, multiple_categories_to_plot))
+        #go.Figure(uncertainty_plot(sol, p, single_category_to_plot, percentiles))  # uncertainty
 
     return html.Div([
         dbc.Row([
