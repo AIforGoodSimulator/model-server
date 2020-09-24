@@ -8,17 +8,19 @@ import hashlib
 from ai4good.params.param_store import ParamStore
 from seirsplus.utilities import *
 from ai4good.models.nm.utils.network_utils import *
+from ai4good.models.nm.parameters.camp_params import *
 
 # TODO: BIG TODO!!!! We're using default parameters from the seirsplus model, and hard coding them here
 # Hopefully, we will be able to read them from a csv instead of this
 
+
 class Parameters:
-    def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
-        self.ps = ps
+    def __init__(self,  camp: str = "Moria", t_steps=200):
+        #self.ps = ps
         self.camp = camp
         # disease_params = ps.get_disease_params() # Do we need this?
-        camp_params = ps.get_camp_params(camp)  # TODO: This SHOULD link to camp_params.py somehow
-        n_pop = camp_params.n_pop
+        # camp_params = ps.get_camp_params(camp)   TODO: This SHOULD link to camp_params.py somehow
+        # n_pop = camp_params.n_pop
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Baseline parameters
@@ -33,13 +35,20 @@ class Parameters:
         self.hospitalizationToDeathPeriod_mean, hospitalizationToDeathPeriod_coeffvar = 7.0, 0.45
         self.R0_mean, R0_coeffvar = 2.5, 0.2
 
-        self.sigma = 1 / gamma_dist(self.latentPeriod_mean, latentPeriod_coeffvar, n_pop)
-        self.lamda = 1 / gamma_dist(self.presymptomaticPeriod_mean, presymptomaticPeriod_coeffvar, n_pop)
-        self.gamma = 1 / gamma_dist(self.symptomaticPeriod_mean, symptomaticPeriod_coeffvar, n_pop)
-        self.eta = 1 / gamma_dist(self.onsetToHospitalizationPeriod_mean, onsetToHospitalizationPeriod_coeffvar, n_pop)
+        self.sigma = 1 / \
+            gamma_dist(self.latentPeriod_mean, latentPeriod_coeffvar, n_pop)
+        self.lamda = 1 / \
+            gamma_dist(self.presymptomaticPeriod_mean,
+                       presymptomaticPeriod_coeffvar, n_pop)
+        self.gamma = 1 / \
+            gamma_dist(self.symptomaticPeriod_mean,
+                       symptomaticPeriod_coeffvar, n_pop)
+        self.eta = 1 / gamma_dist(self.onsetToHospitalizationPeriod_mean,
+                                  onsetToHospitalizationPeriod_coeffvar, n_pop)
         self.gamma_H = 1 / gamma_dist(self.hospitalizationToDischargePeriod_mean, hospitalizationToDischargePeriod_coeffvar,
                                       n_pop)
-        self.mu_H = 1 / gamma_dist(self.hospitalizationToDeathPeriod_mean, hospitalizationToDeathPeriod_coeffvar, n_pop)
+        self.mu_H = 1 / gamma_dist(self.hospitalizationToDeathPeriod_mean,
+                                   hospitalizationToDeathPeriod_coeffvar, n_pop)
         self.R0 = gamma_dist(self.R0_mean, R0_coeffvar, n_pop)
 
         infectiousPeriod = 1 / self.lamda + 1 / self.gamma
@@ -64,6 +73,7 @@ class Parameters:
         self.reduction_rate = 0.3
         self.beta_q = self.beta * (self.reduction_rate / self.R0_mean)
         self.q_global_interactions = 0.05
+        self.t_steps = t_steps
 
     def initialise_age_parameters(self, graph):
         # Age based parameters
@@ -90,19 +100,19 @@ class Parameters:
         ageGroup_susceptibility = {"0-19": 0.5, "20+": 1.0}
 
         self.pct_asymptomatic = get_values_per_node(ageGroup_pctAsymp, graph)
-        self.pct_hospitalized = get_values_per_node(ageGroup_pctHospitalized, graph)
-        self.pct_fatality = get_values_per_node(ageGroup_hospitalFatalityRate, graph)
+        self.pct_hospitalized = get_values_per_node(
+            ageGroup_pctHospitalized, graph)
+        self.pct_fatality = get_values_per_node(
+            ageGroup_hospitalFatalityRate, graph)
         self.alpha = get_values_per_node(ageGroup_susceptibility, graph)
 
     def sha1_hash(self) -> str:
         hash_params = [
-            {i: self.control_dict[i] for i in self.control_dict if i != 'nProcesses'},
-            self.population.tolist(),
+            n_pop,
             self.camp,
-            self.model_params.to_dict('records')
+            # self.model_params.to_dict('records')
         ]
         serialized_params = json.dumps(hash_params, sort_keys=True)
         hash_object = hashlib.sha1(serialized_params.encode('UTF-8'))
         _hash = hash_object.hexdigest()
         return _hash
-
