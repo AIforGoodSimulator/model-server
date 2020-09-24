@@ -28,7 +28,7 @@ def layout(camp, profile, cmp_profiles):
             dcc.Markdown(overview1(camp, params), style={'margin': 30}),
             html.Img(src='/static/abm_model.png'),
             dcc.Markdown(overview1(camp, params), style={'margin': 30}            
-            html.Markdown(overview_population(params), style={'margin': 30}),
+            dcc.Markdown(overview_population(params), style={'margin': 30}),
             html.Img(src='/static/abm_camplayout.png'),             
             dcc.Loading(html.Div([], id='main_section_part1', style={'margin': 30})),
             dcc.Loading(html.Div([], id='main_section_part2', style={'margin': 30})),
