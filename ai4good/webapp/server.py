@@ -38,7 +38,7 @@ def display_page(pathname, query=None):
         query = parse_qs(urlparse(query).query)
         if query['model'][0] == 'compartmental-model':
             return cm_model_results_page.layout(query['camp'][0], query['profile'][0])
-        elif query['model'][0] == 'abm-model':
+        elif query['model'][0] == 'agent-based-model':
             return abm_model_results_page.layout(query['camp'][0], query['profile'][0])
         else:
             return '404'
@@ -47,7 +47,7 @@ def display_page(pathname, query=None):
         if query['model'][0] == 'compartmental-model':
             interventions = query.get('intervention', [])
             return cm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)
-        elif query['model'][0] == 'abm-model':
+        elif query['model'][0] == 'agent-based-model':
             interventions = query.get('intervention', [])
             return abm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)
         else:
