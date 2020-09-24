@@ -30,10 +30,11 @@ def run_model(_model: str, _profile: str, camp: str, load_from_cache: bool, save
             logging.info("Saving model result to cache")
             facade.rs.store(_mdl.id(), res_id, mr)
     if is_save_plots or is_show_plots:
-        if _mdl.id() == 'agent-based-model':
-            save_plots_abm(mr, res_id, is_save_plots, is_show_plots)
-        else:
-            save_plots(mr, res_id, is_save_plots, is_show_plots)
+        # if _mdl.id() == 'agent-based-model':
+        save_plots(mr, res_id, is_save_plots, is_show_plots)
+        #     save_plots_abm(mr, res_id, is_save_plots, is_show_plots)
+        # else:
+        #     save_plots(mr, res_id, is_save_plots, is_show_plots)
     if is_save_report:
         save_report(mr, res_id)
     return mr
