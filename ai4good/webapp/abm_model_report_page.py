@@ -68,7 +68,7 @@ def overview1(camp: str, params: Parameters):
     return textwrap.dedent(f'''
     ## 1. Overview
     This report provides simulation-based estimates for COVID-19 epidemic scenarios for the {camp} camp. 
-    There are an estimated {int(params.population)} people currently living in the camp. 
+    There are an estimated {str(params.total_population)} people currently living in the camp. 
     The model we use is a deterministic, age-specific compartment model. The agent-based model describe the evolution of the epidemic given the camp setting and evaluate potential interventions to combat the spread of COVID-19; the parameters that control COVID-19 transmission rates and disease progression are estimated from the literature. 
     The model tracks individuals as they undertake daily activities in a simulated camp; COVID-19 can be transmitted when infected and susceptible individuals interact. 
     If an individual becomes infected, the infection progresses through a series of disease states; age and pre-existing conditions are accounted for in the probability of moving from one stage to the next.
