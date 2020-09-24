@@ -95,7 +95,7 @@ def figure_generator(sols, params, cats_to_plot):
 
 
     layout = go.Layout(
-        template="simple_white",
+        template="plotly",
         shapes=shapes,
         annotations=annots,
         font=dict(size=font_size),  # '12em'),
@@ -123,13 +123,13 @@ def figure_generator(sols, params, cats_to_plot):
                     label="Linear",
                     method="relayout"
                 ),
-                dict(
-                    args=[{"yaxis": {'title': 'Percentage of Total Population', 'type': 'log', 'range': log_range, 'automargin': True},
-                           "yaxis2": {'title': 'Population', 'type': 'log', 'overlaying': 'y1', 'range': log_range, 'ticktext': [population_format(0.01*vec2[i]) for i in range(len(pop_log_vec))], 'tickvals': [i for i in pop_log_vec], 'automargin': True, 'side':'right'}
-                           }],  # 'tickformat': yax_form_log,
-                    label="Logarithmic",
-                    method="relayout"
-                )
+                # dict(
+                #     args=[{"yaxis": {'title': 'Percentage of Total Population', 'type': 'log', 'range': log_range, 'automargin': True},
+                #            "yaxis2": {'title': 'Population', 'type': 'log', 'overlaying': 'y1', 'range': log_range, 'ticktext': [population_format(0.01*vec2[i]) for i in range(len(pop_log_vec))], 'tickvals': [i for i in pop_log_vec], 'automargin': True, 'side':'right'}
+                #            }],  # 'tickformat': yax_form_log,
+                #     label="Logarithmic",
+                #     method="relayout"
+                # )
             ]),
             x=0.5,
             xanchor="right",
@@ -313,7 +313,7 @@ def uncertainty_plot(sols, params, cats_to_plot, confidence_range=None):
     #     ))
 
     layout = go.Layout(
-        template="simple_white",
+        template="plotly",
         shapes=shapes,
         annotations=annots,
         font=dict(size=font_size),  # '12em'),
@@ -334,13 +334,13 @@ def uncertainty_plot(sols, params, cats_to_plot, confidence_range=None):
                     label="Linear",
                     method="relayout"
                 ),
-                dict(
-                    args=[{"yaxis": {'title': 'Percentage of Total Population', 'type': 'log', 'range': log_range, 'automargin': True},
-                           "yaxis2": {'title': 'Population', 'type': 'log', 'overlaying': 'y1', 'range': log_range, 'ticktext': [population_format(0.01*vec2[i]) for i in range(len(pop_log_vec))], 'tickvals': [i for i in pop_log_vec], 'automargin': True, 'side':'right'}
-                           }],  # 'tickformat': yax_form_log,
-                    label="Logarithmic",
-                    method="relayout"
-                )
+                # dict(
+                #     args=[{"yaxis": {'title': 'Percentage of Total Population', 'type': 'log', 'range': log_range, 'automargin': True},
+                #            "yaxis2": {'title': 'Population', 'type': 'log', 'overlaying': 'y1', 'range': log_range, 'ticktext': [population_format(0.01*vec2[i]) for i in range(len(pop_log_vec))], 'tickvals': [i for i in pop_log_vec], 'automargin': True, 'side':'right'}
+                #            }],  # 'tickformat': yax_form_log,
+                #     label="Logarithmic",
+                #     method="relayout"
+                # )
             ]),
             x=0.5,
             xanchor="right",
@@ -521,13 +521,13 @@ def age_structure_plot(sols, params, cats_to_plot):  # ,confidence_range=None
                     label="Linear",
                     method="relayout"
                 ),
-                dict(
-                    args=[{"yaxis": {'title': 'Percentage of Total Population', 'type': 'log', 'range': log_range, 'automargin': True},
-                           "yaxis2": {'title': 'Population', 'type': 'log', 'overlaying': 'y1', 'range': log_range, 'ticktext': [population_format(0.01*vec2[i]) for i in range(len(pop_log_vec))], 'tickvals': [i for i in pop_log_vec], 'automargin': True, 'side':'right'}
-                           }],  # 'tickformat': yax_form_log,
-                    label="Logarithmic",
-                    method="relayout"
-                )
+                # dict(
+                #     args=[{"yaxis": {'title': 'Percentage of Total Population', 'type': 'log', 'range': log_range, 'automargin': True},
+                #            "yaxis2": {'title': 'Population', 'type': 'log', 'overlaying': 'y1', 'range': log_range, 'ticktext': [population_format(0.01*vec2[i]) for i in range(len(pop_log_vec))], 'tickvals': [i for i in pop_log_vec], 'automargin': True, 'side':'right'}
+                #            }],  # 'tickformat': yax_form_log,
+                #     label="Logarithmic",
+                #     method="relayout"
+                # )
             ]),
             x=0.5,
             xanchor="right",
@@ -681,13 +681,13 @@ def stacked_bar_plot(sols, params, cats_to_plot):
                     label="Linear",
                     method="relayout"
                 ),
-                dict(
-                    args=[{"yaxis": {'title': 'Percentage of Total Population', 'type': 'log', 'range': log_range, 'automargin': True},
-                           "yaxis2": {'title': 'Population', 'type': 'log', 'overlaying': 'y1', 'range': log_range, 'ticktext': [population_format(0.01*vec2[i]) for i in range(len(pop_log_vec))], 'tickvals': [i for i in pop_log_vec], 'automargin': True, 'side':'right'}
-                           }],  # 'tickformat': yax_form_log,
-                    label="Logarithmic",
-                    method="relayout"
-                )
+                # dict(
+                #     args=[{"yaxis": {'title': 'Percentage of Total Population', 'type': 'log', 'range': log_range, 'automargin': True},
+                #            "yaxis2": {'title': 'Population', 'type': 'log', 'overlaying': 'y1', 'range': log_range, 'ticktext': [population_format(0.01*vec2[i]) for i in range(len(pop_log_vec))], 'tickvals': [i for i in pop_log_vec], 'automargin': True, 'side':'right'}
+                #            }],  # 'tickformat': yax_form_log,
+                #     label="Logarithmic",
+                #     method="relayout"
+                # )
             ]),
             x=0.5,
             xanchor="right",
