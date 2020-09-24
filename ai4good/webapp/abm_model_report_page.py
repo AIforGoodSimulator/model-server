@@ -48,12 +48,12 @@ def disclaimer(camp):
     ''').replace('\n', ' ')
 
 
-def glossary():
-    return textwrap.dedent(f'''
-    ## 0. Glossary 
-    * **hospitalisation/critical care demand person days**: The residents go into the hospitalisation/critical stage signify they require care but they may not receive the care depending on the capacity so this aggregates the hospitalisation/critical demand by person times number of days. If a unit cost of care is known, the total medical expense can be calculated.
-    * **IQR (interquartile range)**: The output of modelling are represented as Interquartile range representing a confidence interval of 25%-75%.
-    ''')
+#def glossary():
+#    return textwrap.dedent(f'''
+#    ## 0. Glossary 
+ #   * **hospitalisation/critical care demand person days**: The residents go into the hospitalisation/critical stage signify they require care but they may not receive the care depending on the capacity so this aggregates the hospitalisation/critical demand by person times number of days. If a unit cost of care is known, the total medical expense can be calculated.
+#    * **IQR (interquartile range)**: The output of modelling are represented as Interquartile range representing a confidence interval of 25%-75%.
+#    ''')
 
 
 def overview1(camp: str, params: Parameters):
@@ -61,10 +61,13 @@ def overview1(camp: str, params: Parameters):
     ## 1. Overview
     This report provides simulation-based estimates for COVID-19 epidemic scenarios for the {camp} camp. 
     There are an estimated {int(params.population)} people currently living in the camp. 
-    We developed the first agent-based model of an epidemic in a displacement camp setting and applied it to evaluate potential interventions to combat the spread of COVID-19. 
-    The model tracks individuals as they undertake daily activities in a simulated camp. COVID-19 can be transmitted when infected and susceptible individuals interact. 
-    The demographics and spatial structure of the model camp simulate Moria, and the parameters that control COVID-19 transmission rates and disease progression are estimated from the literature. 
-    We modelled COVID-19 outbreaks without interventions and in the presence of four interventions feasible for displacement camps: 
+    The agent-based model describe the evolution of the epidemic given the camp setting and evaluate potential interventions to combat the spread of COVID-19; the parameters that control COVID-19 transmission rates and disease progression are estimated from the literature. 
+    The model tracks individuals as they undertake daily activities in a simulated camp; COVID-19 can be transmitted when infected and susceptible individuals interact. 
+    If an individual becomes infected, the infection progresses through a series of disease state as in FIG# (pag.15 paper); age and pre-existing conditions are accounted for in the probability of moving from one stage to the next.
+    
+    FIG# (pag.15 paper)
+    
+    COVID-19 outbreaks are modelled without interventions and in the presence of four interventions feasible for displacement camps: 
     i) sectoring, 
     ii) transmission reduction,
     iii) remove-and-isolate, 
@@ -107,15 +110,16 @@ def overview_population(params: Parameters):
           In Moria, the homes of people with the same ethnic or national background are spatially clustered, and people interact more frequently with others from the same background as
           themselves                
         ''')),
-        dbc.Row([
-            dbc.Col([
-                html.Div(html.B(f'Population breakdown of {params.camp} camp with {int(params.population)} residents')),
-                dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
-            ], width=4)
-        ]),
-        dcc.Markdown(textwrap.dedent(f'''
-        The parameter values that describe disease progression and transmission are drawn from the literature.If an individual becomes infected, the infection progresses through a series of disease states according to a predefined probability
-        '''))
+       # dbc.Row([
+       #     dbc.Col([
+       #         html.Div(html.B(f'Population breakdown of {params.camp} camp with {int(params.population)} residents')),
+       #        dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
+       #     ], width=4)
+        #]),
+       # dcc.Markdown(textwrap.dedent(f'''
+        
+        #'''))
+                           FIG14 paper
     ]
 
 
