@@ -1,12 +1,15 @@
 from scipy.stats import poisson
 from ai4good.models.nm.utils import network_utils, stats_utils
 
-##### MORIA CAMP PARAMETERS #####
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Camp parameters for Moria
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 # Total number of people 
 n_pop = 18700
 
 # Sample the population age, and parameter rates
-sample_pop = stats_utils.sample_population(n_pop, "data/augmented_population.csv")
+sample_pop = stats_utils.sample_population(n_pop, "../data/augmented_population.csv")
 
 # Grid info for isoboxes
 dims_isoboxes = (29, 28)  # 812
@@ -53,4 +56,5 @@ grid_block3 = network_utils.create_grid(dims_block3[0], dims_block3[1], grid_blo
 
 household_weight = 0.98  # Edge weight for connections within each structure
 neighbor_weight = 0.017  # Edge weight for friendship connections
-food_weight = 0.407  # Edge weight for connections in the food queue 
+neighbor_proximity = 2  # The radius of nearby structures whose inhabitants a person has connections with
+food_weight = 0.407  # Edge weight for connections in the food queue

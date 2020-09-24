@@ -21,8 +21,13 @@ class NM(Model):
         return p.sha1_hash()
 
     def run(self, p: Parameters) -> ModelResult:
-        create_new_graph()
-        result_bm = load_and_process_graph_bm()
+        # create_new_graph()
+
+        # For the alpha version, we will focus on loading graphs instead of creating them
+        graph, nodes_per_struct = load_graph(f"../data/Moria_wNeighbors")
+        p.initialise_age_parameters(graph)
+
+        result_bm = process_graph_bm(p, graph, nodes_per_struct)
         result_sq = load_and_process_graph_sq()
         result_mq = load_and_process_graph_mq([1, 2, 4])
 
