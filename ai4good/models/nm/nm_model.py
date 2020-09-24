@@ -24,7 +24,7 @@ class NM(Model):
         # create_new_graph()
 
         # For the alpha version, we will focus on loading graphs instead of creating them
-        graph, nodes_per_struct = load_graph(f"experiments/networks/Moria_wNeighbors")
+        graph, nodes_per_struct = load_graph(f"../data/Moria_wNeighbors")
         p.initialise_age_parameters(graph)
 
         result_bm = process_graph_bm(p, graph, nodes_per_struct)

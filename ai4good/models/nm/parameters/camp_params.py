@@ -9,7 +9,7 @@ from ai4good.models.nm.utils import network_utils, stats_utils
 n_pop = 18700
 
 # Sample the population age, and parameter rates
-sample_pop = stats_utils.sample_population(n_pop, "data/augmented_population.csv")
+sample_pop = stats_utils.sample_population(n_pop, "../data/augmented_population.csv")
 
 # Grid info for isoboxes
 dims_isoboxes = (29, 28)  # 812

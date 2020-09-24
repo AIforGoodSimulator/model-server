@@ -3,29 +3,29 @@ from ai4good.models.nm.utils.network_utils import *
 
 
 # Load graphs and process
-def create_new_graph(p):
-    # TODO: For now, this only creates a camp that resembles Moria, but it could be abstracted more (after alpha version is done)
-    cp = p.camp_prams
-    household_weight = 0.98  # Edge weight for connections within each structure
-    graph, nodes_per_struct = create_graph(cp.n_structs, 0, cp.n_pop, cp.max_pop_per_struct,
-                                           edge_weight=household_weight, label="household",
-                                           age_list=list(cp.sample_pop["age"]),
-                                           sex_list=list(cp.sample_pop["sex"]),
-                                           n_ethnicities=cp.n_ethnic_groups)
-    # Connect people from neighboring isoboxes
-    graph = connect_neighbors(graph, 0, cp.n_isoboxes, nodes_per_struct,
-                              cp.grid_isoboxes, cp.neighbor_proximity, cp.neighbor_weight, 'friendship')
-    graph = connect_neighbors(graph, cp.dims_isoboxes[0] * cp.dims_isoboxes[1], cp.dims_block1[0] * cp.dims_block1[1],
-                              nodes_per_struct,
-                              cp.grid_block1, cp.neighbor_proximity, cp.neighbor_weight, 'friendship')
-    graph = connect_neighbors(graph, cp.dims_block1[0] * cp.dims_block1[1], cp.dims_block2[0] * cp.dims_block2[1],
-                              nodes_per_struct,
-                              cp.grid_block2, cp.neighbor_proximity, cp.neighbor_weight, 'friendship')
-    graph = connect_neighbors(graph, cp.dims_block2[0] * cp.dims_block2[1], cp.dims_block3[0] * cp.dims_block3[1],
-                              nodes_per_struct,
-                              cp.grid_block3, cp.neighbor_proximity, cp.neighbor_weight, 'friendship')
-
-    save_graph(graph, nodes_per_struct, f"experiments/networks/Moria_wNeighbors")
+# def create_new_graph(p):
+#     # TODO: For now, this only creates a camp that resembles Moria, but it could be abstracted more (after alpha version is done)
+#     cp = p.camp_prams
+#     household_weight = 0.98  # Edge weight for connections within each structure
+#     graph, nodes_per_struct = create_graph(cp.n_structs, 0, cp.n_pop, cp.max_pop_per_struct,
+#                                            edge_weight=household_weight, label="household",
+#                                            age_list=list(cp.sample_pop["age"]),
+#                                            sex_list=list(cp.sample_pop["sex"]),
+#                                            n_ethnicities=cp.n_ethnic_groups)
+#     # Connect people from neighboring isoboxes
+#     graph = connect_neighbors(graph, 0, cp.n_isoboxes, nodes_per_struct,
+#                               cp.grid_isoboxes, cp.neighbor_proximity, cp.neighbor_weight, 'friendship')
+#     graph = connect_neighbors(graph, cp.dims_isoboxes[0] * cp.dims_isoboxes[1], cp.dims_block1[0] * cp.dims_block1[1],
+#                               nodes_per_struct,
+#                               cp.grid_block1, cp.neighbor_proximity, cp.neighbor_weight, 'friendship')
+#     graph = connect_neighbors(graph, cp.dims_block1[0] * cp.dims_block1[1], cp.dims_block2[0] * cp.dims_block2[1],
+#                               nodes_per_struct,
+#                               cp.grid_block2, cp.neighbor_proximity, cp.neighbor_weight, 'friendship')
+#     graph = connect_neighbors(graph, cp.dims_block2[0] * cp.dims_block2[1], cp.dims_block3[0] * cp.dims_block3[1],
+#                               nodes_per_struct,
+#                               cp.grid_block3, cp.neighbor_proximity, cp.neighbor_weight, 'friendship')
+#
+#     save_graph(graph, nodes_per_struct, f"../data/Moria_wNeighbors")
 
 
 def process_graph_bm(p, graph, nodes_per_struct):
