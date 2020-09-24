@@ -24,10 +24,12 @@ def layout(camp, profile, cmp_profiles):
         [
             dcc.Markdown(disclaimer(camp), style={'margin': 30}),
             html.H1(f'AI for Good Simulator Model Report for {camp} Camp {profile} profile', style={'margin': 30}),
-            dcc.Markdown(glossary(), style={'margin': 30}),
+            #dcc.Markdown(glossary(), style={'margin': 30}),
             dcc.Markdown(overview1(camp, params), style={'margin': 30}),
             html.Img(src='/static/abm_model.png'),
-            html.Div(overview_population(params), style={'margin': 30}),
+            dcc.Markdown(overview1(camp, params), style={'margin': 30}            
+            html.Markdown(overview_population(params), style={'margin': 30}),
+            html.Img(src='/static/abm_camplayout.png'),             
             dcc.Loading(html.Div([], id='main_section_part1', style={'margin': 30})),
             dcc.Loading(html.Div([], id='main_section_part2', style={'margin': 30})),
             base_profile_chart_section(),
@@ -61,11 +63,13 @@ def overview1(camp: str, params: Parameters):
     ## 1. Overview
     This report provides simulation-based estimates for COVID-19 epidemic scenarios for the {camp} camp. 
     There are an estimated {int(params.population)} people currently living in the camp. 
-    The agent-based model describe the evolution of the epidemic given the camp setting and evaluate potential interventions to combat the spread of COVID-19; the parameters that control COVID-19 transmission rates and disease progression are estimated from the literature. 
+    The model we use is a deterministic, age-specific compartment model. The agent-based model describe the evolution of the epidemic given the camp setting and evaluate potential interventions to combat the spread of COVID-19; the parameters that control COVID-19 transmission rates and disease progression are estimated from the literature. 
     The model tracks individuals as they undertake daily activities in a simulated camp; COVID-19 can be transmitted when infected and susceptible individuals interact. 
-    If an individual becomes infected, the infection progresses through a series of disease state as in FIG# (pag.15 paper); age and pre-existing conditions are accounted for in the probability of moving from one stage to the next.
-    
-    FIG# (pag.15 paper)
+    If an individual becomes infected, the infection progresses through a series of disease states; age and pre-existing conditions are accounted for in the probability of moving from one stage to the next.
+    ''')
+  
+def overview2(camp: str, params: Parameters):
+    return textwrap.dedent(f'''
     
     COVID-19 outbreaks are modelled without interventions and in the presence of four interventions feasible for displacement camps: 
     i) sectoring, 
@@ -81,34 +85,28 @@ def overview1(camp: str, params: Parameters):
     ii) the time from the introduction of the first case until peak infection, 
     iii) the total proportion of the population that became infected. 
     For remove-and-isolate interventions, we also recorded the maximum number of individuals kept in isolation to assess the feasibility of the intervention
-    
-    GS: FIND MEANINGFUL GRAPH (LIKE pag.7  paper??)
-    The graph below represents the disease transition dynamics for each individual included in the modelling studies. 
-    The model we use is a deterministic, age-specific compartment model.
     We produce the analysis based on 
-    {params.control_dict['numberOfIterations']} simulation runs over a range of possible parameters.
+    {params.control_dict['number_of_steps']} simulation runs over a range of possible parameters.
     ''')
 
 
 def overview_population(params: Parameters):
     # GS: in this section SUMMARY OF POPULATION AND HOUSEHOLD STRUCTURE, i.e. # in isoboxes/tents, #ethnical backgrounds. CAN WE PUT Fig 3 pag 14 from the paper?
-    df = params.population_frame.copy()
-    df['Population structure'] = df['Population_structure'].map('{:,.1f}%'.format)
-    df['Number of residents'] = df['Population_structure'] * params.population / 100.0
-    df['Number of residents'] = df['Number of residents'].astype(int)
-    df = df[['Age', 'Population structure', 'Number of residents']]
-
-    return [
-        dcc.Markdown(textwrap.dedent(f'''
-        The ABM model describe the population and the camp:
-        * Population specific parameters: population size,age, sex, condition (healty or with pre-existing condition), disease state.
-        * Camp specific parameters: each individual is a member of a household that occupies either an isobox or a tent each characterized by a mean occupancy in the camp.The exact occupancy of each isobox or tent is drawn from a Poisson distribution, and
-          individuals are assigned to isoboxes or tents randomly without regard to sex or age. The camp covers a 1 x 1 (e.g., km) square (figure 3). Isoboxes are assigned to random
-          locations in a central square that covers one half of the area of the camp. Tents are assigned to random locations in the camp outside of the central square. There are 144 toilets evenly
-          distributed throughout the camp. Toilets are placed at the centres of the squares that form a 12 x 12 grid covering the camp. The camp has one food line. The position of the food line is
-          not explicitly modelled.  
-          In Moria, the homes of people with the same ethnic or national background are spatially clustered, and people interact more frequently with others from the same background as
-          themselves                
+    #df = params.population_frame.copy()
+    #df['Population structure'] = df['Population_structure'].map('{:,.1f}%'.format)
+    #df['Number of residents'] = df['Population_structure'] * params.population / 100.0
+    #df['Number of residents'] = df['Number of residents'].astype(int)
+    #df = df[['Age', 'Population structure', 'Number of residents']]
+    return textwrap.dedent(f'''
+    The ABM model accounts for the following characteristic of the population and the camp:
+       *Population specific parameters: population size,age, sex, condition (healty or with pre-existing condition), disease state.
+       * Camp specific parameters: each individual is a member of a household that occupies either an isobox or a tent each characterized by a mean occupancy in the camp.The exact occupancy of each isobox or tent is drawn from a Poisson distribution, and
+         individuals are assigned to isoboxes or tents randomly without regard to sex or age. The camp covers a 1 x 1 (e.g., km) square (figure 3). Isoboxes are assigned to random
+         locations in a central square that covers one half of the area of the camp. Tents are assigned to random locations in the camp outside of the central square. There are 144 toilets evenly
+         distributed throughout the camp. Toilets are placed at the centres of the squares that form a 12 x 12 grid covering the camp. The camp has one food line. The position of the food line is
+         not explicitly modelled.  
+         In Moria, the homes of people with the same ethnic or national background are spatially clustered, and people interact more frequently with others from the same background as
+         themselves                
         ''')),
        # dbc.Row([
        #     dbc.Col([
@@ -119,8 +117,7 @@ def overview_population(params: Parameters):
        # dcc.Markdown(textwrap.dedent(f'''
         
         #'''))
-                           FIG14 paper
-    ]
+                           
 
 
 @local_cache.memoize(timeout=cache_timeout)
