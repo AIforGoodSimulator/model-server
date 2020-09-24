@@ -83,7 +83,7 @@ Run Example:
 
 Container Command Line:
 
-    docker run model-server /bin/bash
+    docker run -it model-server /bin/bash
 
 ### Design overview
 
