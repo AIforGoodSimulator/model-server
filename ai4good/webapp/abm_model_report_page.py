@@ -12,7 +12,7 @@ import dash_bootstrap_components as dbc
 from ai4good.models.abm.abm_model import ABM
 from ai4good.models.abm.initialise_parameters import Parameters
 from ai4good.webapp.apps import dash_app, facade, model_runner, cache, local_cache, cache_timeout
-from ai4good.webapp.abm_model_report_utils import *
+# from ai4good.webapp.abm_model_report_utils import *
 
 
 @cache.memoize(timeout=cache_timeout)
@@ -120,5 +120,5 @@ def get_model_result(camp: str, profile: str):
     assert mr is not None
     profile_df = facade.ps.get_params(ABM.ID, profile).drop(columns=['Profile'])
     params = Parameters(facade.ps, camp, profile_df, {})
-    report = load_report(mr, params)
+    report = "" # load_report(mr, params)
     return mr, profile_df, params, report
