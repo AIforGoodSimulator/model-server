@@ -42,7 +42,6 @@ def process_graph_sq(p, graph, nodes_per_struct):
 
     # Run model
     node_states, simulation_results = run_simulation(model, p.t_steps)
-
     # Construct results dataframe
     output_df = results_to_df(simulation_results)
 
