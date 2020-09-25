@@ -71,7 +71,7 @@ class SimpleParamStore(ParamStore):
         return df['Profile'].unique().tolist()
 
     def get_params(self, model: str, profile: str) -> pd.DataFrame:
-        df = self._read_csv(model+"_profile_params.csv")
+        df = self._read_csv(model + "_profile_params.csv")
         return df[df['Profile'] == profile].copy()
 
     def store_params(self, model: str, profile: str, profile_df: pd.DataFrame):

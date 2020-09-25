@@ -67,6 +67,24 @@ First add azure remote
 
 enter credentials when prompted.
     
+### Docker
+
+Build:
+
+    docker build -t model-server .
+
+Test:
+
+    docker run model-server python -m unittest discover -s ai4good/ -p "test_*.py"
+
+Run Example:
+
+    docker run model-server python ai4good/runner/console_runner.py --profile custom --save_plots --save_report
+
+Container Command Line:
+
+    docker run -it model-server /bin/bash
+
 ### Design overview
 
 Model-server consists of following top level packages:

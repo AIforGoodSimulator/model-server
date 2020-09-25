@@ -7,6 +7,7 @@ import pandas as pd
 import json
 import hashlib
 from ai4good.params.param_store import ParamStore
+from ai4good.utils import path_utils as pu
 
 
 class Parameters:
@@ -48,166 +49,36 @@ class Parameters:
 
         AsymptInfectiousFactor = np.float(model_params[model_params['Name'] == 'infectiousness of asymptomatic'].Value)
 
-        
         self.R_0_list = R_0_list
         self.beta_list = beta_list
-        
         self.shield_increase = shield_increase
         self.shield_decrease = shield_decrease
         self.better_hygiene  = better_hygiene
-
-
         self.number_compartments = number_compartments
-
-        self.AsymptInfectiousFactor         = AsymptInfectiousFactor
-
-        self.latent_rate     = latent_rate
-        self.removal_rate    = removal_rate
-        self.hosp_rate       = hosp_rate        
-        self.quarant_rate    = quarant_rate
-
-        self.death_rate          = death_rate
+        self.AsymptInfectiousFactor = AsymptInfectiousFactor
+        self.latent_rate = latent_rate
+        self.removal_rate = removal_rate
+        self.hosp_rate = hosp_rate
+        self.quarant_rate = quarant_rate
+        self.death_rate = death_rate
         self.death_rate_with_ICU = death_rate_with_ICU
-        
         self.death_prob_with_ICU = death_prob_with_ICU
 
-        self.S_ind = 0
-        self.E_ind = 1
-        self.I_ind = 2
-        self.A_ind = 3
-        self.R_ind = 4
-        self.H_ind = 5
-        self.C_ind = 6
-        self.D_ind = 7
-        self.O_ind = 8
-        self.Q_ind = 9
-        self.U_ind = 10
+        categs = pd.read_csv(pu.cm_params_path('categories.csv'), delimiter=';', skipinitialspace=True)
+        self.calculated_categories = categs['category'].to_list()
+        categs['index'] = np.arange(self.number_compartments)
 
-        self.index = {
-            'S': self.S_ind,
-            'E': self.E_ind,
-            'I': self.I_ind,
-            'A': self.A_ind,
-            'R': self.R_ind,
-            'H': self.H_ind,
-            'C': self.C_ind,
-            'D': self.D_ind,
-            'O': self.O_ind,
-            'Q': self.Q_ind,
-            'U': self.U_ind,
-            'CS': self.number_compartments + self.S_ind,
-            'CE': self.number_compartments + self.E_ind,
-            'CI': self.number_compartments + self.I_ind,
-            'CA': self.number_compartments + self.A_ind,
-            'CR': self.number_compartments + self.R_ind,
-            'CH': self.number_compartments + self.H_ind,
-            'CC': self.number_compartments + self.C_ind,
-            'CD': self.number_compartments + self.D_ind,
-            'CO': self.number_compartments + self.O_ind,
-            'CQ': self.number_compartments + self.Q_ind,
-            'CU': self.number_compartments + self.U_ind,
-            'Ninf': 2 * self.number_compartments
-        }
+        change_categs = pd.read_csv(pu.cm_params_path('change_categories.csv'), delimiter=';', skipinitialspace=True)
+        self.change_in_categories = categs['category'].to_list()
+        change_categs['index'] = np.arange(len(categs), 2 * self.number_compartments)
 
-        self.calculated_categories = ['S',
-                'E',
-                'I',
-                'A',
-                'R',
-                'H',
-                'C',
-                'D',
-                'O',
-                'Q',
-                'U'
-                ]
+        new_infected_category = {'category': 'Ninf', 'shortname': 'New Infected',
+                                 'longname': 'Change in total active infections', 'colour': 'rgb(255,125,100)',
+                                 'colour_name': '', 'index': 2*self.number_compartments}
 
-        self.change_in_categories = ['C'+ii for ii in self.calculated_categories] # gives daily change for each category
-
-        self.longname = {'S':  'Susceptible',
-                    'E':  'Exposed',
-                    'I':  'Infected (symptomatic)',
-                    'A':  'Asymptomatically Infected',
-                    'R':  'Recovered',
-                    'H':  'Hospitalised',
-                    'C':  'Critical',
-                    'D':  'Deaths',
-                    'O':  'Offsite',
-                    'Q':  'Quarantined',
-                    'U':  'No ICU Care',
-                    'CS': 'Change in Susceptible',
-                    'CE': 'Change in Exposed',
-                    'CI': 'Change in Infected (symptomatic)',
-                    'CA': 'Change in Asymptomatically Infected',
-                    'CR': 'Change in Recovered',
-                    'CH': 'Change in Hospitalised',
-                    'CC': 'Change in Critical',
-                    'CD': 'Change in Deaths',
-                    'CO': 'Change in Offsite',
-                    'CQ': 'Change in Quarantined',
-                    'CU': 'Change in No ICU Care',
-                    'Ninf': 'Change in total active infections', # sum of E, I, A
-        }
-
-        self.shortname = {'S':  'Sus.',
-                     'E':  'Exp.',
-                     'I':  'Inf. (symp.)',
-                     'A':  'Asym.',
-                     'R':  'Rec.',
-                     'H':  'Hosp.',
-                     'C':  'Crit.',
-                     'D':  'Deaths',
-                     'O':  'Offsite',
-                     'Q':  'Quar.',
-                     'U':  'No ICU',
-                     'CS': 'Change in Sus.',
-                     'CE': 'Change in Exp.',
-                     'CI': 'Change in Inf. (symp.)',
-                     'CA': 'Change in Asym.',
-                     'CR': 'Change in Rec.',
-                     'CH': 'Change in Hosp.',
-                     'CC': 'Change in Crit.',
-                     'CD': 'Change in Deaths',
-                     'CO': 'Change in Offsite',
-                     'CQ': 'Change in Quar.',
-                     'CU':  'Change in No ICU',
-                     'Ninf': 'New Infected', # newly exposed to the disease = - change in susceptibles
-        }
-
-        self.colour = {'S':  'rgb(0,0,255)', #'blue',
-                  'E':  'rgb(255,150,255)', #'pink',
-                  'I':  'rgb(255,150,50)', #'orange',
-                  'A':  'rgb(255,50,50)', #'dunno',
-                  'R':  'rgb(0,255,0)', #'green',
-                  'H':  'rgb(255,0,0)', #'red',
-                  'C':  'rgb(50,50,50)', #'black',
-                  'D':  'rgb(130,0,255)', #'purple',
-                  'O':  'rgb(130,100,150)', #'dunno',
-                  'Q':  'rgb(150,130,100)', #'dunno',
-                  'U':  'rgb(150,100,150)', #'dunno',
-                  'CS': 'rgb(0,0,255)', #'blue',
-                  'CE': 'rgb(255,150,255)', #'pink',
-                  'CI': 'rgb(255,150,50)', #'orange',
-                  'CA': 'rgb(255,50,50)', #'dunno',
-                  'CR': 'rgb(0,255,0)', #'green',
-                  'CH': 'rgb(255,0,0)', #'red',
-                  'CC': 'rgb(50,50,50)', #'black',
-                  'CD': 'rgb(130,0,255)', #'purple',
-                  'CO': 'rgb(130,100,150)', #'dunno',
-                  'CQ': 'rgb(150,130,100)', #'dunno',
-                  'CU':  'rgb(150,100,150)', #'dunno',
-                  'Ninf': 'rgb(255,125,100)', #
-                }
-
-        self.categories = {}
-        for key in self.longname.keys():
-            self.categories[key] = dict(
-                longname = self.longname[key],
-                shortname = self.shortname[key],
-                colour = self.colour[key],
-                fill_colour = 'rgba' + self.colour[key][3:-1] + ',0.1)' ,
-                index = self.index[key]
-            )
+        all_categs = pd.concat([categs, change_categs, pd.DataFrame([new_infected_category])])
+        all_categs['fill_colour'] = all_categs.apply(lambda row: 'rgba' + row['colour'][3:-1] + ',0.1)', axis=1)
+        self.categories: dict = all_categs.set_index(all_categs['category']).transpose().to_dict()
 
         self.population_frame, self.population = self.prepare_population_frame(camp_params)
 
@@ -256,38 +127,38 @@ class Parameters:
         def str2bool(v):
             return v.lower() in ("yes", "true", "t", "1")
 
-        cd = profile.copy()
+        profile_copy = profile.copy()
         dct = {}
-        p, v, t = get_values(cd, 'better_hygiene')
+        p, v, t = get_values(profile_copy, 'better_hygiene')
         dct[p] = {
             'timing': t,
             'value': self.better_hygiene if v == '<default>' else float(v)
         }
 
-        p, v, _ = get_values(cd, 'ICU_capacity')
+        p, v, _ = get_values(profile_copy, 'ICU_capacity')
         icu_capacity = int(v)
         dct[p] = {'value': icu_capacity / self.population}
 
-        p, v, t = get_values(cd, 'remove_symptomatic')
+        p, v, t = get_values(profile_copy, 'remove_symptomatic')
         dct[p] = {
             'timing': t,
             'rate': float(v) / self.population
         }
 
-        p, v, t = get_values(cd, 'shielding')
+        p, v, t = get_values(profile_copy, 'shielding')
         dct[p] = {'used': str2bool(v)}
 
-        p, v, t = get_values(cd, 'remove_high_risk')
-        _, v2, _ = get_values(cd, 'remove_high_risk_categories')
+        p, v, t = get_values(profile_copy, 'remove_high_risk')
+        _, v2, _ = get_values(profile_copy, 'remove_high_risk_categories')
         dct[p] = {
             'timing': t,
             'rate': float(v) / self.population,
             'n_categories_removed': int(v2)
         }
 
-        add_int_scalar(cd, 't_sim', dct)
-        add_int_scalar(cd, 'numberOfIterations', dct)
-        add_int_scalar(cd, 'nProcesses', dct)
+        add_int_scalar(profile_copy, 't_sim', dct)
+        add_int_scalar(profile_copy, 'numberOfIterations', dct)
+        add_int_scalar(profile_copy, 'nProcesses', dct)
 
         for k, d in dct.items():
             if k in profile_override_dict.keys():
