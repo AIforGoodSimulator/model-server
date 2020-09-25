@@ -13,13 +13,31 @@ def charts(mr):
     percentiles = mr.get('percentiles')
     p = mr.get('params')
 
-    multiple_categories_to_plot = ['E', 'A', 'I', 'R', 'H', 'C', 'D', 'O', 'Q', 'U']  # categories to plot
+    # multiple_categories_to_plot = ['E', 'A', 'I', 'R', 'H', 'C', 'D', 'O', 'Q', 'U']  # categories to plot
     single_category_to_plot = 'C'  # categories to plot in final 3 plots #TODO: make selectable
+    multiple_categories_to_plot = [ #"susceptible_tl",
+            "exposed_tl",
+            "presymptomatic_tl",
+            "symptomatic_tl",
+            "mild_tl",
+            "severe_tl",
+            "recovered_tl",
+            "qua_susceptible_tl",
+            "qua_exposed_tl",
+            "qua_presymptomatic_tl",
+            "qua_symptomatic_tl",
+            "qua_mild_tl",
+            "qua_severe_tl",
+            "qua_recovered_tl"
+            ]
 
     fig_multi_lines = go.Figure(figure_generator(sol, p, multiple_categories_to_plot))  # plot with lots of lines
-    fig_age_structure = go.Figure(age_structure_plot(sol, p, single_category_to_plot))
-    fig_bar_chart = go.Figure(stacked_bar_plot(sol, p, single_category_to_plot))  # bar chart (age structure)
-    fig_uncertainty = go.Figure(uncertainty_plot(sol, p, single_category_to_plot, percentiles))  # uncertainty
+    fig_age_structure = go.Figure(figure_generator(sol, p, multiple_categories_to_plot))
+        #go.Figure(age_structure_plot(sol, p, single_category_to_plot))
+    fig_bar_chart = go.Figure(figure_generator(sol, p, multiple_categories_to_plot))
+        #go.Figure(stacked_bar_plot(sol, p, single_category_to_plot))  # bar chart (age structure)
+    fig_uncertainty = go.Figure(figure_generator(sol, p, multiple_categories_to_plot))
+        #go.Figure(uncertainty_plot(sol, p, single_category_to_plot, percentiles))  # uncertainty
 
     return html.Div([
         dbc.Row([

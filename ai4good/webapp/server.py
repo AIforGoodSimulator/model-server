@@ -10,7 +10,7 @@ import ai4good.webapp.cm_model_report_page as cm_model_report_page
 import ai4good.webapp.cm_admin_page as cm_admin_page
 import ai4good.webapp.abm_model_results_page as abm_model_results_page
 import ai4good.webapp.abm_model_report_page as abm_model_report_page
-import ai4good.webapp.abm_admin_page as abm_admin_page
+# import ai4good.webapp.abm_admin_page as abm_admin_page
 from ai4good.webapp.apps import flask_app, dash_app
 
 
@@ -38,7 +38,7 @@ def display_page(pathname, query=None):
         query = parse_qs(urlparse(query).query)
         if query['model'][0] == 'compartmental-model':
             return cm_model_results_page.layout(query['camp'][0], query['profile'][0])
-        elif query['model'][0] == 'abm-model':
+        elif query['model'][0] == 'agent-based-model':
             return abm_model_results_page.layout(query['camp'][0], query['profile'][0])
         else:
             return '404'
@@ -47,7 +47,7 @@ def display_page(pathname, query=None):
         if query['model'][0] == 'compartmental-model':
             interventions = query.get('intervention', [])
             return cm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)
-        elif query['model'][0] == 'abm-model':
+        elif query['model'][0] == 'agent-based-model':
             interventions = query.get('intervention', [])
             return abm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)
         else:

@@ -91,9 +91,7 @@ class Parameters:
         self.ethnical_corellations = abm.create_ethnic_groups(self.households_location, self.relative_strength_of_interaction)
         self.local_interaction_space = abm.interaction_neighbours(self.households_location, self.smaller_movement_radius, self.larger_movement_radius, self.overlapping_rages_radius, self.ethnical_corellations)
 
-        self.mild_rec = np.random.uniform(0, 1, self.total_population) > math.exp(0.2 * math.log(0.1))  # Liu et al 2020 The Lancet.
-        self.sev_rec = np.random.uniform(0, 1, self.total_population) > math.exp(math.log(63 / 153) / 12)  # Cai et al.
-        self.pick_sick = np.random.uniform(0, 1, self.total_population)  # Get random numbers to determine health states.
+
 
         self.control_dict = {}
 
@@ -101,9 +99,9 @@ class Parameters:
 
     def sha1_hash(self) -> str:
         hash_params = [
-            {i: self.control_dict[i] for i in self.control_dict if i != 'nProcesses'},
+            # {i: self.control_dict[i] for i in self.control_dict if i != 'nProcesses'},
             # self.track_states.tolist(),
-            self.population.tolist(),
+            # self.population.tolist(),
             self.camp,
             self.model_params.to_dict('records')
         ]
