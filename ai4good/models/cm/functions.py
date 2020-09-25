@@ -310,16 +310,8 @@ class Simulator:
 
         seirvars = np.zeros((self.params.number_compartments, 1));
 
-        seirvars[self.params.categories['E']['index'], 0] = 0  # exposed
         seirvars[self.params.categories['I']['index'], 0] = 1 / population  # sympt
         seirvars[self.params.categories['A']['index'], 0] = 1 / population  # asympt
-        seirvars[self.params.categories['R']['index'], 0] = 0  # recovered
-        seirvars[self.params.categories['H']['index'], 0] = 0  # hospitalised/needing hospital care
-        seirvars[self.params.categories['C']['index'], 0] = 0  # critical (cared)
-        seirvars[self.params.categories['D']['index'], 0] = 0  # dead
-        seirvars[self.params.categories['O']['index'], 0] = 0  # offsite
-        seirvars[self.params.categories['Q']['index'], 0] = 0  # quarantined
-        seirvars[self.params.categories['U']['index'], 0] = 0  # critical (uncared)
 
         seirvars[self.params.categories['S']['index'], 0] = 1-seirvars.sum()
 
