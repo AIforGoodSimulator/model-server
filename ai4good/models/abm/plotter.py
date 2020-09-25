@@ -2,6 +2,7 @@ import numpy as np
 from math import ceil, floor
 import plotly.graph_objects as go
 from ai4good.models.model import ModelResult
+import pandas as pd
 
 
 ########################################################################################################################
@@ -18,13 +19,29 @@ def population_format(num,dp=0):
 
 # fill_cols = ['rgba(50,50,50,0.2)','rgba(50,50,50,0.2)','rgba(50,50,50,0.2)','rgba(50,0,0,0.4)']
 ########################################################################################################################
-def figure_generator(track_states_df, params, disease_states):
+def figure_generator(track_states, params, disease_states):
     font_size = 13
     total = params.total_population
     #
     lines_to_plot = []
     #
-    xx = track_states_df['day']  # sols[0]['t']
+    cols = ["susceptible_tl",
+            "exposed_tl",
+            "presymptomatic_tl",
+            "symptomatic_tl",
+            "mild_tl",
+            "severe_tl",
+            "recovered_tl",
+            "qua_susceptible_tl",
+            "qua_exposed_tl",
+            "qua_presymptomatic_tl",
+            "qua_symptomatic_tl",
+            "qua_mild_tl",
+            "qua_severe_tl",
+            "qua_recovered_tl"
+            ]
+    track_states_df = pd.DataFrame(track_states, columns=cols)
+    xx = list(range(len(track_states_df))) #['day']  # sols[0]['t']
 
     for state in disease_states:
         # if name in cats_to_plot:

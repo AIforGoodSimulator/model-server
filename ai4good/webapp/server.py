@@ -10,7 +10,6 @@ import ai4good.webapp.cm_model_report_page as cm_model_report_page
 import ai4good.webapp.cm_admin_page as cm_admin_page
 import ai4good.webapp.abm_model_results_page as abm_model_results_page
 import ai4good.webapp.abm_model_report_page as abm_model_report_page
-import ai4good.webapp.abm_admin_page as abm_admin_page
 import ai4good.webapp.nm_model_results_page as nm_model_results_page
 import ai4good.webapp.nm_model_report_page as nm_model_report_page
 import ai4good.webapp.nm_admin_page as nm_admin_page
@@ -32,7 +31,7 @@ dash_app.layout = html.Div([
 
 
 @dash_app.callback(Output('page-content', 'children'),
-              [Input('url', 'pathname'), Input('url', 'search')])
+                   [Input('url', 'pathname'), Input('url', 'search')])
 def display_page(pathname, query=None):
     logging.info("Displaying page %s with query %s", pathname, query)
     if pathname == '/sim/run_model' or pathname == '/sim/':
@@ -41,7 +40,7 @@ def display_page(pathname, query=None):
         query = parse_qs(urlparse(query).query)
         if query['model'][0] == 'compartmental-model':
             return cm_model_results_page.layout(query['camp'][0], query['profile'][0])
-        elif query['model'][0] == 'abm-model':
+        elif query['model'][0] == 'agent-based-model':
             return abm_model_results_page.layout(query['camp'][0], query['profile'][0])
         elif query['model'][0] == 'network-model':
             return nm_model_results_page.layout(query['camp'][0], query['profile'][0])
@@ -52,7 +51,7 @@ def display_page(pathname, query=None):
         if query['model'][0] == 'compartmental-model':
             interventions = query.get('intervention', [])
             return cm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)
-        elif query['model'][0] == 'abm-model':
+        elif query['model'][0] == 'agent-based-model':
             interventions = query.get('intervention', [])
             return abm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)
         elif query['model'][0] == 'network-model':

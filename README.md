@@ -11,7 +11,7 @@ or first create and activate virtual environment
         python3 -m venv env
         source env/bin/activate
         pip install -r requirements.txt
-
+        
 * On Windows:
 
         py -m venv env
@@ -67,6 +67,24 @@ First add azure remote
 
 enter credentials when prompted.
     
+### Docker
+
+Build:
+
+    docker build -t model-server .
+
+Test:
+
+    docker run model-server python -m unittest discover -s ai4good/ -p "test_*.py"
+
+Run Example:
+
+    docker run model-server python ai4good/runner/console_runner.py --profile custom --save_plots --save_report
+
+Container Command Line:
+
+    docker run -it model-server /bin/bash
+
 ### Design overview
 
 Model-server consists of following top level packages:
@@ -113,3 +131,21 @@ Report page is model specific and allows to compare various intervention scenari
 
 ### Tests
 use run_tests cmd/sh to execute all tests
+
+### Other instances
+
+* Address: http://207.154.208.109:8050/sim/run_model
+
+* Python Server - Waitress Python
+
+Waitress is meant to be a production-quality pure-Python WSGI server with very acceptable performance. It has no dependencies except ones which live in the Python standard library. It runs on CPython on Unix and Windows under Python 2.7+ and Python 3.5+. It is also known to run on PyPy 1.6.0 on UNIX. It supports HTTP/1.0 and HTTP/1.1.
+
+* How to run: 
+
+        update app
+        install python
+        install pip3
+        git clone
+        install waitress
+        run waitress
+        

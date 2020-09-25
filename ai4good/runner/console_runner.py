@@ -30,40 +30,41 @@ def run_model(_model: str, _profile: str, camp: str, load_from_cache: bool, save
             logging.info("Saving model result to cache")
             facade.rs.store(_mdl.id(), res_id, mr)
     if is_save_plots or is_show_plots:
-        if _mdl.id() == 'agent-based-model':
-            save_plots_abm(mr, res_id, is_save_plots, is_show_plots)
-        else:
-            save_plots(mr, res_id, is_save_plots, is_show_plots)
+        # if _mdl.id() == 'agent-based-model':
+        save_plots(mr, res_id, is_save_plots, is_show_plots)
+        #     save_plots_abm(mr, res_id, is_save_plots, is_show_plots)
+        # else:
+        #     save_plots(mr, res_id, is_save_plots, is_show_plots)
     if is_save_report:
         save_report(mr, res_id)
     return mr
 
 
-def save_plots_abm(mr, res_id, is_save_plots, is_show_plots):
-    # multiple_categories_to_plot = ['E', 'A', 'I', 'R', 'H', 'C', 'D', 'O', 'Q', 'U']  # categories to plot
-    # single_category_to_plot = 'C'  # categories to plot in final 3 plots #TODO: make selectable
-
-    # plot graphs
-    track_states_df = mr.get('track_states_df')
-    multiple_categories_to_plot = mr.get('multiple_categories_to_plot')
-    # percentiles = mr.get('percentiles')
-    p = mr.get('params')
-    fig_multi_lines = go.Figure(figure_generator(track_states_df, p, multiple_categories_to_plot))  # plot with lots of lines
-    # fig_age_structure = go.Figure(age_structure_plot(sol, p, single_category_to_plot))
-    # fig_bar_chart = go.Figure(stacked_bar_plot(sol, p, single_category_to_plot))  # bar chart (age structure)
-    # fig_uncertainty = go.Figure(uncertainty_plot(sol, p, single_category_to_plot, percentiles))  # uncertainty
-
-    if is_show_plots:
-        fig_multi_lines.show()
-        # fig_age_structure.show()
-        # fig_bar_chart.show()
-        # fig_uncertainty.show()
-
-    if is_save_plots:
-        fig_multi_lines.write_image(pu.fig_path(f"Disease_progress_{res_id}.png"))
-        # fig_age_structure.write_image(pu.fig_path(f"Age_structure_{res_id}.png"))
-        # fig_bar_chart.write_image(pu.fig_path(f"Age_structure_(bar_chart)_{res_id}.png"))
-        # fig_uncertainty.write_image(pu.fig_path(f"Uncertainty_{res_id}.png"))
+# def save_plots_abm(mr, res_id, is_save_plots, is_show_plots):
+#     # multiple_categories_to_plot = ['E', 'A', 'I', 'R', 'H', 'C', 'D', 'O', 'Q', 'U']  # categories to plot
+#     # single_category_to_plot = 'C'  # categories to plot in final 3 plots #TODO: make selectable
+#
+#     # plot graphs
+#     track_states_df = mr.get('track_states_df')
+#     multiple_categories_to_plot = mr.get('multiple_categories_to_plot')
+#     # percentiles = mr.get('percentiles')
+#     p = mr.get('params')
+#     fig_multi_lines = go.Figure(figure_generator(track_states_df, p, multiple_categories_to_plot))  # plot with lots of lines
+#     # fig_age_structure = go.Figure(age_structure_plot(sol, p, single_category_to_plot))
+#     # fig_bar_chart = go.Figure(stacked_bar_plot(sol, p, single_category_to_plot))  # bar chart (age structure)
+#     # fig_uncertainty = go.Figure(uncertainty_plot(sol, p, single_category_to_plot, percentiles))  # uncertainty
+#
+#     if is_show_plots:
+#         fig_multi_lines.show()
+#         # fig_age_structure.show()
+#         # fig_bar_chart.show()
+#         # fig_uncertainty.show()
+#
+#     if is_save_plots:
+#         fig_multi_lines.write_image(pu.fig_path(f"Disease_progress_{res_id}.png"))
+#         # fig_age_structure.write_image(pu.fig_path(f"Age_structure_{res_id}.png"))
+#         # fig_bar_chart.write_image(pu.fig_path(f"Age_structure_(bar_chart)_{res_id}.png"))
+#         # fig_uncertainty.write_image(pu.fig_path(f"Uncertainty_{res_id}.png"))
 
 
 
