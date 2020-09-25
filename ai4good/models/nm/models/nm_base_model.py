@@ -48,4 +48,4 @@ def process_graph_bm(p, graph, nodes_per_struct):
     # Construct results dataframe
     output_df = results_to_df(simulation_results)
 
-    return output_df
+    return graph, output_df

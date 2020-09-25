@@ -4,12 +4,11 @@ from ai4good.params.param_store import SimpleParamStore
 from ai4good.models.nm.parameters.initialise_parameters import Parameters
 from ai4good.models.nm.models.nm_base_model import *
 from ai4good.models.nm.models.nm_intervention_model_single_food_queue import *
-from ai4good.models.nm.models.nm_intervention_multiple_food_queues import *
 import logging
 
 
 @typechecked
-class NM(Model):
+class NetworkModel(Model):
     ID = 'network-model'
 
     def __init__(self, ps=SimpleParamStore()):
@@ -27,12 +26,14 @@ class NM(Model):
 
         p.initialise_age_parameters(graph)
 
-        result_bm = process_graph_bm(p, graph, nodes_per_struct)
-        result_sq = process_graph_sq(p, graph, nodes_per_struct)
-        # result_mq = load_and_process_graph_mq([1, 2, 4])
+        graph_bm, result_bm = process_graph_bm(p, graph, nodes_per_struct)
+        graph_sq, result_sq = process_graph_sq(p, graph, nodes_per_struct)
 
         return ModelResult(self.result_id(p), {
             'params': p,
             'result_base_model': result_bm,
-            'result_single_food_queue': result_sq
+            'result_single_food_queue': result_sq,
+            'report': result_bm,
+            'graph_base_model': graph_bm,
+            'graph_single_food_queue': graph_sq
         })
