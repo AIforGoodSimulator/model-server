@@ -10,25 +10,26 @@ def layout():
         [
             html.H3('Admin page'),
             html.Div([
-                html.B("Network Model Cache"),
-                html.Pre(f'{facade.rs.list(NetworkModel.ID)}', id='cache_contents'),
-                html.Button('Clear', id='clear_button'),
+                html.B("NM Model Cache"),
+                html.Pre(f'{facade.rs.list(NetworkModel.ID)}',
+                         id='nm_cache_contents'),
+                html.Button('Clear', id='nm_clear_button'),
             ]),
             html.Div([
-                html.Button('Clear redis', id='clear_redis_button'),
-                html.Div(id='notification_div1')
+                html.Button('Clear redis', id='nm_clear_redis_button'),
+                html.Div(id='nm_notification_div1')
             ]),
             html.Div([
-                html.Button('Clear cache', id='clear_cache_button'),
-                html.Div(id='notification_div2'),
+                html.Button('Clear cache', id='nm_clear_cache_button'),
+                html.Div(id='nm_notification_div2'),
             ]),
         ], style={'margin': 10}
     )
 
 
 @dash_app.callback(
-    Output("cache_contents", "children"),
-    [Input("clear_button", "n_clicks")],
+    Output("nm_cache_contents", "children"),
+    [Input("nm_clear_button", "n_clicks")],
 )
 def update_output(n_clicks):
     if n_clicks and n_clicks > 0:
@@ -39,8 +40,8 @@ def update_output(n_clicks):
 
 
 @dash_app.callback(
-    Output("notification_div1", "children"),
-    [Input("clear_redis_button", "n_clicks")],
+    Output("nm_notification_div1", "children"),
+    [Input("nm_clear_redis_button", "n_clicks")],
 )
 def handle_clear_redis(n_clicks):
     if n_clicks and n_clicks > 0:
@@ -51,8 +52,8 @@ def handle_clear_redis(n_clicks):
 
 
 @dash_app.callback(
-    Output("notification_div2", "children"),
-    [Input("clear_cache_button", "n_clicks")],
+    Output("nm_notification_div2", "children"),
+    [Input("nm_clear_cache_button", "n_clicks")],
 )
 def handle_clear_cache(n_clicks):
     if n_clicks and n_clicks > 0:

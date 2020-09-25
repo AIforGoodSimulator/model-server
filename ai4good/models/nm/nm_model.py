@@ -12,7 +12,6 @@ class NetworkModel(Model):
     ID = 'network-model'
 
     def __init__(self, ps=SimpleParamStore()):
-        logging.info("Running network model...")
         Model.__init__(self, ps)
 
     def id(self) -> str:
@@ -22,15 +21,16 @@ class NetworkModel(Model):
         return p.sha1_hash()
 
     def run(self, p: Parameters) -> ModelResult:
+        logging.info("Generating network graph...")
         graph, nodes_per_struct = create_new_graph()
-
+        logging.info("Running network model...")
         p.initialise_age_parameters(graph)
 
-        fig_bm, result_bm = process_graph_bm(p, graph, nodes_per_struct)
-        #result_sq = process_graph_sq(p, graph, nodes_per_struct)
+        result_bm = process_graph_bm(p, graph, nodes_per_struct)
+        result_sq = process_graph_sq(p, graph, nodes_per_struct)
 
         return ModelResult(self.result_id(p), {
             'params': p,
             'result_base_model': result_bm,
-            'fig_base_model': fig_bm
+            'result_single_fq': result_sq
         })

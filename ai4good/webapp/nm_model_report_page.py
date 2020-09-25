@@ -10,12 +10,13 @@ from ai4good.webapp.apps import facade, model_runner, cache, local_cache, cache_
 
 @cache.memoize(timeout=cache_timeout)
 def layout(camp, profile, cmp_profiles):
-    _, profile_df, params, _ = get_model_result(camp, profile)
+    _, profile_df, params = get_model_result(camp, profile)
 
     return html.Div(
         [
             dcc.Markdown(disclaimer(camp), style={'margin': 30}),
-            html.H1(f'AI for Good Simulator Model Report for {camp} Camp {profile} profile', style={'margin': 30}),
+            html.H1(f'AI for Good Simulator Model Report for {camp} Camp {profile} profile', style={
+                    'margin': 30}),
             dcc.Markdown(glossary(), style={'margin': 30}),
             dcc.Markdown(overview1(camp, params), style={'margin': 30}),
 
@@ -52,7 +53,8 @@ def get_model_result(camp: str, profile: str):
     logging.info("Reading data for: " + camp + ", " + profile)
     mr = model_runner.get_result(NetworkModel.ID, profile, camp)
     assert mr is not None
-    profile_df = facade.ps.get_params(NetworkModel.ID, profile).drop(columns=['Profile'])
-    params = Parameters(facade.ps, camp, profile_df, {})
-    report = mr.get('report')
-    return mr, profile_df, params, report
+    profile_df = facade.ps.get_params(
+        NetworkModel.ID, profile).drop(columns=['Profile'])
+    params = Parameters()
+    #report = mr.get('report_base_model')
+    return mr, profile_df, params
