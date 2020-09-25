@@ -44,8 +44,8 @@ def process_graph_bm(p, graph, nodes_per_struct):
 
     # Run model
     node_states, simulation_results = run_simulation(model, p.t_steps)
-
+    fig = model.figure_basic()
     # Construct results dataframe
     output_df = results_to_df(simulation_results)
 
-    return graph, output_df
+    return fig, output_df

@@ -12,7 +12,7 @@ class NetworkModel(Model):
     ID = 'network-model'
 
     def __init__(self, ps=SimpleParamStore()):
-        logging.info("Initialised network model")
+        logging.info("Running network model...")
         Model.__init__(self, ps)
 
     def id(self) -> str:
@@ -26,14 +26,11 @@ class NetworkModel(Model):
 
         p.initialise_age_parameters(graph)
 
-        graph_bm, result_bm = process_graph_bm(p, graph, nodes_per_struct)
-        graph_sq, result_sq = process_graph_sq(p, graph, nodes_per_struct)
+        fig_bm, result_bm = process_graph_bm(p, graph, nodes_per_struct)
+        #result_sq = process_graph_sq(p, graph, nodes_per_struct)
 
         return ModelResult(self.result_id(p), {
             'params': p,
             'result_base_model': result_bm,
-            'result_single_food_queue': result_sq,
-            'report': result_bm,
-            'graph_base_model': graph_bm,
-            'graph_single_food_queue': graph_sq
+            'fig_base_model': fig_bm
         })
