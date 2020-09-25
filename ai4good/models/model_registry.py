@@ -40,6 +40,6 @@ def create_params(ps, _model, _profile, camp, overrides=None):  # model specific
             raise ValueError('Unknown profile: ' + _profile)
         return ABMParameters(ps, camp, profile_df, override_dct)
     elif _model == NetworkModel.ID:
-        return NMParameters(t_steps=5)
+        return NMParameters()
     else:
         raise RuntimeError('Unsupported model: '+_model)
