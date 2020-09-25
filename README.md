@@ -142,7 +142,7 @@ Waitress is meant to be a production-quality pure-Python WSGI server with very a
 
 * How to run: 
 
-        update apk
+        update app
         install python
         install pip3
         git clone
