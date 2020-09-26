@@ -26,5 +26,13 @@ ABM model,probability_spotting_symptoms_per_day,probability of spotting that an 
 ABM model,clearday,days to be cleared of isolation
 ABM model,toilets_blocks,"number of toilets in the camp; the camp is ideally divided in blocks with coordinate x, y"
 ABM model,foodline_blocks,"number of foodlines in the camp; the camp is ideally divided in blocks with coordinate x, y"
-CM model,better_hygiene,
-
+CM model,better_hygiene,general better hygiene setup from the administrating perspective
+CM model,ICU_capacity,number of ICU beds/facilities available up to the ICU standard
+CM model,remove_symptomatic,
+CM model,shielding
+CM model,remove_high_risk
+CM model,remove_high_risk_categories
+CM model,t_sim
+CM model,numberOfIterations
+CM model,nProcesses
+CM model,
