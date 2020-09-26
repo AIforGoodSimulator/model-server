@@ -26,5 +26,5 @@ ABM model,probability_spotting_symptoms_per_day,probability of spotting that an 
 ABM model,clearday,days to be cleared of isolation
 ABM model,toilets_blocks,"number of toilets in the camp; the camp is ideally divided in blocks with coordinate x, y"
 ABM model,foodline_blocks,"number of foodlines in the camp; the camp is ideally divided in blocks with coordinate x, y"
-CM model,better_hygiene
+CM model,better_hygiene,
 
