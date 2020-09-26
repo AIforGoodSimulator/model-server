@@ -134,7 +134,7 @@ use run_tests cmd/sh to execute all tests
 
 ### Other instances
 
-* Address: http://207.154.208.109:8050/sim/run_model (Vera's private instance)
+* Address: http://139.59.146.160:8050/sim/run_model (Vera's private instance)
 
 * Python Server - Waitress Python
 
