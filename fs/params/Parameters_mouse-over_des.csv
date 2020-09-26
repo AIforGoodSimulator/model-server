@@ -1,4 +1,5 @@
 Model,Parameter,Description
+ABM model,number_of_people_in_isoboxes,People in Moria live in isoboxes (prefabricated units) or tents. This parameter is the number of people that live in all isoboxes
 ABM model,number_of_people_in_one_isobox,People in Moria live in isoboxes (prefabricated units) or tents. This parameter is the number of people that live in one isobox
 ABM model,number_of_people_in_tents,People in Moria live in isoboxes (prefabricated units) or tents. This parameter is the total number of people  living in tents
 ABM model,number_of_people_in_one_tent,People in Moria live in isoboxes (prefabricated units) or tents. This parameter is thenumber of people  living in one tent
@@ -35,6 +36,7 @@ CM model,remove_high_risk_categories,the number of high risk categories in the c
 CM model,t_sim,ending time for simulation (days)
 CM model,numberOfIterations,number of iterations of numerical approximations are run before returning results
 CM model,nProcesses,number of processes to use (the more the faster but the higher chance of crashing other model simulations)
+NM model,number_of_people_in_isoboxes,People in Moria live in isoboxes (prefabricated units) or tents. This parameter is the number of people that live in all isoboxes
 NM model,number_of_people_in_one_isobox,People in Moria live in isoboxes (prefabricated units) or tents. This parameter is the number of people that live in one isobox
 NM model,number_of_people_in_tents,People in Moria live in isoboxes (prefabricated units) or tents. This parameter is the total number of people  living in tents
 NM model,number_of_people_in_one_tent,People in Moria live in isoboxes (prefabricated units) or tents. This parameter is thenumber of people  living in one tent
