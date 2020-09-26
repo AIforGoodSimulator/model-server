@@ -28,11 +28,11 @@ ABM model,toilets_blocks,"number of toilets in the camp; the camp is ideally div
 ABM model,foodline_blocks,"number of foodlines in the camp; the camp is ideally divided in blocks with coordinate x, y"
 CM model,better_hygiene,general better hygiene setup from the administrating perspective
 CM model,ICU_capacity,number of ICU beds/facilities available up to the ICU standard
-CM model,remove_symptomatic,
-CM model,shielding
-CM model,remove_high_risk
-CM model,remove_high_risk_categories
-CM model,t_sim
-CM model,numberOfIterations
-CM model,nProcesses
-CM model,
+CM model,remove_symptomatic,people with symptoms of infections are removed from the general community
+CM model,shielding,whether shielding and protecting is available for people defined on medical grounds as extremely vulnerable to infection
+CM model,remove_high_risk,people identified as high-risk to infections are removed from the general community
+CM model,remove_high_risk_categories,the number of high risk categories in the communities
+CM model,t_sim,ending time for simulation (days)
+CM model,numberOfIterations,number of iterations of numerical approximations are run before returning results
+CM model,nProcesses,number of processes to use (the more the faster but the higher chance of crashing other model simulations)
+
