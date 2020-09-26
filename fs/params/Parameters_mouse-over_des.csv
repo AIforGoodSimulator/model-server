@@ -1,4 +1,4 @@
-Model,Parameter,People in Moria live in isoboxes (prefabricated units) or tents. This parameter is the total number of people living in isoboxes
+Model,Parameter,Description
 ABM model,number_of_people_in_one_isobox,People in Moria live in isoboxes (prefabricated units) or tents. This parameter is the number of people that live in one isobox
 ABM model,number_of_people_in_tents,People in Moria live in isoboxes (prefabricated units) or tents. This parameter is the total number of people  living in tents
 ABM model,number_of_people_in_one_tent,People in Moria live in isoboxes (prefabricated units) or tents. This parameter is thenumber of people  living in one tent
