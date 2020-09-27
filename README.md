@@ -53,7 +53,7 @@ Webapp can be started from PyCharm by running server.py main method or from term
 
     waitress-serve --port 8050 --host 0.0.0.0 ai4good.webapp.server:flask_app
     
-Note waitress is for development only and gunicorn is used for production deployment. 
+Note waitress is for local development only and gunicorn is used for production deployment. 
     
 ### Azure deployment
 
