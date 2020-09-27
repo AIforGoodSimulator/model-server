@@ -1,7 +1,7 @@
 name: AIforGood ModelServer push workflow
-on:
-  pull_request:
-    
+
+on: [pull_request]
+
 jobs:
   qa:
     name: Quality check
