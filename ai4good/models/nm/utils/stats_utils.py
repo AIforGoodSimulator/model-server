@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from  ai4good.utils.path_utils import get_nm_aug_pop
 
 
 # Death rate per age calculation - parameters found by fitting a sigmoid curve
@@ -97,7 +98,7 @@ def increase_population(old_pop, new_pop, pop_df_file, **kwargs):
 
 def sample_population(n_sample, pop_df_file):
     # Dataframe including age (V1) and sex (V2)
-    pop_df = pd.read_csv(pop_df_file)
+    pop_df = pd.read_csv(get_nm_aug_pop())
 
     # Sample only the number of people in isoboxes (n_samples)
     pop_df['death_rate'] = pop_df.apply(lambda row: get_deathrate(row), axis=1)
@@ -107,3 +108,4 @@ def sample_population(n_sample, pop_df_file):
     # print(sample['death_rate'].values.shape)
 
     return sample
+
