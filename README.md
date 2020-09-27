@@ -152,6 +152,7 @@ Waitress is meant to be a production-quality pure-Python WSGI server with very a
         sudo apt install python3
         sudo apt install python3-pip
         git clone https://github.com/AIforGoodSimulator/model-server.git
+        cd model-server
         pip3 install -r requirements.txt
         apt install python3-waitress
         waitress-serve --port 8050 --host your_host_ip ai4good.webapp.server:flask_app
