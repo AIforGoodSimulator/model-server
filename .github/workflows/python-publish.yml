@@ -1,4 +1,4 @@
-name: AIforGood ModelServer push workflow
+name: AIforGood ModelServer test workflow
 
 on: [push,pull_request]
 
