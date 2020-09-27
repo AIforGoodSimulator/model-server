@@ -1,5 +1,7 @@
-name: Python Pull Request Workflow
-on: [pull_request]
+# On every push run tests
+
+name: AIforGood ModelServer push workflow
+on: [push]
 jobs:
 
   qa:
