@@ -149,7 +149,6 @@ Waitress is meant to be a production-quality pure-Python WSGI server with very a
 * How to run: 
 
         sudo apt update
-        sudo apt install python3
         sudo apt install python3-pip
         git clone https://github.com/AIforGoodSimulator/model-server.git
         cd model-server
