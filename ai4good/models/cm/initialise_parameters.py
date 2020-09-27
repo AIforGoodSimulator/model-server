@@ -69,7 +69,7 @@ class Parameters:
         categs['index'] = np.arange(self.number_compartments)
 
         change_categs = pd.read_csv(pu.cm_params_path('change_categories.csv'), delimiter=';', skipinitialspace=True)
-        self.change_in_categories = categs['category'].to_list()
+        self.change_in_categories = change_categs['category'].to_list()
         change_categs['index'] = np.arange(len(categs), 2 * self.number_compartments)
 
         new_infected_category = {'category': 'Ninf', 'shortname': 'New Infected',

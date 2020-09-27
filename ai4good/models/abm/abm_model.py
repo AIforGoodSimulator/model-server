@@ -7,6 +7,7 @@ import logging
 from . import abm
 import numpy as np
 import pandas as pd
+import math
 
 
 @typechecked
@@ -30,8 +31,11 @@ class ABM(Model):
             p.track_states[i, :] = np.bincount(p.population[:, 1].astype(int), minlength=14)
 
             if abm.epidemic_finish(np.concatenate((p.track_states[i, 1:6], p.track_states[i, 7:p.number_of_states])), i):
-                return
-
+                break
+            p.mild_rec = np.random.uniform(0, 1, p.total_population) > math.exp(0.2 * math.log(0.1))  # Liu et al 2020 The Lancet.
+            p.sev_rec = np.random.uniform(0, 1, p.total_population) > math.exp(math.log(63 / 153) / 12)  # Cai et al.
+            p.pick_sick = np.random.uniform(0, 1, p.total_population)  # Get random numbers to determine health states.
+            
             if (p.ACTIVATE_INTERVENTION and (i > 0)):
                 p.iat1 = i
                 p.ACTIVATE_INTERVENTION = False
@@ -50,7 +54,14 @@ class ABM(Model):
                 p.sev_rec,
                 p.pick_sick,
                 p.total_number_of_hospitalized)
-
+            
+            p.population, p.total_number_of_hospitalized = abm.disease_state_update(
+                p.population,
+                p.mild_rec,
+                p.sev_rec,
+                p.pick_sick,
+                p.total_number_of_hospitalized,quarantined=True)
+            
             p.population = abm.assign_new_infections(p.population,
                                                         p.toilets_sharing,
                                                         p.foodpoints_sharing,
@@ -71,19 +82,19 @@ class ABM(Model):
             p.quarantine_back = np.logical_and(p.population[:, 1] == 13, p.population[:, 3] >= p.clearday)
             p.population[p.quarantine_back, 1] = 6
 
-            # placeholders for the report
-            standard_sol = [{'t': range(p.number_of_steps)}]
-            perc = [0] * p.number_of_steps
-            percentiles = [perc, perc, perc, perc, perc]
-            config_dict = []
-            [config_dict.append(dict(
-                                beta           = 0,
-                                latentRate     = 0,
-                                removalRate    = 0,
-                                hospRate       = 0,
-                                deathRateICU   = 0,
-                                deathRateNoIcu = 0
-                            )) for _ in range(p.number_of_steps)]
+        # placeholders for the report
+        standard_sol = [{'t': range(p.number_of_steps)}]
+        perc = [0] * p.number_of_steps
+        percentiles = [perc, perc, perc, perc, perc]
+        config_dict = []
+        [config_dict.append(dict(
+                            beta           = 0,
+                            latentRate     = 0,
+                            removalRate    = 0,
+                            hospRate       = 0,
+                            deathRateICU   = 0,
+                            deathRateNoIcu = 0
+                        )) for _ in range(p.number_of_steps)]
 
         report_raw = [[0]]
         prevalence_age = pd.DataFrame([[0]])
@@ -91,16 +102,37 @@ class ABM(Model):
         cumulative_all = pd.DataFrame([[0]])
         cumulative_age = pd.DataFrame([[0]])
 
-        return ModelResult(self.result_id(p), {
+        states = ['exposed_tl', 'presymptomatic_tl', 'symptomatic_tl', 'mild_tl', 'severe_tl', 'recovered_tl',
+         'qua_susceptible_tl', 'qua_exposed_tl', 'qua_presymptomatic_tl', 'qua_symptomatic_tl', 'qua_mild_tl',
+         'qua_severe_tl', 'qua_recovered_tl']
+        # disease_state_tracker_plot = go.Figure()
+
+        mr = ModelResult(self.result_id(p), {
             'standard_sol': standard_sol,
             'percentiles': percentiles,
             'config_dict': config_dict,
             'params': p,
             'report': report_raw,
-            'prevalence_age': prevalence_age,
+            'track_states_df': p.track_states,
+            'multiple_categories_to_plot': states,
             'prevalence_all': prevalence_all,
             'cumulative_all': cumulative_all,
             'cumulative_age': cumulative_age
         })
+
+        return mr
+
+        # return ModelResult(self.result_id(p), {
+        #     'standard_sol': standard_sol,
+        #     'percentiles': percentiles,
+        #     'config_dict': config_dict,
+        #     'params': p,
+        #     'report': report_raw,
+        #     'track_states_df': p.track_states,
+        #     'multiple_categories_to_plot': states,
+        #     'prevalence_all': prevalence_all,
+        #     'cumulative_all': cumulative_all,
+        #     'cumulative_age': cumulative_age
+        # })
 
 

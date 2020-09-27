@@ -64,7 +64,7 @@ def profile_selector():
                 columns=[],
                 data=[]
             ),
-            dbc.Button("Save", id="save_profile_button", color="primary", className="mr-1", disabled=True,
+            dbc.Button("Save", id="save_profile_button",outline=True, color="info", className="mr-1",
                        style={'display': 'none'})
         ]))], style={'height': '100%'}), width=6),
 
@@ -124,23 +124,55 @@ def model_run_buttons():
 def history_table():
     cols = model_runner.history_columns()
 
-    return dbc.Row([
+    return html.Div([
+        dbc.Row([
+         html.H3('Run Queue ')
+        ], style={'margin-top': 100, 'margin-left': 15,'color':'Black','border':'10px'}),
+        dbc.Row([
         dbc.Col(
             html.Div([
-                html.H3('Run Queue'),
                 dash_table.DataTable(
                     id='history_table',
                     columns=[{"name": i, "id": i} for i in cols],
                     data=[{}],
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': 'rgb(248, 248, 248)',
+
+                        }
+                    ],
+                    style_header={
+                        'backgroundColor': 'rgb(89,169,255)',
+                        'fontWeight': 'bold',
+                        'color': 'rgb(255,255,255)',
+                        'text-align': 'center'
+                    }
+
                 )
-            ]),
+            ],style={'margin-left':20}),
             width=6,
         )
-    ], style={'margin-top': 100, 'margin-left': 5})
+    ])
+    ])
+
+
+def nav_bar():
+    return dbc.NavbarSimple(
+        children=[
+            dbc.NavItem(dbc.NavLink("About US", href="#")),
+
+        ],
+        brand="AIforGood",
+        brand_href="#",
+        color="primary",
+        dark=True,
+    )
 
 
 layout = html.Div(
     [
+        nav_bar(),
         html.H3('Run Model'),
         camp_selector(),
         model_selector(),

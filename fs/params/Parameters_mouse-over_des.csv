@@ -1,0 +1,66 @@
+Model,Parameter,Description
+ABM model,number_of_people_in_isoboxes,People in refugee camps may live in isoboxes (prefabricated units) or tents. This parameter is the number of people that live in all isoboxes
+ABM model,number_of_people_in_one_isobox,People in refugee camps may live in isoboxes (prefabricated units) or tents. This parameter is the number of people that live in one isobox
+ABM model,number_of_people_in_tents,People in refugee camps may live in isoboxes (prefabricated units) or tents. This parameter is the total number of people  living in tents
+ABM model,number_of_people_in_one_tent,People in refugee camps may live in isoboxes (prefabricated units) or tents. This parameter is thenumber of people  living in one tent
+ABM model,permanently_asymptomatic_cases,"If an individual becomes infected, the infection progresses through a series of disease states, as shown in the report page. The passage through stages happens according to probabilities taken from the literature. Permanently asymptomatic cases is the number of infected individuals which never show symptoms and eventually recover from the disease."
+ABM model,area_covered_by_isoboxes,"Area of the refugee camps may camp covered by isoboxes. The homes of people with the same ethnic or national background are spatially clustered, and people interact more frequently with others from the same background as themselves. To simulate ethnicities or nationalities in our camp, we assigned each household to one of eight “backgrounds” in proportion to the self-reported countries of origin of people. For each of the eight simulated backgrounds, we randomly selected one tent or isobox to be the seed for the cluster. We assigned the x nearest unassigned households to that background, where x is the number of households with that background."
+ABM model,relative_strength_of_interaction,"Interaction rate between individuals, modelled as dependent of ethnical background and closeness of area around each individual home.  Individuals encounter each other more frequently if they co-occupy a small area than if they co-occupy a large area for the same amount of time. To obtain the interaction rate between individuals i and j from the relative encounter rate, we scaled by a factor g(ij) to account for ethnicity or country of origin. In particular, g(ij) = 1 if individuals i and j have the same background, and g(ij) = 0.2 otherwise."
+ABM model,smaller_movement_radius,"Individuals move about outside their households, and interact with individuals from other households as they move. We assumed that each individual occupies a circular home range centred on its household, and uses all parts of its home range equally. Two individuals may interact if their home ranges overlap. Smaller_movement_radius  is used when we want to model a low interaction environment where we assume that people do not wander to far away from their home "
+ABM model,larger_movement_radius,"Individuals move about outside their households, and interact with individuals from other households as they move. We assumed that each individual occupies a circular home range centred on its household, and uses all parts of its home range equally. Two individuals may interact if their home ranges overlap. Larger_movement_radius  is used when we want to model a high  interaction environment where we assume that people can wander quite  far  from their home "
+ABM model,overlapping_ranges_radius,"Two individuals may interact if their home ranges overlap. Given the overlapping ranges radius, we calculate the area of overlap,  the interaction time between individuals in the overlapping area and the probability of encounter in the overlapping radius"
+ABM model,number_of_steps,Number of simulated days
+ABM model,ACTIVATE_INTERVENTION,"True or False, indicates if any of the interventions is applied"
+ABM model,total_number_of_hospitalized,Total number of hospitalized individuals
+ABM model,num_toilet_visit,Number of daily visit to the toilet
+ABM model,num_toilet_contact,Number of contacts in the toilets area
+ABM model,num_food_visit,Number of visits to the food lane per day
+ABM model,num_food_contact,Number of people with which an individual interact while in the food line
+ABM model,pct_food_visit,"Percentage of time an individual visit the food line,e .g. each individual without symptoms attends the food line once per day on 3 out of 4 days and in another occasions the food is
+brought to that individual by another individual without additional interactions."
+ABM model,transmission_reduction,"Infection transmission reduction due to the intervention, e.g. face masks"
+ABM model,probability_infecting_person_in_household_per_day,probability of infecting an individual in the household per day
+ABM model,probability_infecting_person_in_foodline_per_day,probability of infecting an individual in the foodline per day
+ABM model,probability_infecting_person_in_toilet_per_day,probability of infecting an individual waiting at the toilet per day
+ABM model,probability_infecting_person_in_moving_per_day,probability of infecting another individual while wandering around the camp
+ABM model,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day
+ABM model,clearday,days to be cleared of isolation
+ABM model,toilets_blocks,"number of toilets in the camp; the camp is ideally divided in blocks with coordinate x, y"
+ABM model,foodline_blocks,"number of foodlines in the camp; the camp is ideally divided in blocks with coordinate x, y"
+CM model,better_hygiene,general better hygiene setup from the administrating perspective
+CM model,ICU_capacity,number of ICU beds/facilities available up to the ICU standard
+CM model,remove_symptomatic,people with symptoms of infections are removed from the general community
+CM model,shielding,whether shielding and protecting is available for people defined on medical grounds as extremely vulnerable to infection
+CM model,remove_high_risk,people identified as high-risk to infections are removed from the general community
+CM model,remove_high_risk_categories,the number of high risk categories in the communities
+CM model,t_sim,ending time for simulation (days)
+CM model,numberOfIterations,number of iterations of numerical approximations are run before returning results
+CM model,nProcesses,number of processes to use (the more the faster but the higher chance of crashing other model simulations)
+NM model,number_of_people_in_isoboxes,People in refugee camps may live in isoboxes (prefabricated units) or tents. This parameter is the number of people that live in all isoboxes
+NM model,number_of_people_in_one_isobox,People in refugee camps may live in isoboxes (prefabricated units) or tents. This parameter is the number of people that live in one isobox
+NM model,number_of_people_in_tents,People in refugee camps may live in isoboxes (prefabricated units) or tents. This parameter is the total number of people  living in tents
+NM model,number_of_people_in_one_tent,People in refugee camps may live in isoboxes (prefabricated units) or tents. This parameter is thenumber of people  living in one tent
+NM model,permanently_asymptomatic_cases,"If an individual becomes infected, the infection progresses through a series of disease states, as shown in the report page. The passage through stages happens according to probabilities taken from the literature. Permanently asymptomatic cases is the number of infected individuals which never show symptoms and eventually recover from the disease."
+NM model,area_covered_by_isoboxes,"Area of the refugee camps may camp covered by isoboxes. The homes of people with the same ethnic or national background are spatially clustered, and people interact more frequently with others from the same background as themselves. To simulate ethnicities or nationalities in our camp, we assigned each household to one of eight “backgrounds” in proportion to the self-reported countries of origin of people. For each of the eight simulated backgrounds, we randomly selected one tent or isobox to be the seed for the cluster. We assigned the x nearest unassigned households to that background, where x is the number of households with that background."
+NM model,relative_strength_of_interaction,"Interaction rate between individuals, modelled as dependent of ethnical background and closeness of area around each individual home.  Individuals encounter each other more frequently if they co-occupy a small area than if they co-occupy a large area for the same amount of time. To obtain the interaction rate between individuals i and j from the relative encounter rate, we scaled by a factor g(ij) to account for ethnicity or country of origin. In particular, g(ij) = 1 if individuals i and j have the same background, and g(ij) = 0.2 otherwise."
+NM model,smaller_movement_radius,"Individuals move about outside their households, and interact with individuals from other households as they move. We assumed that each individual occupies a circular home range centred on its household, and uses all parts of its home range equally. Two individuals may interact if their home ranges overlap. Smaller_movement_radius  is used when we want to model a low interaction environment where we assume that people do not wander to far away from their home "
+NM model,larger_movement_radius,"Individuals move about outside their households, and interact with individuals from other households as they move. We assumed that each individual occupies a circular home range centred on its household, and uses all parts of its home range equally. Two individuals may interact if their home ranges overlap. Larger_movement_radius  is used when we want to model a high  interaction environment where we assume that people can wander quite  far  from their home "
+NM model,overlapping_ranges_radius,"Two individuals may interact if their home ranges overlap. Given the overlapping ranges radius, we calculate the area of overlap,  the interaction time between individuals in the overlapping area and the probability of encounter in the overlapping radius"
+NM model,number_of_steps,Number of simulated days
+NM model,ACTIVATE_INTERVENTION,"True or False, indicates if any of the interventions is applied"
+NM model,total_number_of_hospitalized,Total number of hospitalized individuals
+NM model,num_toilet_visit,Number of daily visit to the toilet
+NM model,num_toilet_contact,Number of contacts in the toilets area
+NM model,num_food_visit,Number of visits to the food lane per day
+NM model,num_food_contact,Number of people with which an individual interact while in the food line
+NM model,pct_food_visit,"Percentage of time an individual visit the food line,e .g. each individual without symptoms attends the food line once per day on 3 out of 4 days and in another occasions the food is
+brought to that individual by another individual without additional interactions."
+NM model,transmission_reduction,"Infection transmission reduction due to the intervention, e.g. face masks"
+NM model,probability_infecting_person_in_household_per_day,probability of infecting an individual in the household per day
+NM model,probability_infecting_person_in_foodline_per_day,probability of infecting an individual in the foodline per day
+NM model,probability_infecting_person_in_toilet_per_day,probability of infecting an individual waiting at the toilet per day
+NM model,probability_infecting_person_in_moving_per_day,probability of infecting another individual while wandering around the camp
+NM model,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day
+NM model,clearday,days to be cleared of isolation
+NM model,toilets_blocks,"number of toilets in the camp; the camp is ideally divided in blocks with coordinate x, y"
+NM model,foodline_blocks,"number of foodlines in the camp; the camp is ideally divided in blocks with coordinate x, y"
