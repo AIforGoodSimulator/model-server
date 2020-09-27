@@ -69,6 +69,10 @@ enter credentials when prompted.
     
 ### Docker
 
+Change directory
+
+    cd model-server
+
 Build:
 
     docker build -t model-server .
