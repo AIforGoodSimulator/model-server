@@ -1,5 +1,3 @@
-# On every push run tests
-
 name: AIforGood ModelServer push workflow
 on: [push]
 jobs:
