@@ -17,5 +17,4 @@ jobs:
           pip install -r requirements.txt
       - name: Run unit tests
         run: |
-          pip install pytest
-          pytest
+          ./run_tests.sh
