@@ -50,7 +50,7 @@ def profile_selector():
     return dbc.Row([
         dbc.Col(
             html.Div([
-                html.Label('Profile', style={'font-weight': 'bold'}),
+                html.Label('<a href="https://github.com/AIforGoodSimulator/model-server/blob/master/fs/params/Parameters_mouse-over_des.csv">Profile</a>', style={'font-weight': 'bold'}),
                 dcc.Dropdown(
                     id='profile-dropdown'
                 ),

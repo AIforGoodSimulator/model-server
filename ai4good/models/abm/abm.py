@@ -4,6 +4,7 @@ import random
 import math
 from scipy import optimize
 from scipy.special import factorial
+from  ai4good.utils.path_utils import get_am_aug_pop
 
 def read_age_gender(num_ppl):
     """
@@ -18,10 +19,10 @@ def read_age_gender(num_ppl):
         out : Numpy array of size (`num_ppl`, 2) containing rows: (age, gender)
 
     """
-    path_to_file = 'age_and_sex.csv'
+   # path_to_file = 'age_and_sex.csv'
     
     # Data frame. V1 = age, V2 is sex (1 = male?, 0  = female?).
-    age_and_gender = pd.read_csv(path_to_file)
+    age_and_gender = pd.read_csv(get_am_aug_pop())
     age_and_gender = age_and_gender.loc[:, ~age_and_gender.columns.str.contains('^Unnamed')]
     age_and_gender = age_and_gender.values
     age_and_gender = age_and_gender[np.random.randint(age_and_gender.shape[0], size=num_ppl)]

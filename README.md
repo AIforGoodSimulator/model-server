@@ -138,15 +138,31 @@ Report page is model specific and allows to compare various intervention scenari
 ### Tests
 use run_tests cmd/sh to execute all tests
 
-### Other instances
+### Instances
 
-* Address: http://139.59.146.160:8050/sim/run_model (Vera's private instance)
+Difference instances of model server are available:
 
-* Python Server - Waitress Python
+* Production - for end-users (docker)
+* Non-production - for development and testing (docker) 
+* Others - as backup and virtual environment deployment (e.g. DigitalOcean droplets)
 
-Waitress is meant to be a production-quality pure-Python WSGI server with very acceptable performance. It has no dependencies except ones which live in the Python standard library. It runs on CPython on Unix and Windows under Python 2.7+ and Python 3.5+. It is also known to run on PyPy 1.6.0 on UNIX. It supports HTTP/1.0 and HTTP/1.1.
+ #### Production
+ http://ai4good-sim2.azurewebsites.net/sim/run_model
 
-* How to run: 
+ #### Non-production
+ http://ai4good-sim3.azurewebsites.net/sim/run_model
+ 
+ http://ai4good-sim4.azurewebsites.net/sim/run_model
+
+ #### Others
+
+ * Address: http://139.59.146.160:8050/sim/run_model (Vera's private instance)
+
+ * Python Server - Waitress Python
+
+ Waitress is meant to be a production-quality pure-Python WSGI server with very acceptable performance. It has no dependencies except ones which live in the Python standard library. It runs on CPython on Unix and Windows under Python 2.7+ and Python 3.5+. It is also known to run on PyPy 1.6.0 on UNIX. It supports HTTP/1.0 and HTTP/1.1.
+
+ * How to run: 
 
         sudo apt update
         sudo apt install python3-pip
