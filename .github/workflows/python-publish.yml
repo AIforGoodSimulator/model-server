@@ -17,4 +17,5 @@ jobs:
           pip install -r requirements.txt
       - name: Run unit tests
         run: |
+          chmod 755 ./run_tests.sh
           ./run_tests.sh
