@@ -12,15 +12,18 @@ jobs:
         uses: actions/setup-python@master
         with:
           python-version: 3.8
+        
       - name: Set up dependancies
         run: |
           pip install -r requirements.txt
-          pip install selenium
-      - name: Run unit tests
+          pip install selenium        
+
+      - name: Run acceptance tests
         run: |
           chmod 755 ./run_tests.sh
-          ./run_tests.sh
-      - name: Run acceptance tests
+          python ai4good/webapp/tests/basic_web_test.py
+
+      - name: Run unit tests
         run: |
           chmod 755 ./run_tests.sh
           ./run_tests.sh
