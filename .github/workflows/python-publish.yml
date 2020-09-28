@@ -1,6 +1,6 @@
-name: AIforGood ModelServer push workflow
+name: AIforGood ModelServer test workflow
 
-on: [pull_request]
+on: [push]
 
 jobs:
   qa:
