@@ -140,6 +140,12 @@ use run_tests cmd/sh to execute all tests
 
 ### Instances
 
+Difference instances of model server are available:
+
+* Production - for end-users (docker)
+* Non-production - for development and testing (docker) 
+* Others - as backup and virtual environment deployment (e.g. DigitalOcean droplets)
+
  #### Production
  http://ai4good-sim2.azurewebsites.net/sim/run_model
 
@@ -148,7 +154,7 @@ use run_tests cmd/sh to execute all tests
  
  http://ai4good-sim4.azurewebsites.net/sim/run_model
 
- #### Other instances
+ #### Others
 
  * Address: http://139.59.146.160:8050/sim/run_model (Vera's private instance)
 
