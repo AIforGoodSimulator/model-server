@@ -148,9 +148,9 @@ Difference instances of model server are available:
     http://ai4good-sim2.azurewebsites.net/sim/run_model
 
     #### Non-production
-    http://ai4good-sim3.azurewebsites.net/sim/run_model
+    http://ai4good-uat.azurewebsites.net/sim/run_model (UAT)
 
-    http://ai4good-sim4.azurewebsites.net/sim/run_model
+    http://ai4good-dev.azurewebsites.net/sim/run_model (DEV)
 
     #### Others
 
