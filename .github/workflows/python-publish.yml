@@ -15,7 +15,12 @@ jobs:
       - name: Set up dependancies
         run: |
           pip install -r requirements.txt
+          pip install selenium
       - name: Run unit tests
+        run: |
+          chmod 755 ./run_tests.sh
+          ./run_tests.sh
+      - name: Run acceptance tests
         run: |
           chmod 755 ./run_tests.sh
           ./run_tests.sh
