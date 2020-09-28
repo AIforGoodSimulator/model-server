@@ -100,39 +100,37 @@ Model-server consists of following top level packages:
 * runner - console runner
 * webapp - web application runner / viewer
 
- #### models
- Every model needs to implement ai4good.models.model.Model abstract base class and basically just needs
- to implement run(params) method, where params object can be chosen by the model itself and usually 
- contains general parameters, camp specific parameters and model profile parameters. Model profiles
- are there to investigate and compare various regimes of the model and to help user to select best
- intervention scenario that mitigates COVID-19 spread.
- 
- Model also responsible to provide hash of it's own parameter object so that model results can cached. 
- This functionality of saving/retrieving model result is provided by ModelResultStore and currently 
- stored on filesystem.  
- 
- Model result is represented by ModelResult object which effectively just a free-from dictionary and
- can include some precomputed aggregations to speed up result rending later.
- 
- 
- 
-#### params
-Provides abstract interface to parameter storage which is at the moment is based on csv files 
-stored on local file system.  
- 
-    
-#### runner
+    #### models
+    Every model needs to implement ai4good.models.model.Model abstract base class and basically just needs
+    to implement run(params) method, where params object can be chosen by the model itself and usually 
+    contains general parameters, camp specific parameters and model profile parameters. Model profiles
+    are there to investigate and compare various regimes of the model and to help user to select best
+    intervention scenario that mitigates COVID-19 spread.
 
-Contains console runner that can run a model for single profile or all profiles/camps in a batch.
-Also contains console_utils to list currently cached models with human readable names.
+    Model also responsible to provide hash of it's own parameter object so that model results can cached. 
+    This functionality of saving/retrieving model result is provided by ModelResultStore and currently 
+    stored on filesystem.  
+
+    Model result is represented by ModelResult object which effectively just a free-from dictionary and
+    can include some precomputed aggregations to speed up result rending later.
+  
+    #### params
+    Provides abstract interface to parameter storage which is at the moment is based on csv files 
+    stored on local file system.  
 
 
-#### webapp
+    #### runner
 
-Web application is built with dash/plotly and runs on Azure via gunicorn with multiple workers. There is also Redis
-instance used to store some shared state, such as models currently executing and also hosting some page cache. There is
-also cache on local disk that is used to store larger amounts of data. Webapp has model runner page and report pages.
-Report page is model specific and allows to compare various intervention scenarios.  
+    Contains console runner that can run a model for single profile or all profiles/camps in a batch.
+    Also contains console_utils to list currently cached models with human readable names.
+
+
+    #### webapp
+
+    Web application is built with dash/plotly and runs on Azure via gunicorn with multiple workers. There is also Redis
+    instance used to store some shared state, such as models currently executing and also hosting some page cache. There is
+    also cache on local disk that is used to store larger amounts of data. Webapp has model runner page and report pages.
+    Report page is model specific and allows to compare various intervention scenarios.  
 
 
 ### Tests
@@ -171,4 +169,23 @@ Difference instances of model server are available:
         pip3 install -r requirements.txt
         apt install python3-waitress
         waitress-serve --port 8050 --host your_host_ip ai4good.webapp.server:flask_app
+        
+### FAQ
+Will the web server be a separate container?
+**Yes**
+
+Where do we intend to save the Results and Graphs? Volume/NFS?
+**Bucket Storage**
+
+Are we going to run this on ACI via docker context? or AKS?
+**AKS**
+
+How will new models and their dependencies be added/integrated into the model server?
+**Model server is just a framework you can have inception file to run your model on that model server. all commands are in github documentation already.**
+
+Or will this just become the base image to build a multistage container for new models?
+**Yes**
+
+Orca is not available via pip and requires some dependency management. Alternatives?
+**Which container or AKS does not have orca available. need to know the name.**
         
