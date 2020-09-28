@@ -162,6 +162,7 @@ Difference instances of model server are available:
 
     * How to run: 
 
+    ```
     sudo apt update
     sudo apt install python3-pip
     git clone https://github.com/AIforGoodSimulator/model-server.git
@@ -169,7 +170,8 @@ Difference instances of model server are available:
     pip3 install -r requirements.txt
     apt install python3-waitress
     waitress-serve --port 8050 --host your_host_ip ai4good.webapp.server:flask_app
-        
+    ```
+
 ### FAQ
 Will the web server be a separate container?
 **Yes**
