@@ -138,6 +138,13 @@ Report page is model specific and allows to compare various intervention scenari
 ### Tests
 use run_tests cmd/sh to execute all tests
 
+### Produdction instances
+http://ai4good-sim2.azurewebsites.net/sim/run_model
+
+### Non-production instances
+http://ai4good-sim3.azurewebsites.net/sim/run_model
+http://ai4good-sim4.azurewebsites.net/sim/run_model
+
 ### Other instances
 
 * Address: http://139.59.146.160:8050/sim/run_model (Vera's private instance)
