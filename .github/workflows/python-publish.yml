@@ -18,12 +18,12 @@ jobs:
           pip install -r requirements.txt
           pip install selenium        
 
-      - name: Run acceptance tests
-        run: |
-          waitress-serve --port 8050 --host 0.0.0.0 ai4good.webapp.server:flask_app
-          python ai4good/webapp/tests/basic_web_test.py
-
       - name: Run unit tests
         run: |
           chmod 755 ./run_tests.sh
           ./run_tests.sh
+
+      - name: Run acceptance tests
+        run: |
+          waitress-serve --port 8050 --host 0.0.0.0 ai4good.webapp.server:flask_app
+          python ai4good/webapp/tests/basic_web_test.py
