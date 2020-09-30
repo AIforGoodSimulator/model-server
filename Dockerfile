@@ -9,7 +9,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # need to add waitress in requirements.txt?
 RUN pip install --no-cache-dir waitress
 
-
 WORKDIR /usr/bin/
 
 # install dependencies for orca
