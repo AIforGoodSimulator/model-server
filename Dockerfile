@@ -42,6 +42,8 @@ ENV PYTHONPATH="$PYTHONPATH:/model-server"
 ENV PATH="$PATH:/model-server"
 COPY . .
 
+EXPOSE 8000 2222
+
 # run webserver background process, do we want to run this as a separate container?
 # CMD nohup waitress-serve --port 8050 --host 0.0.0.0 ai4good.webapp.server:flask_app
 
