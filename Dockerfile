@@ -8,7 +8,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # need to add waitress in requirements.txt?
 RUN pip install --no-cache-dir waitress
-RUN pip install --no-cache-dir gunicorn
 
 
 WORKDIR /usr/bin/
