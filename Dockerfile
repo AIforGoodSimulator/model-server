@@ -48,5 +48,5 @@ COPY . .
 # executes console_runner.py
 # ENTRYPOINT ["python", "./ai4good/runner/console_runner.py"]
 
-# default command line params go here
+# default  command line params go here
 # CMD ["--profile", "custom", "--save_plots", "--save_report"]
