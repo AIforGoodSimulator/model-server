@@ -8,28 +8,31 @@ import dash_bootstrap_components as dbc
 
 
 def charts(mr):
-    result_bm = mr.get('result_base_model')
-    result_sq = mr.get('result_single_fq')
-    fig = go.Figure()
-    fig_sq = go.Figure()
-    for col in result_bm.drop(columns=['Time', 'Susceptible', 'T_index']).columns:
-        fig.add_trace(go.Scatter(
-            x=result_bm['Time'], y=result_bm[col], name=col))
-    for col in result_sq.drop(columns=['Time', 'Susceptible', 'T_index']).columns:
-        fig_sq.add_trace(go.Scatter(
-            x=result_sq['Time'], y=result_sq[col], name=col))
+    result = mr.get('result')
+    fig1 = get_figure(result, columns=['Exposed', 'Infected_Presymptomatic',
+                                       'Infected_Symptomatic', 'Infected_Asymptomatic',
+                                       'Hospitalized', 'Fatalities'])
+    fig2 = get_figure(result, columns=['Recovered', 'Susceptible'])
 
     return html.Div([
         dbc.Row([
             dbc.Col(html.Div([
-                html.H6('Base Model'),
-                dcc.Graph(id='fig_bm', figure=fig)
-            ]), width=6),
+                html.H6('Infected over time'),
+                dcc.Graph(id='fig_bm', figure=fig1)
+            ]), width=10),
             dbc.Col(html.Div([
-                html.H6('Interventions with single food queue'),
-                dcc.Graph(id='fig_sq', figure=fig_sq)
-            ]), width=6)
+                html.H6('Susceptible and Recovered over time'),
+                dcc.Graph(id='fig_sq', figure=fig2)
+            ]), width=10)
         ], style={'margin': 10})])
+
+
+def get_figure(result, columns):
+    fig = go.Figure()
+    for col in columns:
+        fig.add_trace(go.Scatter(
+            x=result['Time'], y=result[col], name=col))
+    return fig
 
 
 def layout(camp, profile):
@@ -38,6 +41,7 @@ def layout(camp, profile):
     return html.Div(
         [
             html.H3('Network Model Results'),
+            html.H4('Profile: ' + profile),
             charts(mr),
         ], style={'margin': 10}
     )
