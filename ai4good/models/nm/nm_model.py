@@ -1,9 +1,11 @@
 from typeguard import typechecked
 from ai4good.models.model import Model, ModelResult
+from ai4good.models.nm.models.nm_multiple_food_queues import *
+from ai4good.models.nm.models.nm_multiple_food_queues_interventions import *
 from ai4good.params.param_store import SimpleParamStore
 from ai4good.models.nm.parameters.initialise_parameters import Parameters
-from ai4good.models.nm.models.nm_base_model import *
-from ai4good.models.nm.models.nm_intervention_model_single_food_queue import *
+from ai4good.models.nm.models.nm_baseline import *
+from ai4good.models.nm.models.nm_baseline_interventions import *
 import logging
 
 
@@ -26,10 +28,21 @@ class NetworkModel(Model):
         logging.info("Running network model...")
         p.initialise_age_parameters(graph)
 
-        result = process_graph_bm(p, graph, nodes_per_struct)
-        #result_sq = process_graph_sq(p, graph, nodes_per_struct)
+        # Baseline model, 1 food queue
+        result_baseline = process_graph_bm(p, graph, nodes_per_struct)
+
+        # Baseline model, 1 food queue, WITH interventions
+        result_baseline_interventions = process_graph_bm_interventions(p, graph, nodes_per_struct)
+
+        # Multiple food queuess model: 4, 8
+        result_4_food_queues = process_graph_mq(p, graph, nodes_per_struct, 2)
+        result_8_food_queues = process_graph_mq(p, graph, nodes_per_struct, 4)
+
+        # Multiple food queuess model: 4, 8 WITH interventions
+        result_4_food_queues_interventions = process_graph_mq_interventions(p, graph, nodes_per_struct, 2)
+        result_8_food_queues_interventions = process_graph_mq_interventions(p, graph, nodes_per_struct, 4)
 
         return ModelResult(self.result_id(p), {
             'params': p,
-            'result': result
+            'result': result_baseline
         })
