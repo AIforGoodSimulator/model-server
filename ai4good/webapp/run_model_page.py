@@ -62,7 +62,161 @@ def profile_selector():
             dash_table.DataTable(
                 id='profile_table',
                 columns=[],
-                data=[]
+                data=[],
+                style_data_conditional=[
+            {
+            'if': {
+                'column_id': 'Value'
+            },
+           
+            'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+           {
+            'if': {
+                'row_index': 2,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+              'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+           {
+            'if': {
+                'row_index': 4,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+             'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },              
+          {
+            'if': {
+                'row_index': 0,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+            'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+          {
+            'if': {
+                'row_index': 1,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 3,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 5,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 6,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 7,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 8,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 0,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+              'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+          {
+            'if': {
+                'row_index': 2,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+              'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black',
+        },
+           {
+            'if': {
+                'row_index': 4,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+              'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+           {
+            'if': {
+                'row_index': 1,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 3,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 5,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 6,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 7,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 8,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'column_editable': False
+            },
+           'cursor':'not-allowed'
+        },]                               
             ),
             dbc.Button("Save", id="save_profile_button",outline=True, color="info", className="mr-1",
                        style={'display': 'none'})
