@@ -1,7 +1,6 @@
 from functools import reduce
 import logging
 import textwrap
-from datetime import datetime
 
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
@@ -111,7 +110,7 @@ def get_model_result(camp: str, profile: str):
     profile_df = facade.ps.get_params(CompartmentalModel.ID, profile).drop(columns=['Profile'])
     params = Parameters(facade.ps, camp, profile_df, {})
     report = load_report(mr, params)
-    return mr, profile_df, params, report #profile_df and report are both pandas dataframes
+    return mr, profile_df, params, report
 
 
 @dash_app.callback(
