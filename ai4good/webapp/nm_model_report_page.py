@@ -6,14 +6,17 @@ import dash_core_components as dcc
 from ai4good.models.nm.nm_model import NetworkModel
 from ai4good.models.nm.parameters.initialise_parameters import Parameters
 from ai4good.webapp.apps import facade, model_runner, cache, local_cache, cache_timeout
+from ai4good.webapp.metadata_report import GenerateMetadataDict, GenerateMetadataHTML
 
 
 @cache.memoize(timeout=cache_timeout)
 def layout(camp, profile, cmp_profiles):
+
     _, profile_df, params = get_model_result(camp, profile)
 
     return html.Div(
         [
+            GenerateMetadataHTML(GenerateMetadataDict(NetworkModel.ID, camp, profile, model_runner)),
             dcc.Markdown(disclaimer(camp), style={'margin': 30}),
             html.H1(f'AI for Good Simulator Model Report for {camp} Camp {profile} profile', style={
                     'margin': 30}),

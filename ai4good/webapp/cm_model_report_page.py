@@ -1,6 +1,7 @@
 from functools import reduce
 import logging
 import textwrap
+from datetime import datetime
 
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
@@ -13,15 +14,16 @@ from ai4good.models.cm.cm_model import CompartmentalModel
 from ai4good.models.cm.initialise_parameters import Parameters
 from ai4good.webapp.apps import dash_app, facade, model_runner, cache, local_cache, cache_timeout
 from ai4good.webapp.cm_model_report_utils import *
+from ai4good.webapp.metadata_report import GenerateMetadataDict, GenerateMetadataHTML
 
 
 @cache.memoize(timeout=cache_timeout)
 def layout(camp, profile, cmp_profiles):
-
+    
     _, profile_df, params, _ = get_model_result(camp, profile)
-
     return html.Div(
         [
+            GenerateMetadataHTML(GenerateMetadataDict(CompartmentalModel.ID, camp, profile, model_runner)),
             dcc.Markdown(disclaimer(camp), style={'margin': 30}),
             html.H1(f'AI for Good Simulator Model Report for {camp} Camp {profile} profile', style={'margin': 30}),
             dcc.Markdown(glossary(), style={'margin': 30}),
@@ -38,7 +40,6 @@ def layout(camp, profile, cmp_profiles):
 
         ], style={'margin': 50}
     )
-
 
 def disclaimer(camp):
     return textwrap.dedent(f'''
@@ -110,7 +111,7 @@ def get_model_result(camp: str, profile: str):
     profile_df = facade.ps.get_params(CompartmentalModel.ID, profile).drop(columns=['Profile'])
     params = Parameters(facade.ps, camp, profile_df, {})
     report = load_report(mr, params)
-    return mr, profile_df, params, report
+    return mr, profile_df, params, report #profile_df and report are both pandas dataframes
 
 
 @dash_app.callback(
