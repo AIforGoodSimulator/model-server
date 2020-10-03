@@ -3,6 +3,25 @@ name: AIforGood ModelServer test workflow
 on: [push]
 
 jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@master
+        
+      - name: "Login via Azure CLI"
+        uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+  
+      - name: "Run Azure Functions Action"
+        uses: Azure/functions-action@v1
+        id: fa
+        with:
+          app-name: ai4goodtest
+
+
   qa:
     name: Quality check
     runs-on: ubuntu-18.04
@@ -23,7 +42,9 @@ jobs:
           chmod 755 ./run_tests.sh
           ./run_tests.sh
 
-      - name: Run acceptance tests
-        run: |
-          waitress-serve --port 8050 --host 0.0.0.0 ai4good.webapp.server:flask_app
-          python ai4good/webapp/tests/basic_web_test.py
+#      - name: Run acceptance tests
+#        run: |
+#          waitress-serve --port 8050 --host 0.0.0.0 ai4good.webapp.server:flask_app
+#          python ai4good/webapp/tests/basic_web_test.py
+
+    
