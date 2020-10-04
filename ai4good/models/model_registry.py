@@ -1,7 +1,7 @@
 from ai4good.models.cm.initialise_parameters import Parameters
 from ai4good.models.cm.cm_model import CompartmentalModel
 from ai4good.models.nm.nm_model import NetworkModel
-from ai4good.models.nm.parameters.initialise_parameters import Parameters as NMParameters
+from ai4good.models.nm.initialise_parameters import Parameters as NMParameters
 from ai4good.models.abm.initialise_parameters import Parameters as ABMParameters
 from ai4good.models.abm.abm_model import ABM
 from typing import Dict, Any

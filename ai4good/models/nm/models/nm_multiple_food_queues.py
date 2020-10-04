@@ -1,12 +1,11 @@
 from seirsplus.models import *
 from ai4good.models.nm.utils.network_utils import *
-import ai4good.models.nm.parameters.camp_params as cp
 
 
 def process_graph_mq(p, graph, nodes_per_struct, food_queue_number):
     # Add multiple food queues
     graph = create_multiple_food_queues(graph, food_queue_number, p.food_weight, nodes_per_struct,
-                                        [cp.grid_isoboxes, cp.grid_block1, cp.grid_block2, cp.grid_block3])
+                                        [p.grid_isoboxes, p.grid_block1, p.grid_block2, p.grid_block3])
 
     # Model construction
     model = ExtSEIRSNetworkModel(G=graph, p=p.p_global_interaction,

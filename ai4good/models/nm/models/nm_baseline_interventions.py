@@ -1,8 +1,6 @@
 from seirsplus.models import *
 from ai4good.models.nm.utils.network_utils import *
 from ai4good.models.nm.utils.intervention_utils import *
-import ai4good.models.nm.parameters.camp_params as cp
-
 
 # Load graphs and process
 def process_graph_bm_interventions(p, graph, nodes_per_struct):

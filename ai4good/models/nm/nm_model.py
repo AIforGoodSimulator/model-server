@@ -3,7 +3,6 @@ from ai4good.models.model import Model, ModelResult
 from ai4good.models.nm.models.nm_multiple_food_queues import *
 from ai4good.models.nm.models.nm_multiple_food_queues_interventions import *
 from ai4good.params.param_store import SimpleParamStore
-from ai4good.models.nm.parameters.initialise_parameters import Parameters
 from ai4good.models.nm.models.nm_baseline import *
 from ai4good.models.nm.models.nm_baseline_interventions import *
 import logging

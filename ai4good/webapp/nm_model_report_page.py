@@ -4,7 +4,7 @@ import dash_html_components as html
 import dash_core_components as dcc
 
 from ai4good.models.nm.nm_model import NetworkModel
-from ai4good.models.nm.parameters.initialise_parameters import Parameters
+from ai4good.models.nm.initialise_parameters import Parameters
 from ai4good.webapp.apps import facade, model_runner, cache, local_cache, cache_timeout
 
 
