@@ -56,14 +56,13 @@ def display_page(pathname, query=None):
             return abm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)
         elif query['model'][0] == 'network-model':
             interventions = query.get('intervention', [])
-            return nm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)
+            return nm_model_report_page.layout(query['camp'][0], query['profile'][0], ['baseline'])
         else:
             return '404'
     elif pathname == '/sim/admin':
-        query = parse_qs(urlparse(query).query)
-        if query['model'][0] == 'network-model':
-            return nm_admin_page.layout()
         return cm_admin_page.layout()
+    elif pathname == '/sim/admin_nm':
+        return nm_admin_page.layout()
     else:
         return '404'
 

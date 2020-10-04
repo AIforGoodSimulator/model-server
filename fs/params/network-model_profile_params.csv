@@ -1,7 +1,8 @@
 Profile,Parameter,Start Time,End Time,Value
 baseline,number_of_people_in_isoboxes,,,8100
 baseline,number_of_people_in_one_isobox,,,10
-baseline,number_of_people_in_tents,,,10600
+baseline,number_of_tents,,,2560
+baseline,total_population_in_tents,,,10600
 baseline,number_of_people_in_one_tent,,,4
 baseline,permanently_asymptomatic_cases,,,0.179
 baseline,area_covered_by_isoboxes,,,0.5
@@ -26,3 +27,8 @@ baseline,probability_spotting_symptoms_per_day,,,0.05
 baseline,clearday,,,14
 baseline,toilets_blocks,,,"12,12"
 baseline,foodline_blocks,,,"6,6"
+baseline,neighbor_proximity,,,2
+baseline,neighbor_weight,,,0.017
+baseline,food_weight,,,0.407
+baseline,household_weight,,,0.98
+baseline,number_of_ethnic_groups,,,8
