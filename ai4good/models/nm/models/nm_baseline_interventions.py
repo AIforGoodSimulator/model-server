@@ -8,7 +8,7 @@ import ai4good.models.nm.parameters.camp_params as cp
 def process_graph_bm_interventions(p, graph, nodes_per_struct):
     # Add 1 food queue
     graph = connect_food_queue(
-        graph, nodes_per_struct, cp.food_weight, "food")
+        graph, nodes_per_struct, p.food_weight, "food")
 
     # Create quarantine graph - This also includes neighbor/friendship edges
     quarantine_graph = remove_edges_from_graph(graph, scale=2, edge_label_list=[

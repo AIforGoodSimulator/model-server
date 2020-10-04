@@ -24,7 +24,7 @@ class NetworkModel(Model):
 
     def run(self, p: Parameters) -> ModelResult:
         logging.info("Generating network graph...")
-        graph, nodes_per_struct = create_new_graph()
+        graph, nodes_per_struct = create_new_graph(p)
         logging.info("Running network model...")
         p.initialise_age_parameters(graph)
 

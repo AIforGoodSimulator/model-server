@@ -55,6 +55,5 @@ def get_model_result(camp: str, profile: str):
     assert mr is not None
     profile_df = facade.ps.get_params(
         NetworkModel.ID, profile).drop(columns=['Profile'])
-    params = Parameters()
-    #report = mr.get('report_base_model')
+    params = Parameters(facade.ps, camp, profile_df, {})
     return mr, profile_df, params

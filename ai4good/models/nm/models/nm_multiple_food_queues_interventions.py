@@ -6,7 +6,7 @@ import ai4good.models.nm.parameters.camp_params as cp
 
 def process_graph_mq_interventions(p, graph, nodes_per_struct, food_queue_number):
     # Add multiple food queues
-    graph = create_multiple_food_queues(graph, food_queue_number, cp.food_weight, nodes_per_struct,
+    graph = create_multiple_food_queues(graph, food_queue_number, p.food_weight, nodes_per_struct,
                                         [cp.grid_isoboxes, cp.grid_block1, cp.grid_block2, cp.grid_block3])
 
     # Create quarantine graph - This also includes neighbor/friendship edges
