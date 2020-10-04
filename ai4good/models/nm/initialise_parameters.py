@@ -14,7 +14,7 @@ from scipy.stats import poisson
 # Unsure how to map some parameters in CSV
 
 class Parameters:
-    def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}, t_steps=2):
+    def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
         self.ps = ps
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -86,17 +86,23 @@ class Parameters:
         self.number_of_people_in_isoboxes = int(profile.loc['number_of_people_in_isoboxes', 'Value'])  # pop_isoboxes
         self.number_of_people_in_one_isobox = int(profile.loc['number_of_people_in_one_isobox', 'Value'])  # pop_per_isobox
 
+        self.t_steps = int(profile.loc['number_of_steps', 'Value'])
+
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Unmapped Model Parameters
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         # Grid info for isoboxes
-        self.dims_isoboxes = (29, 28)  # 812
+        dimensions_of_isoboxes = profile.loc['dimensions_of_isoboxes', 'Value'].split(',')
+        self.dims_isoboxes = (int(dimensions_of_isoboxes[0]), int(dimensions_of_isoboxes[1]))
 
         # Grid info for tents
-        self.dims_block1 = (20, 67)  # 1340
-        self.dims_block2 = (53, 15)  # 795
-        self.dims_block3 = (19, 28)  # 532
+        dimensions_of_block1 = profile.loc['dimensions_of_block1', 'Value'].split(',')
+        self.dims_block1 = (int(dimensions_of_block1[0]), int(dimensions_of_block1[1]))
+        dimensions_of_block2 = profile.loc['dimensions_of_block2', 'Value'].split(',')
+        self.dims_block2 = (int(dimensions_of_block2[0]), int(dimensions_of_block2[1]))
+        dimensions_of_block3 = profile.loc['dimensions_of_block3', 'Value'].split(',')
+        self.dims_block3 = (int(dimensions_of_block3[0]), int(dimensions_of_block3[1]))
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Calculated Model Parameters
@@ -179,7 +185,6 @@ class Parameters:
         self.reduction_rate = 0.3
         self.beta_q = self.beta * (self.reduction_rate / self.R0_mean)
         self.q_global_interactions = 0.05
-        self.t_steps = t_steps
         self.q_start = 30
         self.m_start = 30
         self.q_end = 60
