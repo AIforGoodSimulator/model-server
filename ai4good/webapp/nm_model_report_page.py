@@ -18,7 +18,7 @@ def layout(camp, profile, cmp_profiles):
             html.H1(f'AI for Good Simulator Model Report for {camp} Camp {profile} profile', style={
                     'margin': 30}),
             dcc.Markdown(glossary(), style={'margin': 30}),
-            dcc.Markdown(overview1(camp, params), style={'margin': 30}),
+            dcc.Markdown(overview(camp, params), style={'margin': 30}),
 
         ], style={'margin': 50}
     )
