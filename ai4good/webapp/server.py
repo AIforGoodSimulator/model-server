@@ -56,7 +56,7 @@ def display_page(pathname, query=None):
             return abm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)
         elif query['model'][0] == 'network-model':
             interventions = query.get('intervention', [])
-            return nm_model_report_page.layout(query['camp'][0], query['profile'][0], ['baseline'])
+            return nm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)
         else:
             return '404'
     elif pathname == '/sim/admin':

@@ -16,6 +16,7 @@ from scipy.stats import poisson
 class Parameters:
     def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
         self.ps = ps
+        self.profile_name = profile['Profile'].iloc[0]
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Camp parameters
@@ -23,34 +24,6 @@ class Parameters:
         # self.camp = camp   TODO: Update for both camps when ready
         self.camp = "Moria"
         self.camp_params = ps.get_camp_params(self.camp)
-
-        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        # Disease parameters                    # Do we need this?
-        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        disease_params = ps.get_disease_params()
-        parameter_csv = disease_params
-        model_params = parameter_csv[parameter_csv['Type'] == 'Model Parameter']
-        model_params = model_params.loc[:, ['Name', 'Value']]
-        control_data = parameter_csv[parameter_csv['Type'] == 'Control']
-
-        self.better_hygiene = np.float(control_data.Value[control_data.Name == 'Better hygiene'])
-        self.shield_decrease = np.float(
-            control_data[control_data['Name'] == 'Reduction in contact between groups'].Value)
-        self.shield_increase = np.float(control_data[control_data['Name'] == 'Increase in contact within group'].Value)
-
-        self.r_0_list = np.asarray(model_params[model_params['Name'] == 'R0'].Value)
-
-        self.latent_period = np.float(model_params[model_params['Name'] == 'latent period'].Value)
-        self.infectious_period = np.float(model_params[model_params['Name'] == 'infectious period'].Value)
-        self.hosp_period = np.float(model_params[model_params['Name'] == 'hosp period'].Value)
-        self.quarantine_period = np.float(model_params[model_params['Name'] == 'quarantine period'].Value)
-
-        self.death_period = np.float(model_params[model_params['Name'] == 'death period'].Value)
-        self.death_period_with_icu = np.float(model_params[model_params['Name'] == 'death period with ICU'].Value)
-
-        self.infectiousness_of_asymptomatic = np.float(
-            model_params[model_params['Name'] == 'infectiousness of asymptomatic'].Value)
-        self.death_prob_with_icu = np.float(model_params[model_params['Name'] == 'death prob with ICU'].Value)
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Model Parameters
@@ -88,10 +61,6 @@ class Parameters:
 
         self.t_steps = int(profile.loc['number_of_steps', 'Value'])
 
-        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        # Unmapped Model Parameters
-        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
         # Grid info for isoboxes
         dimensions_of_isoboxes = profile.loc['dimensions_of_isoboxes', 'Value'].split(',')
         self.dims_isoboxes = (int(dimensions_of_isoboxes[0]), int(dimensions_of_isoboxes[1]))
@@ -104,13 +73,10 @@ class Parameters:
         dimensions_of_block3 = profile.loc['dimensions_of_block3', 'Value'].split(',')
         self.dims_block3 = (int(dimensions_of_block3[0]), int(dimensions_of_block3[1]))
 
-        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        # Calculated Model Parameters
-        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
         self.n_isoboxes = self.dims_isoboxes[0] * self.dims_isoboxes[1]
 
         # Define the maximum population per structures (tents and isoboxes) drawn from a poisson distribution
+
         max_pop_per_struct_isoboxes = list(
             poisson.rvs(mu=self.number_of_people_in_one_isobox, size=self.n_isoboxes))
         max_pop_per_struct_block1 = list(poisson.rvs(
@@ -121,9 +87,9 @@ class Parameters:
             mu=self.number_of_people_in_one_tent, size=self.dims_block3[0] * self.dims_block3[1]))
 
         self.max_pop_per_struct = max_pop_per_struct_isoboxes \
-                             + max_pop_per_struct_block1 \
-                             + max_pop_per_struct_block2 \
-                             + max_pop_per_struct_block3
+                                  + max_pop_per_struct_block1 \
+                                  + max_pop_per_struct_block2 \
+                                  + max_pop_per_struct_block3
 
         self.n_structs = len(self.max_pop_per_struct)
 
@@ -136,32 +102,50 @@ class Parameters:
         self.grid_block3 = create_grid(
             self.dims_block3[0], self.dims_block3[1], self.grid_block2[-1][-1] + 1)
 
-
+        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Distribution based parameters
-        self.latentPeriod_mean, latentPeriod_coeffvar = 3.0, 0.6
-        self.presymptomaticPeriod_mean, presymptomaticPeriod_coeffvar = 2.2, 0.5
-        self.symptomaticPeriod_mean, symptomaticPeriod_coeffvar = 4.0, 0.4
-        self.onsetToHospitalizationPeriod_mean, onsetToHospitalizationPeriod_coeffvar = 11.0, 0.45
-        self.hospitalizationToDischargePeriod_mean, hospitalizationToDischargePeriod_coeffvar = 11.0, 0.45
-        self.hospitalizationToDeathPeriod_mean, hospitalizationToDeathPeriod_coeffvar = 7.0, 0.45
-        self.R0_mean, R0_coeffvar = 2.5, 0.2
+        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        disease_params = ps.get_disease_params_network_model()
+        model_params = disease_params.loc[:, ['Name', 'Value']]
+
+        self.latentPeriod_mean = np.float(model_params[model_params['Name'] == 'latent_period_mean'].Value)
+        self.latentPeriod_coeffvar = np.float(model_params[model_params['Name'] == 'latent_period_standard_deviation'].Value)
+
+        self.presymptomaticPeriod_mean = np.float(model_params[model_params['Name'] == 'presymptomatic_period_mean'].Value)
+        self.presymptomaticPeriod_coeffvar = np.float(model_params[model_params['Name'] == 'presymptomatic_period_standard_deviation'].Value)
+
+        self.symptomaticPeriod_mean = np.float(model_params[model_params['Name'] == 'symptomatic_period_mean'].Value)
+        self.symptomaticPeriod_coeffvar = np.float(model_params[model_params['Name'] == 'symptomatic_period_standard_deviation'].Value)
+
+        self.onsetToHospitalizationPeriod_mean = np.float(model_params[model_params['Name'] == 'onset_to_hospitalization_period_mean'].Value)
+        self.onsetToHospitalizationPeriod_coeffvar = np.float(model_params[model_params['Name'] == 'onset_to_hospitalization_period_standard_deviation'].Value)
+
+        self.hospitalizationToDischargePeriod_mean = np.float(model_params[model_params['Name'] == 'hospitalization_to_discharge_period_mean'].Value)
+        self.hospitalizationToDischargePeriod_coeffvar = np.float(model_params[model_params['Name'] == 'hospitalization_to_discharge_period_standard_deviation'].Value)
+
+        self.hospitalizationToDeathPeriod_mean = np.float(model_params[model_params['Name'] == 'hospitalization_to_death_period_mean'].Value)
+        self.hospitalizationToDeathPeriod_coeffvar = np.float(model_params[model_params['Name'] == 'hospitalization_to_death_period_standard_deviation'].Value)
+
+        self.R0_mean = np.float(model_params[model_params['Name'] == 'R0_mean'].Value)
+        self.R0_coeffvar = np.float(model_params[model_params['Name'] == 'R0_standard_deviation'].Value)
 
         self.sigma = 1 / \
-                     gamma_dist(self.latentPeriod_mean, latentPeriod_coeffvar, self.total_population)
+                     gamma_dist(self.latentPeriod_mean, self.latentPeriod_coeffvar, self.total_population)
         self.lamda = 1 / \
                      gamma_dist(self.presymptomaticPeriod_mean,
-                                presymptomaticPeriod_coeffvar, self.total_population)
+                                self.presymptomaticPeriod_coeffvar, self.total_population)
         self.gamma = 1 / \
                      gamma_dist(self.symptomaticPeriod_mean,
-                                symptomaticPeriod_coeffvar, self.total_population)
+                                self.symptomaticPeriod_coeffvar, self.total_population)
         self.eta = 1 / gamma_dist(self.onsetToHospitalizationPeriod_mean,
-                                  onsetToHospitalizationPeriod_coeffvar, self.total_population)
+                                  self.onsetToHospitalizationPeriod_coeffvar, self.total_population)
         self.gamma_H = 1 / gamma_dist(self.hospitalizationToDischargePeriod_mean,
-                                      hospitalizationToDischargePeriod_coeffvar,
+                                      self.hospitalizationToDischargePeriod_coeffvar,
                                       self.total_population)
         self.mu_H = 1 / gamma_dist(self.hospitalizationToDeathPeriod_mean,
-                                   hospitalizationToDeathPeriod_coeffvar, self.total_population)
-        self.R0 = gamma_dist(self.R0_mean, R0_coeffvar, self.total_population)
+                                   self.hospitalizationToDeathPeriod_coeffvar, self.total_population)
+        self.R0 = gamma_dist(self.R0_mean, self.R0_coeffvar, self.total_population)
 
         self.infectiousPeriod = 1 / self.lamda + 1 / self.gamma
         self.beta = 1 / self.infectiousPeriod * self.R0

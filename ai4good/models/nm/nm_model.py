@@ -27,21 +27,30 @@ class NetworkModel(Model):
         logging.info("Running network model...")
         p.initialise_age_parameters(graph)
 
-        # Baseline model, 1 food queue
-        result_baseline = process_graph_bm(p, graph, nodes_per_struct)
-
-        # Baseline model, 1 food queue, WITH interventions
-        result_baseline_interventions = process_graph_bm_interventions(p, graph, nodes_per_struct)
-
-        # Multiple food queuess model: 4, 8
-        result_4_food_queues = process_graph_mq(p, graph, nodes_per_struct, 2)
-        result_8_food_queues = process_graph_mq(p, graph, nodes_per_struct, 4)
-
-        # Multiple food queuess model: 4, 8 WITH interventions
-        result_4_food_queues_interventions = process_graph_mq_interventions(p, graph, nodes_per_struct, 2)
-        result_8_food_queues_interventions = process_graph_mq_interventions(p, graph, nodes_per_struct, 4)
+        if p.profile_name == 'baseline':
+            # Baseline model, 1 food queue
+            result = process_graph_bm(p, graph, nodes_per_struct)
+        elif p.profile_name == 'interventions':
+            # Baseline model, 1 food queue, WITH interventions
+            result = process_graph_bm_interventions(p, graph, nodes_per_struct)
+        elif p.profile_name == '4_food_queues':
+            # Multiple food queues model: 4
+            result = process_graph_mq(p, graph, nodes_per_struct, 2)
+        elif p.profile_name == '8_food_queues':
+            # Multiple food queues model: 8
+            result = process_graph_mq(p, graph, nodes_per_struct, 4)
+        elif p.profile_name == 'interventions_4_food_queues':
+            # Multiple food queues model: 4 WITH interventions
+            result = process_graph_mq_interventions(p, graph, nodes_per_struct, 2)
+        elif p.profile_name == 'interventions_8_food_queues':
+            # Multiple food queues model: 8 WITH interventions
+            result = process_graph_mq_interventions(p, graph, nodes_per_struct, 4)
+        else:
+            # Run Baseline Model
+            print('No matching profile found. Running Baseline model, 1 food queue')
+            result = process_graph_bm(p, graph, nodes_per_struct)
 
         return ModelResult(self.result_id(p), {
             'params': p,
-            'result': result_baseline
+            'result': result
         })

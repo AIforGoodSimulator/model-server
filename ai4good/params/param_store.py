@@ -97,6 +97,9 @@ class SimpleParamStore(ParamStore):
     def get_disease_params(self) -> pd.DataFrame:
         return self._read_csv("disease_params.csv")
 
+    def get_disease_params_network_model(self) -> pd.DataFrame:
+        return self._read_csv("network-model_disease_params.csv")
+
     def get_generated_disease_param_vectors(self) -> pd.DataFrame:
         return self._read_csv("generated_params.csv")
 
