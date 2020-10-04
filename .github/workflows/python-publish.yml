@@ -3,25 +3,6 @@ name: AIforGood ModelServer test workflow
 on: [push]
 
 jobs:
-  deploy:
-    name: Build and deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Checkout"
-        uses: actions/checkout@master
-        
-      - name: "Login via Azure CLI"
-        uses: Azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-  
-      - name: "Run Azure Functions Action"
-        uses: Azure/functions-action@v1
-        id: fa
-        with:
-          app-name: ai4goodtest
-
-
   qa:
     name: Quality check
     runs-on: ubuntu-18.04
