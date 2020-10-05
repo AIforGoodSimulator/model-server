@@ -74,6 +74,10 @@ class Parameters:
         self.beta_q = self.beta * (self.reduction_rate / self.R0_mean)
         self.q_global_interactions = 0.05
         self.t_steps = t_steps
+        self.q_start = 30
+        self.m_start = 30
+        self.q_end = 60
+        self.m_end = 90
 
     def initialise_age_parameters(self, graph):
         # Age based parameters
