@@ -26,11 +26,10 @@ class NetworkModel(Model):
         logging.info("Running network model...")
         p.initialise_age_parameters(graph)
 
-        result_bm = process_graph_bm(p, graph, nodes_per_struct)
-        result_sq = process_graph_sq(p, graph, nodes_per_struct)
+        result = process_graph_bm(p, graph, nodes_per_struct)
+        #result_sq = process_graph_sq(p, graph, nodes_per_struct)
 
         return ModelResult(self.result_id(p), {
             'params': p,
-            'result_base_model': result_bm,
-            'result_single_fq': result_sq
+            'result': result
         })

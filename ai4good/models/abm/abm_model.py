@@ -122,17 +122,5 @@ class ABM(Model):
 
         return mr
 
-        # return ModelResult(self.result_id(p), {
-        #     'standard_sol': standard_sol,
-        #     'percentiles': percentiles,
-        #     'config_dict': config_dict,
-        #     'params': p,
-        #     'report': report_raw,
-        #     'track_states_df': p.track_states,
-        #     'multiple_categories_to_plot': states,
-        #     'prevalence_all': prevalence_all,
-        #     'cumulative_all': cumulative_all,
-        #     'cumulative_age': cumulative_age
-        # })
 
 
