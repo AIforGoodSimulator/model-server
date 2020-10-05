@@ -34,7 +34,9 @@ dash_app.layout = html.Div([
                    [Input('url', 'pathname'), Input('url', 'search')])
 def display_page(pathname, query=None):
     logging.info("Displaying page %s with query %s", pathname, query)
-    if pathname == '/sim/run_model' or pathname == '/sim/':
+    if pathname == '/sim/input' or pathname == '/sim/':
+        return run_model_page.layout
+    elif pathname == '/sim/run_model':
         return run_model_page.layout
     elif pathname == '/sim/results':
         query = parse_qs(urlparse(query).query)
