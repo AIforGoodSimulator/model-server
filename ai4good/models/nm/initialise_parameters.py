@@ -22,7 +22,7 @@ class Parameters:
         # Camp parameters
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # self.camp = camp   TODO: Update for both camps when ready
-        self.camp = "Moria"
+        self.camp = camp
         self.camp_params = ps.get_camp_params(self.camp)
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
