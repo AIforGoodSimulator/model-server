@@ -16,7 +16,10 @@ from scipy.stats import poisson
 class Parameters:
     def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
         self.ps = ps
-        self.profile_name = profile['Profile'].iloc[0]
+        if profile is not None:
+            self.profile_name = profile['Profile'].iloc[0]
+        else:
+            self.profile_name = 'None'
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Camp parameters
@@ -33,7 +36,7 @@ class Parameters:
         # Sample the population age, and parameter rates
         self.total_population = int(self.camp_params.Total_population.dropna().sum())  # n_pop
         self.sample_pop = sample_population(self.total_population,
-                                                        "ai4good/models/nm/data/augmented_population.csv")
+                                            "ai4good/models/nm/data/augmented_population.csv")
 
         # Tents
         self.number_of_tents = int(profile.loc['number_of_tents', 'Value'])  # n_tents
@@ -57,7 +60,8 @@ class Parameters:
 
         # Isoboxes
         self.number_of_people_in_isoboxes = int(profile.loc['number_of_people_in_isoboxes', 'Value'])  # pop_isoboxes
-        self.number_of_people_in_one_isobox = int(profile.loc['number_of_people_in_one_isobox', 'Value'])  # pop_per_isobox
+        self.number_of_people_in_one_isobox = int(
+            profile.loc['number_of_people_in_one_isobox', 'Value'])  # pop_per_isobox
 
         self.t_steps = int(profile.loc['number_of_steps', 'Value'])
 
@@ -110,22 +114,32 @@ class Parameters:
         model_params = disease_params.loc[:, ['Name', 'Value']]
 
         self.latentPeriod_mean = np.float(model_params[model_params['Name'] == 'latent_period_mean'].Value)
-        self.latentPeriod_coeffvar = np.float(model_params[model_params['Name'] == 'latent_period_standard_deviation'].Value)
+        self.latentPeriod_coeffvar = np.float(
+            model_params[model_params['Name'] == 'latent_period_standard_deviation'].Value)
 
-        self.presymptomaticPeriod_mean = np.float(model_params[model_params['Name'] == 'presymptomatic_period_mean'].Value)
-        self.presymptomaticPeriod_coeffvar = np.float(model_params[model_params['Name'] == 'presymptomatic_period_standard_deviation'].Value)
+        self.presymptomaticPeriod_mean = np.float(
+            model_params[model_params['Name'] == 'presymptomatic_period_mean'].Value)
+        self.presymptomaticPeriod_coeffvar = np.float(
+            model_params[model_params['Name'] == 'presymptomatic_period_standard_deviation'].Value)
 
         self.symptomaticPeriod_mean = np.float(model_params[model_params['Name'] == 'symptomatic_period_mean'].Value)
-        self.symptomaticPeriod_coeffvar = np.float(model_params[model_params['Name'] == 'symptomatic_period_standard_deviation'].Value)
+        self.symptomaticPeriod_coeffvar = np.float(
+            model_params[model_params['Name'] == 'symptomatic_period_standard_deviation'].Value)
 
-        self.onsetToHospitalizationPeriod_mean = np.float(model_params[model_params['Name'] == 'onset_to_hospitalization_period_mean'].Value)
-        self.onsetToHospitalizationPeriod_coeffvar = np.float(model_params[model_params['Name'] == 'onset_to_hospitalization_period_standard_deviation'].Value)
+        self.onsetToHospitalizationPeriod_mean = np.float(
+            model_params[model_params['Name'] == 'onset_to_hospitalization_period_mean'].Value)
+        self.onsetToHospitalizationPeriod_coeffvar = np.float(
+            model_params[model_params['Name'] == 'onset_to_hospitalization_period_standard_deviation'].Value)
 
-        self.hospitalizationToDischargePeriod_mean = np.float(model_params[model_params['Name'] == 'hospitalization_to_discharge_period_mean'].Value)
-        self.hospitalizationToDischargePeriod_coeffvar = np.float(model_params[model_params['Name'] == 'hospitalization_to_discharge_period_standard_deviation'].Value)
+        self.hospitalizationToDischargePeriod_mean = np.float(
+            model_params[model_params['Name'] == 'hospitalization_to_discharge_period_mean'].Value)
+        self.hospitalizationToDischargePeriod_coeffvar = np.float(
+            model_params[model_params['Name'] == 'hospitalization_to_discharge_period_standard_deviation'].Value)
 
-        self.hospitalizationToDeathPeriod_mean = np.float(model_params[model_params['Name'] == 'hospitalization_to_death_period_mean'].Value)
-        self.hospitalizationToDeathPeriod_coeffvar = np.float(model_params[model_params['Name'] == 'hospitalization_to_death_period_standard_deviation'].Value)
+        self.hospitalizationToDeathPeriod_mean = np.float(
+            model_params[model_params['Name'] == 'hospitalization_to_death_period_mean'].Value)
+        self.hospitalizationToDeathPeriod_coeffvar = np.float(
+            model_params[model_params['Name'] == 'hospitalization_to_death_period_standard_deviation'].Value)
 
         self.R0_mean = np.float(model_params[model_params['Name'] == 'R0_mean'].Value)
         self.R0_coeffvar = np.float(model_params[model_params['Name'] == 'R0_standard_deviation'].Value)
