@@ -1,37 +1,36 @@
 from seirsplus.models import *
 from ai4good.models.nm.utils.network_utils import *
-import ai4good.models.nm.parameters.camp_params as cp
+from ai4good.models.nm.initialise_parameters import Parameters
 
 
 # Load graphs and process
-def create_new_graph():
+def create_new_graph(p: Parameters):
     # TODO: For now, this only creates a camp that resembles Moria, but it could be abstracted more (after alpha version is done)
 
-    household_weight = 0.98  # Edge weight for connections within each structure
-    graph, nodes_per_struct = create_graph(cp.n_structs, 0, cp.n_pop, cp.max_pop_per_struct,
-                                           edge_weight=household_weight, label="household",
-                                           age_list=list(cp.sample_pop["age"]),
-                                           sex_list=list(cp.sample_pop["sex"]),
-                                           n_ethnicities=cp.n_ethnic_groups)
+    graph, nodes_per_struct = create_graph(p.n_structs, 0, p.total_population, p.max_pop_per_struct,
+                                           edge_weight=p.household_weight, label="household",
+                                           age_list=list(p.sample_pop["age"]),
+                                           sex_list=list(p.sample_pop["sex"]),
+                                           n_ethnicities=p.number_of_ethnic_groups)
     # Connect people from neighboring isoboxes
-    graph = connect_neighbors(graph, 0, cp.n_isoboxes, nodes_per_struct,
-                              cp.grid_isoboxes, cp.neighbor_proximity, cp.neighbor_weight, 'friendship')
-    graph = connect_neighbors(graph, cp.dims_isoboxes[0] * cp.dims_isoboxes[1], cp.dims_block1[0] * cp.dims_block1[1],
+    graph = connect_neighbors(graph, 0, p.n_isoboxes, nodes_per_struct,
+                              p.grid_isoboxes, p.neighbor_proximity, p.neighbor_weight, 'friendship')
+    graph = connect_neighbors(graph, p.dims_isoboxes[0] * p.dims_isoboxes[1], p.dims_block1[0] * p.dims_block1[1],
                               nodes_per_struct,
-                              cp.grid_block1, cp.neighbor_proximity, cp.neighbor_weight, 'friendship')
-    graph = connect_neighbors(graph, cp.dims_block1[0] * cp.dims_block1[1], cp.dims_block2[0] * cp.dims_block2[1],
+                              p.grid_block1, p.neighbor_proximity, p.neighbor_weight, 'friendship')
+    graph = connect_neighbors(graph, p.dims_block1[0] * p.dims_block1[1], p.dims_block2[0] * p.dims_block2[1],
                               nodes_per_struct,
-                              cp.grid_block2, cp.neighbor_proximity, cp.neighbor_weight, 'friendship')
-    graph = connect_neighbors(graph, cp.dims_block2[0] * cp.dims_block2[1], cp.dims_block3[0] * cp.dims_block3[1],
+                              p.grid_block2, p.neighbor_proximity, p.neighbor_weight, 'friendship')
+    graph = connect_neighbors(graph, p.dims_block2[0] * p.dims_block2[1], p.dims_block3[0] * p.dims_block3[1],
                               nodes_per_struct,
-                              cp.grid_block3, cp.neighbor_proximity, cp.neighbor_weight, 'friendship')
+                              p.grid_block3, p.neighbor_proximity, p.neighbor_weight, 'friendship')
     return graph, nodes_per_struct
 
 
 def process_graph_bm(p, graph, nodes_per_struct):
     # Base model with 1 food queue
     graph = connect_food_queue(
-        graph, nodes_per_struct, cp.food_weight, "food")
+        graph, nodes_per_struct, p.food_weight, "food")
 
     # Model construction
     model = ExtSEIRSNetworkModel(G=graph, p=p.p_global_interaction,
