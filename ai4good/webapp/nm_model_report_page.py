@@ -18,7 +18,7 @@ def layout(camp, profile, cmp_profiles):
             html.H1(f'AI for Good Simulator Model Report for {camp} Camp {profile} profile', style={
                     'margin': 30}),
             dcc.Markdown(glossary(), style={'margin': 30}),
-            dcc.Markdown(overview1(camp, params), style={'margin': 30}),
+            dcc.Markdown(overview(camp, params), style={'margin': 30}),
 
         ], style={'margin': 50}
     )
@@ -147,6 +147,6 @@ def get_model_result(camp: str, profile: str):
     mr = model_runner.get_result(NetworkModel.ID, profile, camp)
     assert mr is not None
     profile_df = facade.ps.get_params(
-        NetworkModel.ID, profile).drop(columns=['Profile'])
+        NetworkModel.ID, profile)
     params = Parameters(facade.ps, camp, profile_df, {})
     return mr, profile_df, params
