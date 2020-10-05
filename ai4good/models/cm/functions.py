@@ -1,15 +1,17 @@
 #from ai4good.models.cm.initialise_parameters import params, control_data, categories, calculated_categories, change_in_categories
 
-from ai4good.models.cm.initialise_parameters import Parameters
-from math import ceil, floor
-import numpy as np
-from scipy.integrate import ode
-import pandas as pd
-import statistics
 import logging
-from tqdm import tqdm
+import statistics
+from math import ceil, floor
+
 import dask
+import numpy as np
+import pandas as pd
 from dask.diagnostics import ProgressBar
+from scipy.integrate import ode
+from tqdm import tqdm
+
+from ai4good.models.cm.initialise_parameters import Parameters
 
 
 def timing_function(t,time_vector):
@@ -533,39 +535,7 @@ def generate_csv(data_to_save, params: Parameters,  input_type=None, time_vec=No
 
     elif input_type=='raw':
 
-        final_frame=pd.DataFrame()
-
-        for key, value in tqdm(data_to_save.items()):
-            csv_sol = np.transpose(value['y']) # age structured
-
-            solution_csv = pd.DataFrame(csv_sol)
-
-            # setup column names
-            col_names = []
-            number_categories_with_age = csv_sol.shape[1]
-            for i in range(number_categories_with_age):
-                ii = i % params.number_compartments
-                jj = floor(i/params.number_compartments)
-
-                col_names.append(params.categories[category_map[str(ii)]]['longname'] +  ': ' + str(np.asarray(population_frame.Age)[jj]) )
-
-            solution_csv.columns = col_names
-            solution_csv['Time'] = value['t']
-
-            for j in range(len(params.categories.keys())): # params.number_compartments
-                solution_csv[params.categories[category_map[str(j)]]['longname']] = value['y_plot'][j] # summary/non age-structured
-
-            (R0,latentRate,removalRate,hospRate,deathRateICU,deathRateNoIcu)=key
-            solution_csv['R0']=[R0]*solution_csv.shape[0]
-            solution_csv['latentRate']=[latentRate]*solution_csv.shape[0]
-            solution_csv['removalRate']=[removalRate]*solution_csv.shape[0]
-            solution_csv['hospRate']=[hospRate]*solution_csv.shape[0]
-            solution_csv['deathRateICU']=[deathRateICU]*solution_csv.shape[0]
-            solution_csv['deathRateNoIcu']=[deathRateNoIcu]*solution_csv.shape[0]
-            final_frame=pd.concat([final_frame, solution_csv], ignore_index=True)
-
-        solution_csv=final_frame
-        #this is our dataframe to be saved
+        solution_csv = generate_csv_raw(category_map, data_to_save, params, population_frame)
 
     elif input_type=='solution':
         csv_sol = np.transpose(data_to_save[0]['y']) # age structured
@@ -592,4 +562,49 @@ def generate_csv(data_to_save, params: Parameters,  input_type=None, time_vec=No
     # save it
     #solution_csv.to_csv(os.path.join(os.path.dirname(cwd),'CSV_output/' + filename + '.csv' ))
 
+    return solution_csv
+
+
+def generate_csv_raw(category_map, data_to_save, params, population_frame):
+    # setup column names
+    number_categories_with_age = params.number_compartments * population_frame.shape[0]
+    col_names = []
+    for j in range(population_frame.shape[0]):
+        for i in range(params.number_compartments):
+            col_names.append(
+                params.categories[category_map[str(i)]]['longname'] + ': ' + str(population_frame.Age.values[j]))
+    col_names.append('Time')
+    number_of_categories = len(params.categories)
+    for j in range(number_of_categories):  # params.number_compartments
+        col_names.append(params.categories[category_map[str(j)]]['longname'])
+    col_names.append('R0')
+    col_names.append('latentRate')
+    col_names.append('removalRate')
+    col_names.append('hospRate')
+    col_names.append('deathRateICU')
+    col_names.append('deathRateNoIcu')
+    t_sim = params.control_dict['t_sim'] + 1
+    initdata = np.zeros((len(data_to_save) * t_sim, len(col_names)))
+    final_frame = pd.DataFrame(initdata, columns=col_names)
+    idx = 0
+    idxnxt = t_sim
+    for key, value in tqdm(data_to_save.items()):
+        csv_sol = np.transpose(value['y'])  # age structured
+        final_frame.iloc[idx:idxnxt, 0:number_categories_with_age] = csv_sol
+
+        lastrow = idxnxt-1
+        final_frame.loc[idx:lastrow, 'Time'] = value['t']
+        final_frame.iloc[idx:idxnxt, number_categories_with_age + 1:number_categories_with_age + 1 + number_of_categories] = value['y_plot'].T  # summary/non age-structured
+
+        (R0, latentRate, removalRate, hospRate, deathRateICU, deathRateNoIcu) = key
+        final_frame.loc[idx:lastrow, 'R0'] = [R0] * t_sim
+        final_frame.loc[idx:lastrow, 'latentRate'] = [latentRate] * t_sim
+        final_frame.loc[idx:lastrow, 'removalRate'] = [removalRate] * t_sim
+        final_frame.loc[idx:lastrow, 'hospRate'] = [hospRate] * t_sim
+        final_frame.loc[idx:lastrow, 'deathRateICU'] = [deathRateICU] * t_sim
+        final_frame.loc[idx:lastrow, 'deathRateNoIcu'] = [deathRateNoIcu] * t_sim
+        idx += t_sim
+        idxnxt += t_sim
+    solution_csv = final_frame
+    # this is our dataframe to be saved
     return solution_csv
