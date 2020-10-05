@@ -1,0 +1,31 @@
+name: AIforGood ModelServer test workflow
+
+on: [push]
+
+jobs:
+  qa:
+    name: Quality check
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python
+        uses: actions/setup-python@master
+        with:
+          python-version: 3.8
+        
+      - name: Set up dependancies
+        run: |
+          pip install -r requirements.txt
+          pip install selenium        
+
+      - name: Run unit tests
+        run: |
+          chmod 755 ./run_tests.sh
+          ./run_tests.sh
+
+#      - name: Run acceptance tests
+#        run: |
+#          waitress-serve --port 8050 --host 0.0.0.0 ai4good.webapp.server:flask_app
+#          python ai4good/webapp/tests/basic_web_test.py
+
+    
