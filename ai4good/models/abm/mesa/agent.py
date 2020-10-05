@@ -16,14 +16,14 @@ class Person(Agent):
         super().__init__(unique_id, model)
         self.model = model
 
-        self.disease_state = DiseaseStage.SUSCEPTIBLE  # initially everyone is susceptible
-
         self.day_counter = 0
+        self.disease_state = model.agents_disease_states[unique_id]  # initial disease state
         self.gender = model.agents_gender[unique_id]  # agent's gender
         self.age = model.agents_age[unique_id]  # agent's age
         self.pos = model.agents_pos[unique_id]  # agent's position (x, y) in the camp
         self.route = model.agents_route[unique_id]  # current route of the agent: household, food-line, toilet, wander
-        self.household_id = -1  # TODO
+        self.household_id = model.agents_households[unique_id]  # household id of the person (fixed)
+        self.home_range = model.agents_home_ranges[unique_id]  # radius of circle centered at household for movement
 
         # calculate if asymptomatic
         # All children under the age of 16 become asymptomatic (ref), and others become asymptomatic
@@ -43,6 +43,12 @@ class Person(Agent):
             self.day_counter += 1
 
         self.disease_progression()
+        self._update_model()
+
+    def _update_model(self):
+        # update the model data
+        self.model.agents_disease_states[self.unique_id] = self.disease_state
+        self.model.agents_pos[self.unique_id] = self.pos
 
     def move(self):
         pass
@@ -125,6 +131,11 @@ class Person(Agent):
         # After 5 days, All individuals in the 1st asymptomatic state pass to the “2nd asymptomatic” state
         if self.disease_state == DiseaseStage.ASYMPTOMATIC1 and self.day_counter >= 6:
             self.disease_state = DiseaseStage.ASYMPTOMATIC2
+
+    def _infection_spread_movement(self):
+        # Returns the infection spread probability while person is wandering
+
+        pass
 
     def is_infectious(self) -> bool:
         # returns `True` if a person can infect others

@@ -8,15 +8,21 @@ from ai4good.models.abm.initialise_parameters import Parameters
 from ai4good.models.abm.mesa.utils import read_age_gender
 from ai4good.models.abm.mesa.common import Route
 from ai4good.models.abm.mesa.common import DiseaseStage
+from ai4good.models.abm.mesa.helper import CampHelper
 
 
-class Camp(Model):
+class Camp(Model, CampHelper):
     """
     Modelling Moria camp
     """
 
     # Side length of square shaped camp
     CAMP_SIZE = 100.0
+
+    # If a susceptible and an infectious individual interact, then the infection is transmitted with probability pa
+    # Fang and colleagues (2020)
+    # TODO: missing in params?
+    Pa = 0.1
 
     def __init__(self, params: Parameters):
         super().__init__()
@@ -25,11 +31,21 @@ class Camp(Model):
 
         assert self.params.camp
 
+        self.agents_disease_states = np.array([DiseaseStage.SUSCEPTIBLE for _ in range(self.people_count)])
         self.agents_age = read_age_gender(self.people_count)[:, 0]
         self.agents_gender = read_age_gender(self.people_count)[:, 1]
+
+        # TODO: these are baseline values, parameterize it
+        self.agents_home_ranges = np.array([
+            0.02 * Camp.CAMP_SIZE if (self.agents_gender[i] == 0 or self.agents_age[i] < 10) else 0.1 * Camp.CAMP_SIZE
+            for i in range(self.people_count)
+        ])
+
         self.agents_pos = Camp.CAMP_SIZE * np.random.random((self.people_count, 2))
         self.agents_route = np.array([Route.HOUSEHOLD] * self.people_count)
         self.households = self.get_households(self.params.number_of_isoboxes, self.params.number_of_tents)
+        self.agents_households = np.array([])  # TODO
+        self.agents_ethnic_groups = np.array([])  # TODO
 
         self.schedule = RandomActivation(self)
         self.space = ContinuousSpace(x_max=Camp.CAMP_SIZE, y_max=Camp.CAMP_SIZE, torus=False)
@@ -50,6 +66,28 @@ class Camp(Model):
         # point the epidemic had ended
         return any([agent.__getattribute__("disease_status") not in [DiseaseStage.SUSCEPTIBLE, DiseaseStage.RECOVERED]
                     for agent in self.schedule.agent_buffer()])
+
+    def infection_spread_movement(self):
+        # probability of infection spread during movement
+
+        # get position of households
+        hh_pos = self.households[:, 1:]
+
+        # create an array of people's attributes
+        # 0: household id, 1: home range, 2: ethnic group id, 3: disease state
+        people = np.concatenate([
+            self.agents_households,
+            self.agents_home_ranges,
+            self.agents_ethnic_groups,
+            self.agents_disease_states
+        ], axis=0)
+
+        return self._prob_m(hh_pos, people)
+
+    def infection_spread_toilet(self):
+        # probability of infection spread during toilet visit
+
+        pass
 
     @property
     def people_count(self):
