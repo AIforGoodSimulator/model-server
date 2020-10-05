@@ -310,10 +310,10 @@ def history_table():
 def nav_bar():
     return dbc.NavbarSimple(
         children=[
-            dbc.NavItem(dbc.NavLink("About US", href="#")),
+            dbc.NavItem(dbc.NavLink("About us", href="https://www.aiforgood.co.uk/")),
 
         ],
-        brand="AIforGood",
+        brand="AI for Good Simulator",
         brand_href="#",
         color="primary",
         dark=True,
