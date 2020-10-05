@@ -50,7 +50,7 @@ def profile_selector():
     return dbc.Row([
         dbc.Col(
             html.Div([
-                html.Label('Profile', style={'font-weight': 'bold'}),
+                html.Label('<a href="https://raw.githubusercontent.com/AIforGoodSimulator/model-server/master/fs/params/Parameters_mouse-over_des.csv">Profile</a>', style={'font-weight': 'bold'}),
                 dcc.Dropdown(
                     id='profile-dropdown'
                 ),
@@ -244,9 +244,9 @@ def model_run_buttons():
     return html.Div([
         dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True),
         dbc.Button("See Results", id="model_results_button", color="success", className="mr-1",
-            target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'),
+                   target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'),
         dbc.Button("See Report", id="model_report_button", color="success", className="mr-1",
-            disabled=True, key='model_report_button_key'),
+                   disabled=True, key='model_report_button_key'),
         dbc.Toast(
             [],
             id="run_model_toast",

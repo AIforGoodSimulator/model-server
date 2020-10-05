@@ -23,7 +23,7 @@ numba_logger.setLevel(logging.WARNING)
 
 @flask_app.route("/")
 def index():
-    return redirect('/sim/run_model')
+    return redirect('/sim/input')
 
 
 dash_app.layout = html.Div([
@@ -37,6 +37,7 @@ dash_app.layout = html.Div([
 def display_page(pathname, query=None):
     logging.info("Displaying page %s with query %s", pathname, query)
     if pathname == '/sim/input' or pathname == '/sim/':
+        print ("input")
         return run_model_page.layout
     elif pathname == '/sim/run_model':
         return run_model_page.layout
