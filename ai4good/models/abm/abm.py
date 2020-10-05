@@ -1,10 +1,14 @@
+import math
+import random
 import numpy as np
 import pandas as pd
-import random
-import math
+from numba import njit
 from scipy import optimize
 from scipy.special import factorial
-from  ai4good.utils.path_utils import get_am_aug_pop
+
+from ai4good.utils.path_utils import get_am_aug_pop
+from ai4good.models.abm.ops.spatial_ops import distance_matrix, assign_block
+
 
 def read_age_gender(num_ppl):
     """
@@ -19,8 +23,6 @@ def read_age_gender(num_ppl):
         out : Numpy array of size (`num_ppl`, 2) containing rows: (age, gender)
 
     """
-   # path_to_file = 'age_and_sex.csv'
-    
     # Data frame. V1 = age, V2 is sex (1 = male?, 0  = female?).
     age_and_gender = pd.read_csv(get_am_aug_pop())
     age_and_gender = age_and_gender.loc[:, ~age_and_gender.columns.str.contains('^Unnamed')]
@@ -35,8 +37,8 @@ def create_household_column(num_hh_type1, num_ppl_type1, num_hh_type2, num_ppl_t
 
     Parameters
     ----------
-        num_hh_type1  : Number of isoboxes (hb)
-        num_ppl_type1 : Number of people in isoboxes (Nb)
+        num_hh_type1  : Number of iso-boxes (hb)
+        num_ppl_type1 : Number of people in iso-boxes (Nb)
         num_hh_type2  : Number of tents (ht)
         num_ppl_type2 : Number of people in tents (Nt)
 
@@ -50,7 +52,7 @@ def create_household_column(num_hh_type1, num_ppl_type1, num_hh_type2, num_ppl_t
     # Random allotments of people to households
     # `ppl_hh_index_draw` will be of size [Nb + Nt] with each element ∈ [1, hb + ht]
     ppl_hh_index_draw = np.concatenate([
-        # values ∈ [1, hb] for isoboxes
+        # values ∈ [1, hb] for iso-boxes
         np.ceil(num_hh_type1 * np.random.uniform(0, 1, num_ppl_type1)),
         # values ∈ [hb + 1, hb + ht] for tents
         num_hh_type1 + np.ceil(num_hh_type2 * np.random.uniform(0, 1, num_ppl_type2))
@@ -66,6 +68,7 @@ def create_household_column(num_hh_type1, num_ppl_type1, num_hh_type2, num_ppl_t
     return np.sort(ppl_to_hh_index)
 
     # NOTE: This function can be replaced with just > (np.random.sample(Nb+Nt) * (hb+ht)).astype(np.int32)
+
 
 def create_diseasestate_column(num_ppl, seed=1):
     """
@@ -88,14 +91,19 @@ def create_diseasestate_column(num_ppl, seed=1):
     # return infection state
     return initial_diseasestate
 
+
 def create_daystosymptoms_column(num_ppl):
-    #weibull distribution parameters following (Backer et al. 2020 Eurosurveillance)
+    # The time from exposure until symptoms appear (i.e., the incubation period) is
+    # drawn from a Weibull distribution with a mean of 6.4 days and a standard deviation of 2.3
+    # days (Backer et al. 2020)
     k = (2.3/6.4)**(-1.086)
     L = 6.4 / (math.gamma(1 + 1/k))
     return np.array([random.weibullvariate(L, k) for ppl in np.arange(num_ppl)])
 
+
 def create_daycount_column(num_ppl):
     return np.zeros(num_ppl)
+
 
 def create_asymp_column(num_ppl, asymp_rate, age_column=None, num_ppl_chro=300):
     """
@@ -111,25 +119,35 @@ def create_asymp_column(num_ppl, asymp_rate, age_column=None, num_ppl_chro=300):
     Returns
     -------
         out : A boolean array indicating if person is asymptomatically infected or not
+
+    Notes
+    -----
+        Asymptomatic people are those who are infected BUT don't show any symptoms. Such people can infect others
+        without showing any symptoms on their own
     """
     
     if age_column is not None:
         raise NotImplementedError("Age has not been considered for asymptomatic infection calculations yet!")
     else:
-        return np.random.uniform(0, 1, num_ppl) < ( asymp_rate * (num_ppl/(num_ppl-num_ppl_chro)) )
+        # TODO: age < 16 should be asymptomatic as per tucker model
+        return np.random.uniform(0, 1, num_ppl) < (asymp_rate * (num_ppl/(num_ppl-num_ppl_chro)))
+
 
 def create_age_column(age_data):
     return age_data
 
+
 def create_gender_column(gender_data):
     return gender_data
+
 
 def create_chronic_column(num_ppl, age_column, num_ppl_chro=300):
     myfunction = lambda x: np.absolute(num_ppl_chro-np.sum((1+np.exp(-(x-11.69+.2191*age_column-0.001461*age_column**2))**(-1))))-num_ppl
     xopt = optimize.fsolve(myfunction, x0=[2])
     rchron = (1+np.exp(-(xopt-11.69+.2191*age_column-0.001461*age_column**2)))**(-1)
-    chroncases = (np.random.uniform(np.min(rchron),1,num_ppl) < rchron)
+    chroncases = (np.random.uniform(np.min(rchron), 1, num_ppl) < rchron)
     return chroncases
+
 
 def adjust_asymp_with_chronic(asymp_column, chronic_column):
     """
@@ -145,8 +163,9 @@ def adjust_asymp_with_chronic(asymp_column, chronic_column):
         out : Updated asymptomatic array
     """
     new_asymp_column = asymp_column.copy()
-    new_asymp_column[chronic_column==1] = 0
+    new_asymp_column[chronic_column == 1] = 0
     return new_asymp_column
+
 
 def create_wanderer_column(gender, age):
     """
@@ -159,11 +178,11 @@ def create_wanderer_column(gender, age):
     
     Returns
     -------
-        out : Boolean array of same size as of `gender` and `age`, indicating if a person is wanderer (True) or not (False)
+        out : Boolean array indicating if a person is wanderer (True) or not (False)
 
     """
-
     return np.logical_and([gender == 1], [age >= 10]).transpose()
+
 
 def form_population_matrix(N, hb, Nb, ht, Nt, pac, age_and_gender):
     """
@@ -172,8 +191,8 @@ def form_population_matrix(N, hb, Nb, ht, Nt, pac, age_and_gender):
     Parameters
     ----------
         N              : Total population
-        hb             : Number of isoboxes
-        Nb             : Number of people in isoboxes
+        hb             : Number of iso-boxes
+        Nb             : Number of people in iso-boxes
         ht             : Number of tents
         Nt             : Number of people in tents
         pac            : Proportion of permanently asymptomatic cases (Mizumoto et al 2020 Eurosurveillance)
@@ -183,9 +202,9 @@ def form_population_matrix(N, hb, Nb, ht, Nt, pac, age_and_gender):
     -------
         out : 2D array containing population info. Each row will contain following columns:
            0: Initial household distribution for each individual [0, hb+ht)
-           1: Binary disease state for each individual {0, 1}
+           1: Disease state for each individual
            2: Days to symptoms
-           3: Daycount
+           3: Day count
            4: Binary state indicating if individual is asymptomatic {0, 1}
            5: Age of the individual
            6: Gender of the individual {0: female, 1: male}
@@ -194,33 +213,34 @@ def form_population_matrix(N, hb, Nb, ht, Nt, pac, age_and_gender):
 
     """
     
-    #1 allocated to isoboxes and tents
+    # 1 allocated to iso-boxes and tents
     household_column = create_household_column(hb, Nb, ht, Nt)
-    #2 allocate an infector
+    # 2 allocate an infector
     disease_column = create_diseasestate_column(N)
-    #3 weibull distribution
+    # 3 weibull distribution
     dsymptom_column = create_daystosymptoms_column(N)
-    #4 np.zeros(num_ppl)
+    # 4 np.zeros(num_ppl)
     daycount_column = create_daycount_column(N)
-    #5 hard coded number of chronics
+    # 5 hard coded number of chronics
     asymp_column = create_asymp_column(N, pac)
-    #6 age
+    # 6 age
     age_column = create_age_column(age_and_gender[:,0])
-    #7 gender
+    # 7 gender
     gender_column = create_gender_column(age_and_gender[:,1])
-    #8 formula based on age
+    # 8 formula based on age
     chronic_column = create_chronic_column(N, age_column)
-    #5 new_asymp_column[chronic_column==1]=0
+    # 5 new_asymp_column[chronic_column==1]=0
     new_asymp_column = adjust_asymp_with_chronic(asymp_column, chronic_column)
-    #9
+    # 9
     wanderer_column = create_wanderer_column(gender_column, age_column)
 
-    pop_matrix=np.column_stack((household_column, disease_column, dsymptom_column,
+    pop_matrix = np.column_stack((household_column, disease_column, dsymptom_column,
                                 daycount_column, new_asymp_column, age_column,
                                 gender_column, chronic_column, wanderer_column))
     
     assert pop_matrix.shape == (N, 9)
     return pop_matrix
+
 
 def place_households(ppl_to_hh_index, prop_type1, num_hh_type1):
     """
@@ -229,12 +249,12 @@ def place_households(ppl_to_hh_index, prop_type1, num_hh_type1):
     Parameters
     ----------
         ppl_to_hh_index : Household distribution within the population
-        prop_type1      : Proportion of area covered by isoboxes (iba=0.5)
-        num_hh_type1    : Number of isoboxes (hb)
+        prop_type1      : Proportion of area covered by iso-boxes (iba=0.5)
+        num_hh_type1    : Number of iso-boxes (hb)
     
     Returns
     -------
-        out : 2D array containing location of households (isoboxes + tents)
+        out : 2D array containing location of households (iso-boxes + tents)
 
     """
     
@@ -275,77 +295,34 @@ def place_households(ppl_to_hh_index, prop_type1, num_hh_type1):
     assert hhloc.shape[0] == maxhh
     return hhloc
 
-def assign_block(hhloc, blocks):
-    """
-    Assign households to blocks based on a hypothetical grid size
-
-    Parameters
-    ----------
-        hhloc  : A (hb+ht, 2) array containing position of isoboxes and tents
-        blocks : [nx, ny] pair containing grid size
-    
-    Returns
-    -------
-        label  : A 1D array containing block numbers for each household
-        shared : A 2D boolean array of shared blocks at the household level.
-                 shared[i, j] will be `True` if household i and j share the toilet or food line else `False`
-    """
-
-    # total number of households (isoboxes + tents)
-    hh_size = hhloc.shape[0]
-
-    # assign x coordinate of household to one of the x-axis blocks
-    limit_x = np.arange(1, blocks[0] + 1) / blocks[0] # x-axis grid lines considering 1x1 camp
-    label_x = np.digitize(hhloc[:, 0], limit_x)       # returns indices of x-axis grid line where household belongs
-
-    # assign y coordinate of household to one of the y-axis blocks
-    limit_y = np.arange(1, blocks[1] + 1) / blocks[1] # y-axis grid lines considering 1x1 camp
-    label_y = np.digitize(hhloc[:, 1], limit_y)       # returns indices of y-axis grid line where household belongs
-    
-    # based on integral grid position (label_x, label_y), calculate the grid number [1, nx*ny]
-    label = label_y * blocks[0] + label_x + 1
-
-    # find out which households share the same toilet or foodline
-    TEMP = np.tile(label, (len(label), 1))
-    shared = (TEMP.T == TEMP) - np.eye(hh_size)
-
-    # TODO: this assert statement will not be always True! Confirm with others.
-    # assert np.max(label) == np.prod(blocks)
-    assert shared.shape == (hh_size, hh_size)
-    location = np.vstack((limit_x, limit_y))
-    
-    return location, label, shared
 
 def position_toilet(hhloc, nx=12, ny=12):
     """
     Position toilets in the camp.
     From the doc: "Toilets are placed at the centres of the squares that form a 12 x 12 grid covering the camp"
-
     Parameters
     ----------
         hhloc : A (hb+ht, 2) array containing position of isoboxes and tents
         nx    : Width of hypothetical grid used for toilet placement
         ny    : Height of hypothetical grid used for toilet placement
-
     """
-    
+
     # Grid dimensions for toilet blocks
     tblocks = np.array([nx, ny])
 
     # assign toilets to households
     return assign_block(hhloc, tblocks)
 
+
 def position_foodline(hhloc, nx=1, ny=1):
     """
     Position foodline in the camp.
     From the doc: "The camp has one food line. The position of the food line is not explicitly modelled."
-
     Parameters
     ----------
         hhloc : A (hb+ht, 2) array containing position of isoboxes and tents
         nx    : Width of hypothetical grid used for foodine placement
         ny    : Height of hypothetical grid used for foodline placement
-
     """
 
     # Grid dimensions for foodline blocks
@@ -353,53 +330,84 @@ def position_foodline(hhloc, nx=1, ny=1):
 
     # assign foodline to households
     return assign_block(hhloc, fblocks)
+
     
-def create_ethnic_groups(hhloc,int_eth):
+def create_ethnic_groups(hh_loc, int_eth):
     """
-    From the paper:
-    -----------------
-    "In Moria, the homes of people with the same ethnic or national background are spatially clustered, and people interact more frequently      with others from the same background as themselves.   ... To simulate ethnicities or nationalities in our camp, we assigned each            household to one of eight (?) “backgrounds” in proportion to the    self-reported countries of origin of people.. For each of the          eight simulated backgrounds, we randomly selected one tent or isobox to be    the seed for the cluster. We assigned the x nearest          unassigned households to that background, where x is the number of households with that background."
 
-    Parameters:
-    -----------
-    hhloc: A (hb+ht, 2) array containing position of isoboxes and tents
-    int_eth: scalar representing relative strength interactions between ethnicities (external parameter)
-
-    Returns:
+    Parameters
     ----------
-    ethcor: ethnicities correlation
+        hh_loc : A (hb+ht, 2) array containing position of households (iso-boxes and tents)
+        int_eth: A scalar representing relative strength interactions between ethnicities (external parameter)
+
+    Returns
+    -------
+        eth_cor: ethnicities correlation
+
+    Notes
+    -----
+    "In Moria, the homes of people with the same ethnic or national background are spatially clustered,
+    and people interact more frequently with others from the same background as themselves.   ...
+    To simulate ethnicities or nationalities in our camp, we assigned each household to one of eight (?) “backgrounds”
+    in proportion to the self-reported countries of origin of people.. For each of the eight simulated backgrounds,
+    we randomly selected one tent or isobox to be he seed for the cluster. We assigned the x nearest unassigned
+    households to that background, where x is the number of households with that background."
 
     """
+    
+    # TODO: should be parameterized
     Afghan = 7919 ; Cameroon = 149 ; Congo = 706 ;Iran = 107 ;Iraq = 83 ; Somalia = 442 ; Syria = 729
-    g = np.array([Afghan,Cameroon,Congo,Iran,Iraq,Somalia,Syria])  
-    totEthnic = sum(g) 
-    hh_size=hhloc.shape[0]
-    g_hh = np.round(hh_size*g/totEthnic)              # Number of households per group.
-    np.random.shuffle(g_hh) #shuffle the array
-    hhunass= np.column_stack((np.arange(0,hh_size), hhloc))   # Unassigned households. Firsto column is the index of the hh.
-    hheth = np.zeros((hh_size,1))
-    i=0
-    for g in g_hh:
-        gcen = hhunass[np.random.randint(hhunass.shape[0]),1:] # Chose an unassigned household as the group (cluster) centre.
-        dfromc = np.sum((hhunass[:,1:]-np.tile(gcen,(hhunass.shape[0],1)))**2,1) # Squared distance to cluster centre.
-        cloind = np.argsort(dfromc)                            # Get the indices of the closest households (cloind).
-        hheth[hhunass[cloind[0:int(g)],0].astype(int)] = i  # Assign i-th ethnic group to those households.
-        hhunass = np.delete(hhunass,cloind[0:int(g)],0)     # Remove those hoseholds (remove the i-th cluster/ethnic group)
-        i+=1
-    ethmatch = (np.tile(hheth,(1,len(hheth)))==np.tile(hheth,(1,len(hheth))).T )
-    #scale down the connection for poeple of different background
-    ethcor = ethmatch+int_eth*(1-ethmatch)
-    return ethcor
+    g = np.array([Afghan, Cameroon, Congo, Iran, Iraq, Somalia, Syria])  
+    total_pop = sum(g)
+    hh_size = hh_loc.shape[0]
 
-def interaction_neighbours(household_coordinates, movement_radius_small, movement_radius_large, lrtol, ethnic_groups):
+    # Number of households per group
+    g_hh = np.round(hh_size*g/total_pop)
+    np.random.shuffle(g_hh)
+
+    # Unassigned households. First column is the index of hh
+    hh_index = np.arange(0, hh_size)
+    hh_unassigned = np.column_stack((hh_index, hh_loc))
+
+    # to store which ethnic group is allocated to which household
+    hh_eth = np.zeros((hh_size, 1))
+
+    for i, g in enumerate(g_hh):  # iterate for each ethnic group
+
+        # Chose an unassigned household as the group (cluster) center.
+        g_center = hh_unassigned[np.random.randint(hh_unassigned.shape[0]), 1:]
+
+        # Squared distance to cluster centre.
+        dfromc = np.sum((hh_unassigned[:, 1:]-np.tile(g_center, (hh_unassigned.shape[0], 1)))**2, 1)
+
+        # Get the indices of the `g` closest households
+        cloind = np.argsort(dfromc)[0: int(g)]
+
+        # Assign i-th ethnic group to those households
+        hh_eth[hh_unassigned[cloind, 0].astype(int)] = i
+
+        # Remove those households (remove the i-th cluster/ethnic group)
+        hh_unassigned = np.delete(hh_unassigned, cloind, axis=0)
+
+    # find out which households have same ethnic groups
+    eth_match = (np.tile(hh_eth, (1, hh_size)) == np.tile(hh_eth, (1, hh_size)).T)
+
+    # scale down the connection for people of different background
+    # TODO: is scale-down happening here? Since `eth_match` will be either 0 or 1, eth_cor will be either `int_eth` or 1
+    eth_cor = eth_match + int_eth * (1 - eth_match)
+
+    return eth_cor
+
+
+def interaction_neighbours(household_coordinates, r, R, lrtol, ethnic_groups):
     """
     Parameters
     ----------
         household_coordinates : A 2D array containing co-ordinates of the households
-        movement_radius_small : Smaller movement radius [0-1]
-        movement_radius_large : Larger movement radius [0-1]
+        r                     : Smaller movement radius [0-1]
+        R                     : Larger movement radius [0-1]
         lrtol                 : scale value for interactions within household
-        ethnic_groups         : Scale values for interaction between ethnic groups (output of create_ethnic_groups())
+        ethnic_groups         : Scale values for interaction between ethnic groups (output of `create_ethnic_groups`())
     
     Returns
     -------
@@ -407,37 +415,39 @@ def interaction_neighbours(household_coordinates, movement_radius_small, movemen
     """
 
     # create distance matrix for distance in between households
-    household_distance_matrix = distance_between_households(household_coordinates);
+    household_distance_matrix = distance_matrix(household_coordinates)
 
-    # the case where person with movement_radius_small is inteacting with person with same radius
-    relative_encounter_small = relative_encounter_rate(household_distance_matrix, movement_radius_small,
-                                                       movement_radius_small)
+    # the case where person with movement_radius_small is interacting with person with same radius
+    relative_encounter_small = relative_encounter_rate(household_distance_matrix, r, r)
 
-    # the case where person with movement_radius_large is inteacting with person with same radius
-    relative_encounter_large = relative_encounter_rate(household_distance_matrix, movement_radius_large,
-                                                       movement_radius_large)
-    # the case where person with movement_radius_large is inteacting with person with movement_radius_small
-    relative_encounter_small_large = relative_encounter_rate(household_distance_matrix, movement_radius_small,
-                                                             movement_radius_large)
+    # the case where person with movement_radius_large is interacting with person with same radius
+    relative_encounter_large = relative_encounter_rate(household_distance_matrix, R, R)
 
-    lis = np.multiply(math.pi * lrtol ** 2 * np.dstack(
-        (relative_encounter_small, relative_encounter_small_large, relative_encounter_large)),
-                      np.dstack((ethnic_groups, ethnic_groups, ethnic_groups)))
+    # the case where person with movement_radius_large is interacting with person with movement_radius_small
+    relative_encounter_small_large = relative_encounter_rate(household_distance_matrix, r, R)
+
+    lis = np.multiply(
+        math.pi * lrtol ** 2 * np.dstack((
+            relative_encounter_small,
+            relative_encounter_small_large,
+            relative_encounter_large
+        )),
+        np.dstack((ethnic_groups, ethnic_groups, ethnic_groups))
+    )
     return lis
 
+
 def interaction_neighbours_fast(hhloc, lr1, lr2, lrtol, ethcor):
-    #use the formula from https://mathworld.wolfram.com/Circle-CircleIntersection.html 
-    #create distance matrix for distance in between households
-    hhdm_x=(np.tile(hhloc[:,0],(hhloc.shape[0],1)).T - np.tile(hhloc[:,0],(hhloc.shape[0],1)))**2
-    hhdm_y=(np.tile(hhloc[:,1],(hhloc.shape[0],1)).T - np.tile(hhloc[:,1],(hhloc.shape[0],1)))**2
-    hhdm=np.sqrt(hhdm_x+hhdm_y)
-    #the case where lr1 is inteacting with lr1
+    # use the formula from https://mathworld.wolfram.com/Circle-CircleIntersection.html
+    # create distance matrix for distance in between households
+    hhdm = distance_matrix(hhloc)
+    # the case where lr1 is interacting with lr1
     area_overlap11=2*(lr1**2*np.arccos(np.clip(0.5*hhdm/lr1,a_min=None,a_max=1))-np.nan_to_num(hhdm/2*np.sqrt(lr1**2-hhdm**2/4)))
     relative_encounter11=area_overlap11/(math.pi**2*lr1**4)
-    #the case where lr2 is inteacting with lr2
+    # the case where lr2 is interacting with lr2
     area_overlap22=2*(lr2**2*np.arccos(np.clip(hhdm/(2*lr2),a_min=None,a_max=1))-np.nan_to_num(hhdm/2*np.sqrt(lr2**2-hhdm**2/4)))
     relative_encounter22=area_overlap22/(math.pi**2*lr2**4)
-    #the case where lr1 is interacting with lr2
+    # the case where lr1 is interacting with lr2
     area_overlap12=np.nan_to_num((lr1**2*np.arccos(np.clip((hhdm**2+lr1**2-lr2**2)/(2*hhdm*lr1),a_min=None,a_max=1)))
     +(lr2**2*np.arccos(np.clip((hhdm**2+lr2**2-lr1**2)/(2*hhdm*lr2),a_min=None,a_max=1)))
     -0.5*np.sqrt((-hhdm+lr1+lr2)*(hhdm+lr1-lr2)*(hhdm-lr1+lr2)*(hhdm+lr1+lr2)))
@@ -445,253 +455,214 @@ def interaction_neighbours_fast(hhloc, lr1, lr2, lrtol, ethcor):
     lis = np.multiply(math.pi*lrtol**2*np.dstack((relative_encounter11,relative_encounter12,relative_encounter22)),np.dstack((ethcor,ethcor,ethcor)))
     return lis
 
+
 def epidemic_finish(states, iteration):
-    '''
+    """
     Finish the simulation when no person is in any state other than recovered or susceptible
-    '''
-    return (np.sum(states) == 0 and iteration > 10)
+    """
+    return np.sum(states) == 0 and iteration > 10
+
 
 def disease_state_update(pop_matrix, mild_rec, sev_rec, pick_sick, thosp, quarantined=False):
-    '''
-    Disease progress from one state to another among susceptible, exposed, presymptomatic,
-    symptomatic, mild, severe and recovered for Quarantine and Normal situation
-    '''
-    # thosp = Total number of hospitalized individuals.
-    # abc_to_xyz_ind = abc state to xyz state 's indices in pop_matrix
+    """
+    Disease progress from one state to another among susceptible, exposed, presymptomatic, symptomatic, mild, severe
+    and recovered for Quarantine and Normal situation.
 
-    # columns for pop_matrix
-    # 0 "household",
-    # 1 "disease",
-    # 2 "dsymptom",
-    # 3 "daycount",
-    # 4 "new_asymp",
-    # 5 "age",
-    # 6 "gender",
-    # 7 "chronic",
-    # 8 "wanderer"
+    Parameters
+    ----------
+        pop_matrix: Population matrix (created in `form_population_matrix`)
+        mild_rec: Probability that person's disease state will change from mild->recovered
+        sev_rec: Probability that person's disease state will change from severe->recovered
+        pick_sick: Health state
+        thosp: Total number of hospitalized individuals
+        quarantined: Boolean indicating if quarantined population is considered or not-quarantined population
 
-    # values for pop_matrix[:,1]:
-    # 0 'susceptible',
-    # 1 'exposed',
-    # 2 'presymptomatic',
-    # 3 'symptomatic',
-    # 4 'mild',
-    # 5 'severe',
-    # 6 'recovered',
-    # 7 'qua_susceptible',
-    # 8 'qua_exposed',
-    # 9 'qua_presymptomatic',
-    # 10'qua_symptomatic',
-    # 11'qua_mild',
-    # 12'qua_severe',
-    # 13'qua_recovered'
+    Returns
+    -------
+        pop_matrix: Updated population matrix
+        thosp: Updated number of hospitalized people
 
-    qua_add=0
+    Notes
+    -----
+        abc_to_xyz_ind = abc state to xyz state's indices in pop_matrix
+
+        Columns of pop_matrix (relevant to this method):
+        {1: disease state, 2: days to symptomatic, 3: day count, 5: age, 7: chronic flag}
+
+        Possible values of disease state (pop_matrix[:, 1]):
+        {
+            0: susceptible, 1: exposed, 2: presymptomatic, 3: symptomatic, 4: mild, 5: severe, 6: recovered,
+            7: qua_susceptible, 8: qua_exposed, 9: qua_presymptomatic, 10: qua_symptomatic, 11: qua_mild,
+            12: qua_severe, 13: qua_recovered
+        }
+
+    """
+
+    # get susceptible index value. Refer values of pop_matrix[:, 1] for more details
+    qua_add = 0  # for normal situation
     if quarantined:
-        qua_add=7
-    # Move exposed to presymptomatic
-    exposed_to_presym_ind=np.logical_and(pop_matrix[:,1]==1+qua_add,pop_matrix[:,3]>=np.floor(0.5*pop_matrix[:,2]))
-    pop_matrix[exposed_to_presym_ind,1] =2+qua_add
-    # Move presymptomatic to symptomatic but not yet severe.
-    presymp_to_symp_ind = np.logical_and(pop_matrix[:,1]==2+qua_add,pop_matrix[:,3]>=pop_matrix[:,2])
-    pop_matrix[presymp_to_symp_ind,1] = 3+qua_add
-    pop_matrix[presymp_to_symp_ind,3] = 0
-    # Move individuals with 6 days of symptoms to mild.
-    symp_to_mild_ind=np.logical_and(pop_matrix[:,1]==(3+qua_add),pop_matrix[:,3]==6) 
-    pop_matrix[symp_to_mild_ind,1] = 4+qua_add   
-    # Move Mild Symptoms to recovered
-    mild_to_recovered_ind = np.logical_and(pop_matrix[:,1]==(4+qua_add),mild_rec)
-    pop_matrix[mild_to_recovered_ind,1] = 6+qua_add                             
-    # Move Severe symptoms to recovered.
-    severe_to_recovered_ind = np.logical_and(pop_matrix[:,1]==(5+qua_add),sev_rec)
-    pop_matrix[severe_to_recovered_ind,1] = 6+qua_add     
-    #  symptomatic to the “mild” or “severe”
-    asp = np.array([0,.000408,.0104,.0343,.0425,.0816,.118,.166,.184])        # Verity et al. hospitalisation.
-    aspc = np.array([.0101,.0209,.0410,.0642,.0721,.2173,.2483,.6921,.6987])  # Verity et al. corrected for Tuite.
-    AGE_BUCKET=9
-    for buc in range(AGE_BUCKET):
-        # Assign individuals with mild symptoms for six days, sick, between 10*sci and 10*sci+1 years old to severe and count as hospitalized.
-        if buc==8:# For all individual with Age 80 and above.
-            # Move individuals with Chronic diseases with 6 days of mild to severe.
-            mild_to_severe_ind=np.logical_and.reduce((pop_matrix[:,1]==4+qua_add,pop_matrix[:,3]==6,pick_sick<asp[buc],pop_matrix[:,5]>=10*buc,pop_matrix[:,7]==0))
-            thosp += np.sum(mild_to_severe_ind)
-            pop_matrix[mild_to_severe_ind,1] = 5+qua_add
-            # Move individuals with Chronic diseases with 6 days of mild to severe.
-            mild_to_severe_chronic_ind=np.logical_and.reduce((pop_matrix[:,1]==4+qua_add,pop_matrix[:,3]==6,pick_sick<aspc[buc],pop_matrix[:,5]>=10*buc,pop_matrix[:,7]==1))
-            thosp += np.sum(mild_to_severe_chronic_ind)
-            pop_matrix[mild_to_severe_chronic_ind,1] = 5+qua_add 
-        else:
-            severe_ind = np.logical_and.reduce((
-                pop_matrix[:, 1] == 4 + qua_add, #mild
-                pop_matrix[:, 3] == 6, #6 days
-                pick_sick < asp[buc], #probability of passage to next disease state for low risk people
-                pop_matrix[:, 5] >= 10 * buc,
-                pop_matrix[:, 5] < (10 * buc + 10)
-            ))
-            thosp += np.sum(severe_ind)
-            pop_matrix[severe_ind, 1] = 5 + qua_add
-            # Wouldnt this step double count previous individuals? Is this step the one that adjusts for pre-existing conditions?
-            severe_chronic_ind = np.logical_and.reduce((
-                pop_matrix[:, 1] == 4 + qua_add,
-                pop_matrix[:, 3] == 6,
-                pick_sick < aspc[buc], #probability of passage to next disease state for high risk people
-                pop_matrix[:, 5] >= (10 * buc),
-                pop_matrix[:, 5] < (10 * buc + 10),
-                pop_matrix[:, 7] == 1
-            ))
-            thosp += np.sum(severe_chronic_ind)
-            pop_matrix[severe_chronic_ind, 1] = 5 + qua_add
+        qua_add = 7  # for quarantined situation
 
-            # Move individuals with Non Chronic diseases with 6 days of mild to severe for current age group.
-            # cond1 = pop_matrix[:,1]==4+qua_add
-            # cond2 = pop_matrix[:,3]==6
-            # cond3 = pick_sick<asp[buc]
-            # cond4 = pop_matrix[:,5]>=10*buc
-            # cond5 = pop_matrix[:,5]<(10*buc+10)
-            # cond6 = pop_matrix[:,7]==0
-            # mild_to_severe_ind=np.logical_and.reduce((pop_matrix[:,1]==4+qua_add,pop_matrix[:,3]==6,pick_sick<asp[buc],pop_matrix[:,5]>=10*buc, pop_matrix[:,5]<(10*buc+10)))
-            #np.logical_and.reduce((pop_matrix[:,1]==4+qua_add,pop_matrix[:,3]==6,pick_sick<asp[buc],pop_matrix[:,5]>=10*buc, pop_matrix[:,5]<(10*buc+10), pop_matrix[:,7]==0))
-            # thosp += np.sum(mild_to_severe_ind)
-            # pop_matrix[mild_to_severe_ind,1] = 5+qua_add
-            # # Move individuals with Chronic diseases with 6 days of mild to severe for current age group.
-            # mild_to_severe_chronic_ind=np.logical_and.reduce((pop_matrix[:,1]==4+qua_add,pop_matrix[:,3]==6,pick_sick<aspc[buc],pop_matrix[:,5]>=10*buc,pop_matrix[:,5]<(10*buc+10),pop_matrix[:,7]==1))
-            # thosp += np.sum(mild_to_severe_chronic_ind)
-            # pop_matrix[mild_to_severe_chronic_ind,1] = 5+qua_add
+    # Move exposed to presymptomatic
+    exposed_to_presym_ind = np.logical_and(
+        pop_matrix[:, 1] == (1 + qua_add),  # returns exposed/qua_exposed people
+        pop_matrix[:, 3] >= np.floor(0.5 * pop_matrix[:, 2])  # returns people who passed half of incubation period
+    )
+    # update exposed->presymptomatic state
+    pop_matrix[exposed_to_presym_ind, 1] = 2 + qua_add
+
+    # Move presymptomatic to symptomatic but not yet severe.
+    presymp_to_symp_ind = np.logical_and(
+        pop_matrix[:, 1] == (2 + qua_add),  # returns presymptomatic/qua_presymptomatic people
+        pop_matrix[:, 3] >= pop_matrix[:, 2],  # returns people for which incubation period is over
+        # TODO: verify (Added by Ankit)
+        pop_matrix[:, 4] == 0  # returns non-asymptomatic people. Asymptomatic people don't become symptomatic
+    )
+    # update presymptomatic->symptomatic state
+    pop_matrix[presymp_to_symp_ind, 1] = 3 + qua_add
+    # NOTE: Reset the day count when incubation period is over
+    pop_matrix[presymp_to_symp_ind, 3] = 0
+
+    # Move individuals with 6 days of symptoms to mild.
+    symp_to_mild_ind = np.logical_and(
+        pop_matrix[:, 1] == (3 + qua_add),  # returns symptomatic/qua_symptomatic people
+        pop_matrix[:, 3] == 6  # people on their 6th day after incubation period was over
+    )
+    pop_matrix[symp_to_mild_ind, 1] = 4 + qua_add
+
+    # Move people with mild symptoms to recovered state
+    mild_to_recovered_ind = np.logical_and(
+        pop_matrix[:, 1] == (4 + qua_add),  # returns mild/qua_mild people
+        mild_rec  # returns True if mild->recovered is valid based on probabilities defined in Lui et al. 2020
+    )
+    # update mild->recovered state
+    pop_matrix[mild_to_recovered_ind, 1] = 6 + qua_add
+
+    # Move people with severe symptoms to recovered state
+    severe_to_recovered_ind = np.logical_and(
+        pop_matrix[:, 1] == (5+qua_add),  # returns severe/qua_severe people
+        sev_rec  # returns True if severe->recovered is valid based on probabilities defined in Cai et al.
+    )
+    # update severe->recovered state
+    pop_matrix[severe_to_recovered_ind, 1] = 6 + qua_add
+
+    # symptomatic to the “mild” or “severe”
+    # Verity et al. hospitalisation.
+    asp = np.array([0, .000408, .0104, .0343, .0425, .0816, .118, .166, .184])
+    # Verity et al. corrected for Tuite
+    aspc = np.array([.0101, .0209, .0410, .0642, .0721, .2173, .2483, .6921, .6987])
+
+    age_bucket = 9  # age ranges from (0-10) to (90+)
+    for buc in range(age_bucket):
+
+        # Assign individuals with mild symptoms for six days, sick, between 10*sci and 10*sci+1 years old to severe
+        # and count as hospitalized.
+
+        severe_ind = np.logical_and.reduce((
+            pop_matrix[:, 1] == 4 + qua_add,  # returns mild/qua_mild people
+            pop_matrix[:, 3] == 6,  # 6th day after incubation period ??
+            pick_sick < asp[buc],  # Verity and colleagues data (low-risk)
+            pop_matrix[:, 5] >= 10 * buc,  # people age lower bound
+            pop_matrix[:, 5] < (10 * buc + 10),  # people age upper bound
+            pop_matrix[:, 7] == 0  # people not having chronic disease
+        ))
+        # consider new severe people as hospitalized
+        thosp += np.sum(severe_ind)
+        # update mild->severe state
+        pop_matrix[severe_ind, 1] = 5 + qua_add
+
+        # Move individuals with Chronic diseases with 6 days of mild to severe.
+        severe_chronic_ind = np.logical_and.reduce((
+            pop_matrix[:, 1] == 4 + qua_add,  # returns mild/qua_mild people
+            pop_matrix[:, 3] == 6,  # 6th day after incubation period ??
+            pick_sick < aspc[buc],  # Tuite and colleagues data (high-risk)
+            pop_matrix[:, 5] >= (10 * buc),  # people age lower bound
+            pop_matrix[:, 5] < (10 * buc + 10),  # people age upper bound
+            pop_matrix[:, 7] == 1  # person having chronic disease
+        ))
+        # consider new severe people as hospitalized
+        thosp += np.sum(severe_chronic_ind)
+        # update mild->severe state
+        pop_matrix[severe_chronic_ind, 1] = 5 + qua_add
                            
-    return pop_matrix,thosp
+    return pop_matrix, thosp
 
-def disease_state_update_for_agent(agent,mild_rec,sev_rec,pick_sick,thosp,quarantined=False):
-    '''
-    Disease progress from one state to another among susceptible, exposed, presymptomatic,
-    symptomatic, mild, severe and recovered for Quarantine and Normal situation
-    '''
-    # thosp = Total number of hospitalized individuals.
-    # abc_to_xyz_ind = abc state to xyz state 's indices in pop_matrix
 
-    # columns for pop_matrix
-    # 0 "household",
-    # 1 "disease",
-    # 2 "dsymptom",
-    # 3 "daycount",
-    # 4 "new_asymp",
-    # 5 "age",
-    # 6 "gender",
-    # 7 "chronic",
-    # 8 "wanderer"
-
-    # values for pop_matrix[:,1]:
-    # 0 'susceptible',
-    # 1 'exposed',
-    # 2 'presymptomatic',
-    # 3 'symptomatic',
-    # 4 'mild',
-    # 5 'severe',
-    # 6 'recovered',
-    # 7 'qua_susceptible',
-    # 8 'qua_exposed',
-    # 9 'qua_presymptomatic',
-    # 10'qua_symptomatic',
-    # 11'qua_mild',
-    # 12'qua_severe',
-    # 13'qua_recovered'
-
-    pop_matrix = np.array([[
-        agent.household,
-        agent.disease,
-        agent.dsymptom,
-        agent.daycount,
-        agent.new_asymp,
-        agent.age,
-        agent.gender,
-        agent.chronic,
-        agent.wanderer
-    ]])
-
-    qua_add=0
-    if quarantined:
-        qua_add=7
-    # Move exposed to presymptomatic
-    exposed_to_presym_ind=np.logical_and(pop_matrix[:,1]==1+qua_add,pop_matrix[:,3]>=np.floor(0.5*pop_matrix[:,2]))
-    pop_matrix[exposed_to_presym_ind,1] =2+qua_add
-    # Move presymptomatic to symptomatic but not yet severe.
-    presymp_to_symp_ind = np.logical_and(pop_matrix[:,1]==2+qua_add,pop_matrix[:,3]>=pop_matrix[:,2])
-    pop_matrix[presymp_to_symp_ind,1] = 3+qua_add
-    pop_matrix[presymp_to_symp_ind,3] = 0
-    # Move individuals with 6 days of symptoms to mild.
-    symp_to_mild_ind=np.logical_and(pop_matrix[:,1]==(3+qua_add),pop_matrix[:,3]==6)
-    pop_matrix[symp_to_mild_ind,1] = 4+qua_add
-    #  symptomatic to the “mild” or “severe”
-    asp = np.array([0,.000408,.0104,.0343,.0425,.0816,.118,.166,.184])        # Verity et al. hospitalisation.
-    aspc = np.array([.0101,.0209,.0410,.0642,.0721,.2173,.2483,.6921,.6987])  # Verity et al. corrected for Tuite.
-    AGE_BUCKET=9
-    for buc in range(AGE_BUCKET):
-        # Assign individuals with mild symptoms for six days, sick, between 10*sci and 10*sci+1 years old to severe and count as hospitalized.
-        if buc==8:# For all individual with Age 80 and above.
-            # Move individuals with Chronic diseases with 6 days of mild to severe.
-            mild_to_severe_ind=np.logical_and.reduce((pop_matrix[:,1]==4+qua_add,pop_matrix[:,3]==6,pick_sick<asp[buc],pop_matrix[:,5]>=10*buc,pop_matrix[:,7]==0))
-            thosp += np.sum(mild_to_severe_ind)
-            pop_matrix[mild_to_severe_ind,1] = 5+qua_add
-            # Move individuals with Chronic diseases with 6 days of mild to severe.
-            mild_to_severe_chronic_ind=np.logical_and.reduce((pop_matrix[:,1]==4+qua_add,pop_matrix[:,3]==6,pick_sick<aspc[buc],pop_matrix[:,5]>=10*buc,pop_matrix[:,7]==1))
-            thosp += np.sum(mild_to_severe_chronic_ind)
-            pop_matrix[mild_to_severe_chronic_ind,1] = 5+qua_add
-        else:
-            # Move individuals with Non Chronic diseases with 6 days of mild to severe for current age group.
-            mild_to_severe_ind=np.logical_and.reduce((pop_matrix[:,1]==4+qua_add,pop_matrix[:,3]==6,pick_sick<asp[buc],pop_matrix[:,5]>=10*buc, pop_matrix[:,5]<(10*buc+10, pop_matrix[:,7]==0)))
-            thosp += np.sum(mild_to_severe_ind)
-            pop_matrix[mild_to_severe_ind,1] = 5+qua_add
-            # Move individuals with Chronic diseases with 6 days of mild to severe for current age group.
-            mild_to_severe_chronic_ind=np.logical_and.reduce((pop_matrix[:,1]==4+qua_add,pop_matrix[:,3]==6,pick_sick<aspc[buc],pop_matrix[:,5]>=10*buc,pop_matrix[:,5]<(10*buc+10),pop_matrix[:,7]==1))
-            thosp += np.sum(mild_to_severe_chronic_ind)
-            pop_matrix[mild_to_severe_chronic_ind,1] = 5+qua_add
-    # Move Mild Symptoms to recovered
-    mild_to_recovered_ind = np.logical_and(pop_matrix[:,1]==(4+qua_add),mild_rec)
-    pop_matrix[mild_to_recovered_ind,1] = 6+qua_add
-    # Move Severe symptoms to recovered.
-    severe_to_recovered_ind = np.logical_and(pop_matrix[:,1]==(5+qua_add),sev_rec)
-    pop_matrix[severe_to_recovered_ind,1] = 6+qua_add
-    return pop_matrix,thosp
-
+@njit
 def accumarray(subs, val):
-    '''Construct Array with accumulation.
-    https://www.mathworks.com/help/matlab/ref/accumarray.html'''
-    return np.array([np.sum(val[np.where(subs==i)]) for i in np.unique(subs)])
+    """Construct Array with accumulation. https://www.mathworks.com/help/matlab/ref/accumarray.html"""
+    unq = np.unique(subs)
+    n = subs.shape[0]
+    out = []
+    for h in unq:
+        h_sum = 0
+        for i in range(n):
+            if subs[i] == h:
+                h_sum = h_sum + val[i]
+        out.append(h_sum)
+
+    return np.array(out)
+
+    # return np.array([np.sum(val[np.where(subs == i)]) for i in np.unique(subs)])
+
 
 def identify_contagious_active(pop_matrix):
-    # values for pop_matrix[:,1]:
-    # 0 'susceptible',
-    # 1 'exposed',
-    # 2 'presymptomatic',
-    # 3 'symptomatic',
-    # 4 'mild',
-    # 5 'severe',
-    # 6 'recovered',
-    # 7 'qua_susceptible',
-    # 8 'qua_exposed',
-    # 9 'qua_presymptomatic',
-    # 10'qua_symptomatic',
-    # 11'qua_mild',
-    # 12'qua_severe',
-    # 13'qua_recovered'
+    """
 
-    # contagious_hhl = people with 2-5 states
-    # contagious_hhl_qua = people with 9-12 states
-    # contagious_camp = symp+asymp or presymp or symp+teen
-    # contagious_sitters = not wanderers
-    # contagious_wanderers = wanderers
-    # active_camp = symp+asymp or presymp or symp+teen or exposed+susep or recovered
+    Parameters
+    ----------
+        pop_matrix: Population matrix (created in `form_population_matrix`)
 
-    contagious_hhl = np.logical_and(pop_matrix[:,1]>1,pop_matrix[:,1]<6)
-    contagious_hhl_qua = np.logical_and(pop_matrix[:,1]>8,pop_matrix[:,1]<13) 
-    contagious_asymp=np.logical_and.reduce((pop_matrix[:,1]>2,pop_matrix[:,1]<5,pop_matrix[:,4]==1))
-    contagious_presymp=(pop_matrix[:,1]==2)
-    contagious_teen=np.logical_and.reduce((pop_matrix[:,1]>2,pop_matrix[:,1]<5,pop_matrix[:,5]<16))
-    contagious_camp=np.logical_or.reduce((contagious_asymp,contagious_presymp,contagious_teen))
-    contagious_sitters = np.logical_and(contagious_camp,pop_matrix[:,8]==False)
-    contagious_wanderers = np.logical_and(contagious_camp,pop_matrix[:,8]==True)
-    active_camp=np.logical_or.reduce((contagious_camp,pop_matrix[:,1]<2,pop_matrix[:,1]==6))
-    assert(sum(contagious_camp)==(sum(contagious_sitters)+sum(contagious_wanderers)))
-    return contagious_hhl,contagious_hhl_qua,contagious_camp,contagious_sitters,contagious_wanderers,active_camp
+    Returns
+    -------
+        contagious_hhl:         people with 2-5 states
+        contagious_hhl_qua:     people with 9-12 states
+        contagious_camp:        symp+asymp or presymp or symp+teen
+        contagious_sitters:     not wanderers
+        contagious_wanderers:   wanderers
+        active_camp:            symp+asymp or presymp or symp+teen or exposed+susep or recovered
+
+    Notes
+    -----
+    Possible values of disease state (pop_matrix[:, 1]):
+        0: susceptible, 1: exposed, 2: presymptomatic, 3: symptomatic, 4: mild, 5: severe, 6: recovered,
+        7: qua_susceptible, 8: qua_exposed, 9: qua_presymptomatic, 10: qua_symptomatic, 11: qua_mild,
+        12: qua_severe, 13: qua_recovered
+
+    """
+
+    contagious_hhl = np.logical_and(pop_matrix[:, 1] > 1, pop_matrix[:, 1] < 6)
+    contagious_hhl_qua = np.logical_and(pop_matrix[:, 1] > 8, pop_matrix[:, 1] < 13)
+
+    # get asymptomatic population with contagious infection
+    contagious_asymp = np.logical_and.reduce((
+        pop_matrix[:, 1] > 2, pop_matrix[:, 1] < 5,  # returns people who are symptomatic/mild
+        # TODO: should 10,11 stages also included here?
+        pop_matrix[:, 4] == 1  # returns asymptomatic people
+    ))
+    # get presymptomatic population
+    # TODO: should qua_presymptomatic also included here?
+    contagious_presymp = pop_matrix[:, 1] == 2
+    contagious_teen = np.logical_and.reduce((pop_matrix[:, 1] > 2, pop_matrix[:, 1] < 5, pop_matrix[:, 5] < 16))
+    contagious_camp = np.logical_or.reduce((
+        contagious_asymp,
+        contagious_presymp,
+        contagious_teen
+    ))
+
+    # NOTE: pop_matrix[:, 8] returns 0/1 if person is sitter/wanderer
+    contagious_sitters = np.logical_and(contagious_camp, pop_matrix[:, 8] == 0)
+    contagious_wanderers = np.logical_and(contagious_camp, pop_matrix[:, 8] == 1)
+
+    active_camp = np.logical_or.reduce((
+        contagious_camp,
+        pop_matrix[:, 1] < 2,  # susceptible/exposed people (i.e. uninfected) TODO: should we include 7/8 as well?
+        pop_matrix[:, 1] == 6  # recovered people (cannot get infection again) TODO: should we include 13 as well?
+    ))
+
+    assert sum(contagious_camp) == (sum(contagious_sitters)+sum(contagious_wanderers))
+    return contagious_hhl, contagious_hhl_qua, contagious_camp, contagious_sitters, contagious_wanderers, active_camp
+
 
 def infected_and_sum_by_households(pop_matrix, contagious):
 
@@ -702,16 +673,18 @@ def infected_and_sum_by_households(pop_matrix, contagious):
     contagious_wanderers = contagious[4]
     active_camp = contagious[5]
 
-    infh = accumarray(pop_matrix[:,0],contagious_hhl)   # All infected in house and at toilets, population 
-    infhq = accumarray(pop_matrix[:,0],contagious_hhl_qua) # All infected in house, quarantine 
-    infl = accumarray(pop_matrix[:,0],contagious_camp)   # presymptomatic and asymptomatic for food lines
-    infls = accumarray(pop_matrix[:,0],contagious_sitters) # All sedentaries for local transmission
-    inflw = accumarray(pop_matrix[:,0],contagious_wanderers) # All wanderers for local transmission
-    allfl = accumarray(pop_matrix[:,0],active_camp)  # All people in food lines
-    return infh,infhq,infl,infls,inflw,allfl
+    inf_h = accumarray(pop_matrix[:, 0], contagious_hhl)         # All infected in house and at toilets, population
+    inf_hq = accumarray(pop_matrix[:, 0], contagious_hhl_qua)    # All infected in house, quarantine
+    inf_l = accumarray(pop_matrix[:, 0], contagious_camp)        # presymptomatic and asymptomatic for food lines
+    inf_ls = accumarray(pop_matrix[:, 0], contagious_sitters)    # All sitters for local transmission
+    inf_lw = accumarray(pop_matrix[:, 0], contagious_wanderers)  # All wanderers for local transmission
+    all_fl = accumarray(pop_matrix[:, 0], active_camp)           # All people in food lines
+    return inf_h, inf_hq, inf_l, inf_ls, inf_lw, all_fl
 
-def infected_prob_inhhl(inf_prob_hhl,trans_prob_hhl):
+
+def infected_prob_inhhl(inf_prob_hhl, trans_prob_hhl):
     return 1-(1-trans_prob_hhl)**np.array(inf_prob_hhl) 
+
 
 def infected_prob_activity(
         # Toilets or foodline activity shared by households
@@ -744,75 +717,108 @@ def infected_prob_activity(
                                 (np.power(1-probability_of_transmission_for_activity*transmission_reduction,activity_coeff)),1)
     return transmission_during_activity*factor
 
+
 def infected_prob_movement(pop_matrix, neighbour_inter, aip, tr, contagious_households):
+    """
+
+    Parameters
+    ----------
+        pop_matrix: 2D Population matrix
+        neighbour_inter: Local interaction space
+        aip: the probability of infecting other people moving about
+        tr: Transmission reduction
+        contagious_households: Contagious households
+
+    Returns
+    -------
+        out: Local transmission rates i.e. probability of transmission during movement
+    """
+
     households_with_no_wanderers = contagious_households[3]
     households_with_wanderers = contagious_households[4]
-    lr1_exp_contacts = neighbour_inter[:,:,0].dot(households_with_no_wanderers)+\
-                       neighbour_inter[:,:,1].dot(households_with_wanderers)
-    lr2_exp_contacts = neighbour_inter[:,:,1].dot(households_with_no_wanderers)+\
-                       neighbour_inter[:,:,2].dot(households_with_wanderers)
+
+    lr1_exp_contacts = neighbour_inter[:, :, 0].dot(households_with_no_wanderers) + \
+                       neighbour_inter[:, :, 1].dot(households_with_wanderers)
+    lr2_exp_contacts = neighbour_inter[:, :, 1].dot(households_with_no_wanderers) + \
+                       neighbour_inter[:, :, 2].dot(households_with_wanderers)
+
     # But contacts are roughly Poisson distributed (assuming a large population), so transmission rates are:
     trans_for_lr1 = 1-np.exp(-lr1_exp_contacts*aip*tr)
     trans_for_lr2 = 1-np.exp(-lr2_exp_contacts*aip*tr)    
+
     # Now, assign the appropriate local transmission rates to each person.
-    trans_local_inter = trans_for_lr1[pop_matrix[:,0].astype(int)]*(1-pop_matrix[:,8])+trans_for_lr2[pop_matrix[:,0].astype(int)]*(pop_matrix[:,8])
+    trans_local_inter = trans_for_lr1[pop_matrix[:, 0].astype(int)]*(1-pop_matrix[:, 8]) + \
+                        trans_for_lr2[pop_matrix[:, 0].astype(int)]*(pop_matrix[:, 8])
+
     return trans_local_inter
 
-def prob_of_transmission_within_household(
-        # Probability for members of each household to contract from their housemates
-        infection_probability_per_person,
-        # Probability for members of each household to contract during a toilet visit
-        transmission_at_toilet,
-        # Probability for members of each household to contract during a food line visit
-        transmission_in_foodline
-):
-    probability_of_transmission_within_household = 1 - \
-           (1 - infection_probability_per_person) * \
-           (1 - transmission_at_toilet) * \
-           (1 - transmission_in_foodline)
-    return probability_of_transmission_within_household
 
-def prob_of_transmission(
-        # Probability for members of each household to contract from their housemates
-        probability_of_transmission_within_household,
-        # Probability for members of each household to contract during the movement (wandering around)
-        probability_of_transmission_during_movement
-):
-    full_inf_prob = 1 - (
-            (1 - probability_of_transmission_within_household) *
-            (1 - probability_of_transmission_during_movement)
-    )
-    return full_inf_prob
+def prob_of_transmission_within_household(Ph, Pt, Pf):
+    """
+    Get the probability of transmission of infection within household
 
-def impose_infection(
-        # The existing infection status
-        infection_status,
-        # New infections
-        newly_infected
-):
+    Parameters
+    ----------
+        Ph: Probability for members of each household to contract from their housemates
+        Pt: Probability for members of each household to contract during a toilet visit
+        Pf: Probability for members of each household to contract during a food line visit
+
+    Returns
+    -------
+        out: Probability of transmission of infection within household
+
+    Notes
+    -----
+    From paper: "𝑝𝑖𝑑 = 1 − Π(1 − 𝑝𝑖𝑑𝑤) 𝑤∈{ℎ,𝑡,𝑓,𝑚}."
+    """
+    return 1 - ((1 - Ph) * (1 - Pt) * (1 - Pf))
+
+
+def prob_of_transmission(Ph, Pm):
+    """
+    Total probability of transmission
+    Parameters
+    ----------
+        Ph: Probability for members of each household to contract from their housemates
+        Pm: Probability for members of each household to contract during the movement (wandering around)
+
+    Returns
+    -------
+        out: Total probability of transmission
+
+    Notes
+    -----
+    From paper: "𝑝𝑖𝑑 = 1 − Π(1 − 𝑝𝑖𝑑𝑤) 𝑤∈{ℎ,𝑡,𝑓,𝑚}."
+    """
+    return 1 - ((1 - Ph) * (1 - Pm))
+
+
+def impose_infection(infection_status, newly_infected):
+    """
+    Get Infection status for newly infected people.
+
+    Parameters
+    ----------
+        infection_status: Disease state for each individual.
+        newly_infected: Boolean array where ith element is True if ith person is newly infected
+
+    Returns
+    -------
+        out: Updated infection status for newly infected people
+
+    Notes
+    -----
+    Only possible update is from "susceptible (0) -> exposed (1)" in this function
+    """
     infection_status += (1 - np.sign(infection_status)) * newly_infected
     return infection_status
 
-def infection_transmission(
-        # probability_of_transmission
-        probability_of_transmission,
-        # population_total
-        population_total
-):
-    random_uniform = np.random.uniform(0, 1, population_total)
-    newly_infected = probability_of_transmission > random_uniform
-    return newly_infected
 
-
-def impose_infection_in_quarantin(
-        # Probability of infection per person in quaranteen
-        infection_probability_per_person_in_quarantin,
-        # The total number of people in the camp
-        population_total
-):
+def impose_infection_in_quarantine(infection_probability_per_person_in_quarantine, population_total):
     random_uniform = np.random.uniform(0, 1, population_total)
-    newly_infected_in_quarantine = infection_probability_per_person_in_quarantin > random_uniform
+    newly_infected_in_quarantine = infection_probability_per_person_in_quarantine > random_uniform
     return newly_infected_in_quarantine
+
 
 def update_infection_status(
         # Population matrix of the camp
@@ -827,21 +833,21 @@ def update_infection_status(
     households = population[:, 0].astype(int)
 
     # Find new infections by person, population
-    # newly_infected = probability_of_transmission > np.random.uniform(0, 1, population_total)
-    newly_infected = infection_transmission(probability_of_transmission, population_total)
+    newly_infected = probability_of_transmission > np.random.uniform(0, 1, population_total)
 
     # Impose infections, population. Only infect susceptible individuals
     infection_status = impose_infection(infection_status, newly_infected)
 
     # Find new infections by person, quarantine
-    newly_infected_in_quarantin = impose_infection_in_quarantin(
+    newly_infected_in_quarantin = impose_infection_in_quarantine(
         infection_probability_per_person_in_quarantin[households],
         population_total)
 
-    # Impose nfections, quarantine
+    # Impose infections, quarantine
     infection_status += (infection_status == 7) * newly_infected_in_quarantin
 
     return population
+
 
 def transmission_within_household(
         # probability_of_infection_household
@@ -900,11 +906,11 @@ def transmission_within_household(
         contacts_per_foodline_visit,
         probability_of_infection_food_line,
         initial_transmission_reduction,
-        factor = pct_days_with_foodline_visits
+        factor=pct_days_with_foodline_visits
     )
 
     # Households in quarantine don't get these exposures, but that is taken care of below
-    # because this is applied only to susceptibles in the population with these, we can calculate
+    # because this is applied only to susceptible in the population with these, we can calculate
     # the probability of all transmissions that calculated at the household level.
     probability_of_transmission_within_household = prob_of_transmission_within_household(
         probability_of_transmission_in_household,
@@ -914,340 +920,168 @@ def transmission_within_household(
 
     return probability_of_transmission_within_household
 
+
 def assign_new_infections(
-        # people in the camp: a matrix (2D array) with the following columns:
-        # 0.household, 1.disease, 2.dsymptom, 3.daycount, 4.new_asymp,
-        # 5.age, 6.gender, 7.chronic, 8.wanderer
-        population,
-        # a matrix (2D array) of shared toilets at the household level.
-        toilets_shared_by_households,
-        # a matrix (2D array) of shared food points at the household level.
-        foodpoints_shared_by_households,
-        # the number of toilet visits per person per day
-        toilet_visits_per_person_per_day,
-        # the number of contacts per a toilet visit
-        contacts_per_toilet_visit,
-        # the number of food point visits per person per day
-        foodline_visits_per_person_per_day,
-        # the number of contacts per a food point visit
-        contacts_per_foodline_visit,
-        # percentage of food point visits ppd (once per day on 3 out of 4 days)
-        pct_days_with_foodline_visits,
-        # the initial transmission reduction
-        initial_transmission_reduction,
-        # a matrix (2D array) for distance in between households
-        distance_between_households,
-        # the probability of infecting each person in your household per day
-        probability_of_infection_household,
-        # the probability of infecting other people in the food line
-        probability_of_infection_food_line,
-        # the probability of infecting other people in the toilet
-        probability_of_infection_toilet,
-        # the probability of infecting other people moving about
-        probability_of_infection_wandering
-):
+        population, toilets_shared_by_households, foodpoints_shared_by_households,
+        toilet_visits_per_person_per_day, contacts_per_toilet_visit, foodline_visits_per_person_per_day,
+        contacts_per_foodline_visit, pct_days_with_foodline_visits, initial_transmission_reduction,
+        local_interaction_space, probability_of_infection_household, probability_of_infection_food_line,
+        probability_of_infection_toilet, probability_of_infection_wandering):
 
-    ##########################################################
-    # 1. IDENTIFY CONTAGIOUS AND ACTIVE PEOPLE IN DIFFERENT CONTEXTS
-    # Contagious in the house and at toilets, food points, outside, in population.
-    # At least presymptomatic AND at most severe.
-
-    households = population[:, 0].astype(int)
-    contagious_people = identify_contagious_active(population)
-    contagious_households = infected_and_sum_by_households(population, contagious_people)
-
-    ##########################################################
-    # 2. COMPUTE INFECTION PROBABILITIES FOR EACH PERSON BY HOUSEHOLD
-    # Probability for members of each household to contract from their housemates
-
-    probability_of_transmission_within_household = transmission_within_household(
-        # probability_of_infection_household
-        probability_of_infection_household,
-        # toilets_shared_by_households
-        toilets_shared_by_households,
-        # toilet_visits_per_person_per_day
-        toilet_visits_per_person_per_day,
-        # contacts_per_toilet_visit
-        contacts_per_toilet_visit,
-        # probability_of_infection_toilet
-        probability_of_infection_toilet,
-        # initial_transmission_reduction
-        initial_transmission_reduction,
-        # foodpoints_shared_by_households
-        foodpoints_shared_by_households,
-        # foodline_visits_per_person_per_day
-        foodline_visits_per_person_per_day,
-        # contacts_per_foodline_visit
-        contacts_per_foodline_visit,
-        # probability_of_infection_food_line
-        probability_of_infection_food_line,
-        # pct_days_with_foodline_visits
-        pct_days_with_foodline_visits,
-        contagious_households
-    )
-
-    # Transmissions during movement around the residence must be calculated at the individual level,
-    # because they do not depend on what movement radius the individual uses. So...
-    # Compute expected contacts with infected individuals for individuals that use small and
-    # large movement radii.
-    probability_of_transmission_during_movement = infected_prob_movement(
-        population,
-        distance_between_households,
-        probability_of_infection_wandering,
-        initial_transmission_reduction,
-        contagious_households
-    )
-    # Finally, compute the full per-person infection probability within households,
-    # at toilets and food lines.
-    probability_of_transmission = prob_of_transmission(
-        probability_of_transmission_within_household[households],
-        probability_of_transmission_during_movement
-    )
-
-    # In quarantine
-    probability_of_transmission_in_quarantin = infected_prob_inhhl(
-        # Households with contagious person in quarantin
-        contagious_households[1],
-        probability_of_infection_household
-    )
-
-    ##########################################################
-    # 3. ASSIGN NEW INFECTIONS
-
-    population = update_infection_status(
-        population,
-        probability_of_transmission,
-        probability_of_transmission_in_quarantin
-    )
-
-    return population
-
-def assign_new_infections_for_agent(
-        # people in the camp: a matrix (2D array) with the following columns:
-        # 0.household, 1.disease, 2.dsymptom, 3.daycount, 4.new_asymp,
-        # 5.age, 6.gender, 7.chronic, 8.wanderer
-        agent,
-        # a matrix (2D array) of shared toilets at the household level.
-        toilets_shared_by_households,
-        # a matrix (2D array) of shared food points at the household level.
-        foodpoints_shared_by_households,
-        # the number of toilet visits per person per day
-        toilet_visits_per_person_per_day,
-        # the number of contacts per a toilet visit
-        contacts_per_toilet_visit,
-        # the number of food point visits per person per day
-        foodline_visits_per_person_per_day,
-        # the number of contacts per a food point visit
-        contacts_per_foodline_visit,
-        # percentage of food point visits ppd (once per day on 3 out of 4 days)
-        pct_days_with_foodline_visits,
-        # the initial transmission reduction
-        initial_transmission_reduction,
-        # a matrix (2D array) for distance in between households
-        distance_between_households,
-        # the probability of infecting each person in your household per day
-        probability_of_infection_household,
-        # the probability of infecting other people in the food line
-        probability_of_infection_food_line,
-        # the probability of infecting other people in the toilet
-        probability_of_infection_toilet,
-        # the probability of infecting other people moving about
-        probability_of_infection_wandering
-):
-    population = np.array([[
-        agent.household,
-        agent.disease,
-        agent.dsymptom,
-        agent.daycount,
-        agent.new_asymp,
-        agent.age,
-        agent.gender,
-        agent.chronic,
-        agent.wanderer
-    ]])
-
-    ##########################################################
-    # 1. IDENTIFY CONTAGIOUS AND ACTIVE PEOPLE IN DIFFERENT CONTEXTS
-    # Contagious in the house and at toilets, food points, outside, in population.
-    # At least presymptomatic AND at most severe.
-
-    households = population[:, 0].astype(int)
-    contagious_people = identify_contagious_active(population)
-    contagious_households = infected_and_sum_by_households(population, contagious_people)
-
-    ##########################################################
-    # 2. COMPUTE INFECTION PROBABILITIES FOR EACH PERSON BY HOUSEHOLD
-    # Probability for members of each household to contract from their housemates
-
-    probability_of_transmission_within_household = transmission_within_household(
-        # probability_of_infection_household
-        probability_of_infection_household,
-        # toilets_shared_by_households
-        toilets_shared_by_households, # need to call model level function
-        # toilet_visits_per_person_per_day
-        toilet_visits_per_person_per_day,
-        # contacts_per_toilet_visit
-        contacts_per_toilet_visit,
-        # probability_of_infection_toilet
-        probability_of_infection_toilet,
-        # initial_transmission_reduction
-        initial_transmission_reduction,
-        # foodpoints_shared_by_households
-        foodpoints_shared_by_households,
-        # foodline_visits_per_person_per_day
-        foodline_visits_per_person_per_day,
-        # contacts_per_foodline_visit
-        contacts_per_foodline_visit,
-        # probability_of_infection_food_line
-        probability_of_infection_food_line,
-        # pct_days_with_foodline_visits
-        pct_days_with_foodline_visits,
-        contagious_households
-    )
-
-    # Transmissions during movement around the residence must be calculated at the individual level,
-    # because they do not depend on what movement radius the individual uses. So...
-    # Compute expected contacts with infected individuals for individuals that use small and
-    # large movement radii.
-    probability_of_transmission_during_movement = infected_prob_movement(
-        population,
-        distance_between_households,
-        probability_of_infection_wandering,
-        initial_transmission_reduction,
-        contagious_households
-    )
-    # Finally, compute the full per-person infection probability within households,
-    # at toilets and food lines.
-    probability_of_transmission = prob_of_transmission(
-        probability_of_transmission_within_household[households],
-        probability_of_transmission_during_movement
-    )
-
-    # In quarantine
-    probability_of_transmission_in_quarantin = infected_prob_inhhl(
-        # Households with contagious person in quarantin
-        contagious_households[1],
-        probability_of_infection_household
-    )
-
-    ##########################################################
-    # 3. ASSIGN NEW INFECTIONS
-
-    population = update_infection_status(
-        population, #should have hh + status
-        probability_of_transmission,
-        probability_of_transmission_in_quarantin
-    )
-
-    return population
-
-def move_hhl_quarantine(pop_matrix, prob_spot_symp):
-    # Individuals in camp with symptons spotted given some probability
-    spot_symp = np.random.uniform(0, 1, pop_matrix.shape[0]) < prob_spot_symp
-
-    # Current state of all individuals in camp
-    states = pop_matrix[:,1]
-
-    # Filter conditions for next operation
-    symptomatic = states > 2              # Symptomatic individuals
-    not_quarantined = states < 6          # Individuals not in quarantine
-    not_new_asymp = pop_matrix[:,4] == 0  # Individuals who are not newly asymptomatic
-    aged_above_15 = pop_matrix[:,5] >= 16 # Individuals aged 15 and above
-
-    # Individuals not quarantined who should be...
-    symp = np.logical_and.reduce((
-        symptomatic,
-        not_quarantined,
-        not_new_asymp,
-        aged_above_15))
-
-    # ... of which those who discover they have symptons and should be quarantined
-    spotted_per_day = spot_symp * symp
-
-    # IDS of households containing quarantined individuals
-    symp_house = pop_matrix[spotted_per_day==1,0]
-
-    # Individuals in quarantined households
-    qua_hh = np.in1d(pop_matrix[:,0], symp_house)
-
-    # Update individuals in quarantined households to 'qua_*'
-    pop_matrix[qua_hh,1] += 7
-
-    return pop_matrix
-
-def move_hhl_quarantine_for_agent(agent, prob_spot_symp):
-
-    pop_matrix = np.array([[
-        agent.household,
-        agent.disease,
-        agent.dsymptom,
-        agent.daycount,
-        agent.new_asymp,
-        agent.age,
-        agent.gender,
-        agent.chronic,
-        agent.wanderer
-    ]])
-
-    # Individuals in camp with symptons spotted given some probability
-    spot_symp = np.random.uniform(0, 1, pop_matrix.shape[0]) < prob_spot_symp
-
-    # Current state of all individuals in camp
-    states = pop_matrix[:,1]
-
-    # Filter conditions for next operation
-    symptomatic = states > 2              # Symptomatic individuals
-    not_quarantined = states < 6          # Individuals not in quarantine
-    not_new_asymp = pop_matrix[:,4] == 0  # Individuals who are not newly asymptomatic
-    aged_above_15 = pop_matrix[:,5] >= 16 # Individuals aged 15 and above
-
-    # Individuals not quarantined who should be...
-    symp = np.logical_and.reduce((
-        symptomatic,
-        not_quarantined,
-        not_new_asymp,
-        aged_above_15))
-
-    # ... of which those who discover they have symptons and should be quarantined
-    spotted_per_day = spot_symp * symp
-
-    # IDS of households containing quarantined individuals
-    symp_house = pop_matrix[spotted_per_day==1,0]
-    
-    # Individuals in quarantined households
-    qua_hh = np.in1d(pop_matrix[:,0], symp_house)
-
-    # Update individuals in quarantined households to 'qua_*'
-    pop_matrix[qua_hh,1] += 7
-
-    return pop_matrix
-
-def distance_between_households(household_coordinates):
     """
-    Calculate distance between households
 
     Parameters
     ----------
-        household_coordinates : A 2D array containing (X, Y) coordinates of the households
-    
+        population:                             Population matrix (created in `form_population_matrix`)
+        toilets_shared_by_households:           a matrix (2D array) of shared toilets at the household level
+        foodpoints_shared_by_households:        a matrix (2D array) of shared food points at the household level
+        toilet_visits_per_person_per_day:       the number of toilet visits per person per day
+        contacts_per_toilet_visit:              the number of contacts per a toilet visit
+        foodline_visits_per_person_per_day:     the number of food point visits per person per day
+        contacts_per_foodline_visit:            the number of contacts per a food point visit
+        pct_days_with_foodline_visits:          percentage of food point visits ppd (once per day on 3 out of 4 days)
+        initial_transmission_reduction:         the initial transmission reduction
+        local_interaction_space:                Local interaction space
+        probability_of_infection_household:     the probability of infecting each person in your household per day
+        probability_of_infection_food_line:     the probability of infecting other people in the food line
+        probability_of_infection_toilet:        the probability of infecting other people in the toilet
+        probability_of_infection_wandering:     the probability of infecting other people moving about
+
     Returns
     -------
-        out : 2D distance matrix where (i, j) element holds the Euclidean distance between household (i) and household (j)
+
     """
 
-    # number of households
-    num = household_coordinates.shape[0]
+    ##########################################################
+    # 1. IDENTIFY CONTAGIOUS AND ACTIVE PEOPLE IN DIFFERENT CONTEXTS
+    # Contagious in the house and at toilets, food points, outside, in population.
+    # At least presymptomatic AND at most severe.
 
-    # (X, Y) coordintes of the households
-    X = household_coordinates[:, 0]
-    Y = household_coordinates[:, 1]
-    
-    # calculate delta X and delta Y for Euclidean distance
-    delta_x = np.tile(X, (num, 1)).T - np.tile(X, (num, 1)) # delta_x is a 2D array containing diff between X coordinates for each pair of households
-    delta_y = np.tile(Y, (num, 1)).T - np.tile(Y, (num, 1)) # delta_y is a 2D array containing diff between Y coordinates for each pair of households
+    households = population[:, 0].astype(int)
+    contagious_people = identify_contagious_active(population)
+    contagious_households = infected_and_sum_by_households(population, contagious_people)
 
-    # return Euclidean distance
-    return np.sqrt(delta_x ** 2 + delta_y ** 2)
+    ##########################################################
+    # 2. COMPUTE INFECTION PROBABILITIES FOR EACH PERSON BY HOUSEHOLD
+    # Probability for members of each household to contract from their housemates
+
+    probability_of_transmission_within_household = transmission_within_household(
+        # probability_of_infection_household
+        probability_of_infection_household,
+        # toilets_shared_by_households
+        toilets_shared_by_households,
+        # toilet_visits_per_person_per_day
+        toilet_visits_per_person_per_day,
+        # contacts_per_toilet_visit
+        contacts_per_toilet_visit,
+        # probability_of_infection_toilet
+        probability_of_infection_toilet,
+        # initial_transmission_reduction
+        initial_transmission_reduction,
+        # foodpoints_shared_by_households
+        foodpoints_shared_by_households,
+        # foodline_visits_per_person_per_day
+        foodline_visits_per_person_per_day,
+        # contacts_per_foodline_visit
+        contacts_per_foodline_visit,
+        # probability_of_infection_food_line
+        probability_of_infection_food_line,
+        # pct_days_with_foodline_visits
+        pct_days_with_foodline_visits,
+        contagious_households
+    )
+
+    # Transmissions during movement around the residence must be calculated at the individual level,
+    # because they do not depend on what movement radius the individual uses. So...
+    # Compute expected contacts with infected individuals for individuals that use small and
+    # large movement radii.
+    probability_of_transmission_during_movement = infected_prob_movement(
+        population,
+        local_interaction_space,
+        probability_of_infection_wandering,
+        initial_transmission_reduction,
+        contagious_households
+    )
+    # Finally, compute the full per-person infection probability within households,
+    # at toilets and food lines.
+    probability_of_transmission = prob_of_transmission(
+        probability_of_transmission_within_household[households],
+        probability_of_transmission_during_movement
+    )
+
+    # In quarantine
+    probability_of_transmission_in_quarantin = infected_prob_inhhl(
+        # Households with contagious person in quarantine
+        contagious_households[1],
+        probability_of_infection_household
+    )
+
+    ##########################################################
+    # 3. ASSIGN NEW INFECTIONS
+
+    population = update_infection_status(
+        population,
+        probability_of_transmission,
+        probability_of_transmission_in_quarantin
+    )
+
+    return population
+
+
+def move_hhl_quarantine(pop_matrix, prob_spot_symp):
+    """
+
+    Parameters
+    ----------
+    pop_matrix: Population matrix (from `form_population_matrix`)
+    prob_spot_symp: Probability of spotting symptoms
+
+    Returns
+    -------
+
+    Notes
+    -----
+    Possible values of disease state (pop_matrix[:, 1]):
+        0: susceptible, 1: exposed, 2: presymptomatic, 3: symptomatic, 4: mild, 5: severe, 6: recovered,
+        7: qua_susceptible, 8: qua_exposed, 9: qua_presymptomatic, 10: qua_symptomatic, 11: qua_mild,
+        12: qua_severe, 13: qua_recovered
+
+    """
+
+    # Individuals in camp with symptoms spotted given some probability
+    spot_symp = np.random.uniform(0, 1, pop_matrix.shape[0]) < prob_spot_symp
+
+    # Current state of all individuals in camp
+    states = pop_matrix[:, 1]
+
+    # Filter conditions for next operation
+    symptomatic = states > 2                # Symptomatic individuals
+    not_quarantined = states < 6            # Individuals not in quarantine
+    not_new_asymp = pop_matrix[:, 4] == 0   # Individuals who are not newly asymptomatic
+    aged_above_15 = pop_matrix[:, 5] >= 16  # Individuals aged above 15 yrs
+
+    # Individuals not quarantined who should be...
+    symp = np.logical_and.reduce((
+        symptomatic,
+        not_quarantined,
+        not_new_asymp,
+        aged_above_15
+    ))
+
+    # ... of which those who discover they have symptoms and should be quarantined
+    spotted_per_day = spot_symp * symp
+
+    # IDS of households containing quarantined individuals
+    symp_house = pop_matrix[spotted_per_day == 1, 0]
+
+    # Individuals in quarantined households
+    qua_hh = np.in1d(pop_matrix[:, 0], symp_house)
+
+    # Update individuals in quarantined households to 'qua_*'
+    pop_matrix[qua_hh, 1] += 7
+
+    return pop_matrix
+
 
 def relative_encounter_rate(d, R, r):
     """
@@ -1273,19 +1107,19 @@ def relative_encounter_rate(d, R, r):
                 a_max=1
             )
         )
-    ) #nan means no overlap in this case
+    )  # nan means no overlap in this case
 
     # angle between center of circle centered at (2) and point of intersections of circles centered at (1) and (2)
     angle2 = 2*np.arccos(
         np.nan_to_num(
             np.clip(
-                ( d**2 + r**2 - R**2 ) / ( 2*d*r ),
+                (d**2 + r**2 - R**2) / (2*d*r),
                 a_min=None,
                 a_max=1
             )
         )
-    ) #nan means no overlap in this case
-    
+    )  # nan means no overlap in this case
+
     area_sector1 = 0.5 * (r**2) * angle2
     area_sector2 = 0.5 * (R**2) * angle1
 
@@ -1294,4 +1128,3 @@ def relative_encounter_rate(d, R, r):
     relative_encounter12 = area_overlap12 / (math.pi**2 * R**2 * r**2)
     
     return relative_encounter12
-
