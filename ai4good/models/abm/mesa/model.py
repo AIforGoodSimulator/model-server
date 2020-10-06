@@ -1,6 +1,6 @@
 import numpy as np
 from mesa import Model
-from mesa.time import SimultaneousActivation
+from mesa.time import RandomActivation
 from mesa.space import ContinuousSpace
 
 from ai4good.models.abm.mesa.agent import Person
@@ -43,10 +43,18 @@ class Camp(Model, CampHelper):
         self.agents_pos = Camp.CAMP_SIZE * np.random.random((self.people_count, 2))
         self.agents_route = np.array([Route.HOUSEHOLD] * self.people_count)
         self.households = self.get_households(self.params.number_of_isoboxes, self.params.number_of_tents)
-        self.agents_households = np.array([])  # TODO
+        self.agents_households = np.array([])  # TODO: household ids of the agents
         self.agents_ethnic_groups = np.array([])  # TODO
 
-        self.schedule = SimultaneousActivation(self)
+        # There are 144 toilets evenly distributed throughout the camp. Toilets are placed at the centres of the
+        # squares that form a 12 x 12 grid covering the camp
+        self.toilets = self._position_blocks(Camp.CAMP_SIZE, 12)
+
+        # The camp has one food line. Since the position of food line is not modelled, we just maintain food line queue
+        # each person going to the food line to collect food will enter this queue
+        self.foodline_queue = []  # start with no people in food line
+
+        self.schedule = RandomActivation(self)
         self.space = ContinuousSpace(x_max=Camp.CAMP_SIZE, y_max=Camp.CAMP_SIZE, torus=False)
 
         for i in range(self.people_count):
@@ -57,16 +65,7 @@ class Camp(Model, CampHelper):
         # TODO: randomly select one person and mark as "Exposed"
 
     def step(self):
-
-        # step each agent
-        for agent in self.schedule.agent_buffer():
-            agent.step()
-
-        for agent in self.schedule.agent_buffer():
-            agent.advance()
-
-        self.schedule.steps += 1
-        self.schedule.time += 1
+        self.schedule.step()
 
     def stop_simulation(self) -> bool:
         # We ran each simulation until all individuals in the population were either susceptible or recovered, at which
@@ -103,6 +102,15 @@ class Camp(Model, CampHelper):
     @property
     def people_count(self):
         return self.params.total_population
+
+    def get_filter_array(self):
+        # pass compatible `people` array to be passed to `_filter_agents` function
+        # need agent's details columns: route, household_id, disease state
+        return np.dstack([
+            self.agents_route,
+            self.agents_households,
+            self.agents_disease_states
+        ], axis=0)
 
     def get_households(self, num_iso_boxes, num_tents):
         """

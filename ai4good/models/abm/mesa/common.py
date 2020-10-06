@@ -19,3 +19,4 @@ class Route(Enum):
     TOILET = 1
     FOOD_LINE = 2
     WANDERING = 3
+    QUARANTINED = 4

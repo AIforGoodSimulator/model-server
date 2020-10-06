@@ -13,8 +13,82 @@ class CampHelper(object):
     Helper class for camp functions
     """
 
-    def _find_nearest_toilet(self):
-        pass
+    @staticmethod
+    @njit
+    def _position_blocks(camp_size, grid_size):
+        """
+        Uniform placement of blocks (typically foodline or toilet) in the camp.
+
+        Parameters
+        ----------
+            camp_size: Side length of the square camp
+            grid_size: Size of the square grid where placement of foodline/toilet happens
+
+        Returns
+        -------
+            out: (grid_size * grid_size, 2) shaped array containing (x, y) co-ordinates of the blocks
+
+        """
+
+        # since the placement will be uniform and equidistant, there will be a fixed distance between two blocks along
+        # an axis. We call this distance as step
+        step = camp_size / grid_size
+
+        # bottom left position of the first block. This serves as both the x and y co-ordinate since camp is a square
+        pos0 = step / 2.0
+
+        # output position matrix
+        out = np.zeros(shape=(grid_size * grid_size, 2))
+        k = 0  # counter for out array
+
+        for i in range(grid_size):  # along x-axis
+            for j in range(grid_size):  # along y-axis
+                # new position calculated by moving `step` distance along each axis
+                out[k, :] = [pos0 + i * step, pos0 + j * step]
+                k += 1  # increment counter
+
+        # return the co-ordinates array
+        return out
+
+    @staticmethod
+    @njit
+    def filter_agents(people, skip_agent_id, route, household_id, is_infected, has_symptoms):
+        # Filter agents by various parameters. The indices of the filtered agents are returned
+        n = people.shape[0]  # number of people
+        out = []
+        for i in range(n):
+            if (
+                # (-1 means don't apply filter)
+                (route == -1 or people[i, 0] == route)  # filter based on route
+                and (household_id == -1 or people[i, 1] == household_id)  # filter based on household
+                and (
+                    is_infected == -1 or (
+                        # filter infected people
+                        is_infected == 1 and people[i, 2] in [DiseaseStage.SYMPTOMATIC, DiseaseStage.ASYMPTOMATIC1,
+                                                              DiseaseStage.ASYMPTOMATIC2, DiseaseStage.MILD,
+                                                              DiseaseStage.SEVERE, DiseaseStage.PRESYMPTOMATIC]
+                    ) or (
+                        # filter uninfected people
+                        is_infected == 0 and people[i, 2] in [DiseaseStage.SUSCEPTIBLE, DiseaseStage.EXPOSED,
+                                                              DiseaseStage.RECOVERED]
+                    )
+                )
+                and (
+                    has_symptoms == -1 or (
+                        # filter people showing symptoms
+                        has_symptoms == 1 and people[i, 2] in [DiseaseStage.SYMPTOMATIC, DiseaseStage.MILD,
+                                                               DiseaseStage.SEVERE]
+                    ) or (
+                        # filter people showing no symptoms
+                        has_symptoms == 0 and people[i, 2] in [DiseaseStage.SUSCEPTIBLE, DiseaseStage.EXPOSED,
+                                                               DiseaseStage.PRESYMPTOMATIC, DiseaseStage.RECOVERED,
+                                                               DiseaseStage.ASYMPTOMATIC1, DiseaseStage.ASYMPTOMATIC2]
+                    )
+                )
+                and (skip_agent_id == -1 or i != skip_agent_id)
+            ):
+                out.append(i)
+        return np.array(out)
 
     @staticmethod
     @njit
@@ -118,3 +192,28 @@ class PersonHelper(object):
         new_y = _clip_coordinates(new_y)
 
         return new_x, new_y
+
+    @staticmethod
+    @njit
+    def _find_nearest(pos, others):
+        # Find and return the index of the entity nearest to individual positioned at `pos`
+        # The co-ordinates of the entities are defined in `others` array (?, 2)
+
+        d_min = Camp.CAMP_SIZE * 10000.0  # a large number in terms of distance
+        d_min_index = -1  # index in `others` which is nearest to the individual positioned at `pos`
+
+        # number of entities around individual positioned at `pos`
+        n = others.shape[0]
+
+        for i in range(n):  # iterate all entities in `others` array
+            # distance between entity `i` and individual
+            dij = (others[i, 0] - pos[0]) ** 2 + (others[i, 1] - pos[1]) ** 2
+            # dij = dij ** 0.5 : this step is not needed since relative distance is needed
+
+            # update nearest entity based on distance
+            if dij < d_min:
+                d_min = dij
+                d_min_index = i
+
+        # return index of the nearest entity and the nearest distance associated with that entity
+        return d_min_index, d_min
