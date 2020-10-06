@@ -36,7 +36,9 @@ dash_app = dash.Dash(
     server=flask_app,
     routes_pathname_prefix='/sim/',
     suppress_callback_exceptions=True,
-    external_stylesheets=[dbc.themes.BOOTSTRAP]
+    external_stylesheets=[dbc.themes.SPACELAB]
+    
+
 )
 dash_app.title = "AI4Good COVID-19 Model Server"
 
