@@ -1,5 +1,6 @@
 import numpy as np
 from mesa import Model
+from numba import njit
 from mesa.time import RandomActivation
 from mesa.space import ContinuousSpace
 
@@ -43,12 +44,13 @@ class Camp(Model, CampHelper):
         self.agents_pos = Camp.CAMP_SIZE * np.random.random((self.people_count, 2))
         self.agents_route = np.array([Route.HOUSEHOLD] * self.people_count)
         self.households = self.get_households(self.params.number_of_isoboxes, self.params.number_of_tents)
-        self.agents_households = np.array([])  # TODO: household ids of the agents
-        self.agents_ethnic_groups = np.array([])  # TODO
+        self.agents_households = self.assign_households_to_agents()  # TODO: household ids of the agents
+        self.agents_ethnic_groups = np.array([])  # TODO: can we remove/de-prioritize it for abm?
 
         # There are 144 toilets evenly distributed throughout the camp. Toilets are placed at the centres of the
         # squares that form a 12 x 12 grid covering the camp
         self.toilets = self._position_blocks(Camp.CAMP_SIZE, 12)
+        self.toilets_queue = {}  # dict containing toilet_id: [ list of agents unique ids ] for toilet occupancy
 
         # The camp has one food line. Since the position of food line is not modelled, we just maintain food line queue
         # each person going to the food line to collect food will enter this queue
@@ -57,21 +59,43 @@ class Camp(Model, CampHelper):
         self.schedule = RandomActivation(self)
         self.space = ContinuousSpace(x_max=Camp.CAMP_SIZE, y_max=Camp.CAMP_SIZE, torus=False)
 
+        # randomly select one person and mark as "Exposed"
+        self.agents_disease_states[np.random.randint(0, high=self.people_count)] = DiseaseStage.EXPOSED
+
         for i in range(self.people_count):
             p = Person(i, self)
             self.schedule.add(p)
             self.space.place_agent(p, self.agents_pos[i, :])
 
-        # TODO: randomly select one person and mark as "Exposed"
+    def step(self, times=10):
+        # simulate model `times` number of steps
 
-    def step(self):
-        self.schedule.step()
+        for _ in range(times):
 
-    def stop_simulation(self) -> bool:
+            # check if simulation can stop
+            if self.stop_simulation(self.agents_disease_states):
+                return
+
+            # step all agents
+            self.schedule.step()
+
+            # clear some model day-wise variables
+            self.foodline_queue = []  # clear food line queue at end of the day
+            self.toilets_queue = {}  # clear toilet queues at end of the day
+
+    @staticmethod
+    @njit
+    def stop_simulation(disease_states) -> int:
         # We ran each simulation until all individuals in the population were either susceptible or recovered, at which
         # point the epidemic had ended
-        return any([agent.__getattribute__("disease_status") not in [DiseaseStage.SUSCEPTIBLE, DiseaseStage.RECOVERED]
-                    for agent in self.schedule.agent_buffer()])
+        n = disease_states.shape[0]
+        for i in range(n):
+            if disease_states[i] not in [DiseaseStage.SUSCEPTIBLE, DiseaseStage.RECOVERED]:
+                # DO NOT stop the simulation if any person is NOT (susceptible or recovered)
+                return 0
+
+        # if all agents are either susceptible or recovered, time to stop the simulation
+        return 1
 
     def infection_spread_movement(self):
         # probability of infection spread during movement
@@ -90,15 +114,6 @@ class Camp(Model, CampHelper):
 
         return self._prob_m(hh_pos, people)
 
-    def infection_spread_toilet(self):
-        # probability of infection spread during toilet visit
-
-        pass
-
-    def visit_toilet(self):
-
-        pass
-
     @property
     def people_count(self):
         return self.params.total_population
@@ -111,6 +126,10 @@ class Camp(Model, CampHelper):
             self.agents_households,
             self.agents_disease_states
         ], axis=0)
+
+    def assign_households_to_agents(self):
+        # TODO
+        return np.array([])
 
     def get_households(self, num_iso_boxes, num_tents):
         """

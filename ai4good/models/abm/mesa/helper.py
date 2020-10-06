@@ -217,3 +217,9 @@ class PersonHelper(object):
 
         # return index of the nearest entity and the nearest distance associated with that entity
         return d_min_index, d_min
+
+    @staticmethod
+    def _is_showing_symptoms(disease_state):
+        return disease_state in (
+            DiseaseStage.SYMPTOMATIC, DiseaseStage.MILD, DiseaseStage.SEVERE
+        )

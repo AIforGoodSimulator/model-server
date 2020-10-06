@@ -23,6 +23,9 @@ class Person(Agent, PersonHelper):
         self.age = model.agents_age[unique_id]  # agent's age
         self.pos = model.agents_pos[unique_id]  # agent's position (x, y) in the camp
         self.route = model.agents_route[unique_id]  # current route of the agent: household, food-line, toilet, wander
+        self.toilet_id = -1  # if agent is standing in queue for toilet, store the id of the toilet
+        self.toilet_queue_idx = -1  # if agent is standing in queue for toilet, store the index in the queue
+        self.foodline_queue_idx = -1  # if agent is standing in food line, store the index in the queue
 
         # each person is allocated a household initially (iso-box or tent). This does not change during model simulation
         self.household_id = model.agents_households[unique_id]  # household id of the person (fixed)
@@ -44,6 +47,7 @@ class Person(Agent, PersonHelper):
 
     def step(self) -> None:
         # simulate 1 day in the camp
+        # this cannot be run in parallel unfortunately :(
 
         if self.disease_state not in [DiseaseStage.SUSCEPTIBLE, DiseaseStage.RECOVERED, DiseaseStage.DECEASED]:
             self.day_counter += 1
@@ -81,6 +85,10 @@ class Person(Agent, PersonHelper):
         self.model.agents_pos[self.unique_id] = self.pos
         self.model.agents_route[self.unique_id] = self.route
 
+        # reset values
+        self.toilet_queue_idx = -1
+        self.foodline_queue_idx = -1
+
     def move(self) -> None:
         # We assume that each individual occupies a circular home range centred on its household, and uses all
         # parts of its home range equally
@@ -98,12 +106,12 @@ class Person(Agent, PersonHelper):
 
     def visit_foodline(self, prob_attend=0.75) -> None:
         """
-        Simulating agent's visit to foodline. This is not probabilistic/stochastic, but fixed i.e. 3 times per day
+        Simulating agent's visit to food line. This is not probabilistic/stochastic, but fixed i.e. 3 times per day
 
         Parameters
         ----------
             prob_attend: This is the probability that the agent will go to the foodline. Based on tucker model, people
-                without symptoms visit foodline once per day on 3 out of 4 days. On other occasions, food is brought to
+                without symptoms visit food line once per day on 3 out of 4 days. On other occasions, food is brought to
                 that individual by another individual without additional interactions.
                 Hence, we gave it value of 3/4
         """
@@ -112,12 +120,13 @@ class Person(Agent, PersonHelper):
         if self.is_showing_symptoms():
             return
 
-        # going to foodline has some probability defined to it as mentioned above
+        # going to food line has some probability defined to it as mentioned above
         if random.random() > prob_attend:
             return
 
         self.route = Route.FOOD_LINE  # change agent's route
         # no need to change `pos` since `route` is FOOD_LINE hence current position is redundant for infection dynamics
+        self.foodline_queue_idx = len(self.model.foodline_queue)
         self.model.foodline_queue.append(self.unique_id)  # add agent to food line
 
     def visit_toilet(self, prob_visit=0.3, toilet_proximity=Camp.CAMP_SIZE*0.02) -> None:
@@ -152,12 +161,27 @@ class Person(Agent, PersonHelper):
 
         # now, the agent wants to visit toilet and there is a toilet nearby, now change the position
         self.route = Route.TOILET
-        self.pos = self.model.toilets[nearest_toilet_id]
+
+        # update toilet queue
+        if nearest_toilet_id in self.model.toilets_queue:
+            self.toilet_queue_idx = len(self.model.toilets_queue[nearest_toilet_id])
+            self.model.toilets_queue[nearest_toilet_id].append(self.unique_id)
+        else:
+            self.toilet_queue_idx = 0
+            self.model.toilets_queue[nearest_toilet_id] = [self.unique_id]
+        self.toilet_id = nearest_toilet_id  # update the current toilet id
+        # self.pos = self.model.toilets[nearest_toilet_id]  # TODO: revisit if this needs to change
 
     def infection_dynamics(self, ph=0.5):
 
         # Infections can be transmitted from infectious to susceptible individuals in four ways:
         # within households, at toilets, in the food line, or as individuals move about the camp
+        # This method will make susceptible people infectious
+
+        # if agent is already infected, don't do anything
+        # TODO: verify
+        if self.disease_state != DiseaseStage.SUSCEPTIBLE:
+            return
 
         if self.route == Route.HOUSEHOLD:
             """
@@ -169,10 +193,6 @@ class Person(Agent, PersonHelper):
             """
 
             # Calculate if agent will be infected BY other infectious people
-            # if agent is already infected, don't do anything
-            # TODO: verify
-            if self.disease_state != DiseaseStage.SUSCEPTIBLE:
-                return
 
             # We need to calculate the number of infectious people with whom agent shares a household
             # First, get the total number of people currently in household who are infected
@@ -191,9 +211,69 @@ class Person(Agent, PersonHelper):
             return
 
         if self.route == Route.FOOD_LINE:
+            """
+            If an individual attends the food line, it interacts with the individual in front of and the individual
+            behind it in the line.
+            """
+
+            # Thus, catching infection is dependent on if the people in front and back are infectious or not
+            n = 0
+
+            # check infection for person in front of the agent
+            if self.foodline_queue_idx > 0 and \
+                    self._is_showing_symptoms(
+                        self.model.agents_disease_states[self.model.foodline_queue[self.foodline_queue_idx-1]]
+                    ):
+                n += 1
+
+            # check infection for person behind the agent
+            if self.foodline_queue_idx < (len(self.model.foodline_queue)-1) and \
+                    self._is_showing_symptoms(
+                        self.model.agents_disease_states[self.model.foodline_queue[self.foodline_queue_idx+1]]
+                    ):
+                n += 1
+
+            # find probability that infection will be spread
+            p_if = 1.0 - (1.0 - Camp.Pa) ** n
+
+            # change state from susceptible to exposed with probability `p_if`
+            self._change_state(p_if, DiseaseStage.EXPOSED)
+
             return
 
         if self.route == Route.TOILET:
+            """
+            On each visit, it interacts with the individual in front of it and the individual behind it in the 
+            toilet line
+            """
+
+            # Thus, catching infection is dependent on if the people in front and back are infectious or not
+            n = 0
+
+            # check infection for person in front of the agent
+            if self.toilet_queue_idx > 0 and \
+                    self._is_showing_symptoms(
+                        self.model.agents_disease_states[
+                            self.model.toilets_queue[self.toilet_id][self.foodline_queue_idx - 1]
+                        ]
+                    ):
+                n += 1
+
+            # check infection for person behind the agent
+            if self.toilet_queue_idx < (len(self.model.toilets_queue[self.toilet_id]) - 1) and \
+                    self._is_showing_symptoms(
+                        self.model.agents_disease_states[
+                            self.model.toilets_queue[self.toilet_id][self.foodline_queue_idx + 1]
+                        ]
+                    ):
+                n += 1
+
+            # find probability that infection will be spread
+            p_it = 1.0 - (1.0 - Camp.Pa) ** n
+
+            # change state from susceptible to exposed with probability `p_it`
+            self._change_state(p_it, DiseaseStage.EXPOSED)
+
             return
 
         if self.route == Route.QUARANTINED:
@@ -274,16 +354,6 @@ class Person(Agent, PersonHelper):
         if random.random() < prob:
             self.disease_state = new_state
 
-    def is_infectious(self) -> bool:
-        # returns `True` if a person can infect others
-        return self.disease_state in (
-            DiseaseStage.PRESYMPTOMATIC,
-            DiseaseStage.SYMPTOMATIC, DiseaseStage.MILD, DiseaseStage.SEVERE,
-            DiseaseStage.ASYMPTOMATIC1, DiseaseStage.ASYMPTOMATIC2
-        )
-
     def is_showing_symptoms(self) -> bool:
         # returns `True` if a person is showing infection symptoms
-        return self.disease_state in (
-            DiseaseStage.SYMPTOMATIC, DiseaseStage.MILD, DiseaseStage.SEVERE
-        )
+        return self._is_showing_symptoms(self.disease_state)
