@@ -242,11 +242,15 @@ def profile_selector():
 
 def model_run_buttons():
     return html.Div([
+        html.Label('Start simulation', style={'font-weight': 'bold'}),
+        html.Div([], id='start_simulation'),
         dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True),
-        dbc.Button("See Results", id="model_results_button", color="success", className="mr-1",
-                   target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'),
-        dbc.Button("See Report", id="model_report_button", color="success", className="mr-1",
-                   disabled=True, key='model_report_button_key'),
+        dbc.Button("Validate Model", id="validate_model_button", color="secondary", className="mr-1", disabled=True),
+        html.Div([], id='new_row'),
+        html.Label('Display outputs', style={'font-weight': 'bold'}),
+        html.Div([], id='display_outputs'),
+        dbc.Button("See Results", id="model_results_button", color="success", className="mr-1", target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'),
+        dbc.Button("See Report", id="model_report_button", color="success", className="mr-1", disabled=True, key='model_report_button_key'),
         dbc.Toast(
             [],
             id="run_model_toast",
@@ -273,13 +277,17 @@ def model_run_buttons():
             ]),
         ], id="show_report_dialog", centered=True)
 
-    ], id='run_buttons_div')
+    ], id='run_buttons_div', style={'margin': 20})
 
 
 def history_table():
     cols = model_runner.history_columns()
 
-    return dbc.Row([
+    return html.Div([
+        dbc.Row([
+         html.H3('Model Running Queue ')
+        ], style={'margin-top': 100, 'margin-left': 15,'color':'Black','border':'10px'}),
+        dbc.Row([
         dbc.Col(
             html.Div([
                 html.H3('Run Queue'),
@@ -310,8 +318,8 @@ def history_table():
 def nav_bar():
     return dbc.NavbarSimple(
         children=[
-            dbc.NavItem(dbc.NavLink("About us", href="https://www.aiforgood.co.uk/")),
-
+            dbc.NavItem(dbc.NavLink("Home", href="https://www.aiforgood.co.uk/")),
+            dbc.NavItem(dbc.NavLink("About us", href="https://www.aiforgood.co.uk/about-us")),
         ],
         brand="AI for Good Simulator",
         brand_href="#",
@@ -322,11 +330,20 @@ def nav_bar():
 layout = html.Div(
     [
         nav_bar(),
-        html.H3('Run Model'),
-        camp_selector(),
-        model_selector(),
-        profile_selector(),
-        model_run_buttons(),
+        html.Div(
+        [
+            html.H3('Select Parameters'),
+            camp_selector(),
+            model_selector(),
+            profile_selector(),
+        ], style={'margin': 10}),
+        
+        html.Div(
+        [
+            html.H3('Run Model'),
+            model_run_buttons(),
+        ], style={'margin': 10}),
+        
         history_table(),
         dcc.Interval(
             id='interval-component',
