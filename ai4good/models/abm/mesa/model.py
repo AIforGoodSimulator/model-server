@@ -1,6 +1,6 @@
 import numpy as np
 from mesa import Model
-from mesa.time import RandomActivation
+from mesa.time import SimultaneousActivation
 from mesa.space import ContinuousSpace
 
 from ai4good.models.abm.mesa.agent import Person
@@ -27,7 +27,6 @@ class Camp(Model, CampHelper):
     def __init__(self, params: Parameters):
         super().__init__()
         self.params = params
-        self.time_step = 0
 
         assert self.params.camp
 
@@ -47,7 +46,7 @@ class Camp(Model, CampHelper):
         self.agents_households = np.array([])  # TODO
         self.agents_ethnic_groups = np.array([])  # TODO
 
-        self.schedule = RandomActivation(self)
+        self.schedule = SimultaneousActivation(self)
         self.space = ContinuousSpace(x_max=Camp.CAMP_SIZE, y_max=Camp.CAMP_SIZE, torus=False)
 
         for i in range(self.people_count):
@@ -58,8 +57,16 @@ class Camp(Model, CampHelper):
         # TODO: randomly select one person and mark as "Exposed"
 
     def step(self):
-        self.schedule.step()
-        self.time_step += 1
+
+        # step each agent
+        for agent in self.schedule.agent_buffer():
+            agent.step()
+
+        for agent in self.schedule.agent_buffer():
+            agent.advance()
+
+        self.schedule.steps += 1
+        self.schedule.time += 1
 
     def stop_simulation(self) -> bool:
         # We ran each simulation until all individuals in the population were either susceptible or recovered, at which
@@ -86,6 +93,10 @@ class Camp(Model, CampHelper):
 
     def infection_spread_toilet(self):
         # probability of infection spread during toilet visit
+
+        pass
+
+    def visit_toilet(self):
 
         pass
 

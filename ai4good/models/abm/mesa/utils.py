@@ -2,6 +2,8 @@ import math
 import random
 import numpy as np
 import pandas as pd
+
+from ai4good.models.abm.mesa.model import Camp
 from ai4good.utils.path_utils import get_am_aug_pop
 
 
@@ -33,3 +35,11 @@ def get_incubation_period(num_ppl):
     k = (2.3/6.4)**(-1.086)
     l = 6.4 / (math.gamma(1 + 1/k))
     return np.array([random.weibullvariate(l, k) for _ in np.arange(num_ppl)])
+
+
+def _clip_coordinates(val, low=0.0, high=Camp.CAMP_SIZE):
+    if val < low:
+        return low
+    if val > high:
+        return high
+    return val

@@ -1,5 +1,9 @@
 import math
+import random
+import numpy as np
 from numba import njit
+
+from ai4good.models.abm.mesa.utils import _clip_coordinates
 from ai4good.models.abm.mesa.common import DiseaseStage
 from ai4good.models.abm.mesa.model import Camp
 
@@ -9,11 +13,16 @@ class CampHelper(object):
     Helper class for camp functions
     """
 
+    def _find_nearest_toilet(self):
+        pass
+
+    @staticmethod
     @njit
-    def _prob_m(self, hh_pos, people):
+    def _prob_m(hh_pos, people):
         # The probability that susceptible individual i becomes infected on day d while moving about its home range.
         # To understand the math behind this method, refer to "Infection as individuals move about the camp" section
         # of tucker model.
+        # TODO: this is not abm
 
         # number of people
         n_ppl = people.shape[0]
@@ -89,3 +98,23 @@ class CampHelper(object):
             out.append(p_idm)
 
         return out
+
+
+class PersonHelper(object):
+
+    @staticmethod
+    @njit
+    def _move(center, radius):
+        # random wandering simulation: person will move within the home range centered at household
+        r = random.random() * radius
+        theta = random.random() * (2 * math.pi)
+
+        # get random position within home range
+        new_x = center[0] + r * math.cos(theta)
+        new_y = center[1] + r * math.sin(theta)
+
+        # clip position so as to not move outside the camp
+        new_x = _clip_coordinates(new_x)
+        new_y = _clip_coordinates(new_y)
+
+        return new_x, new_y
