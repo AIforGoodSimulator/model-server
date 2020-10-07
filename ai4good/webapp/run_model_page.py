@@ -50,7 +50,7 @@ def profile_selector():
     return dbc.Row([
         dbc.Col(
             html.Div([
-                html.Label('<a href="https://raw.githubusercontent.com/AIforGoodSimulator/model-server/master/fs/params/Parameters_mouse-over_des.csv">Profile</a>', style={'font-weight': 'bold'}),
+                html.Label('Profile', style={'font-weight': 'bold'}),
                 dcc.Dropdown(
                     id='profile-dropdown'
                 ),
@@ -68,7 +68,7 @@ def profile_selector():
             'if': {
                 'column_id': 'Value'
             },
-           
+
             'border': '1px solid rgb(0,0,0)',
             'backgroundColor': 'rgb(240, 240, 240)',
             'color': 'black'
@@ -90,7 +90,7 @@ def profile_selector():
              'border': '1px solid rgb(0,0,0)',
             'backgroundColor': 'rgb(240, 240, 240)',
             'color': 'black'
-        },              
+        },
           {
             'if': {
                 'row_index': 0,  # number | 'odd' | 'even'
@@ -216,7 +216,7 @@ def profile_selector():
                 'column_editable': False
             },
            'cursor':'not-allowed'
-        },]                               
+        },]
             ),
             dbc.Button("Save", id="save_profile_button",outline=True, color="info", className="mr-1",
                        style={'display': 'none'})
@@ -521,4 +521,3 @@ def on_run_report_button_click(n_open, n_show, n_cancel, is_open, model, profile
 def update_run_report_link(interventions, model, profile, camp):
     p = "&".join(map(lambda i: f'intervention={i}', interventions))
     return f'/sim/report?model={model}&profile={profile}&camp={camp}&{p}',
-
