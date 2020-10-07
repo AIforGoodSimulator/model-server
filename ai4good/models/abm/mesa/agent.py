@@ -63,7 +63,7 @@ class Person(Agent, PersonHelper):
             self.infection_dynamics()
 
         # going to food line
-        self.visit_foodline()
+        self.visit_food_line()
         self.infection_dynamics()
 
         # 3 rounds of move and visiting toilet
@@ -94,7 +94,8 @@ class Person(Agent, PersonHelper):
         # parts of its home range equally
 
         # We assume that only individuals without symptoms interact in their home ranges
-        if self.is_showing_symptoms():
+        # personal assumption: quarantined individuals will not wander
+        if self.is_showing_symptoms() or self.route == Route.QUARANTINED:
             return
 
         # set current route
@@ -104,30 +105,33 @@ class Person(Agent, PersonHelper):
         # this internal calls the helper class where the numba optimized code is executed
         self.pos = self._move(self.household_center, self.home_range)
 
-    def visit_foodline(self, prob_attend=0.75) -> None:
+    def visit_food_line(self, prob_visit=0.75) -> None:
         """
         Simulating agent's visit to food line. This is not probabilistic/stochastic, but fixed i.e. 3 times per day
 
         Parameters
         ----------
-            prob_attend: This is the probability that the agent will go to the foodline. Based on tucker model, people
+            prob_visit: This is the probability that the agent will go to the food line. Based on tucker model, people
                 without symptoms visit food line once per day on 3 out of 4 days. On other occasions, food is brought to
                 that individual by another individual without additional interactions.
-                Hence, we gave it value of 3/4
+                (Hence, we gave it value of 3/4)
         """
 
         # We assume that only individuals without symptoms attend food lines
-        if self.is_showing_symptoms():
+        # personal assumption: quarantined individuals will not go to food line
+        if self.is_showing_symptoms() or self.route == Route.QUARANTINED:
             return
 
         # going to food line has some probability defined to it as mentioned above
-        if random.random() > prob_attend:
+        if random.random() > prob_visit:
             return
 
         self.route = Route.FOOD_LINE  # change agent's route
-        # no need to change `pos` since `route` is FOOD_LINE hence current position is redundant for infection dynamics
+        # no need to update `pos` since `route` is FOOD_LINE hence current position is redundant for infection dynamics
+
+        # add the agent to the end of food line queue and store the position
         self.foodline_queue_idx = len(self.model.foodline_queue)
-        self.model.foodline_queue.append(self.unique_id)  # add agent to food line
+        self.model.foodline_queue.append(self.unique_id)
 
     def visit_toilet(self, prob_visit=0.3, toilet_proximity=Camp.CAMP_SIZE*0.02) -> None:
         """
@@ -143,7 +147,8 @@ class Person(Agent, PersonHelper):
         """
 
         if self.route != Route.WANDERING and self.route != Route.HOUSEHOLD:
-            # assumption: person will visit toilet if wandering or inside household
+            # personal assumption: person will visit toilet if wandering or inside household
+            # i.e. person will not visit toilet whilst in food line or when quarantined
             # TODO: how to model toilet visit during lockdown or when quarantined?
             return
 
@@ -172,11 +177,18 @@ class Person(Agent, PersonHelper):
         self.toilet_id = nearest_toilet_id  # update the current toilet id
         # self.pos = self.model.toilets[nearest_toilet_id]  # TODO: revisit if this needs to change
 
-    def infection_dynamics(self, ph=0.5):
+    def infection_dynamics(self, ph=0.5) -> None:
+        """
+        Infections can be transmitted from infectious to susceptible individuals in four ways:
+        within households, at toilets, in the food line, or as individuals move about the camp
+        This method will make susceptible people infectious
 
-        # Infections can be transmitted from infectious to susceptible individuals in four ways:
-        # within households, at toilets, in the food line, or as individuals move about the camp
-        # This method will make susceptible people infectious
+        Parameters
+        ----------
+            ph: On each day, each infectious individual in a household infects each susceptible individual in that
+                household with probability ph
+
+        """
 
         # if agent is already infected, don't do anything
         # TODO: verify
@@ -208,6 +220,7 @@ class Person(Agent, PersonHelper):
             return
 
         if self.route == Route.WANDERING:
+            # TODO
             return
 
         if self.route == Route.FOOD_LINE:
@@ -277,6 +290,7 @@ class Person(Agent, PersonHelper):
             return
 
         if self.route == Route.QUARANTINED:
+            # TODO
             return
 
     def disease_progression(self) -> None:

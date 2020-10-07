@@ -53,9 +53,27 @@ class CampHelper(object):
     @staticmethod
     @njit
     def filter_agents(people, skip_agent_id, route, household_id, is_infected, has_symptoms):
-        # Filter agents by various parameters. The indices of the filtered agents are returned
+        """
+        Filter agents by various parameters. The indices of the filtered agents are returned
+
+        Parameters
+        ----------
+            people: A 2D array where each row contains [route, household_id, disease_state] for agent
+            skip_agent_id: Unique id of the agent to skip in result (value: -1 means ignore filter)
+            route: Current route of the agents (value: -1 means ignore filter)
+            household_id: Household id of the agents (value: -1 means ignore filter)
+            is_infected: To check if agent is infected (1) or not (0) (value: -1 means ignore filter)
+            has_symptoms: To check if agent is showing symptoms (1) or not (0) (value: -1 means ignore filter)
+
+        Returns
+        -------
+            out: Index of the filtered agents
+
+        """
+
         n = people.shape[0]  # number of people
-        out = []
+        out = []  # output index array
+
         for i in range(n):
             if (
                 # (-1 means don't apply filter)
@@ -85,18 +103,30 @@ class CampHelper(object):
                                                                DiseaseStage.ASYMPTOMATIC1, DiseaseStage.ASYMPTOMATIC2]
                     )
                 )
-                and (skip_agent_id == -1 or i != skip_agent_id)
+                and (skip_agent_id == -1 or i != skip_agent_id)  # skip agent
             ):
                 out.append(i)
+
+        # return as numpy array
         return np.array(out)
 
     @staticmethod
     @njit
     def _prob_m(hh_pos, people):
-        # The probability that susceptible individual i becomes infected on day d while moving about its home range.
-        # To understand the math behind this method, refer to "Infection as individuals move about the camp" section
-        # of tucker model.
-        # TODO: this is not abm
+        """
+        The probability that susceptible individual i becomes infected on day d while moving about its home range.
+        To understand the math behind this method, refer to "Infection as individuals move about the camp" section
+        of tucker model.
+
+        Parameters
+        ----------
+            hh_pos: (?, 2) array containing co-ordinates of households
+            people: A 2D array containing [household id, home range, ethnic group id, disease state] for each agent
+
+        Returns
+        -------
+
+        """
 
         # number of people
         n_ppl = people.shape[0]
@@ -175,6 +205,9 @@ class CampHelper(object):
 
 
 class PersonHelper(object):
+    """
+    Helper class for Person functions
+    """
 
     @staticmethod
     @njit
@@ -220,6 +253,7 @@ class PersonHelper(object):
 
     @staticmethod
     def _is_showing_symptoms(disease_state):
+        # returns true if `disease_state` is one where agent shows symptoms
         return disease_state in (
             DiseaseStage.SYMPTOMATIC, DiseaseStage.MILD, DiseaseStage.SEVERE
         )
