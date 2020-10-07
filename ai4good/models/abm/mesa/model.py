@@ -122,23 +122,6 @@ class Camp(Model, CampHelper):
         # if all agents are either susceptible or recovered, time to stop the simulation
         return 1
 
-    def infection_spread_movement(self):
-        # probability of infection spread during movement
-
-        # get position of households
-        hh_pos = self.households[:, 1:]
-
-        # create an array of people's attributes
-        # 0: household id, 1: home range, 2: ethnic group id, 3: disease state
-        people = np.concatenate([
-            self.agents_households,
-            self.agents_home_ranges,
-            self.agents_ethnic_groups,
-            self.agents_disease_states
-        ], axis=0)
-
-        return self._prob_m(hh_pos, people)
-
     def apply_interventions(self, vt=None, lockdown=None, sector=None, isolation=None) -> None:
         """
         Add interventions

@@ -114,6 +114,7 @@ class CampHelper(object):
     @njit
     def _prob_m(hh_pos, people):
         """
+        TODO: Implement this in agent.py
         The probability that susceptible individual i becomes infected on day d while moving about its home range.
         To understand the math behind this method, refer to "Infection as individuals move about the camp" section
         of tucker model.
