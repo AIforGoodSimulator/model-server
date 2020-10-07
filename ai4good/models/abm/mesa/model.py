@@ -1,4 +1,5 @@
 import time
+import random
 import logging
 import numpy as np
 from mesa import Model
@@ -172,8 +173,18 @@ class Camp(Model, CampHelper):
         if lockdown is not None:
             rl = lockdown['rl']  # new home range (for all agents)
             wl = lockdown['wl']  # proportion of people who violate lockdown
-            # TODO
-            pass
+
+            for i, a in enumerate(self.schedule.agents):  # iterate over all the agents
+
+                # check whether agent will violate lockdown or not
+                will_violate = random.random() < wl
+
+                # set their home range to rl with probability (1- wl), and to 0.1 otherwise
+                new_home_range = 0.1 if will_violate else rl
+
+                # update home range data
+                a.__setattr__("home_range", new_home_range)
+                self.agents_home_ranges[i] = new_home_range
 
         # The camp in our baseline model has a single food line, where transmission can potentially occur between two
         # individuals from any parts of the camp. This facilitates the rapid spread of COVID-19 infection. A plausible
