@@ -90,6 +90,10 @@ class SimpleParamStore(ParamStore):
         df = self._read_csv("camp_params.csv")
         return df[df.Camp == camp].copy()
 
+    def get_camp_params_network_model(self, camp: str) -> pd.DataFrame:
+        df = self._read_csv("network-model_camp_params.csv")
+        return df[df.Camp == camp].copy()
+
     def get_contact_matrix_params(self, camp: str) -> pd.DataFrame:
         df = self._read_csv("contact_matrix_params.csv")
         return df[df.Camp == camp].copy()
