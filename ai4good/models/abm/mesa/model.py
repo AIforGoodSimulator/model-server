@@ -11,7 +11,7 @@ from ai4good.models.abm.initialise_parameters import Parameters
 from ai4good.models.abm.mesa.utils import read_age_gender
 from ai4good.models.abm.mesa.common import Route
 from ai4good.models.abm.mesa.common import DiseaseStage
-from ai4good.models.abm.mesa.helper import CampHelper
+from ai4good.models.abm.mesa.helper import CampHelper, PersonHelper
 
 
 class Camp(Model, CampHelper):
@@ -45,10 +45,12 @@ class Camp(Model, CampHelper):
         self.agents_gender = read_age_gender(self.people_count)[:, 1]
 
         # In our baseline model, we assume that females and individuals under the age of 10 use home ranges with radius
-        # 0.02, and that males over the age of 10 use home ranges with radius 0.1
-        # TODO: these are baseline values, parameterize it
+        # 0.02 (`smaller_movement_radius`), and that males over the age of 10 use home ranges with radius 0.1
+        # (`larger_movement_radius`)
         self.agents_home_ranges = np.array([
-            0.02 * Camp.CAMP_SIZE if (self.agents_gender[i] == 0 or self.agents_age[i] < 10) else 0.1 * Camp.CAMP_SIZE
+            self.params.smaller_movement_radius * Camp.CAMP_SIZE if (self.agents_gender[i] == 0 or
+                                                                     self.agents_age[i] < 10)
+            else self.params.larger_movement_radius * Camp.CAMP_SIZE
             for i in range(self.people_count)
         ])
 
@@ -65,13 +67,14 @@ class Camp(Model, CampHelper):
         self.agents_ethnic_groups = np.array([])  # TODO: can we remove/de-prioritize it for abm?
 
         # There are 144 toilets evenly distributed throughout the camp. Toilets are placed at the centres of the
-        # squares that form a 12 x 12 grid covering the camp
-        self.toilets = self._position_blocks(Camp.CAMP_SIZE, 12)
+        # squares that form a 12 x 12 grid covering the camp (baseline)
+        self.toilets = self._position_blocks(self.params.toilets_blocks[0])
         self.toilets_queue = {}  # dict containing toilet_id: [ list of agents unique ids ] for toilet occupancy
 
-        # The camp has one food line. Since the position of food line is not modelled, we just maintain food line queue
+        # The camp has one food line (baseline)
         # each person going to the food line to collect food will enter this queue
-        self.foodline_queue = []  # start with no people in food line
+        self.foodlines = self._position_blocks(self.params.foodline_blocks[0])  # initial food lines
+        self.foodline_queue = {}  # dict containing foodline_id: [ list of agents unique ids ] who are standing in line
 
         # mesa scheduler
         self.schedule = RandomActivation(self)
@@ -87,26 +90,26 @@ class Camp(Model, CampHelper):
             self.schedule.add(p)
             self.space.place_agent(p, self.agents_pos[i, :])
 
-    def step(self, times=10):
-        # simulate model `times` number of steps
+    def step(self):
+        # simulate 1 day in camp
 
+        # check if simulation can stop
+        if self.stop_simulation(self.agents_disease_states):
+            return
+
+        # step all agents
+        self.schedule.step()
+
+        # clear some model day-wise variables
+        self.foodline_queue = {}  # clear food line queue at end of the day
+        self.toilets_queue = {}  # clear toilet queues at end of the day
+
+    def simulate(self):
         t1 = time.time()  # start of the model execution
-
-        for _ in range(times):
-
-            # check if simulation can stop
-            if self.stop_simulation(self.agents_disease_states):
-                return
-
-            # step all agents
-            self.schedule.step()
-
-            # clear some model day-wise variables
-            self.foodline_queue = []  # clear food line queue at end of the day
-            self.toilets_queue = {}  # clear toilet queues at end of the day
-
+        for _ in range(self.params.number_of_steps):
+            self.step()
         t2 = time.time()  # end of the model execution
-        logging.info("Completed x{} steps in {} seconds".format(times, t2-t1))
+        logging.info("Completed x{} steps in {} seconds".format(self.params.number_of_steps, t2 - t1))
 
     @staticmethod
     @njit
@@ -175,13 +178,22 @@ class Camp(Model, CampHelper):
         # The camp in our baseline model has a single food line, where transmission can potentially occur between two
         # individuals from any parts of the camp. This facilitates the rapid spread of COVID-19 infection. A plausible
         # intervention would be to divide the camp into sectors with separate food lines, and require individuals to
-        # use the food line closest to their households. To simulate this sectoring intervention, we divide the camp
-        # into an n x n grid of squares, each with its own food line
+        # use the food line closest to their households. To simulate this intervention, we divide the camp into an
+        # n x n grid of squares, each with its own food line
         if sector is not None:
-            # TODO
-            # TODO: this will require more changes as original implementation has one `foodline_queue` for entire camp
-            # TODO: possible implementation: make `foodline_queue` a list of list instead?
-            pass
+            # create food lines based on `sector` parameter
+            # `foodline` will contain new positions of the foodlines
+            self.foodlines = self._position_blocks(sector)
+
+            # assign agents to foodline of their sector (nearest ones to their household)
+            for a in self.schedule.agents:
+                # update agent's food line id
+                # find food line nearest to household of the agent
+                a.foodline_id = PersonHelper.find_nearest(a.__getattribute__("household_center"), self.foodlines)
+
+            # reset food line queues
+            # TODO: double check
+            self.foodline_queue = {}
 
         # Managers of some populations, including Moria, have planned interventions in which people with COVID-19
         # infections and their households will be removed from populations and kept in isolation until the infected
@@ -260,11 +272,13 @@ class Camp(Model, CampHelper):
 
         """
 
-        iso_boxes_pos = self.get_iso_boxes(num_iso_boxes)  # get positions of iso-boxes
-        iso_boxes_ids = np.arange(0, num_iso_boxes)  # ids of iso-boxes
+        # get positions and ids of iso-boxes
+        iso_boxes_pos = self.get_iso_boxes(num_iso_boxes, self.params.area_covered_by_isoboxes)
+        iso_boxes_ids = np.arange(0, num_iso_boxes)
 
-        tents_pos = self.get_tents(num_tents)  # get positions of tents
-        tents_ids = np.arange(num_iso_boxes, num_iso_boxes + num_tents)  # ids of tents
+        # get positions and ids of tents
+        tents_pos = self.get_tents(num_tents, self.params.area_covered_by_isoboxes)
+        tents_ids = np.arange(num_iso_boxes, num_iso_boxes + num_tents)
 
         iso_boxes = np.concatenate([iso_boxes_ids, iso_boxes_pos], axis=0)  # join ids and co-ordinates of iso-boxes
         tents = np.concatenate([tents_ids, tents_pos], axis=0)  # join ids and co-ordinates of tents
@@ -276,7 +290,7 @@ class Camp(Model, CampHelper):
         return households  # return household data
 
     @staticmethod
-    def get_iso_boxes(num: int) -> np.array:
+    def get_iso_boxes(num: int, iso_area_ratio: float) -> np.array:
         """
         Get positions of the iso-boxes in the camp.
         Iso-boxes are assigned to random locations in a central square that covers one half of the area of the camp
@@ -284,6 +298,7 @@ class Camp(Model, CampHelper):
         Parameters
         ----------
             num: Number of iso-boxes in the camp
+            iso_area_ratio: The portion of the camp area (0->1) that is occupied by iso-boxes
 
         Returns
         -------
@@ -292,16 +307,19 @@ class Camp(Model, CampHelper):
 
         # Iso-boxes are assigned to random locations in a central square that covers one half of the area of the camp
 
+        # the side length of central square
+        center_sq_side = Camp.CAMP_SIZE * iso_area_ratio**0.5
+
         # minimum and maximum co-ordinates for central square
-        p_min = Camp.CAMP_SIZE * ((2**0.5)-1)/(2*(2**0.5))
-        p_max = Camp.CAMP_SIZE * ((2**0.5)+1)/(2*(2**0.5))
+        p_min = (Camp.CAMP_SIZE - center_sq_side) / 2.0
+        p_max = (Camp.CAMP_SIZE + center_sq_side) / 2.0
 
         pos = (p_max - p_min) * np.random.random(size=(num, 2)) + p_min  # choose random positions from central square
 
         return pos  # return iso boxes co-ordinates
 
     @staticmethod
-    def get_tents(num: int) -> np.array:
+    def get_tents(num: int, iso_area_ratio: float) -> np.array:
         """
         Get positions of the tents in the camp.
         Tents are assigned to random locations in the camp outside of the central square
@@ -309,6 +327,7 @@ class Camp(Model, CampHelper):
         Parameters
         ----------
             num: Number of tents in the camp
+            iso_area_ratio: The portion of the camp area (0->1) that is occupied by iso-boxes
 
         Returns
         -------
@@ -318,9 +337,12 @@ class Camp(Model, CampHelper):
         # The area outside the central square can be divided into 4 parts (bottom, right, top, left)
         # Below is the positions of tents distributed in all these 4 parts
 
+        # the side length of central square
+        center_sq_side = Camp.CAMP_SIZE * iso_area_ratio ** 0.5
+
         min1 = 0.0  # minimum co-ordinate for the region outside central square
-        max1 = Camp.CAMP_SIZE * ((2**0.5)-1)/(2*(2**0.5))  # co-ordinate of first edge of central square
-        min2 = Camp.CAMP_SIZE * ((2**0.5)+1)/(2*(2**0.5))  # co-ordinate of second edge of central square
+        max1 = (Camp.CAMP_SIZE - center_sq_side) / 2.0  # co-ordinate of first edge of central square
+        min2 = (Camp.CAMP_SIZE + center_sq_side) / 2.0  # co-ordinate of second edge of central square
         max2 = Camp.CAMP_SIZE  # co-ordinate of camp end
 
         assert num >= 4, "For calculations, we need minimum 4 tents"

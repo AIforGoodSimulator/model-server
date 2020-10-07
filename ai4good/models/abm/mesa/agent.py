@@ -23,8 +23,10 @@ class Person(Agent, PersonHelper):
         self.age = model.agents_age[unique_id]  # agent's age
         self.pos = model.agents_pos[unique_id]  # agent's position (x, y) in the camp
         self.route = model.agents_route[unique_id]  # current route of the agent: household, food-line, toilet, wander
+
         self.toilet_id = -1  # if agent is standing in queue for toilet, store the id of the toilet
         self.toilet_queue_idx = -1  # if agent is standing in queue for toilet, store the index in the queue
+        self.foodline_id = -1  # id of the foodline to visit
         self.foodline_queue_idx = -1  # if agent is standing in food line, store the index in the queue
 
         # each person is allocated a household initially (iso-box or tent). This does not change during model simulation
@@ -36,8 +38,8 @@ class Person(Agent, PersonHelper):
 
         # calculate if asymptomatic
         # All children under the age of 16 become asymptomatic (ref), and others become asymptomatic
-        # with probability 0.178 (Mizumoto et al. 2020)
-        self.is_asymptomatic = self.age < 16 or random.random() <= 0.178
+        # with probability 0.178 (`permanently_asymptomatic_cases`) (Mizumoto et al. 2020)
+        self.is_asymptomatic = self.age < 16 or random.random() <= self.model.params.permanently_asymptomatic_cases
 
         # calculate if high risk
         self.is_high_risk = self.age >= 80
@@ -48,6 +50,7 @@ class Person(Agent, PersonHelper):
     def step(self) -> None:
         # simulate 1 day in the camp
         # this cannot be run in parallel unfortunately :(
+        # TODO: fix
 
         if self.disease_state not in [DiseaseStage.SUSCEPTIBLE, DiseaseStage.RECOVERED, DiseaseStage.DECEASED]:
             self.day_counter += 1
@@ -130,8 +133,14 @@ class Person(Agent, PersonHelper):
         # no need to update `pos` since `route` is FOOD_LINE hence current position is redundant for infection dynamics
 
         # add the agent to the end of food line queue and store the position
-        self.foodline_queue_idx = len(self.model.foodline_queue)
-        self.model.foodline_queue.append(self.unique_id)
+        if self.foodline_id in self.model.foodline_queue:
+            # if already people in food line, go to end of line
+            self.foodline_queue_idx = len(self.model.foodline_queue[self.foodline_id])
+            self.model.foodline_queue[self.foodline_id].append(self.unique_id)
+        else:
+            # if line not formed yet, start the line
+            self.foodline_queue_idx = 0
+            self.model.foodline_queue[self.foodline_id] = [self.unique_id]
 
     def visit_toilet(self, prob_visit=0.3, toilet_proximity=Camp.CAMP_SIZE*0.02) -> None:
         """
@@ -158,7 +167,7 @@ class Person(Agent, PersonHelper):
             return
 
         # second, check if there is a toilet nearby
-        nearest_toilet_id, nearest_toilet_distance = self._find_nearest(self.pos, self.model.toilets)
+        nearest_toilet_id, nearest_toilet_distance = self.find_nearest(self.pos, self.model.toilets)
 
         # third, check if toilet is in desired proximity
         if nearest_toilet_distance > toilet_proximity:
@@ -177,18 +186,15 @@ class Person(Agent, PersonHelper):
         self.toilet_id = nearest_toilet_id  # update the current toilet id
         # self.pos = self.model.toilets[nearest_toilet_id]  # TODO: revisit if this needs to change
 
-    def infection_dynamics(self, ph=0.5) -> None:
-        """
-        Infections can be transmitted from infectious to susceptible individuals in four ways:
-        within households, at toilets, in the food line, or as individuals move about the camp
-        This method will make susceptible people infectious
+    def infection_dynamics(self) -> None:
+        # Infections can be transmitted from infectious to susceptible individuals in four ways:
+        # within households, at toilets, in the food line, or as individuals move about the camp
+        # This method will make susceptible people infectious
 
-        Parameters
-        ----------
-            ph: On each day, each infectious individual in a household infects each susceptible individual in that
-                household with probability ph
-
-        """
+        # On each day, each infectious individual in a household infects each susceptible individual in that
+        # household with probability ph
+        # TODO: in csv file, ph=0.33 in baseline model. But tucker model says baseline value is 0.5
+        ph = self.model.params.probability_infecting_person_in_household_per_day
 
         # if agent is already infected, don't do anything
         # TODO: verify
@@ -235,14 +241,18 @@ class Person(Agent, PersonHelper):
             # check infection for person in front of the agent
             if self.foodline_queue_idx > 0 and \
                     self._is_showing_symptoms(
-                        self.model.agents_disease_states[self.model.foodline_queue[self.foodline_queue_idx-1]]
+                        self.model.agents_disease_states[
+                            self.model.foodline_queue[self.foodline_id][self.foodline_queue_idx-1]
+                        ]
                     ):
                 n += 1
 
             # check infection for person behind the agent
-            if self.foodline_queue_idx < (len(self.model.foodline_queue)-1) and \
+            if self.foodline_queue_idx < (len(self.model.foodline_queue[self.foodline_id])-1) and \
                     self._is_showing_symptoms(
-                        self.model.agents_disease_states[self.model.foodline_queue[self.foodline_queue_idx+1]]
+                        self.model.agents_disease_states[
+                            self.model.foodline_queue[self.foodline_id][self.foodline_queue_idx+1]
+                        ]
                     ):
                 n += 1
 

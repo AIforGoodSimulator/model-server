@@ -15,13 +15,12 @@ class CampHelper(object):
 
     @staticmethod
     @njit
-    def _position_blocks(camp_size, grid_size):
+    def _position_blocks(grid_size):
         """
         Uniform placement of blocks (typically foodline or toilet) in the camp.
 
         Parameters
         ----------
-            camp_size: Side length of the square camp
             grid_size: Size of the square grid where placement of foodline/toilet happens
 
         Returns
@@ -32,7 +31,7 @@ class CampHelper(object):
 
         # since the placement will be uniform and equidistant, there will be a fixed distance between two blocks along
         # an axis. We call this distance as step
-        step = camp_size / grid_size
+        step = Camp.CAMP_SIZE / grid_size
 
         # bottom left position of the first block. This serves as both the x and y co-ordinate since camp is a square
         pos0 = step / 2.0
@@ -229,18 +228,18 @@ class PersonHelper(object):
 
     @staticmethod
     @njit
-    def _find_nearest(pos, others):
-        # Find and return the index of the entity nearest to individual positioned at `pos`
+    def find_nearest(pos, others):
+        # Find and return the index of the entity nearest to subject positioned at `pos`
         # The co-ordinates of the entities are defined in `others` array (?, 2)
 
         d_min = Camp.CAMP_SIZE * 10000.0  # a large number in terms of distance
-        d_min_index = -1  # index in `others` which is nearest to the individual positioned at `pos`
+        d_min_index = -1  # index in `others` which is nearest to the subject positioned at `pos`
 
-        # number of entities around individual positioned at `pos`
+        # number of entities around subject positioned at `pos`
         n = others.shape[0]
 
         for i in range(n):  # iterate all entities in `others` array
-            # distance between entity `i` and individual
+            # distance between entity `i` and subject
             dij = (others[i, 0] - pos[0]) ** 2 + (others[i, 1] - pos[1]) ** 2
             # dij = dij ** 0.5 : this step is not needed since relative distance is needed
 
