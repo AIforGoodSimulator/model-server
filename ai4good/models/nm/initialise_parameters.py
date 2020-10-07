@@ -22,6 +22,7 @@ class Parameters:
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Camp parameters
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
         self.camp = camp
         self.camp_params = ps.get_camp_params_network_model(self.camp)
 
