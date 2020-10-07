@@ -5,7 +5,6 @@ from ai4good.models.nm.initialise_parameters import Parameters
 
 # Load graphs and process
 def create_new_graph(p: Parameters):
-    # TODO: For now, this only creates a camp that resembles Moria, but it could be abstracted more (after alpha version is done)
 
     graph, nodes_per_struct = create_graph(p.n_structs, 0, p.total_population, p.max_pop_per_struct,
                                            edge_weight=p.household_weight, label="household",
