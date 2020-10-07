@@ -3,9 +3,8 @@ import random
 import numpy as np
 from numba import njit
 
-from ai4good.models.abm.mesa.utils import _clip_coordinates
-from ai4good.models.abm.mesa.common import DiseaseStage
-from ai4good.models.abm.mesa.model import Camp
+from ai4good.models.abm.mesa_impl.utils import _clip_coordinates
+from ai4good.models.abm.mesa_impl.common import *
 
 
 class CampHelper(object):
@@ -31,7 +30,7 @@ class CampHelper(object):
 
         # since the placement will be uniform and equidistant, there will be a fixed distance between two blocks along
         # an axis. We call this distance as step
-        step = Camp.CAMP_SIZE / grid_size
+        step = CAMP_SIZE / grid_size
 
         # bottom left position of the first block. This serves as both the x and y co-ordinate since camp is a square
         pos0 = step / 2.0
@@ -81,25 +80,25 @@ class CampHelper(object):
                 and (
                     is_infected == -1 or (
                         # filter infected people
-                        is_infected == 1 and people[i, 2] in [DiseaseStage.SYMPTOMATIC, DiseaseStage.ASYMPTOMATIC1,
-                                                              DiseaseStage.ASYMPTOMATIC2, DiseaseStage.MILD,
-                                                              DiseaseStage.SEVERE, DiseaseStage.PRESYMPTOMATIC]
+                        is_infected == 1 and people[i, 2] in [SYMPTOMATIC, ASYMPTOMATIC1,
+                                                              ASYMPTOMATIC2, MILD,
+                                                              SEVERE, PRESYMPTOMATIC]
                     ) or (
                         # filter uninfected people
-                        is_infected == 0 and people[i, 2] in [DiseaseStage.SUSCEPTIBLE, DiseaseStage.EXPOSED,
-                                                              DiseaseStage.RECOVERED]
+                        is_infected == 0 and people[i, 2] in [SUSCEPTIBLE, EXPOSED,
+                                                              RECOVERED]
                     )
                 )
                 and (
                     has_symptoms == -1 or (
                         # filter people showing symptoms
-                        has_symptoms == 1 and people[i, 2] in [DiseaseStage.SYMPTOMATIC, DiseaseStage.MILD,
-                                                               DiseaseStage.SEVERE]
+                        has_symptoms == 1 and people[i, 2] in [SYMPTOMATIC, MILD,
+                                                               SEVERE]
                     ) or (
                         # filter people showing no symptoms
-                        has_symptoms == 0 and people[i, 2] in [DiseaseStage.SUSCEPTIBLE, DiseaseStage.EXPOSED,
-                                                               DiseaseStage.PRESYMPTOMATIC, DiseaseStage.RECOVERED,
-                                                               DiseaseStage.ASYMPTOMATIC1, DiseaseStage.ASYMPTOMATIC2]
+                        has_symptoms == 0 and people[i, 2] in [SUSCEPTIBLE, EXPOSED,
+                                                               PRESYMPTOMATIC, RECOVERED,
+                                                               ASYMPTOMATIC1, ASYMPTOMATIC2]
                     )
                 )
                 and (skip_agent_id == -1 or i != skip_agent_id)  # skip agent
@@ -145,8 +144,8 @@ class CampHelper(object):
             qid = 0.0
 
             # assumption: only individuals without symptoms interact in their home ranges
-            if people[i, 3] not in [DiseaseStage.SUSCEPTIBLE, DiseaseStage.EXPOSED, DiseaseStage.PRESYMPTOMATIC,
-                                    DiseaseStage.ASYMPTOMATIC1, DiseaseStage.ASYMPTOMATIC2, DiseaseStage.RECOVERED]:
+            if people[i, 3] not in [SUSCEPTIBLE, EXPOSED, PRESYMPTOMATIC,
+                                    ASYMPTOMATIC1, ASYMPTOMATIC2, RECOVERED]:
                 continue
 
             for j in range(n_ppl):
@@ -155,9 +154,9 @@ class CampHelper(object):
                     continue
 
                 # assumption: only individuals without symptoms interact in their home ranges
-                if people[j, 3] not in [DiseaseStage.SUSCEPTIBLE, DiseaseStage.EXPOSED, DiseaseStage.PRESYMPTOMATIC,
-                                        DiseaseStage.ASYMPTOMATIC1, DiseaseStage.ASYMPTOMATIC2,
-                                        DiseaseStage.RECOVERED]:
+                if people[j, 3] not in [SUSCEPTIBLE, EXPOSED, PRESYMPTOMATIC,
+                                        ASYMPTOMATIC1, ASYMPTOMATIC2,
+                                        RECOVERED]:
                     continue
 
                 hh_id = people[j, 0]  # household id for person j
@@ -198,7 +197,7 @@ class CampHelper(object):
                 qid += fij
 
             # The probability that susceptible individual i becomes infected on day d while moving about its home range
-            p_idm = 1 - math.exp(-qid * Camp.Pa)
+            p_idm = 1 - math.exp(-qid * 0.1)
             out.append(p_idm)
 
         return out
@@ -232,7 +231,7 @@ class PersonHelper(object):
         # Find and return the index of the entity nearest to subject positioned at `pos`
         # The co-ordinates of the entities are defined in `others` array (?, 2)
 
-        d_min = Camp.CAMP_SIZE * 10000.0  # a large number in terms of distance
+        d_min = CAMP_SIZE * 10000.0  # a large number in terms of distance
         d_min_index = -1  # index in `others` which is nearest to the subject positioned at `pos`
 
         # number of entities around subject positioned at `pos`
@@ -255,5 +254,5 @@ class PersonHelper(object):
     def _is_showing_symptoms(disease_state):
         # returns true if `disease_state` is one where agent shows symptoms
         return disease_state in (
-            DiseaseStage.SYMPTOMATIC, DiseaseStage.MILD, DiseaseStage.SEVERE
+            SYMPTOMATIC, MILD, SEVERE
         )

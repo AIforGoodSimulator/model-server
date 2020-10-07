@@ -29,11 +29,11 @@ class Parameters:
         
         self.number_of_people_in_isoboxes = int(profile.loc['number_of_people_in_isoboxes','Value'])
         self.number_of_people_in_one_isobox = int(profile.loc['number_of_people_in_one_isobox','Value'])
-        self.number_of_isoboxes = self.number_of_people_in_isoboxes / self.number_of_people_in_one_isobox
+        self.number_of_isoboxes = math.ceil(self.number_of_people_in_isoboxes / self.number_of_people_in_one_isobox)
 
         self.number_of_people_in_tents = int(profile.loc['number_of_people_in_tents','Value'])
         self.number_of_people_in_one_tent = int(profile.loc['number_of_people_in_one_tent','Value'])
-        self.number_of_tents = self.number_of_people_in_tents / self.number_of_people_in_one_tent
+        self.number_of_tents = math.ceil(self.number_of_people_in_tents / self.number_of_people_in_one_tent)
 
         self.total_population = self.number_of_people_in_isoboxes + self.number_of_people_in_tents
         self.permanently_asymptomatic_cases = float(profile.loc['permanently_asymptomatic_cases','Value'])

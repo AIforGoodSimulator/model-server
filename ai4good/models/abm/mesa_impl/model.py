@@ -1,5 +1,4 @@
 import time
-import random
 import logging
 import numpy as np
 from mesa import Model
@@ -7,12 +6,11 @@ from numba import njit
 from mesa.time import RandomActivation
 from mesa.space import ContinuousSpace
 
-from ai4good.models.abm.mesa.agent import Person
+from ai4good.models.abm.mesa_impl.agent import Person
 from ai4good.models.abm.initialise_parameters import Parameters
-from ai4good.models.abm.mesa.utils import read_age_gender
-from ai4good.models.abm.mesa.common import Route
-from ai4good.models.abm.mesa.common import DiseaseStage
-from ai4good.models.abm.mesa.helper import CampHelper, PersonHelper
+from ai4good.models.abm.mesa_impl.utils import read_age_gender, get_incubation_period
+from ai4good.models.abm.mesa_impl.common import *
+from ai4good.models.abm.mesa_impl.helper import CampHelper, PersonHelper
 
 
 class Camp(Model, CampHelper):
@@ -21,25 +19,24 @@ class Camp(Model, CampHelper):
     # TODO: can we add thread locks/semaphore to share resources and then simulate all agents in parallel?
     """
 
-    # Side length of square shaped camp
-    # In tucker model, CAMP_SIZE=1.0. However, any value can be set here since all distance calculations are done
-    # relative to `CAMP_SIZE`
-    CAMP_SIZE = 100.0
-
-    # If a susceptible and an infectious individual interact, then the infection is transmitted with probability pa
-    # Fang and colleagues (2020)
-    # TODO: this is baseline value, parameterize it
-    Pa = 0.1
-
     def __init__(self, params: Parameters):
-        super().__init__()
+        super(Camp, self).__init__()
+
         self.params = params
+
+        # If a susceptible and an infectious individual interact, then the infection is transmitted with probability pa
+        # Fang and colleagues (2020)
+        # TODO: this is baseline value, parameterize it
+        self.Pa = 0.1
 
         if self.params.camp.upper() != 'MORIA':
             raise NotImplementedError("Only Moria camp is implemented for abm at the moment")
 
         # all agents are susceptible before simulation starts
-        self.agents_disease_states = np.array([DiseaseStage.SUSCEPTIBLE for _ in range(self.people_count)])
+        self.agents_disease_states = np.array([SUSCEPTIBLE for _ in range(self.people_count)])
+
+        # incubation period: number of days from exposure until symptoms appear
+        self.agents_incubation_periods = get_incubation_period(self.people_count)
 
         # get age and gender of the agents
         self.agents_age = read_age_gender(self.people_count)[:, 0]
@@ -49,17 +46,16 @@ class Camp(Model, CampHelper):
         # 0.02 (`smaller_movement_radius`), and that males over the age of 10 use home ranges with radius 0.1
         # (`larger_movement_radius`)
         self.agents_home_ranges = np.array([
-            self.params.smaller_movement_radius * Camp.CAMP_SIZE if (self.agents_gender[i] == 0 or
-                                                                     self.agents_age[i] < 10)
-            else self.params.larger_movement_radius * Camp.CAMP_SIZE
+            self.params.smaller_movement_radius * CAMP_SIZE if (self.agents_gender[i] == 0 or self.agents_age[i] < 10)
+            else self.params.larger_movement_radius * CAMP_SIZE
             for i in range(self.people_count)
         ])
 
         # randomly position agents throughout the camp
-        self.agents_pos = Camp.CAMP_SIZE * np.random.random((self.people_count, 2))
+        self.agents_pos = CAMP_SIZE * np.random.random((self.people_count, 2))
 
         # initially all agents are in their respective households
-        self.agents_route = np.array([Route.HOUSEHOLD] * self.people_count)
+        self.agents_route = np.array([HOUSEHOLD] * self.people_count)
 
         # [id, x, y] of each household
         self.households = self.get_households(self.params.number_of_isoboxes, self.params.number_of_tents)
@@ -77,13 +73,13 @@ class Camp(Model, CampHelper):
         self.foodlines = self._position_blocks(self.params.foodline_blocks[0])  # initial food lines
         self.foodline_queue = {}  # dict containing foodline_id: [ list of agents unique ids ] who are standing in line
 
-        # mesa scheduler
+        # mesa_impl scheduler
         self.schedule = RandomActivation(self)
-        # mesa space
-        self.space = ContinuousSpace(x_max=Camp.CAMP_SIZE, y_max=Camp.CAMP_SIZE, torus=False)
+        # mesa_impl space
+        self.space = ContinuousSpace(x_max=CAMP_SIZE, y_max=CAMP_SIZE, torus=False)
 
         # randomly select one person and mark as "Exposed"
-        self.agents_disease_states[np.random.randint(0, high=self.people_count)] = DiseaseStage.EXPOSED
+        self.agents_disease_states[np.random.randint(0, high=self.people_count)] = EXPOSED
 
         # add agents to the model
         for i in range(self.people_count):
@@ -93,6 +89,8 @@ class Camp(Model, CampHelper):
 
     def step(self):
         # simulate 1 day in camp
+
+        logging.info("Running step: {}".format(self.schedule.steps))
 
         # check if simulation can stop
         if self.stop_simulation(self.agents_disease_states):
@@ -105,12 +103,16 @@ class Camp(Model, CampHelper):
         self.foodline_queue = {}  # clear food line queue at end of the day
         self.toilets_queue = {}  # clear toilet queues at end of the day
 
-    def simulate(self):
+    def simulate(self) -> None:
         t1 = time.time()  # start of the model execution
-        for _ in range(self.params.number_of_steps):
+        for t in range(self.params.number_of_steps):
             self.step()
         t2 = time.time()  # end of the model execution
         logging.info("Completed x{} steps in {} seconds".format(self.params.number_of_steps, t2 - t1))
+
+    def collect_data(self):
+        # TODO: Collect data at regular intervals
+        pass
 
     @staticmethod
     @njit
@@ -119,7 +121,7 @@ class Camp(Model, CampHelper):
         # point the epidemic had ended
         n = disease_states.shape[0]
         for i in range(n):
-            if disease_states[i] not in [DiseaseStage.SUSCEPTIBLE, DiseaseStage.RECOVERED]:
+            if disease_states[i] not in [SUSCEPTIBLE, RECOVERED]:
                 # DO NOT stop the simulation if any person is NOT (susceptible or recovered)
                 return 0
 
@@ -128,7 +130,8 @@ class Camp(Model, CampHelper):
 
     def apply_interventions(self, vt=None, lockdown=None, sector=None, isolation=None) -> None:
         """
-        Add interventions
+        Add interventions. This method should be called once when intervention is applied. It need not be called at
+        each step.
 
         Parameters
         ----------
@@ -162,7 +165,11 @@ class Camp(Model, CampHelper):
         # However, people in Moria have been provided with face masks. We simulated a population in which all
         # individuals wear face masks outside their homes by setting vt = 0.32 (Jefferson et al. 2009)
         if vt is not None:
-            Camp.Pa = Camp.Pa * vt
+            self.Pa = self.Pa * vt
+
+            # propagate new value to all agents
+            for a in self.schedule.agents:
+                a.__setattr__("Pa", self.Pa)
 
         # Some countries have attempted to limit the spread of COVID-19 by requiring people to stay in or close to
         # their homes (ref). This intervention has been called "lockdown". We simulated a lockdown in which most
@@ -174,16 +181,16 @@ class Camp(Model, CampHelper):
             rl = lockdown['rl']  # new home range (for all agents)
             wl = lockdown['wl']  # proportion of people who violate lockdown
 
+            # actual probabilities that agents will violate lockdown
+            will_violate = np.random.random(size=(self.people_count,))
+
             for i, a in enumerate(self.schedule.agents):  # iterate over all the agents
 
-                # check whether agent will violate lockdown or not
-                will_violate = random.random() < wl
-
-                # set their home range to rl with probability (1- wl), and to 0.1 otherwise
-                new_home_range = 0.1 if will_violate else rl
+                # set home range to rl with probability (1- wl), and to 0.1 if lockdown is violated
+                new_home_range = 0.1 if will_violate[i] < wl else rl
 
                 # update home range data
-                a.__setattr__("home_range", new_home_range)
+                a.home_range = new_home_range
                 self.agents_home_ranges[i] = new_home_range
 
         # The camp in our baseline model has a single food line, where transmission can potentially occur between two
@@ -228,8 +235,8 @@ class Camp(Model, CampHelper):
         return self.params.total_population
 
     def get_filter_array(self):
-        # pass compatible `people` array to be passed to `_filter_agents` function
-        # need agent's details columns: route, household_id, disease state
+        # returns compatible `people` array which is then passed to `_filter_agents` function
+        # Agent columns needed: route, household_id, disease state
         return np.dstack([
             self.agents_route,
             self.agents_households,
@@ -244,7 +251,7 @@ class Camp(Model, CampHelper):
         # check if provided population can be fit into given number of households
         camp_capacity = self.params.number_of_people_in_one_isobox * self.params.number_of_isoboxes + \
                         self.params.number_of_people_in_one_tent * self.params.number_of_tents
-        assert camp_capacity < self.people_count, \
+        assert camp_capacity >= self.people_count, \
             "Number of people ({}) exceeds camp capacity ({})".format(self.people_count, camp_capacity)
 
         out = np.zeros(shape=(camp_capacity,), dtype=np.int32)  # array containing household id for each agent
@@ -285,17 +292,17 @@ class Camp(Model, CampHelper):
 
         # get positions and ids of iso-boxes
         iso_boxes_pos = self.get_iso_boxes(num_iso_boxes, self.params.area_covered_by_isoboxes)
-        iso_boxes_ids = np.arange(0, num_iso_boxes)
+        iso_boxes_ids = np.arange(0, num_iso_boxes)[:, None]  # expand from shape (?,) to (?,1)
 
         # get positions and ids of tents
         tents_pos = self.get_tents(num_tents, self.params.area_covered_by_isoboxes)
-        tents_ids = np.arange(num_iso_boxes, num_iso_boxes + num_tents)
+        tents_ids = np.arange(num_iso_boxes, num_iso_boxes + num_tents)[:, None]  # expand from shape (?,) to (?,1)
 
-        iso_boxes = np.concatenate([iso_boxes_ids, iso_boxes_pos], axis=0)  # join ids and co-ordinates of iso-boxes
-        tents = np.concatenate([tents_ids, tents_pos], axis=0)  # join ids and co-ordinates of tents
+        iso_boxes = np.concatenate([iso_boxes_ids, iso_boxes_pos], axis=1)  # join ids and co-ordinates of iso-boxes
+        tents = np.concatenate([tents_ids, tents_pos], axis=1)  # join ids and co-ordinates of tents
 
         # merge iso-boxes and tents
-        households = np.concatenate([iso_boxes, tents], axis=1)
+        households = np.concatenate([iso_boxes, tents], axis=0)
         np.random.shuffle(households)
 
         return households  # return household data
@@ -319,11 +326,11 @@ class Camp(Model, CampHelper):
         # Iso-boxes are assigned to random locations in a central square that covers one half of the area of the camp
 
         # the side length of central square
-        center_sq_side = Camp.CAMP_SIZE * iso_area_ratio**0.5
+        center_sq_side = CAMP_SIZE * iso_area_ratio**0.5
 
         # minimum and maximum co-ordinates for central square
-        p_min = (Camp.CAMP_SIZE - center_sq_side) / 2.0
-        p_max = (Camp.CAMP_SIZE + center_sq_side) / 2.0
+        p_min = (CAMP_SIZE - center_sq_side) / 2.0
+        p_max = (CAMP_SIZE + center_sq_side) / 2.0
 
         pos = (p_max - p_min) * np.random.random(size=(num, 2)) + p_min  # choose random positions from central square
 
@@ -349,12 +356,12 @@ class Camp(Model, CampHelper):
         # Below is the positions of tents distributed in all these 4 parts
 
         # the side length of central square
-        center_sq_side = Camp.CAMP_SIZE * iso_area_ratio ** 0.5
+        center_sq_side = CAMP_SIZE * iso_area_ratio ** 0.5
 
         min1 = 0.0  # minimum co-ordinate for the region outside central square
-        max1 = (Camp.CAMP_SIZE - center_sq_side) / 2.0  # co-ordinate of first edge of central square
-        min2 = (Camp.CAMP_SIZE + center_sq_side) / 2.0  # co-ordinate of second edge of central square
-        max2 = Camp.CAMP_SIZE  # co-ordinate of camp end
+        max1 = (CAMP_SIZE - center_sq_side) / 2.0  # co-ordinate of first edge of central square
+        min2 = (CAMP_SIZE + center_sq_side) / 2.0  # co-ordinate of second edge of central square
+        max2 = CAMP_SIZE  # co-ordinate of camp end
 
         assert num >= 4, "For calculations, we need minimum 4 tents"
 
