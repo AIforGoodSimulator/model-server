@@ -10,8 +10,6 @@ from ai4good.models.nm.utils.network_utils import *
 from ai4good.models.nm.utils.stats_utils import *
 from scipy.stats import poisson
 
-# TODO: (Partially Done) We're using default parameters from the seirsplus model, and hard coding them here
-# Unsure how to map some parameters in CSV
 
 class Parameters:
     def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
@@ -24,9 +22,9 @@ class Parameters:
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Camp parameters
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        # self.camp = camp   TODO: Update for both camps when ready
+
         self.camp = camp
-        self.camp_params = ps.get_camp_params(self.camp)
+        self.camp_params = ps.get_camp_params_network_model(self.camp)
 
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Model Parameters
@@ -180,45 +178,33 @@ class Parameters:
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Reduced interaction parameters
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        self.reduction_rate = 0.3
+        self.reduction_rate = np.float(model_params[model_params['Name'] == 'reduction_rate'].Value)
         self.beta_q = self.beta * (self.reduction_rate / self.R0_mean)
-        self.q_global_interactions = 0.05
-        self.q_start = 30
-        self.m_start = 30
-        self.q_end = 60
-        self.m_end = 90
+        self.q_global_interactions = np.float(model_params[model_params['Name'] == 'q_globalintxn'].Value)
+        self.q_start = int(profile.loc['quarantine_start', 'Value'])
+        self.m_start = int(profile.loc['masks_start', 'Value'])
+        self.q_end = int(profile.loc['quarantine_end', 'Value'])
+        self.m_end = int(profile.loc['masks_end', 'Value'])
 
     def initialise_age_parameters(self, graph):
-        # Age based parameters
-        # TODO: Take from camp_params
+        pctAsymptomatic_df = self.camp_params[['Age', 'pctAsymptomatic']].copy(deep=False)
+        ageGroup_pctAsymp = pctAsymptomatic_df.set_index('Age', drop=True, append=False).to_dict()['pctAsymptomatic']
 
-        ageGroup_pctAsymp = {"0-19": 0.8, "20+": 0.2}
-        ageGroup_pctHospitalized = {'0-9': 0.0000,
-                                    '10-19': 0.0004,
-                                    '20-29': 0.0104,
-                                    '30-39': 0.0343,
-                                    '40-49': 0.0425,
-                                    '50-59': 0.0816,
-                                    '60-69': 0.118,
-                                    '70-79': 0.166,
-                                    '80+': 0.184}
+        pctHospitalized_df = self.camp_params[['Age', 'pctHospitalized']].copy(deep=False)
+        ageGroup_pctHospitalized = pctHospitalized_df.set_index('Age', drop=True, append=False).to_dict()[
+            'pctHospitalized']
 
-        ageGroup_hospitalFatalityRate = {'0-9': 0.0000,
-                                         '10-19': 0.3627,
-                                         '20-29': 0.0577,
-                                         '30-39': 0.0426,
-                                         '40-49': 0.0694,
-                                         '50-59': 0.1532,
-                                         '60-69': 0.3381,
-                                         '70-79': 0.5187,
-                                         '80+': 0.7283}
-        ageGroup_susceptibility = {"0-19": 0.5, "20+": 1.0}
+        hospitalFatalityRate_df = self.camp_params[['Age', 'hospitalFatalityRate']].copy(deep=False)
+        ageGroup_hospitalFatalityRate = hospitalFatalityRate_df.set_index('Age', drop=True, append=False).to_dict()[
+            'hospitalFatalityRate']
+
+        susceptibility_df = self.camp_params[['Age', 'susceptibility']].copy(deep=False)
+        ageGroup_susceptibility = susceptibility_df.set_index('Age', drop=True, append=False).to_dict()[
+            'susceptibility']
 
         self.pct_asymptomatic = get_values_per_node(ageGroup_pctAsymp, graph)
-        self.pct_hospitalized = get_values_per_node(
-            ageGroup_pctHospitalized, graph)
-        self.pct_fatality = get_values_per_node(
-            ageGroup_hospitalFatalityRate, graph)
+        self.pct_hospitalized = get_values_per_node(ageGroup_pctHospitalized, graph)
+        self.pct_fatality = get_values_per_node(ageGroup_hospitalFatalityRate, graph)
         self.alpha = get_values_per_node(ageGroup_susceptibility, graph)
 
     def sha1_hash(self) -> str:
