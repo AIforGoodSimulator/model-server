@@ -3,7 +3,6 @@ import numpy as np
 from mesa import Agent
 
 from ai4good.models.abm.mesa_impl.helper import PersonHelper
-from ai4good.models.abm.mesa_impl.utils import get_incubation_period
 from ai4good.models.abm.mesa_impl.common import *
 
 
@@ -22,6 +21,7 @@ class Person(Agent, PersonHelper):
         self.age = model.agents_age[unique_id]  # agent's age
         self.pos = model.agents_pos[unique_id]  # agent's position (x, y) in the camp
         self.route = model.agents_route[unique_id]  # current route of the agent: household, food-line, toilet, wander
+        self.ethnic_group = model.agents_ethnic_groups[unique_id]  # ethnic group to which agent belongs
 
         self.toilet_id = -1  # if agent is standing in queue for toilet, store the id of the toilet
         self.toilet_queue_idx = -1  # if agent is standing in queue for toilet, store the index in the queue
@@ -32,7 +32,7 @@ class Person(Agent, PersonHelper):
         self.household_id = model.agents_households[unique_id]  # household id of the person (fixed)
 
         # for movement, household center and home range are required
-        self.household_center = self.model.households[self.household_id, 1:]  # center co-ordinate of household
+        self.household_center = self.model.households[self.household_id, 2:]  # center co-ordinate of household
         self.home_range = model.agents_home_ranges[unique_id]  # radius of circle centered at household for movement
 
         # calculate if asymptomatic
@@ -191,10 +191,10 @@ class Person(Agent, PersonHelper):
 
         # On each day, each infectious individual in a household infects each susceptible individual in that
         # household with probability ph
-        # TODO: in csv file, ph=0.33 in baseline model. But tucker model says baseline value is 0.5
+        # TODO: in csv file, ph=0.33 in baseline model. But tucker model says baseline value is 0.5. Verify this.
         ph = self.model.params.probability_infecting_person_in_household_per_day
 
-        # if agent is already infected, don't do anything
+        # if agent is already infected, don't do anything. Let `disease_progression` run its course.
         # TODO: verify
         if self.disease_state != SUSCEPTIBLE:
             return
@@ -212,10 +212,12 @@ class Person(Agent, PersonHelper):
 
             # We need to calculate the number of infectious people with whom agent shares a household
             # First, get the total number of people currently in household who are infected
+            # create a filter array of agents
             people = self.model.get_filter_array()
+            # filter people who are also inside household same as of current agent and who are infected
             infectious_household_ids = self.model.filter_agents(people, skip_agent_id=self.unique_id,
                                                                 route=HOUSEHOLD, household_id=self.household_id,
-                                                                is_infected=1, has_symptoms=-1)
+                                                                is_infected=1)
             h_cid = infectious_household_ids.shape[0]  # number of infectious households
             p_ih = 1.0 - (1.0 - ph) ** h_cid  # probability value based on the formula (2)
 
@@ -302,6 +304,7 @@ class Person(Agent, PersonHelper):
             return
 
     def disease_progression(self) -> None:
+        # TODO: add stage when person is hospitalized
 
         # exposed to presymptomatic
         # a person becomes presymptomatic after half of the incubation period is completed
@@ -329,22 +332,22 @@ class Person(Agent, PersonHelper):
 
         # After 5 days, individuals pass from the symptomatic to the “mild” or “severe” states, with age- and
         # condition-dependent probabilities following Verity and colleagues (2020) and Tuite and colleagues (preprint).
-        # Verity (low-risk)
+        # Verity (low-risk) : probability values for each age slot [0-10, 10-20, ...90+]
         asp = np.array([0, .000408, .0104, .0343, .0425, .0816, .118, .166, .184])
-        # Tuite (high-risk)
+        # Tuite (high-risk) : probability values for each age slot [0-10, 10-20, ...90+]
         aspc = np.array([.0101, .0209, .0410, .0642, .0721, .2173, .2483, .6921, .6987])
+        # calculate age slot from age
         age_slot = int(self.age/10)
 
         # symptomatic to mild
         if self.disease_state == SYMPTOMATIC and \
-                self.day_counter >= 6 and random.random() < asp[age_slot]:
+                self.day_counter >= 6 and not self.is_high_risk and random.random() < asp[age_slot]:
             self.disease_state = MILD
             return
 
         # symptomatic to severe
         if self.disease_state == SYMPTOMATIC and \
-                self.day_counter >= 6 and self.is_high_risk and \
-                random.random() < aspc[age_slot]:
+                self.day_counter >= 6 and self.is_high_risk and random.random() < aspc[age_slot]:
             self.disease_state = SEVERE
             return
 

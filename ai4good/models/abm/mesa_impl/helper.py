@@ -50,18 +50,20 @@ class CampHelper(object):
 
     @staticmethod
     @njit
-    def filter_agents(people, skip_agent_id, route, household_id, is_infected, has_symptoms):
+    def filter_agents(people, skip_agent_id=-1, route=-1, household_id=-1, is_infected=-1, has_symptoms=-1,
+                      ethnic_grp=-1):
         """
         Filter agents by various parameters. The indices of the filtered agents are returned
 
         Parameters
         ----------
-            people: A 2D array where each row contains [route, household_id, disease_state] for agent
+            people: A 2D array where each row contains [route, household_id, disease_state, ethnic group] for agent
             skip_agent_id: Unique id of the agent to skip in result (value: -1 means ignore filter)
             route: Current route of the agents (value: -1 means ignore filter)
             household_id: Household id of the agents (value: -1 means ignore filter)
             is_infected: To check if agent is infected (1) or not (0) (value: -1 means ignore filter)
             has_symptoms: To check if agent is showing symptoms (1) or not (0) (value: -1 means ignore filter)
+            ethnic_grp: Ethnic group id of the agents (value: -1 means ignore filter)
 
         Returns
         -------
@@ -102,6 +104,7 @@ class CampHelper(object):
                     )
                 )
                 and (skip_agent_id == -1 or i != skip_agent_id)  # skip agent
+                and (ethnic_grp == -1 or people[i, 3] == ethnic_grp)  # filter based on ethnicity
             ):
                 out.append(i)
 
@@ -227,9 +230,10 @@ class PersonHelper(object):
 
     @staticmethod
     @njit
-    def find_nearest(pos, others):
+    def find_nearest(pos, others, condn=None):
         # Find and return the index of the entity nearest to subject positioned at `pos`
         # The co-ordinates of the entities are defined in `others` array (?, 2)
+        # Additionally, an optional `condn` boolean array can be used to filter `others`
 
         d_min = CAMP_SIZE * 10000.0  # a large number in terms of distance
         d_min_index = -1  # index in `others` which is nearest to the subject positioned at `pos`
@@ -243,7 +247,7 @@ class PersonHelper(object):
             # dij = dij ** 0.5 : this step is not needed since relative distance is needed
 
             # update nearest entity based on distance
-            if dij < d_min:
+            if dij < d_min and (condn is None or condn[i] == 1):
                 d_min = dij
                 d_min_index = i
 

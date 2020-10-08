@@ -1,5 +1,7 @@
+import time
 import math
 import random
+import logging
 import numpy as np
 import pandas as pd
 from numba import njit
@@ -45,3 +47,14 @@ def _clip_coordinates(val, low=0.0, high=CAMP_SIZE):
     if val > high:
         return high
     return val
+
+
+def log(name="function"):
+    # decorator for logging completion time
+    # use this decorator like @log(name='func_name')
+    def wrapped(func):
+        t1 = time.time()
+        func()
+        t2 = time.time()
+        logging.info("Completed {} in {} seconds".format(name, t2-t1))
+    return wrapped

@@ -1,16 +1,18 @@
-import time
 import logging
+import random
 import numpy as np
+from tqdm import tqdm
 from mesa import Model
 from numba import njit
+from scipy.cluster.vq import kmeans
 from mesa.time import RandomActivation
 from mesa.space import ContinuousSpace
 
+from ai4good.models.abm.mesa_impl.common import *
 from ai4good.models.abm.mesa_impl.agent import Person
 from ai4good.models.abm.initialise_parameters import Parameters
-from ai4good.models.abm.mesa_impl.utils import read_age_gender, get_incubation_period
-from ai4good.models.abm.mesa_impl.common import *
 from ai4good.models.abm.mesa_impl.helper import CampHelper, PersonHelper
+from ai4good.models.abm.mesa_impl.utils import read_age_gender, get_incubation_period, log
 
 
 class Camp(Model, CampHelper):
@@ -19,6 +21,22 @@ class Camp(Model, CampHelper):
     # TODO: can we add thread locks/semaphore to share resources and then simulate all agents in parallel?
     """
 
+    # ethnic groups and their proportions in the camp
+    # this is referred from previous abm.py file
+    # TODO: tucker model refers to 8 ethnic groups. But abm.py contained only 7. verify this.
+    # TODO: In abm.py, people count per ethnic group was mentioned. We have transformed it into proportions to work for
+    # TODO: any population size
+    ethnic_groups = [  # [ethnic group name, proportion of people in ethnic group]
+        ['afghan', 7919 / 10135],
+        ['cameroon', 149 / 10135],
+        ['congo', 706 / 10135],
+        ['iran', 107 / 10135],
+        ['iraq', 83 / 10135],
+        ['somalia', 442 / 10135],
+        ['syria', 729 / 10135]
+    ]
+
+    @log(name="camp initialization")
     def __init__(self, params: Parameters):
         super(Camp, self).__init__()
 
@@ -27,6 +45,7 @@ class Camp(Model, CampHelper):
         # If a susceptible and an infectious individual interact, then the infection is transmitted with probability pa
         # Fang and colleagues (2020)
         # TODO: this is baseline value, parameterize it
+        # TODO: should this be picked from some distribution for each agent or having fixed value is fine?
         self.Pa = 0.1
 
         if self.params.camp.upper() != 'MORIA':
@@ -35,7 +54,7 @@ class Camp(Model, CampHelper):
         # all agents are susceptible before simulation starts
         self.agents_disease_states = np.array([SUSCEPTIBLE for _ in range(self.people_count)])
 
-        # incubation period: number of days from exposure until symptoms appear
+        # incubation period : number of days from exposure until symptoms appear
         self.agents_incubation_periods = get_incubation_period(self.people_count)
 
         # get age and gender of the agents
@@ -52,16 +71,20 @@ class Camp(Model, CampHelper):
         ])
 
         # randomly position agents throughout the camp
+        # TODO: should this be changed to household center co-ordinates instead? as we are using initial route=HOUSEHOLD
         self.agents_pos = CAMP_SIZE * np.random.random((self.people_count, 2))
 
         # initially all agents are in their respective households
         self.agents_route = np.array([HOUSEHOLD] * self.people_count)
 
-        # [id, x, y] of each household
-        self.households = self.get_households(self.params.number_of_isoboxes, self.params.number_of_tents)
+        self.agents_ethnic_groups = self._assign_ethnicity_to_agents()  # ethnic group ids of the agents
 
-        self.agents_households = self.assign_households_to_agents()  # household ids of the agents (does not change)
-        self.agents_ethnic_groups = np.array([])  # TODO: can we remove/de-prioritize it for abm?
+        # [id, capacity, x, y] of each household
+        # TODO: not on priority as will require changes in various code blocks
+        # TODO: Right now each household is just a point in space. It should have some area for an ABM
+        self.households = self._get_households()
+
+        self.agents_households = self._assign_households_to_agents()  # household ids of the agents (does not change)
 
         # There are 144 toilets evenly distributed throughout the camp. Toilets are placed at the centres of the
         # squares that form a 12 x 12 grid covering the camp (baseline)
@@ -83,18 +106,17 @@ class Camp(Model, CampHelper):
 
         # add agents to the model
         for i in range(self.people_count):
+            # create agent
             p = Person(i, self)
+            # add agent to simulation scheduler
             self.schedule.add(p)
+            # place agent in the camp
             self.space.place_agent(p, self.agents_pos[i, :])
 
     def step(self):
         # simulate 1 day in camp
 
         logging.info("Running step: {}".format(self.schedule.steps))
-
-        # check if simulation can stop
-        if self.stop_simulation(self.agents_disease_states):
-            return
 
         # step all agents
         self.schedule.step()
@@ -103,12 +125,21 @@ class Camp(Model, CampHelper):
         self.foodline_queue = {}  # clear food line queue at end of the day
         self.toilets_queue = {}  # clear toilet queues at end of the day
 
+    @log(name="simulation")
     def simulate(self) -> None:
-        t1 = time.time()  # start of the model execution
-        for t in range(self.params.number_of_steps):
+        # simulate for number of days
+
+        logging.info("Starting simulation for x{} days".format(self.params.number_of_steps))
+        for t in tqdm(range(self.params.number_of_steps)):
+            # check if simulation can stop
+            if self.stop_simulation(self.agents_disease_states):
+                return
+
+            # simulate 1 day
             self.step()
-        t2 = time.time()  # end of the model execution
-        logging.info("Completed x{} steps in {} seconds".format(self.params.number_of_steps, t2 - t1))
+
+            # collect data after end of every day
+            self.collect_data()
 
     def collect_data(self):
         # TODO: Collect data at regular intervals
@@ -165,11 +196,11 @@ class Camp(Model, CampHelper):
         # However, people in Moria have been provided with face masks. We simulated a population in which all
         # individuals wear face masks outside their homes by setting vt = 0.32 (Jefferson et al. 2009)
         if vt is not None:
+            # scale transmission probability
             self.Pa = self.Pa * vt
-
             # propagate new value to all agents
             for a in self.schedule.agents:
-                a.__setattr__("Pa", self.Pa)
+                a.Pa = self.Pa
 
         # Some countries have attempted to limit the spread of COVID-19 by requiring people to stay in or close to
         # their homes (ref). This intervention has been called "lockdown". We simulated a lockdown in which most
@@ -187,6 +218,7 @@ class Camp(Model, CampHelper):
             for i, a in enumerate(self.schedule.agents):  # iterate over all the agents
 
                 # set home range to rl with probability (1- wl), and to 0.1 if lockdown is violated
+                # TODO: parameterize this 0.1 value?
                 new_home_range = 0.1 if will_violate[i] < wl else rl
 
                 # update home range data
@@ -207,7 +239,7 @@ class Camp(Model, CampHelper):
             for a in self.schedule.agents:
                 # update agent's food line id
                 # find food line nearest to household of the agent
-                a.foodline_id = PersonHelper.find_nearest(a.__getattribute__("household_center"), self.foodlines)
+                a.foodline_id = PersonHelper.find_nearest(a.household_center, self.foodlines)
 
             # reset food line queues
             # TODO: double check
@@ -227,7 +259,7 @@ class Camp(Model, CampHelper):
         if isolation is not None:
             b = isolation['b']  # probability that camp manager detects agent with symptoms
             n = isolation['n']  # number of days after recovery when agent can go back to camp
-            # TODO
+            # TODO: Not Implemented
             pass
 
     @property
@@ -236,17 +268,28 @@ class Camp(Model, CampHelper):
 
     def get_filter_array(self):
         # returns compatible `people` array which is then passed to `_filter_agents` function
-        # Agent columns needed: route, household_id, disease state
+        # Agent columns needed: route, household_id, disease state, ethnic group
         return np.dstack([
             self.agents_route,
             self.agents_households,
-            self.agents_disease_states
+            self.agents_disease_states,
+            self.agents_ethnic_groups
         ], axis=0)
 
-    def assign_households_to_agents(self):
+    def _assign_households_to_agents(self):
         # assign households to agents based on capacity
         # Iso-boxes are prefabricated housing units with a mean occupancy of 10 individuals
         # Tents have a mean occupancy of 4 individuals.
+
+        # In Moria, the homes of people with the same ethnic or national background are spatially clustered, and people
+        # interact more frequently with others from the same background as themselves. To simulate ethnicities or
+        # nationalities in our camp, we assigned each household to one of eight “backgrounds” in proportion to the
+        # self-reported national origins of people in the Moria medical records. For each of the eight simulated
+        # backgrounds, we randomly selected one household to be the seed for the cluster. We assigned the x nearest
+        # unassigned households to that background, where x is the number of households in the background. Thus, the
+        # first background occupies an area that is roughly circular, but other backgrounds may occupy crescents or
+        # less regular shapes.
+        # NOTE: In our implementation, we assign agents to ethnicities instead of assigning households to ethnicities
 
         # check if provided population can be fit into given number of households
         camp_capacity = self.params.number_of_people_in_one_isobox * self.params.number_of_isoboxes + \
@@ -254,52 +297,78 @@ class Camp(Model, CampHelper):
         assert camp_capacity >= self.people_count, \
             "Number of people ({}) exceeds camp capacity ({})".format(self.people_count, camp_capacity)
 
-        out = np.zeros(shape=(camp_capacity,), dtype=np.int32)  # array containing household id for each agent
+        # array containing household id for each agent. initialize all with -1
+        out = np.zeros((self.people_count,), dtype=np.int32) - 1
         o = 0  # counter for `out`
 
-        # shuffle iso-boxes
-        iso_boxes = np.arange(self.params.number_of_isoboxes)
-        np.random.shuffle(iso_boxes)
+        # get leftover capacity for each of the households
+        household_left_capacities = self.households[:, 1].copy()
 
-        # assign people to iso-boxes in order
-        for i in iso_boxes:
-            out[o: o + self.params.number_of_people_in_one_isobox] = i
-            o = o + self.params.number_of_people_in_one_isobox
+        # create clusters based on number of ethnic groups
+        # use kmeans algorithm to cluster households
+        # `cluster_pts` contains co-ordinates where clusters are centered. This may not be exactly a household position
+        cluster_pts, _ = kmeans(self.households[:, 2:], len(self.ethnic_groups))
 
-        # shuffle tents
-        tents = np.arange(self.params.number_of_tents)
-        np.random.shuffle(tents)
+        # iterate for all ethnic groups available
+        for i, eth in enumerate(self.ethnic_groups):
+            # number of people in same ethnic group (not any one assigned to a household initially)
+            num_eth_ppl = np.count_nonzero(self.agents_ethnic_groups == i)
+            # cluster center co-ordinates
+            cluster_center = cluster_pts[i, :]
 
-        # assign people to tents in order
-        for t in tents:
-            out[o: o + self.params.number_of_people_in_one_tent] = t
-            o = o + self.params.number_of_people_in_one_tent
+            # while there are people to allocate to a household
+            while num_eth_ppl > 0:
+                # get nearest household to cluster center which has some capacity
+                hh_idx, _ = PersonHelper.find_nearest(
+                    cluster_center,
+                    self.households[:, 2:],
+                    household_left_capacities > 0  # return only households which have some capacity left
+                )
+                # check if such household exist
+                if hh_idx == -1:
+                    raise RuntimeError("Can't find any household for agents")
 
-        return out[:self.people_count]
+                # get the capacity of the selected household
+                hh_cap = household_left_capacities[hh_idx]
 
-    def get_households(self, num_iso_boxes, num_tents):
+                # get number of people who can fit into this household
+                ppl_to_allocate = int(min(num_eth_ppl, hh_cap))
+
+                # assign agents to household
+                out[o: o + ppl_to_allocate] = hh_idx
+                o = o + ppl_to_allocate
+
+                # update household capacity
+                household_left_capacities[hh_idx] -= ppl_to_allocate
+                # update number of unassigned agents in the ethnic group
+                num_eth_ppl -= ppl_to_allocate
+
+        # return household ids of agents
+        return out
+
+    def _get_households(self) -> np.array:
         """
-        Parameters
-        ----------
-            num_iso_boxes: Number of iso boxes in the camp
-            num_tents: Number of tents in the camp
-
         Returns
         -------
-            out: An 2D array (?, 3) containing id and x,y co-ordinates of the households
-
+            out: An 2D array (?, 4) containing id, capacity and x,y co-ordinates of the households
         """
 
-        # get positions and ids of iso-boxes
-        iso_boxes_pos = self.get_iso_boxes(num_iso_boxes, self.params.area_covered_by_isoboxes)
+        num_iso_boxes = self.params.number_of_isoboxes
+        num_tents = self.params.number_of_tents
+
+        # get positions, ids and capacities of iso-boxes
+        iso_boxes_pos = self._get_iso_boxes(num_iso_boxes, self.params.area_covered_by_isoboxes)
         iso_boxes_ids = np.arange(0, num_iso_boxes)[:, None]  # expand from shape (?,) to (?,1)
+        iso_capacities = np.array([self.params.number_of_people_in_one_isobox] * num_iso_boxes)
 
-        # get positions and ids of tents
-        tents_pos = self.get_tents(num_tents, self.params.area_covered_by_isoboxes)
+        # get positions, ids and capacities of tents
+        tents_pos = self._get_tents(num_tents, self.params.area_covered_by_isoboxes)
         tents_ids = np.arange(num_iso_boxes, num_iso_boxes + num_tents)[:, None]  # expand from shape (?,) to (?,1)
+        tents_capacities = np.array([self.params.number_of_people_in_one_tent] * num_tents)
 
-        iso_boxes = np.concatenate([iso_boxes_ids, iso_boxes_pos], axis=1)  # join ids and co-ordinates of iso-boxes
-        tents = np.concatenate([tents_ids, tents_pos], axis=1)  # join ids and co-ordinates of tents
+        # join ids, capacities and co-ordinates of iso-boxes and tents
+        iso_boxes = np.concatenate([iso_boxes_ids, iso_capacities, iso_boxes_pos], axis=1)
+        tents = np.concatenate([tents_ids, tents_capacities, tents_pos], axis=1)
 
         # merge iso-boxes and tents
         households = np.concatenate([iso_boxes, tents], axis=0)
@@ -308,7 +377,7 @@ class Camp(Model, CampHelper):
         return households  # return household data
 
     @staticmethod
-    def get_iso_boxes(num: int, iso_area_ratio: float) -> np.array:
+    def _get_iso_boxes(num: int, iso_area_ratio: float) -> np.array:
         """
         Get positions of the iso-boxes in the camp.
         Iso-boxes are assigned to random locations in a central square that covers one half of the area of the camp
@@ -337,7 +406,7 @@ class Camp(Model, CampHelper):
         return pos  # return iso boxes co-ordinates
 
     @staticmethod
-    def get_tents(num: int, iso_area_ratio: float) -> np.array:
+    def _get_tents(num: int, iso_area_ratio: float) -> np.array:
         """
         Get positions of the tents in the camp.
         Tents are assigned to random locations in the camp outside of the central square
@@ -398,3 +467,30 @@ class Camp(Model, CampHelper):
         np.random.shuffle(pos)
 
         return pos  # return tents co-ordinates
+
+    def _assign_ethnicity_to_agents(self):
+        # assign ethnicity to agents of the camp
+
+        # number of ethnic groups
+        num_eth = len(self.ethnic_groups)
+
+        assert self.people_count >= num_eth, "Minimum {} people required for calculations".format(num_eth)
+
+        # array containing ethnic group ids
+        out = np.zeros((self.people_count,), dtype=np.int32)
+        o = 0  # counter for `out`
+
+        for i, grp in enumerate(self.ethnic_groups):
+            # calculate number of people in ethnic group from percentage
+            grp_ppl_count = int(grp[1] * self.people_count)
+            # assign calculated number of people to ethnic group `grp`
+            out[o: o + grp_ppl_count] = i
+            # increment counter
+            o = o + grp_ppl_count
+
+        # note that by default any small number of agents left from above loop (due to rounding off `grp_ppl_count` will
+        # be assigned to group 0)
+
+        # shuffle and return
+        np.random.shuffle(out)
+        return out

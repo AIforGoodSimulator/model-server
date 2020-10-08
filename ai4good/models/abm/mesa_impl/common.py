@@ -1,4 +1,4 @@
-from enum import Enum
+# This file contains common variables
 
 # Side length of square shaped camp
 # In tucker model, CAMP_SIZE=1.0. However, any value can be set here since all distance calculations are done
@@ -16,7 +16,6 @@ MILD = 6
 SEVERE = 7
 RECOVERED = 8
 DECEASED = 9
-
 
 # Agent's status
 HOUSEHOLD = 0
