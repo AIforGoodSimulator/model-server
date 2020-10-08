@@ -1,8 +1,18 @@
+import time
+
 import numpy as np
 import pandas as pd
 
 DIGIT_SEP = ' to '  # em dash to separate from minus sign
 
+def timing(f):
+    def wrap(*args):
+        time1 = time.time()
+        ret = f(*args)
+        time2 = time.time()
+        print('%s function took %0.3f ms' % (f.__name__, (time2-time1)*1000.0))
+        return ret
+    return wrap
 
 def load_report(mr, params) -> pd.DataFrame:
     return normalize_report(mr.get('report'), params)
@@ -17,7 +27,7 @@ def normalize_report(df, params):
     df.update(df_temp)
     return df
 
-
+@timing
 def prevalence_all_table(df):
     # calculate Peak Day IQR and Peak Number IQR for each of the 'incident' variables to table
     table_params = ['Infected (symptomatic)', 'Hospitalised', 'Critical', 'Change in Deaths']
@@ -40,7 +50,7 @@ def prevalence_all_table(df):
         q75_day, q25_day = np.percentile(day, [75, 25])
         q75_number, q25_number = np.percentile(number, [75, 25])
         iqr_table[param] = (
-        (int(round(q25_day)), int(round(q75_day))), (int(round(q25_number)), int(round(q75_number))))
+            (int(round(q25_day)), int(round(q75_day))), (int(round(q25_number)), int(round(q75_number))))
     table_columns = {'Infected (symptomatic)': 'Prevalence of Symptomatic Cases',
                      'Hospitalised': 'Hospitalisation Demand',
                      'Critical': 'Critical Care Demand', 'Change in Deaths': 'Prevalence of Deaths'}
@@ -54,7 +64,7 @@ def prevalence_all_table(df):
     data = {'Outcome': outcome, 'Peak Day IQR': peak_day, 'Peak Number IQR': peak_number}
     return pd.DataFrame.from_dict(data)
 
-
+@timing
 def prevalence_age_table(df):
     # calculate age specific Peak Day IQR and Peak Number IQR for each of the 'prevalent' variables to contruct table
     table_params = ['Infected (symptomatic)', 'Hospitalised', 'Critical']
@@ -86,7 +96,7 @@ def prevalence_age_table(df):
         q75_day, q25_day = np.percentile(day, [75, 25])
         q75_number, q25_number = np.percentile(number, [75, 25])
         iqr_table_age[key] = (
-        (int(round(q25_day)), int(round(q75_day))), (int(round(q25_number)), int(round(q75_number))))
+            (int(round(q25_day)), int(round(q75_day))), (int(round(q25_number)), int(round(q75_number))))
     arrays = [np.array(['Incident Cases', 'Incident Cases', 'Incident Cases', 'Incident Cases', 'Incident Cases',
                         'Incident Cases', 'Incident Cases', 'Incident Cases', 'Incident Cases', 'Hospital Demand',
                         'Hospital Demand', 'Hospital Demand', 'Hospital Demand', 'Hospital Demand', 'Hospital Demand',
@@ -193,7 +203,7 @@ def prevalence_age_table(df):
     d = {'Peak Day, IQR': peak_day.astype(str), 'Peak Number, IQR': peak_number.astype(str)}
     return pd.DataFrame(data=d, index=arrays)
 
-
+@timing
 def cumulative_all_table(df, N):
     # now we try to calculate the total count
     # cases: (N-exposed)*0.5 since the asymptomatic rate is 0.5
@@ -241,8 +251,9 @@ def cumulative_all_table(df, N):
             'Counts': cumulative_count}
     return pd.DataFrame.from_dict(data)
 
-
-def cumulative_age_table(df):
+# deprecated
+@timing
+def cumulative_age_table_old(df):
     # need to have an age break down for this as well
     # 1 month 3 month and 6 month breakdown
     arrays = [np.array(
@@ -257,14 +268,13 @@ def cumulative_age_table(df):
          'Critical Person-days', 'Critical Person-days', 'Deaths', 'Deaths', 'Deaths', 'Deaths', 'Deaths', 'Deaths',
          'Deaths', 'Deaths',
          'Deaths']),
-              np.array(
-                  ['all ages', '<9 years', '10-19 years', '20-29 years', '30-39 years', '40-49 years', '50-59 years',
-                   '60-69 years', '70+ years', 'all ages', '<9 years', '10-19 years', '20-29 years', '30-39 years',
-                   '40-49 years', '50-59 years', '60-69 years', '70+ years', 'all ages', '<9 years', '10-19 years',
-                   '20-29 years', '30-39 years', '40-49 years', '50-59 years', '60-69 years', '70+ years', 'all ages',
-                   '<9 years', '10-19 years', '20-29 years', '30-39 years', '40-49 years', '50-59 years', '60-69 years',
-                   '70+ years'])]
-    table_params = ['Susceptible', 'Hospitalised', 'Critical', 'Deaths']
+        np.array(
+            ['all ages', '<9 years', '10-19 years', '20-29 years', '30-39 years', '40-49 years', '50-59 years',
+             '60-69 years', '70+ years', 'all ages', '<9 years', '10-19 years', '20-29 years', '30-39 years',
+             '40-49 years', '50-59 years', '60-69 years', '70+ years', 'all ages', '<9 years', '10-19 years',
+             '20-29 years', '30-39 years', '40-49 years', '50-59 years', '60-69 years', '70+ years', 'all ages',
+             '<9 years', '10-19 years', '20-29 years', '30-39 years', '40-49 years', '50-59 years', '60-69 years',
+             '70+ years'])]
     params_select = ['Susceptible:', 'Deaths']
     params_accu = ['Hospitalised', 'Critical']
     columns_to_select = []
@@ -284,94 +294,94 @@ def cumulative_age_table(df):
         if 'Susceptible:' in column:
             if '0-9' in column:
                 first_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.4).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.4).quantile([.25, .75])
                 three_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.4).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.4).quantile([.25, .75])
                 six_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.4).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.4).quantile([.25, .75])
             elif '10-19' in column:
                 first_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.25).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.25).quantile([.25, .75])
                 three_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.25).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.25).quantile([.25, .75])
                 six_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.25).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.25).quantile([.25, .75])
             elif '20-29' in column:
                 first_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.37).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.37).quantile([.25, .75])
                 three_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.37).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.37).quantile([.25, .75])
                 six_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.37).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.37).quantile([.25, .75])
             elif '30-39' in column:
                 first_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.42).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.42).quantile([.25, .75])
                 three_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.42).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.42).quantile([.25, .75])
                 six_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.42).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.42).quantile([.25, .75])
             elif '40-49' in column:
                 first_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.51).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.51).quantile([.25, .75])
                 three_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.51).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.51).quantile([.25, .75])
                 six_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.51).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.51).quantile([.25, .75])
             elif '50-59' in column:
                 first_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.59).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.59).quantile([.25, .75])
                 three_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.59).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.59).quantile([.25, .75])
                 six_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.59).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.59).quantile([.25, .75])
             elif '60-69' in column:
                 first_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.72).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.72).quantile([.25, .75])
                 three_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.72).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.72).quantile([.25, .75])
                 six_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.72).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.72).quantile([.25, .75])
             elif '70+' in column:
                 first_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.76).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_first_month_diff)[column].mul(-0.76).quantile([.25, .75])
                 three_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.76).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_third_month_diff)[column].mul(-0.76).quantile([.25, .75])
                 six_month_select[column] = \
-                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                    [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.76).quantile([.25, .75])
+                    df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                        [column, 'Time']].apply(find_sixth_month_diff)[column].mul(-0.76).quantile([.25, .75])
         else:
             first_month_select[column] = \
-            df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                [column, 'Time']].apply(find_first_month)[column].quantile([.25, .75])
+                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                    [column, 'Time']].apply(find_first_month)[column].quantile([.25, .75])
             three_month_select[column] = \
-            df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                [column, 'Time']].apply(find_third_month)[column].quantile([.25, .75])
+                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                    [column, 'Time']].apply(find_third_month)[column].quantile([.25, .75])
             six_month_select[column] = \
-            df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-                [column, 'Time']].apply(find_sixth_month)[column].quantile([.25, .75])
+                df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                    [column, 'Time']].apply(find_sixth_month)[column].quantile([.25, .75])
 
     first_month_select['Susceptible'] = {0.25: 0, 0.75: 0}
     three_month_select['Susceptible'] = {0.25: 0, 0.75: 0}
@@ -389,14 +399,14 @@ def cumulative_age_table(df):
     six_month_accu = {}
     for column in columns_to_acc:
         first_month_accu[column] = \
-        df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-            [column, 'Time']].apply(find_one_month)[column].quantile([.25, .75])
+            df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                [column, 'Time']].apply(find_one_month)[column].quantile([.25, .75])
         three_month_accu[column] = \
-        df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-            [column, 'Time']].apply(find_three_months)[column].quantile([.25, .75])
+            df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                [column, 'Time']].apply(find_three_months)[column].quantile([.25, .75])
         six_month_accu[column] = \
-        df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
-            [column, 'Time']].apply(find_six_months)[column].quantile([.25, .75])
+            df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+                [column, 'Time']].apply(find_six_months)[column].quantile([.25, .75])
     first_month = _merge(first_month_select, first_month_accu)
     third_month = _merge(three_month_select, three_month_accu)
     sixth_month = _merge(six_month_select, six_month_accu)
@@ -564,7 +574,7 @@ def cumulative_age_table(df):
                 three_month_count[26] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
             elif key.startswith('Deaths'):
                 three_month_count[35] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-    six_month_count = np.empty(36, dtype="S10")
+    six_month_count = np.empty(36, dtype="S15")
     for key, item in sixth_month.items():
         if key == 'Susceptible':
             six_month_count[0] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
@@ -650,342 +660,79 @@ def cumulative_age_table(df):
          'First six months': six_month_count.astype(str)}
     return pd.DataFrame(data=d, index=arrays)
 
-def cumulative_age_table_new(df):
+@timing
+def cumulative_age_table(df):
     # need to have an age break down for this as well
     # 1 month 3 month and 6 month breakdown
     arrays = [np.array(
-        ['Symptomatic Cases', 'Symptomatic Cases', 'Symptomatic Cases', 'Symptomatic Cases', 'Symptomatic Cases',
-         'Symptomatic Cases', 'Symptomatic Cases', 'Symptomatic Cases', 'Symptomatic Cases', 'Hospital Person-Days',
-         'Hospital Person-Days', 'Hospital Person-Days', 'Hospital Person-Days', 'Hospital Person-Days',
-         'Hospital Person-Days',
-         'Hospital Person-Days', 'Hospital Person-Days', 'Hospital Person-Days', 'Critical Person-days',
-         'Critical Person-days',
-         'Critical Person-days', 'Critical Person-days', 'Critical Person-days', 'Critical Person-days',
-         'Critical Person-days',
-         'Critical Person-days', 'Critical Person-days', 'Deaths', 'Deaths', 'Deaths', 'Deaths', 'Deaths', 'Deaths',
-         'Deaths', 'Deaths',
-         'Deaths']),
-              np.array(
-                  ['all ages', '<9 years', '10-19 years', '20-29 years', '30-39 years', '40-49 years', '50-59 years',
-                   '60-69 years', '70+ years', 'all ages', '<9 years', '10-19 years', '20-29 years', '30-39 years',
-                   '40-49 years', '50-59 years', '60-69 years', '70+ years', 'all ages', '<9 years', '10-19 years',
-                   '20-29 years', '30-39 years', '40-49 years', '50-59 years', '60-69 years', '70+ years', 'all ages',
-                   '<9 years', '10-19 years', '20-29 years', '30-39 years', '40-49 years', '50-59 years', '60-69 years',
-                   '70+ years'])]
-    table_params = ['Susceptible', 'Hospitalised', 'Critical', 'Deaths']
+        ['Symptomatic Cases'] * 9 + ['Hospital Person-Days'] * 9 + ['Critical Person-days'] * 9 + ['Deaths'] * 9),
+        np.array(
+            ['all ages', '<9 years', '10-19 years', '20-29 years', '30-39 years', '40-49 years', '50-59 years',
+             '60-69 years', '70+ years'] * 4)]
     params_select = ['Susceptible:', 'Deaths']
     params_accu = ['Hospitalised', 'Critical']
-    columns_to_select = []
-    columns_to_acc = []
-    multipliers = []
-    for column in df.columns:
-        for param in params_select:
-            if column.startswith(param):
-                if 'Susceptible:' in column:
-                    if '0-9' in column:
-                        multipliers.append(-0.4)
-                    elif '10-19' in column:
-                        multipliers.append(-0.25)
-                    elif '20-29' in column:
-                        multipliers.append(-0.37)
-                    elif '30-39' in column:
-                        multipliers.append(-0.42)
-                    elif '40-49' in column:
-                        multipliers.append(-0.51)
-                    elif '50-59' in column:
-                        multipliers.append(-0.59)
-                    elif '60-69' in column:
-                        multipliers.append(-0.72)
-                    elif '70+' in column:
-                        multipliers.append(-0.76)
-                else:
-                    multipliers.append(1)
-                columns_to_select.append(column)
-        for param in params_accu:
-            if column.startswith(param):
-                columns_to_acc.append(column)
-    first_month_select = {}
-    three_month_select = {}
-    six_month_select = {}
+    columns_to_acc, columns_to_select, multipliers = collect_columns(df.columns, params_accu, params_select)
 
-    first_month_diff = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[columns_to_select + ['Time']].apply(find_first_month_diff)
-    third_month_diff = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[columns_to_select + ['Time']].apply(find_third_month_diff)
-    sixth_month_diff = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[columns_to_select + ['Time']].apply(find_sixth_month_diff)
+    first_month_diff = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+        columns_to_select + ['Time']].apply(find_first_month_diff)
+    third_month_diff = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+        columns_to_select + ['Time']].apply(find_third_month_diff)
+    sixth_month_diff = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+        columns_to_select + ['Time']].apply(find_sixth_month_diff)
     first_month_select = first_month_diff[columns_to_select].mul(multipliers).quantile([.25, .75])
     three_month_select = third_month_diff[columns_to_select].mul(multipliers).quantile([.25, .75])
     six_month_select = sixth_month_diff[columns_to_select].mul(multipliers).quantile([.25, .75])
 
-    first_month_select['Susceptible'] = {0.25: 0, 0.75: 0}
-    three_month_select['Susceptible'] = {0.25: 0, 0.75: 0}
-    six_month_select['Susceptible'] = {0.25: 0, 0.75: 0}
-    for column in columns_to_select:
-        if 'Susceptible:' in column:
-            first_month_select['Susceptible'][0.25] += first_month_select[column][0.25]
-            first_month_select['Susceptible'][0.75] += first_month_select[column][0.75]
-            three_month_select['Susceptible'][0.25] += three_month_select[column][0.25]
-            three_month_select['Susceptible'][0.75] += three_month_select[column][0.75]
-            six_month_select['Susceptible'][0.25] += six_month_select[column][0.25]
-            six_month_select['Susceptible'][0.75] += six_month_select[column][0.75]
+    first_month_select['Susceptible'] = first_month_select.filter(like='Susceptible:').sum(axis=1)
+    three_month_select['Susceptible'] = three_month_select.filter(like='Susceptible:').sum(axis=1)
+    six_month_select['Susceptible'] = six_month_select.filter(like='Susceptible:').sum(axis=1)
 
-    one_month_cumsum = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[columns_to_acc + ['Time']].apply(find_one_month)
-    three_month_cumsum = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[columns_to_acc + ['Time']].apply(find_three_months)
-    six_month_cumsum = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[columns_to_acc + ['Time']].apply(find_six_months)
+    one_month_cumsum = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+        columns_to_acc + ['Time']].apply(find_one_month)
+    three_month_cumsum = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+        columns_to_acc + ['Time']].apply(find_three_months)
+    six_month_cumsum = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+        columns_to_acc + ['Time']].apply(find_six_months)
     first_month_accu = one_month_cumsum[columns_to_acc].quantile([.25, .75])
     three_month_accu = three_month_cumsum[columns_to_acc].quantile([.25, .75])
     six_month_accu = six_month_cumsum[columns_to_acc].quantile([.25, .75])
 
-    first_month = _merge(first_month_select, first_month_accu)
-    third_month = _merge(three_month_select, three_month_accu)
-    sixth_month = _merge(six_month_select, six_month_accu)
-    first_month_count = np.empty(36, dtype="S15")
-    for key, item in first_month.items():
-        if key == 'Susceptible':
-            first_month_count[0] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-        elif key == 'Hospitalised':
-            first_month_count[9] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-        elif key == 'Critical':
-            first_month_count[18] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-        elif key == 'Deaths':
-            first_month_count[27] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-        elif '0-9' in key:
-            if key.startswith('Susceptible'):
-                first_month_count[1] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                first_month_count[10] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                first_month_count[19] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                first_month_count[28] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-        elif '10-19' in key:
-            if key.startswith('Susceptible'):
-                first_month_count[2] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                first_month_count[11] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                first_month_count[20] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                first_month_count[29] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-        elif '20-29' in key:
-            if key.startswith('Susceptible'):
-                first_month_count[3] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                first_month_count[12] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                first_month_count[21] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                first_month_count[30] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-        elif '30-39' in key:
-            if key.startswith('Susceptible'):
-                first_month_count[4] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                first_month_count[13] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                first_month_count[22] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                first_month_count[31] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-        elif '40-49' in key:
-            if key.startswith('Susceptible'):
-                first_month_count[5] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                first_month_count[14] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                first_month_count[23] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                first_month_count[32] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-        elif '50-59' in key:
-            if key.startswith('Susceptible'):
-                first_month_count[6] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                first_month_count[15] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                first_month_count[24] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                first_month_count[33] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-        elif '60-69' in key:
-            if key.startswith('Susceptible'):
-                first_month_count[7] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                first_month_count[16] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                first_month_count[25] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                first_month_count[34] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-        elif '70+' in key:
-            if key.startswith('Susceptible'):
-                first_month_count[8] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                first_month_count[17] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                first_month_count[26] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                first_month_count[35] = f'{int(round(first_month[key][0.25]))}{DIGIT_SEP}{int(round(first_month[key][0.75]))}'
-    three_month_count = np.empty(36, dtype="S15")
-    for key, item in third_month.items():
-        if key == 'Susceptible':
-            three_month_count[0] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-        elif key == 'Hospitalised':
-            three_month_count[9] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-        elif key == 'Critical':
-            three_month_count[18] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-        elif key == 'Deaths':
-            three_month_count[27] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-        elif '0-9' in key:
-            if key.startswith('Susceptible'):
-                three_month_count[1] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                three_month_count[10] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                three_month_count[19] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                three_month_count[28] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-        elif '10-19' in key:
-            if key.startswith('Susceptible'):
-                three_month_count[2] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                three_month_count[11] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                three_month_count[20] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                three_month_count[29] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-        elif '20-29' in key:
-            if key.startswith('Susceptible'):
-                three_month_count[3] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                three_month_count[12] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                three_month_count[21] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                three_month_count[30] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-        elif '30-39' in key:
-            if key.startswith('Susceptible'):
-                three_month_count[4] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                three_month_count[13] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                three_month_count[22] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                three_month_count[31] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-        elif '40-49' in key:
-            if key.startswith('Susceptible'):
-                three_month_count[5] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                three_month_count[14] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                three_month_count[23] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                three_month_count[32] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-        elif '50-59' in key:
-            if key.startswith('Susceptible'):
-                three_month_count[6] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                three_month_count[15] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                three_month_count[24] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                three_month_count[33] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-        elif '60-69' in key:
-            if key.startswith('Susceptible'):
-                three_month_count[7] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                three_month_count[16] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                three_month_count[25] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                three_month_count[34] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-        elif '70+' in key:
-            if key.startswith('Susceptible'):
-                three_month_count[8] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                three_month_count[17] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                three_month_count[26] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                three_month_count[35] = f'{int(round(third_month[key][0.25]))}{DIGIT_SEP}{int(round(third_month[key][0.75]))}'
-    six_month_count = np.empty(36, dtype="S10")
-    for key, item in sixth_month.items():
-        if key == 'Susceptible':
-            six_month_count[0] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-        elif key == 'Hospitalised':
-            six_month_count[9] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-        elif key == 'Critical':
-            six_month_count[18] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-        elif key == 'Deaths':
-            six_month_count[27] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-        elif '0-9' in key:
-            if key.startswith('Susceptible'):
-                six_month_count[1] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                six_month_count[10] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                six_month_count[19] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                six_month_count[28] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-        elif '10-19' in key:
-            if key.startswith('Susceptible'):
-                six_month_count[2] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                six_month_count[11] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                six_month_count[20] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                six_month_count[29] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-        elif '20-29' in key:
-            if key.startswith('Susceptible'):
-                six_month_count[3] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                six_month_count[12] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                six_month_count[21] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                six_month_count[30] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-        elif '30-39' in key:
-            if key.startswith('Susceptible'):
-                six_month_count[4] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                six_month_count[13] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                six_month_count[22] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                six_month_count[31] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-        elif '40-49' in key:
-            if key.startswith('Susceptible'):
-                six_month_count[5] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                six_month_count[14] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                six_month_count[23] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                six_month_count[32] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-        elif '50-59' in key:
-            if key.startswith('Susceptible'):
-                six_month_count[6] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                six_month_count[15] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                six_month_count[24] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                six_month_count[33] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-        elif '60-69' in key:
-            if key.startswith('Susceptible'):
-                six_month_count[7] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                six_month_count[16] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                six_month_count[25] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                six_month_count[34] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-        elif '70+' in key:
-            if key.startswith('Susceptible'):
-                six_month_count[8] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Hospitalised'):
-                six_month_count[17] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Critical'):
-                six_month_count[26] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-            elif key.startswith('Deaths'):
-                six_month_count[35] = f'{int(round(sixth_month[key][0.25]))}{DIGIT_SEP}{int(round(sixth_month[key][0.75]))}'
-    d = {'First month': first_month_count.astype(str), 'First three months': three_month_count.astype(str),
-         'First six months': six_month_count.astype(str)}
+    first_month = pd.concat([first_month_select, first_month_accu], axis=1)
+    third_month = pd.concat([three_month_select, three_month_accu], axis=1)
+    sixth_month = pd.concat([six_month_select, six_month_accu], axis=1)
+
+    sorted_columns = first_month.columns.sort_values()
+    my_comp_order = ['Susceptible', 'Hospitalised', 'Critical', 'Deaths']
+    my_sorted_columns = sum([list(filter(lambda column: comp in column, sorted_columns)) for comp in my_comp_order], [])
+
+    first_month_count = first_month[my_sorted_columns]\
+        .apply(round).astype(int).astype(str) \
+        .apply(lambda x: DIGIT_SEP.join(x.values), axis=0).values
+    three_month_count = third_month[my_sorted_columns]\
+        .apply(round).astype(int).astype(str) \
+        .apply(lambda x: DIGIT_SEP.join(x.values), axis=0).values
+    six_month_count = sixth_month[my_sorted_columns]\
+        .apply(round).astype(int).astype(str) \
+        .apply(lambda x: DIGIT_SEP.join(x.values), axis=0).values
+
+    d = {'First month': first_month_count, 'First three months': three_month_count,
+         'First six months': six_month_count}
     return pd.DataFrame(data=d, index=arrays)
+
+
+def collect_columns(columns, params_accu, params_select):
+    keys = generateIntervals(0, 70, 10)
+    columns_to_select = list(filter(lambda column: any(column.startswith(s) for s in params_select), columns))
+    columns_to_acc = list(filter(lambda column: any(column.startswith(s) for s in params_accu), columns))
+    mMap = dict(zip(generateIntervals(0, 70, 10), [-0.4, -0.25, -0.37, -0.42, -0.51, -0.59, -0.72, -0.76]))
+    multipliers = list(
+        map(lambda column: mMap[next(key for key in keys if key in column)] if 'Susceptible:' in column else 1,
+            columns_to_select))
+    return columns_to_acc, columns_to_select, multipliers
+
+def generateIntervals(_from, _to, step):
+    return [str(a) + '-' + str(b) for a, b in
+            zip(list(range(_from, _to, step)), list(range(_from + step - 1, _to, step)))] + [str(_to) + '+']
 
 
 def diff_table(baseline, intervention, N):
@@ -1024,17 +771,18 @@ def diff_table(baseline, intervention, N):
 def effectiveness_cum_table(baseline, intervention, N):
     table_params = ['Symptomatic Cases', 'Hospital Person-Days', 'Critical Person-days', 'Deaths']
     cum_table_baseline = cumulative_all_table(baseline, N)
-    #print("CUM: "+str(cum_table_baseline.loc[:, 'Counts']))
+    # print("CUM: "+str(cum_table_baseline.loc[:, 'Counts']))
     baseline_numbers = cum_table_baseline.loc[:, 'Counts'].apply(lambda x: [int(i) for i in x.split(DIGIT_SEP)])
 
     baseline_numbers_separate = pd.DataFrame(baseline_numbers.tolist(), columns=['25%', '75%'])
     comparisonTable = {}
 
     cumTable = cumulative_all_table(intervention, N)
-    #print("Counts: \n"+str(cumTable.loc[:, 'Counts']))
+    # print("Counts: \n"+str(cumTable.loc[:, 'Counts']))
 
     intervention_numbers = pd.DataFrame(
-        cumTable.loc[:, 'Counts'].apply(lambda x: [int(i) for i in x.split(DIGIT_SEP)]).tolist(), columns=['25%', '75%'])
+        cumTable.loc[:, 'Counts'].apply(lambda x: [int(i) for i in x.split(DIGIT_SEP)]).tolist(),
+        columns=['25%', '75%'])
     differencePercentage = (baseline_numbers_separate - intervention_numbers) / baseline_numbers_separate * 100
     prettyOutput = []
     for _, row in differencePercentage.round(0).astype(int).iterrows():
@@ -1064,10 +812,9 @@ def effectiveness_peak_table(baseline, intervention):
         interventionPeak_baseline.loc[:, 'Peak Day IQR'].apply(lambda x: [int(i) for i in x.split(DIGIT_SEP)]).tolist(),
         columns=['25%', '75%'])
     peakNumber_baseline = pd.DataFrame(
-        interventionPeak_baseline.loc[:, 'Peak Number IQR'].apply(lambda x: [int(i) for i in x.split(DIGIT_SEP)]).tolist(),
+        interventionPeak_baseline.loc[:, 'Peak Number IQR'].apply(
+            lambda x: [int(i) for i in x.split(DIGIT_SEP)]).tolist(),
         columns=['25%', '75%'])
-
-
 
     comparisonSubdict = {}
     interventionPeak = prevalence_all_table(intervention)
@@ -1079,11 +826,11 @@ def effectiveness_peak_table(baseline, intervention):
         columns=['25%', '75%'])
     differenceDay = (peakDay - peakDay_baseline)
 
-    peakNumber_baseline = peakNumber_baseline + 0.01 # Shift to avoid div/0
+    peakNumber_baseline = peakNumber_baseline + 0.01  # Shift to avoid div/0
     peakNumber = peakNumber + 0.01
 
     differenceNumberPercentage = (peakNumber_baseline - peakNumber) / peakNumber_baseline * 100
-    #differenceNumberPercentage = differenceNumberPercentage.replace([np.inf, -np.inf], 100.0)
+    # differenceNumberPercentage = differenceNumberPercentage.replace([np.inf, -np.inf], 100.0)
     prettyOutputDay = []
     prettyOutputNumber = []
     for _, row in differenceDay.round(0).astype(int).iterrows():
@@ -1140,5 +887,3 @@ def find_six_months(df):
 def _merge(dict1, dict2):
     res = {**dict1, **dict2}
     return res
-
-
