@@ -40,20 +40,20 @@ NM model,number_of_people_in_isoboxes,People in refugee camps may live in isobox
 NM model,number_of_people_in_one_isobox,People in refugee camps may live in isoboxes (prefabricated units) or tents. This parameter is the number of people that live in one isobox
 NM model,number_of_tents,Total number of tents in refugee camp
 NM model,total_population_in_tents,People in refugee camps may live in isoboxes (prefabricated units) or tents. This parameter is the total number of people living in tents
-NM model,number_of_people_in_one_tent,People in refugee camps may live in isoboxes (prefabricated units) or tents. This parameter is thenumber of people  living in one tent
-NM model,neighbor_proximity,
-NM model,neighbor_weight,
-NM model,food_weight,
-NM model,household_weight,
-NM model,food_queues,
-NM model,number_of_ethnic_groups,
-NM model,dimensions_of_isoboxes,
-NM model,dimensions_of_block1,
-NM model,dimensions_of_block2,
-NM model,dimensions_of_block3,
-NM model,quarantine_start,
-NM model,quarantine_end,
-NM model,masks_start,
-NM model,masks_end,
-NM model,transmission_reduction,
+NM model,number_of_people_in_one_tent,People in refugee camps may live in isoboxes (prefabricated units) or tents. This parameter is the number of people living in one tent
+NM model,neighbor_proximity,People in refugee camps may live in isoboxes (prefabricated units) or tents and we assume that they interact with people that live near them. This number is the radius of nearby structures whose inhabitants a person has connections with
+NM model,neighbor_weight,Denotes the strength of connections between individuals and the neighbors that they interact with
+NM model,food_weight,Denotes the strength of connections between people in a food queue
+NM model,household_weight,Denotes the strength of connections between people that live in the same household
+NM model,food_queues,Number of food queues that the camp has
+NM model,number_of_ethnic_groups,Number of ethnic groups in the camp
+NM model,dimensions_of_isoboxes,People in refugee camps may live in isoboxes (prefabricated units), this pair of numbers denotes the number of isoboxes across the horizontal axis and the vertical axis of a grid resembling the isobox (center-east) area of the camp.
+NM model,dimensions_of_block1,People in refugee camps may live in tents and we have distributed all tents in blocks according to camp zones. This pair of numbers denotes the number of tents across the horizontal axis and the vertical axis of a grid resembling the north side of the camp.
+NM model,dimensions_of_block2,People in refugee camps may live in tents and we have distributed all tents in blocks according to camp zones. This pair of numbers denotes the number of tents across the horizontal axis and the vertical axis of a grid resembling the west side of the camp.
+NM model,dimensions_of_block3,People in refugee camps may live in tents and we have distributed all tents in blocks according to camp zones. This pair of numbers denotes the number of tents across the horizontal axis and the vertical axis of a grid resembling the south side of the camp.
+NM model,quarantine_start,Day that the quarantine interventions gets put in place
+NM model,quarantine_end,Day that the quarantine interventions gets lifted
+NM model,masks_start,Day that people start wearing masks
+NM model,masks_end,Day that people stop wearing masks
+NM model,transmission_reduction,Transmission rate reduction percentage when interventions are put in place
 NM model,number_of_steps,Number of simulated days
