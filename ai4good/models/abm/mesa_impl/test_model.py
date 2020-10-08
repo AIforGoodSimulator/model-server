@@ -60,27 +60,8 @@ class MyTestCase(unittest.TestCase):
 
         print("ethnic groups: " + mod.agents_ethnic_groups)
 
-        # print("start")
-        # print(mod.params)
-        # print(mod.households)
-        # print(mod.toilets)
-        # print(mod.Pa)
-        # print(mod.agents_disease_states)
         print("agents_ethnic_groups: " + str(mod.agents_ethnic_groups))
-        # print(mod.agents_gender)
-        # print(mod.households)
-        # print(mod.agents_home_ranges)
-        # print(mod.agents_households)
-        # print(mod.agents_incubation_periods)
-        # print(mod.agents_pos)
-        # print(mod.agents_route)
-        # print(mod.foodline_queue)
-        # print(mod.foodlines)
-        # print(mod.schedule)
-        # print(mod.schedule)
-        # print(mod.current_id)
-        # print(mod.running)
-        # print("end")
+
 
         print(mod)
         # test = 1
