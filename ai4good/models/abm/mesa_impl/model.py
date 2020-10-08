@@ -1,12 +1,12 @@
 import logging
-import random
 import numpy as np
 from tqdm import tqdm
 from mesa import Model
 from numba import njit
 from scipy.cluster.vq import kmeans
-from mesa.time import RandomActivation
 from mesa.space import ContinuousSpace
+from mesa.time import SimultaneousActivation
+from mesa.datacollection import DataCollector
 
 from ai4good.models.abm.mesa_impl.common import *
 from ai4good.models.abm.mesa_impl.agent import Person
@@ -48,8 +48,17 @@ class Camp(Model, CampHelper):
         # TODO: should this be picked from some distribution for each agent or having fixed value is fine?
         self.Pa = 0.1
 
+        # Probability that camp managers will detect people with symptoms
+        # Initially, this value will be 0.0, but by adding intervention via `apply_interventions` (isolation) we can
+        # change this value
+        self.P_detect = 0.0
+        self.P_n = 0
+
         if self.params.camp.upper() != 'MORIA':
             raise NotImplementedError("Only Moria camp is implemented for abm at the moment")
+
+        # day counter for each agent to track the state of the disease (this is NOT simulation day counter)
+        self.agents_day_counter = np.zeros((self.people_count,), dtype=np.int32)
 
         # all agents are susceptible before simulation starts
         self.agents_disease_states = np.array([SUSCEPTIBLE for _ in range(self.people_count)])
@@ -97,7 +106,7 @@ class Camp(Model, CampHelper):
         self.foodline_queue = {}  # dict containing foodline_id: [ list of agents unique ids ] who are standing in line
 
         # mesa_impl scheduler
-        self.schedule = RandomActivation(self)
+        self.schedule = SimultaneousActivation(self)
         # mesa_impl space
         self.space = ContinuousSpace(x_max=CAMP_SIZE, y_max=CAMP_SIZE, torus=False)
 
@@ -112,6 +121,14 @@ class Camp(Model, CampHelper):
             self.schedule.add(p)
             # place agent in the camp
             self.space.place_agent(p, self.agents_pos[i, :])
+
+        # data collector
+        # TODO
+        # most data is maintained by model, so `agent_reporters` may not be needed
+        self.data_collector = DataCollector(
+            model_reporters={},
+            agent_reporters={}
+        )
 
     def step(self):
         # simulate 1 day in camp
@@ -139,11 +156,7 @@ class Camp(Model, CampHelper):
             self.step()
 
             # collect data after end of every day
-            self.collect_data()
-
-    def collect_data(self):
-        # TODO: Collect data at regular intervals
-        pass
+            self.data_collector.collect(self)
 
     @staticmethod
     @njit
@@ -219,7 +232,7 @@ class Camp(Model, CampHelper):
 
                 # set home range to rl with probability (1- wl), and to 0.1 if lockdown is violated
                 # TODO: parameterize this 0.1 value?
-                new_home_range = 0.1 if will_violate[i] < wl else rl
+                new_home_range = CAMP_SIZE * (0.1 if will_violate[i] < wl else rl)
 
                 # update home range data
                 a.home_range = new_home_range
@@ -254,16 +267,60 @@ class Camp(Model, CampHelper):
         # following equation (2), but cannot infect or become infected by individuals in other households by any
         # transmission route. We assume that individuals are returned to the camp 7 days after they have recovered, or
         # if they do not become infected, 7 days after the last infected person in their household has recovered. By
-        # setting different values of b, we can simulate remove-and-isolate interventions with
-        # different detection efficiencies.
+        # setting different values of b, we can simulate remove-and-isolate interventions with different detection
+        # efficiencies.
         if isolation is not None:
-            b = isolation['b']  # probability that camp manager detects agent with symptoms
-            n = isolation['n']  # number of days after recovery when agent can go back to camp
-            # TODO: Not Implemented
-            pass
+            self.P_detect = isolation['b']  # probability that camp manager detects agent with symptoms
+            self.P_n = isolation['n']  # number of days after recovery when agent can go back to camp
+
+            assert 0.0 <= self.P_detect <= 1.0, "Probability of detecting symptoms must be within [0,1]"
+            assert self.P_n > 0, "Invalid value for isolation parameter: n"
+
+    def isolate_household(self, household_id: int) -> None:
+        # isolate household with given id
+        # first, find the agents in the household
+        hh_agents_idx = self.agents_households == household_id
+        # set all agents in the household as quarantined
+        self.agents_route[hh_agents_idx] = QUARANTINED
+        # update each agent
+        agents = self.schedule.agents
+        for i in np.argwhere(hh_agents_idx):
+            agents[i].isolate()
+
+    def check_remove_from_isolation(self, household_id: int) -> None:
+        # Remove agents in household with given id from isolation (quarantine) IF all people in household have recovered
+        # TODO: How will agent recover? Is there special care given in isolation which can expedite agent's state to
+        # TODO: recovered or people always recover after going through all stages
+        # TODO: i.e. symptomatic->mild/severe->recovered?
+
+        # TODO: Right now to remove agents from quarantine, we check if agent has shown no symptoms for some days.
+        # TODO: Should the logic be instead: check if agent's state is SUSCEPTIBLE OR RECOVERED? This way, asymptomatic
+        # TODO: and exposed agents will not be sent back to the camp
+
+        # number of people in `household_id` household
+        num_ppl_hh = np.count_nonzero(self.agents_households == household_id)
+
+        # if all people in the household don't show symptoms for `P_n` days, then free them all
+        if np.count_nonzero(np.logical_and(
+            self.agents_households == household_id,  # check for agents in same household
+            self.agents_disease_states != SYMPTOMATIC,  # agent must not be symptomatic
+            self.agents_disease_states != MILD,  # agent must not be mildly infected
+            self.agents_disease_states != SEVERE,  # agent must not be severely infected
+            self.agents_day_counter >= self.P_n  # agent must've been in no-symptoms state for at least `P_n` days TODO
+        )) == num_ppl_hh:
+            # first, find the agents in the household
+            hh_agents_idx = self.agents_households == household_id
+            # set all agents in the household as quarantined
+            self.agents_route[hh_agents_idx] = QUARANTINED
+            # update each agent
+            agents = self.schedule.agents
+            for i in np.argwhere(hh_agents_idx):
+                agents[i].goto_household(1.0)  # if quarantine is over, then go back to household
+                agents[i].day_counter = 0  # restart day counter
 
     @property
     def people_count(self):
+        # number of people in the camp
         return self.params.total_population
 
     def get_filter_array(self):
@@ -274,7 +331,7 @@ class Camp(Model, CampHelper):
             self.agents_households,
             self.agents_disease_states,
             self.agents_ethnic_groups
-        ], axis=0)
+        ]).squeeze()
 
     def _assign_households_to_agents(self):
         # assign households to agents based on capacity
@@ -359,12 +416,12 @@ class Camp(Model, CampHelper):
         # get positions, ids and capacities of iso-boxes
         iso_boxes_pos = self._get_iso_boxes(num_iso_boxes, self.params.area_covered_by_isoboxes)
         iso_boxes_ids = np.arange(0, num_iso_boxes)[:, None]  # expand from shape (?,) to (?,1)
-        iso_capacities = np.array([self.params.number_of_people_in_one_isobox] * num_iso_boxes)
+        iso_capacities = np.array([self.params.number_of_people_in_one_isobox] * num_iso_boxes)[:, None]
 
         # get positions, ids and capacities of tents
         tents_pos = self._get_tents(num_tents, self.params.area_covered_by_isoboxes)
         tents_ids = np.arange(num_iso_boxes, num_iso_boxes + num_tents)[:, None]  # expand from shape (?,) to (?,1)
-        tents_capacities = np.array([self.params.number_of_people_in_one_tent] * num_tents)
+        tents_capacities = np.array([self.params.number_of_people_in_one_tent] * num_tents)[:, None]
 
         # join ids, capacities and co-ordinates of iso-boxes and tents
         iso_boxes = np.concatenate([iso_boxes_ids, iso_capacities, iso_boxes_pos], axis=1)
@@ -469,7 +526,7 @@ class Camp(Model, CampHelper):
         return pos  # return tents co-ordinates
 
     def _assign_ethnicity_to_agents(self):
-        # assign ethnicity to agents of the camp
+        # assign ethnicity to agents of the camp based on `ethnic_groups` array
 
         # number of ethnic groups
         num_eth = len(self.ethnic_groups)

@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 from numba import njit
 
-from ai4good.models.abm.mesa_impl.common import CAMP_SIZE
 from ai4good.utils.path_utils import get_am_aug_pop
+from ai4good.models.abm.mesa_impl.common import CAMP_SIZE
 
 
 def read_age_gender(num_ppl):
@@ -52,9 +52,11 @@ def _clip_coordinates(val, low=0.0, high=CAMP_SIZE):
 def log(name="function"):
     # decorator for logging completion time
     # use this decorator like @log(name='func_name')
-    def wrapped(func):
-        t1 = time.time()
-        func()
-        t2 = time.time()
-        logging.info("Completed {} in {} seconds".format(name, t2-t1))
-    return wrapped
+    def wrapped1(func):
+        def wrapped2(self, *args, **kwargs):
+            t1 = time.time()
+            func(self, *args, **kwargs)
+            t2 = time.time()
+            logging.info("Completed {} in {} seconds".format(name, t2-t1))
+        return wrapped2
+    return wrapped1

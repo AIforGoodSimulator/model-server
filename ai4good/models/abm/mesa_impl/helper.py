@@ -3,8 +3,8 @@ import random
 import numpy as np
 from numba import njit
 
-from ai4good.models.abm.mesa_impl.utils import _clip_coordinates
 from ai4good.models.abm.mesa_impl.common import *
+from ai4good.models.abm.mesa_impl.utils import _clip_coordinates
 
 
 class CampHelper(object):

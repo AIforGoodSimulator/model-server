@@ -1,21 +1,29 @@
+import logging
 import random
 import numpy as np
 from mesa import Agent
 
-from ai4good.models.abm.mesa_impl.helper import PersonHelper
 from ai4good.models.abm.mesa_impl.common import *
+from ai4good.models.abm.mesa_impl.helper import PersonHelper
 
 
 class Person(Agent, PersonHelper):
     """
     Modelling a person living in the camp
     """
+    
+    def do_infection_dynamics_afterwards(func):
+        # use this wrapper to always execute `infection_dynamics` after function `func` call
+        def wrapper(self, *args, **kwargs):
+            func(self, *args, **kwargs)
+            self.infection_dynamics()
+        return wrapper
 
     def __init__(self, unique_id: int, model):
         super().__init__(unique_id, model)
         self.model = model
 
-        self.day_counter = 0
+        self.day_counter = model.agents_day_counter[unique_id]  # initial day counter value
         self.disease_state = model.agents_disease_states[unique_id]  # initial disease state
         self.gender = model.agents_gender[unique_id]  # agent's gender
         self.age = model.agents_age[unique_id]  # agent's age
@@ -23,17 +31,19 @@ class Person(Agent, PersonHelper):
         self.route = model.agents_route[unique_id]  # current route of the agent: household, food-line, toilet, wander
         self.ethnic_group = model.agents_ethnic_groups[unique_id]  # ethnic group to which agent belongs
 
-        self.toilet_id = -1  # if agent is standing in queue for toilet, store the id of the toilet
-        self.toilet_queue_idx = -1  # if agent is standing in queue for toilet, store the index in the queue
-        self.foodline_id = -1  # id of the foodline to visit
-        self.foodline_queue_idx = -1  # if agent is standing in food line, store the index in the queue
-
         # each person is allocated a household initially (iso-box or tent). This does not change during model simulation
         self.household_id = model.agents_households[unique_id]  # household id of the person (fixed)
 
         # for movement, household center and home range are required
         self.household_center = self.model.households[self.household_id, 2:]  # center co-ordinate of household
         self.home_range = model.agents_home_ranges[unique_id]  # radius of circle centered at household for movement
+
+        self.toilet_id = -1  # if agent is standing in queue for toilet, store the id of the toilet
+        self.toilet_queue_idx = -1  # if agent is standing in queue for toilet, store the index in the queue
+
+        # id of the foodline to visit (nearest one)
+        self.foodline_id = PersonHelper.find_nearest(self.household_center, self.model.foodlines)
+        self.foodline_queue_idx = -1  # if agent is standing in food line, store the index in the queue
 
         # calculate if asymptomatic
         # All children under the age of 16 become asymptomatic (ref), and others become asymptomatic
@@ -47,50 +57,82 @@ class Person(Agent, PersonHelper):
         self.incubation_period = self.model.agents_incubation_periods[unique_id]
 
     def step(self) -> None:
-        # simulate 1 day in the camp
-        # this cannot be run in parallel unfortunately :(
-        # TODO: fix
+        # An agent in the camp can do following activities at any given time based on their route
 
-        if self.disease_state not in [SUSCEPTIBLE, RECOVERED, DECEASED]:
-            self.day_counter += 1
-
+        # if a person is quarantined, they don't do any activities (toilet visits and food line visits during quarantine
+        # are not modelled)
+        # TODO: should we model it?
         if self.route == QUARANTINED:
+            # a susceptible person in quarantine can still be infected by its household mates
+            self.infection_dynamics()
             return
 
-        # 3 rounds of move and visiting toilet
-        for _ in range(3):
-            self.move()
-            self.infection_dynamics()
-            self.visit_toilet()
-            self.infection_dynamics()
-
-        # going to food line
+        # a variable to denote how much activities the agent does in a day
+        # TODO: parameterize it? or some better alternative?
+        activity = 2
+        
+        [self.move() for _ in range(activity)]
+        self.visit_toilet()
+        [self.move() for _ in range(activity)]
         self.visit_food_line(prob_visit=self.model.params.pct_food_visit)
-        self.infection_dynamics()
-
-        # 3 rounds of move and visiting toilet
-        for _ in range(3):
-            self.move()
-            self.infection_dynamics()
-            self.visit_toilet()
-            self.infection_dynamics()
-
-        # update disease progress values
-        self.disease_progression()
-
-        # at the end of the day, send the individual back to his/her household
-        self.route = HOUSEHOLD
-        self.pos = self.household_center
+        [self.move() for _ in range(activity)]
+        self.visit_toilet()
+        [self.move() for _ in range(activity)]
+        self.visit_food_line(prob_visit=self.model.params.pct_food_visit)
+        [self.move() for _ in range(activity)]
+        self.visit_toilet()
+        [self.move() for _ in range(activity)]
+        self.visit_food_line(prob_visit=self.model.params.pct_food_visit)
+        [self.move() for _ in range(activity)]
+        self.visit_toilet()
+        [self.move() for _ in range(activity)]
+        self.goto_household(0.9)  # at the end of the day, agent goes back to his/her household with high probability
 
         # update the model data
-        self.model.agents_disease_states[self.unique_id] = self.disease_state
-        self.model.agents_pos[self.unique_id] = self.pos
-        self.model.agents_route[self.unique_id] = self.route
+        self.model.agents_day_counter[self.unique_id] = self.day_counter
 
         # reset values
         self.toilet_queue_idx = -1
         self.foodline_queue_idx = -1
 
+    def advance(self) -> None:
+        # things to do at the end of the day
+
+        # 1. update disease state
+        self.disease_progression()
+
+        # 2. check if agent needs to be quarantined
+        # An agent in the camp who is showing symptoms can be quarantined with some probability
+        # The detected agent will be removed along with its household
+        if self.route != QUARANTINED and self.is_showing_symptoms() and random.random() <= self.model.P_detect:
+            # when detected, quarantine the complete household
+            self.model.isolate_household(self.household_id)
+
+        # 3. check if person in quarantine can come back to the camp
+        # We assume that individuals are returned to the camp 7 days after they have recovered, or if they do not
+        # become infected, 7 days after the last infected person in their household has recovered
+        # TODO: Right now to remove agents from quarantine, we check if agent has shown no symptoms for some days.
+        # TODO: Should the logic be instead: check if agent's state is SUSCEPTIBLE OR RECOVERED? This way, asymptomatic
+        # TODO: and exposed agents will not be sent back to the camp
+        if self.route == QUARANTINED and not self.is_showing_symptoms() and self.day_counter >= self.model.P_n:
+            self.model.check_remove_from_isolation(self.household_id)
+
+        # increase day counter to track number of days in a disease state
+        if self.disease_state not in [SUSCEPTIBLE, RECOVERED, DECEASED]:
+            self.day_counter += 1
+
+    @do_infection_dynamics_afterwards
+    def goto_household(self, prob):
+        # The agent goes back to the household for rest or other activities which may involve interaction with other
+        # people in the household.
+        # Personal assumption: Going to the household has some probability linked to it. At the end of the day, the
+        # agent will definitely go back to the household (i.e. `prob` ~ 1). At other instances in the day, one goes to
+        # the household with the probability of 0.5
+        if random.random() <= prob:
+            self.set_route(HOUSEHOLD)
+            self.set_pos(self.household_center)
+
+    @do_infection_dynamics_afterwards
     def move(self) -> None:
         # We assume that each individual occupies a circular home range centred on its household, and uses all
         # parts of its home range equally
@@ -101,12 +143,13 @@ class Person(Agent, PersonHelper):
             return
 
         # set current route
-        self.route = WANDERING
+        self.set_route(WANDERING)
 
         # set new position
         # this internal calls the helper class where the numba optimized code is executed
-        self.pos = self._move(self.household_center, self.home_range)
+        self.set_pos(self._move(self.household_center, self.home_range))
 
+    @do_infection_dynamics_afterwards
     def visit_food_line(self, prob_visit) -> None:
         """
         Simulating agent's visit to food line. This is not probabilistic/stochastic, but fixed i.e. 3 times per day
@@ -127,7 +170,7 @@ class Person(Agent, PersonHelper):
         if random.random() > prob_visit:
             return
 
-        self.route = FOOD_LINE  # change agent's route
+        self.set_route(FOOD_LINE)  # change agent's route
         # no need to update `pos` since `route` is FOOD_LINE hence current position is redundant for infection dynamics
 
         # add the agent to the end of food line queue and store the position
@@ -140,6 +183,7 @@ class Person(Agent, PersonHelper):
             self.foodline_queue_idx = 0
             self.model.foodline_queue[self.foodline_id] = [self.unique_id]
 
+    @do_infection_dynamics_afterwards
     def visit_toilet(self, prob_visit=0.3, toilet_proximity=CAMP_SIZE*0.02) -> None:
         """
         Simulating agent's visit to toilet
@@ -153,10 +197,11 @@ class Person(Agent, PersonHelper):
 
         """
 
-        if self.route != WANDERING and self.route != HOUSEHOLD:
+        if self.route not in (WANDERING, HOUSEHOLD):
             # personal assumption: person will visit toilet if wandering or inside household
             # i.e. person will not visit toilet whilst in food line or when quarantined
             # TODO: how to model toilet visit during lockdown or when quarantined?
+            # Possible answer: Agents still visit toilets in isolation but quarantine infection spread is not modelled
             return
 
         # first, check if agent will/want to go to toilet
@@ -172,7 +217,7 @@ class Person(Agent, PersonHelper):
             return  # toilet is too far away
 
         # now, the agent wants to visit toilet and there is a toilet nearby, now change the position
-        self.route = TOILET
+        self.set_route(TOILET)
 
         # update toilet queue
         if nearest_toilet_id in self.model.toilets_queue:
@@ -182,7 +227,6 @@ class Person(Agent, PersonHelper):
             self.toilet_queue_idx = 0
             self.model.toilets_queue[nearest_toilet_id] = [self.unique_id]
         self.toilet_id = nearest_toilet_id  # update the current toilet id
-        # self.pos = self.model.toilets[nearest_toilet_id]  # TODO: revisit if this needs to change
 
     def infection_dynamics(self) -> None:
         # Infections can be transmitted from infectious to susceptible individuals in four ways:
@@ -309,7 +353,7 @@ class Person(Agent, PersonHelper):
         # exposed to presymptomatic
         # a person becomes presymptomatic after half of the incubation period is completed
         if self.disease_state == EXPOSED and self.day_counter > self.incubation_period/2.0:
-            self.disease_state = PRESYMPTOMATIC
+            self.set_disease_state(PRESYMPTOMATIC)
             return
 
         # presymptomatic to 1st asymptomatic
@@ -317,7 +361,7 @@ class Person(Agent, PersonHelper):
         if self.disease_state == PRESYMPTOMATIC and \
                 self.day_counter >= self.incubation_period and \
                 self.is_asymptomatic:
-            self.disease_state = ASYMPTOMATIC1
+            self.set_disease_state(ASYMPTOMATIC1)
             self.day_counter = 0
             return
 
@@ -326,7 +370,7 @@ class Person(Agent, PersonHelper):
         if self.disease_state == PRESYMPTOMATIC and \
                 self.day_counter >= self.incubation_period and \
                 not self.is_asymptomatic:
-            self.disease_state = SYMPTOMATIC
+            self.set_disease_state(SYMPTOMATIC)
             self.day_counter = 0
             return
 
@@ -342,13 +386,13 @@ class Person(Agent, PersonHelper):
         # symptomatic to mild
         if self.disease_state == SYMPTOMATIC and \
                 self.day_counter >= 6 and not self.is_high_risk and random.random() < asp[age_slot]:
-            self.disease_state = MILD
+            self.set_disease_state(MILD)
             return
 
         # symptomatic to severe
         if self.disease_state == SYMPTOMATIC and \
                 self.day_counter >= 6 and self.is_high_risk and random.random() < aspc[age_slot]:
-            self.disease_state = SEVERE
+            self.set_disease_state(SEVERE)
             return
 
         # mild to recovered
@@ -356,13 +400,13 @@ class Person(Agent, PersonHelper):
         # On each day, individuals in the mild or 2nd asymptomatic state pass to the recovered state with
         # probability 0.37 (Lui et al. 2020)
         if self.disease_state in [MILD, ASYMPTOMATIC2] and random.random() <= 0.37:
-            self.disease_state = RECOVERED
+            self.set_disease_state(RECOVERED)
             return
 
         # severe to recovered
         # individuals in the severe state pass to the recovered state with probability 0.071 (Cai et al., preprint)
         if self.disease_state == SEVERE and random.random() <= 0.071:
-            self.disease_state = RECOVERED
+            self.set_disease_state(RECOVERED)
             return
 
         # severe to deceased
@@ -371,14 +415,35 @@ class Person(Agent, PersonHelper):
         # 1st asymptomatic to 2nd asymptomatic
         # After 5 days, All individuals in the 1st asymptomatic state pass to the “2nd asymptomatic” state
         if self.disease_state == ASYMPTOMATIC1 and self.day_counter >= 6:
-            self.disease_state = ASYMPTOMATIC2
+            self.set_disease_state(ASYMPTOMATIC2)
             return
+
+    def isolate(self):
+        # Isolate the agent (detected to have infections or someone in his/her household has an infection)
+
+        # change route and reset day counter
+        self.set_route(QUARANTINED)
+        self.day_counter = 0
 
     def _change_state(self, prob: float, new_state: int):
         # change state of the agent with some probability
         if random.random() < prob:
-            self.disease_state = new_state
+            self.set_disease_state(new_state)
 
     def is_showing_symptoms(self) -> bool:
         # returns `True` if a person is showing infection symptoms
         return self._is_showing_symptoms(self.disease_state)
+
+    def set_disease_state(self, val):
+        self.disease_state = val
+        self.model.agents_disease_states[self.unique_id] = val
+
+    def set_pos(self, val):
+        self.pos = val
+        self.model.agents_pos[self.unique_id, :] = val
+
+    def set_route(self, val):
+        self.route = val
+        self.model.agents_route[self.unique_id] = val
+
+    do_infection_dynamics_afterwards = staticmethod(do_infection_dynamics_afterwards)
