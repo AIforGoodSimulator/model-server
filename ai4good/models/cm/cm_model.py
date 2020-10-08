@@ -5,7 +5,6 @@ from ai4good.models.cm.initialise_parameters import Parameters
 from ai4good.models.cm.functions import Simulator
 from ai4good.models.cm.functions import generate_csv
 from ai4good.webapp.cm_model_report_utils import *
-import pandas.testing as pdt
 import logging
 
 
@@ -42,8 +41,6 @@ class CompartmentalModel(Model):
         cumulative_all = cumulative_all_table(report, p.population)
         logging.info("Computing cumulative_age_table")
         cumulative_age = cumulative_age_table(report)
-        cumulative_age_old = cumulative_age_table_old(report)
-        pdt.assert_frame_equal(cumulative_age, cumulative_age_old)
 
         logging.info("Model result ready")
         return ModelResult(self.result_id(p), {
