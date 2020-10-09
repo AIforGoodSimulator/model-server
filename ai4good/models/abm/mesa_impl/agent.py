@@ -39,11 +39,9 @@ class Person(Agent, PersonHelper):
         self.home_range = model.agents_home_ranges[unique_id]  # radius of circle centered at household for movement
 
         self.toilet_id = -1  # if agent is standing in queue for toilet, store the id of the toilet
-        self.toilet_queue_idx = -1  # if agent is standing in queue for toilet, store the index in the queue
 
         # id of the foodline to visit (nearest one)
         self.foodline_id = PersonHelper.find_nearest(self.household_center, self.model.foodlines)
-        self.foodline_queue_idx = -1  # if agent is standing in food line, store the index in the queue
 
         # calculate if asymptomatic
         # All children under the age of 16 become asymptomatic (ref), and others become asymptomatic
@@ -61,13 +59,13 @@ class Person(Agent, PersonHelper):
 
         # if a person is quarantined, they don't do any activities (toilet visits and food line visits during quarantine
         # are not modelled)
-        # TODO: should we model it?
         if self.route == QUARANTINED:
-            # a susceptible person in quarantine can still be infected by its household mates
+            # a susceptible person in quarantine can still be infected by other people in his/her household
             self.infection_dynamics()
             return
 
-        # a variable to denote how much activities the agent does in a day
+        # `activity` variable is used to denote how much activities the agent does in a day
+        # More the number of activities an agent performs, more is their movement
         # TODO: parameterize it? or some better alternative?
         activity = 2
         
@@ -90,10 +88,6 @@ class Person(Agent, PersonHelper):
 
         # update the model data
         self.model.agents_day_counter[self.unique_id] = self.day_counter
-
-        # reset values
-        self.toilet_queue_idx = -1
-        self.foodline_queue_idx = -1
 
     def advance(self) -> None:
         # things to do at the end of the day
@@ -176,11 +170,9 @@ class Person(Agent, PersonHelper):
         # add the agent to the end of food line queue and store the position
         if self.foodline_id in self.model.foodline_queue:
             # if already people in food line, go to end of line
-            self.foodline_queue_idx = len(self.model.foodline_queue[self.foodline_id])
             self.model.foodline_queue[self.foodline_id].append(self.unique_id)
         else:
             # if line not formed yet, start the line
-            self.foodline_queue_idx = 0
             self.model.foodline_queue[self.foodline_id] = [self.unique_id]
 
     @do_infection_dynamics_afterwards
@@ -204,27 +196,26 @@ class Person(Agent, PersonHelper):
             # Possible answer: Agents still visit toilets in isolation but quarantine infection spread is not modelled
             return
 
-        # first, check if agent will/want to go to toilet
-        # this is calculated based on probability to go to the toilet
+        # First, check if agent will/want to go to toilet
+        # This is calculated based on probability to go to the toilet
         if random.random() > prob_visit:
             return
 
-        # second, check if there is a toilet nearby
+        # Second, check if there is a toilet nearby
         nearest_toilet_id, nearest_toilet_distance = self.find_nearest(self.pos, self.model.toilets)
 
         # third, check if toilet is in desired proximity
         if nearest_toilet_distance > toilet_proximity:
             return  # toilet is too far away
 
-        # now, the agent wants to visit toilet and there is a toilet nearby, now change the position
+        # Now, the agent wants to visit toilet and there is a toilet nearby, so change the position of the agent
+        # Set current route as TOILET (used for infection dynamics)
         self.set_route(TOILET)
 
         # update toilet queue
         if nearest_toilet_id in self.model.toilets_queue:
-            self.toilet_queue_idx = len(self.model.toilets_queue[nearest_toilet_id])
             self.model.toilets_queue[nearest_toilet_id].append(self.unique_id)
         else:
-            self.toilet_queue_idx = 0
             self.model.toilets_queue[nearest_toilet_id] = [self.unique_id]
         self.toilet_id = nearest_toilet_id  # update the current toilet id
 
@@ -282,20 +273,27 @@ class Person(Agent, PersonHelper):
             # Thus, catching infection is dependent on if the people in front and back are infectious or not
             n = 0
 
+            # Find the position of the agent in the food line
+            try:
+                foodline_queue_idx = self.model.foodline_queue[self.foodline_id].index(self.unique_id)
+            except ValueError:
+                # Code should never reach here, but if it does, do nothing.
+                return
+
             # check infection for person in front of the agent
-            if self.foodline_queue_idx > 0 and \
+            if foodline_queue_idx > 0 and \
                     self._is_showing_symptoms(
                         self.model.agents_disease_states[
-                            self.model.foodline_queue[self.foodline_id][self.foodline_queue_idx-1]
+                            self.model.foodline_queue[self.foodline_id][foodline_queue_idx-1]
                         ]
                     ):
                 n += 1
 
             # check infection for person behind the agent
-            if self.foodline_queue_idx < (len(self.model.foodline_queue[self.foodline_id])-1) and \
+            if foodline_queue_idx < (len(self.model.foodline_queue[self.foodline_id])-1) and \
                     self._is_showing_symptoms(
                         self.model.agents_disease_states[
-                            self.model.foodline_queue[self.foodline_id][self.foodline_queue_idx+1]
+                            self.model.foodline_queue[self.foodline_id][foodline_queue_idx+1]
                         ]
                     ):
                 n += 1
@@ -305,6 +303,11 @@ class Person(Agent, PersonHelper):
 
             # change state from susceptible to exposed with probability `p_if`
             self._change_state(p_if, EXPOSED)
+
+            # Finally, remove agent from the food line queue if he/she is at front of the queue
+            if foodline_queue_idx == 0:  # check if agent is at the front of the queue
+                self.set_route(WANDERING)  # send agent back to wandering
+                self.model.foodline_queue[self.foodline_id].remove(self.unique_id)  # remove agent from the queue
 
             return
 
@@ -317,20 +320,27 @@ class Person(Agent, PersonHelper):
             # Thus, catching infection is dependent on if the people in front and back are infectious or not
             n = 0
 
+            # Get the position of the agent in the toilet queue
+            try:
+                toilet_queue_idx = self.model.toilets_queue[self.toilet_id].index(self.unique_id)
+            except ValueError:
+                # Code should never reach here. But if it does, do nothing
+                return
+
             # check infection for person in front of the agent
-            if self.toilet_queue_idx > 0 and \
+            if toilet_queue_idx > 0 and \
                     self._is_showing_symptoms(
                         self.model.agents_disease_states[
-                            self.model.toilets_queue[self.toilet_id][self.foodline_queue_idx - 1]
+                            self.model.toilets_queue[self.toilet_id][toilet_queue_idx - 1]
                         ]
                     ):
                 n += 1
 
             # check infection for person behind the agent
-            if self.toilet_queue_idx < (len(self.model.toilets_queue[self.toilet_id]) - 1) and \
+            if toilet_queue_idx < (len(self.model.toilets_queue[self.toilet_id]) - 1) and \
                     self._is_showing_symptoms(
                         self.model.agents_disease_states[
-                            self.model.toilets_queue[self.toilet_id][self.foodline_queue_idx + 1]
+                            self.model.toilets_queue[self.toilet_id][toilet_queue_idx + 1]
                         ]
                     ):
                 n += 1
@@ -340,6 +350,11 @@ class Person(Agent, PersonHelper):
 
             # change state from susceptible to exposed with probability `p_it`
             self._change_state(p_it, EXPOSED)
+
+            # Finally, remove agent from the toilet queue if he/she is at front of the queue
+            if toilet_queue_idx == 0:  # check if agent is at the front of the queue
+                self.set_route(WANDERING)  # send agent back to wandering
+                self.model.toilets_queue[self.toilet_id].remove(self.unique_id)  # remove agent from the queue
 
             return
 

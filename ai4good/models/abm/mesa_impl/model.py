@@ -133,14 +133,8 @@ class Camp(Model, CampHelper):
     def step(self):
         # simulate 1 day in camp
 
-        logging.info("Running step: {}".format(self.schedule.steps))
-
         # step all agents
         self.schedule.step()
-
-        # clear some model day-wise variables
-        self.foodline_queue = {}  # clear food line queue at end of the day
-        self.toilets_queue = {}  # clear toilet queues at end of the day
 
     @log(name="simulation")
     def simulate(self) -> None:
