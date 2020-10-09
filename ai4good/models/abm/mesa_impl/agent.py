@@ -233,7 +233,7 @@ class Person(Agent, PersonHelper):
         if self.disease_state != SUSCEPTIBLE:
             return
 
-        if self.route == HOUSEHOLD:
+        if self.route == HOUSEHOLD or self.route == QUARANTINED:
             """
             On each day, each infectious individual in a household infects each susceptible individual in that 
             household with probability ph. Thus, if individual i shares its household with hcid infectious individuals 
@@ -250,7 +250,7 @@ class Person(Agent, PersonHelper):
             people = self.model.get_filter_array()
             # filter people who are also inside household same as of current agent and who are infected
             infectious_household_ids = self.model.filter_agents(people, skip_agent_id=self.unique_id,
-                                                                route=HOUSEHOLD, household_id=self.household_id,
+                                                                route=self.route, household_id=self.household_id,
                                                                 is_infected=1)
             h_cid = infectious_household_ids.shape[0]  # number of infectious households
             p_ih = 1.0 - (1.0 - ph) ** h_cid  # probability value based on the formula (2)
@@ -357,7 +357,7 @@ class Person(Agent, PersonHelper):
 
             return
 
-        if self.route == QUARANTINED:
+        if self.route == HOSPITALIZED:
             # TODO
             return
 
@@ -406,6 +406,9 @@ class Person(Agent, PersonHelper):
         if self.disease_state == SYMPTOMATIC and \
                 self.day_counter >= 6 and self.is_high_risk and random.random() < aspc[age_slot]:
             self.set_disease_state(SEVERE)
+
+            # TODO: tucker model does not cover hospitalization of agents, should we keep it?
+            # TODO: change step function for hospitalized agents
             self.set_route(HOSPITALIZED)  # hospitalize agent when condition gets severe
             return
 

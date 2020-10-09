@@ -42,6 +42,7 @@ def get_incubation_period(num_ppl):
 
 @njit
 def _clip_coordinates(val, low=0.0, high=CAMP_SIZE):
+    # Clip value `val` from `low` and `high`
     if val < low:
         return low
     if val > high:
@@ -60,3 +61,7 @@ def log(name="function"):
             logging.info("Completed {} in {} seconds".format(name, t2-t1))
         return wrapped2
     return wrapped1
+
+
+def plot():
+    pass
