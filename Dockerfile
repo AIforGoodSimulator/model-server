@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # need to add waitress in requirements.txt?
 RUN pip install --no-cache-dir waitress
-
+RUN pip install --no-cache-dir gunicorn
 
 WORKDIR /usr/bin/
 
@@ -43,11 +43,13 @@ ENV PYTHONPATH="$PYTHONPATH:/model-server"
 ENV PATH="$PATH:/model-server"
 COPY . .
 
+EXPOSE 8000 8000
+
 # run webserver background process, do we want to run this as a separate container?
 # CMD nohup waitress-serve --port 8050 --host 0.0.0.0 ai4good.webapp.server:flask_app
 
 # executes console_runner.py
 # ENTRYPOINT ["python", "./ai4good/runner/console_runner.py"]
 
-# default command line params go here
+# default  command line params go here
 # CMD ["--profile", "custom", "--save_plots", "--save_report"]
