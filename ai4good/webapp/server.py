@@ -18,6 +18,8 @@ from ai4good.webapp.apps import flask_app, dash_app
 
 logging.basicConfig(level=logging.DEBUG)
 
+numba_logger = logging.getLogger('numba')
+numba_logger.setLevel(logging.WARNING)
 
 @flask_app.route("/")
 def index():
