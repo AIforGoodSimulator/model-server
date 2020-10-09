@@ -1,4 +1,3 @@
-import logging
 import random
 import numpy as np
 from mesa import Agent
@@ -363,7 +362,6 @@ class Person(Agent, PersonHelper):
             return
 
     def disease_progression(self) -> None:
-        # TODO: add stage when person is hospitalized
 
         # exposed to presymptomatic
         # a person becomes presymptomatic after half of the incubation period is completed
@@ -408,6 +406,7 @@ class Person(Agent, PersonHelper):
         if self.disease_state == SYMPTOMATIC and \
                 self.day_counter >= 6 and self.is_high_risk and random.random() < aspc[age_slot]:
             self.set_disease_state(SEVERE)
+            self.set_route(HOSPITALIZED)  # hospitalize agent when condition gets severe
             return
 
         # mild to recovered
