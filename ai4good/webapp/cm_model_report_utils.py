@@ -10,7 +10,7 @@ def timing(f):
         time1 = time.time()
         ret = f(*args)
         time2 = time.time()
-        print('%s function took %0.3f ms' % (f.__name__, (time2-time1)*1000.0))
+        print('%s function took %0.1f s' % (f.__name__, (time2-time1)))
         return ret
     return wrap
 
@@ -97,17 +97,10 @@ def prevalence_age_table(df):
         q75_number, q25_number = np.percentile(number, [75, 25])
         iqr_table_age[key] = (
             (int(round(q25_day)), int(round(q75_day))), (int(round(q25_number)), int(round(q75_number))))
-    arrays = [np.array(['Incident Cases', 'Incident Cases', 'Incident Cases', 'Incident Cases', 'Incident Cases',
-                        'Incident Cases', 'Incident Cases', 'Incident Cases', 'Incident Cases', 'Hospital Demand',
-                        'Hospital Demand', 'Hospital Demand', 'Hospital Demand', 'Hospital Demand', 'Hospital Demand',
-                        'Hospital Demand', 'Hospital Demand', 'Hospital Demand', 'Critical Demand', 'Critical Demand',
-                        'Critical Demand', 'Critical Demand', 'Critical Demand', 'Critical Demand', 'Critical Demand',
-                        'Critical Demand', 'Critical Demand']),
+    arrays = [np.array(['Incident Cases']*9 + ['Hospital Demand']*9 + ['Critical Demand']*9),
               np.array(
                   ['all ages', '<9 years', '10-19 years', '20-29 years', '30-39 years', '40-49 years', '50-59 years',
-                   '60-69 years', '70+ years', 'all ages', '<9 years', '10-19 years', '20-29 years', '30-39 years',
-                   '40-49 years', '50-59 years', '60-69 years', '70+ years', 'all ages', '<9 years', '10-19 years',
-                   '20-29 years', '30-39 years', '40-49 years', '50-59 years', '60-69 years', '70+ years'])]
+                   '60-69 years', '70+ years']*3)]
     peak_day = np.empty(27, dtype="S10")
     peak_number = np.empty(27, dtype="S10")
     for key, item in iqr_table_age.items():
@@ -252,7 +245,7 @@ def cumulative_all_table(df, N):
     return pd.DataFrame.from_dict(data)
 
 @timing
-def cumulative_age_table(df):
+def cumulative_age_table(df, camp_params):
     # need to have an age break down for this as well
     # 1 month 3 month and 6 month breakdown
     arrays = [np.array(
@@ -262,7 +255,7 @@ def cumulative_age_table(df):
              '60-69 years', '70+ years'] * 4)]
     params_select = ['Susceptible:', 'Deaths']
     params_accu = ['Hospitalised', 'Critical']
-    columns_to_acc, columns_to_select, multipliers = collect_columns(df.columns, params_accu, params_select)
+    columns_to_acc, columns_to_select, multipliers = collect_columns(df.columns, params_accu, params_select, camp_params)
 
     first_month_diff = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
         columns_to_select + ['Time']].apply(find_first_month_diff)
@@ -311,20 +304,13 @@ def cumulative_age_table(df):
     return pd.DataFrame(data=d, index=arrays)
 
 
-def collect_columns(columns, params_accu, params_select):
-    intervals = generate_intervals(0, 70, 10)
+def collect_columns(columns, params_accu, params_select, camp_params):
     columns_to_select = list(filter(lambda column: any(column.startswith(s) for s in params_select), columns))
     columns_to_acc = list(filter(lambda column: any(column.startswith(s) for s in params_accu), columns))
-    m_map = dict(zip(intervals, [-0.4, -0.25, -0.37, -0.42, -0.51, -0.59, -0.72, -0.76]))
     multipliers = list(
-        map(lambda column: m_map[next(key for key in intervals if key in column)] if 'Susceptible:' in column else 1,
+        map(lambda column: -camp_params[camp_params['Age'].apply(lambda x: x in column)]['p_symptomatic'].values[0] if 'Susceptible:' in column else 1,
             columns_to_select))
     return columns_to_acc, columns_to_select, multipliers
-
-def generate_intervals(_from, _to, step):
-    return [str(a) + '-' + str(b) for a, b in
-            zip(list(range(_from, _to, step)), list(range(_from + step - 1, _to, step)))] + [str(_to) + '+']
-
 
 def diff_table(baseline, intervention, N):
     t1 = effectiveness_cum_table(baseline, intervention, N)
