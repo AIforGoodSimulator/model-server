@@ -3,6 +3,7 @@ import time
 import numpy as np
 import pandas as pd
 
+from ai4good.models.cm.simulator import AGE_SEP
 DIGIT_SEP = ' to '  # em dash to separate from minus sign
 
 def timing(f):
@@ -197,49 +198,32 @@ def prevalence_age_table(df):
     return pd.DataFrame(data=d, index=arrays)
 
 @timing
-def cumulative_all_table(df, N):
+def cumulative_all_table(df, population, camp_params):
     # now we try to calculate the total count
     # cases: (N-exposed)*0.5 since the asymptomatic rate is 0.5
     # hopistal days: cumulative count of hospitalisation bucket
     # critical days: cumulative count of critical days
     # deaths: we already have that from the frame
-    table_params = ['Susceptible', 'Hospitalised', 'Critical', 'Deaths']
-    grouped = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])
-    cumulative_all = {}
-    for index, group in grouped:
-        # for each RO value find out the peak days for each table params
-        group = group.set_index('Time')
-        cumulative = {}
-        for param in table_params:
-            if param == 'Susceptible':
-                param09 = 'Susceptible: 0-9'
-                param1019 = 'Susceptible: 10-19'
-                param2029 = 'Susceptible: 20-29'
-                param3039 = 'Susceptible: 30-39'
-                param4049 = 'Susceptible: 40-49'
-                param5059 = 'Susceptible: 50-59'
-                param6069 = 'Susceptible: 60-69'
-                param7079 = 'Susceptible: 70+'
-                cumulative[param] = ((N * 0.2105 - (group[param09].tail(1).values[0])) * 0.4 +
-                                     (N * 0.1734 - (group[param1019].tail(1).values[0])) * 0.25 +
-                                     (N * 0.2635 - (group[param2029].tail(1).values[0])) * 0.37 +
-                                     (N * 0.1716 - (group[param3039].tail(1).values[0])) * 0.42 +
-                                     (N * 0.0924 - (group[param4049].tail(1).values[0])) * 0.51 +
-                                     (N * 0.0555 - (group[param5059].tail(1).values[0])) * 0.59 +
-                                     (N * 0.0254 - (group[param6069].tail(1).values[0])) * 0.72 +
-                                     (N * 0.0077 - (group[param7079].tail(1).values[0])) * 0.76)
-            elif param == 'Deaths':
-                cumulative[param] = (group[param].tail(1).values[0])
-            elif param == 'Hospitalised' or param == 'Critical':
-                cumulative[param] = (group[param].sum())
-        cumulative_all[index] = cumulative
-    cumulative_count = []
-    for param in table_params:
-        count = []
-        for elem in cumulative_all.values():
-            count.append(elem[param])
-        q75_count, q25_count = np.percentile(count, [75, 25])
-        cumulative_count.append(f'{int(round(q25_count))}{DIGIT_SEP}{int(round(q75_count))}')
+
+    df = df.filter(regex='^Time$|^R0$|^latentRate$|^removalRate$|^hospRate$|^deathRateICU$|^deathRateNoIcu$|Susceptible'+AGE_SEP+'|^Deaths$|^Hospitalised$|^Critical$|^Deaths$')
+    groups = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])
+    groups_tails = groups.apply(lambda x: x.set_index('Time').tail(1))
+
+    susceptible = groups_tails.filter(like='Susceptible'+AGE_SEP).rename(columns=lambda x: x.split(AGE_SEP)[1])[camp_params['Age']]
+    susceptible = ((population * camp_params['Population_structure'].values / 100 - susceptible) * camp_params['p_symptomatic'].values).sum(axis=1)
+    susceptible.index = susceptible.index.droplevel('Time')
+
+    deaths = groups_tails['Deaths']
+    deaths.index = deaths.index.droplevel('Time')
+
+    cumulative = {
+        'Susceptible': susceptible,
+        'Hospitalised': groups['Hospitalised'].sum(),
+        'Critical': groups['Critical'].sum(),
+        'Deaths': deaths
+    }
+    cumulative_all = pd.DataFrame(cumulative)
+    cumulative_count = cumulative_all.quantile([.25, .75]).apply(round).astype(int).astype(str).apply(lambda x: DIGIT_SEP.join(x.values), axis=0).values
     data = {'Totals': ['Symptomatic Cases', 'Hospital Person-Days', 'Critical Person-days', 'Deaths'],
             'Counts': cumulative_count}
     return pd.DataFrame.from_dict(data)

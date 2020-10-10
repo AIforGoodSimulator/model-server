@@ -2,8 +2,8 @@ from typeguard import typechecked
 from ai4good.models.model import Model, ModelResult
 from ai4good.params.param_store import ParamStore
 from ai4good.models.cm.initialise_parameters import Parameters
-from ai4good.models.cm.functions import Simulator
-from ai4good.models.cm.functions import generate_csv
+from ai4good.models.cm.simulator import Simulator
+from ai4good.models.cm.simulator import generate_csv
 from ai4good.webapp.cm_model_report_utils import *
 import logging
 
@@ -38,7 +38,7 @@ class CompartmentalModel(Model):
         logging.info("Computing prevalence_all_table")
         prevalence_all = prevalence_all_table(report)
         logging.info("Computing cumulative_all_table")
-        cumulative_all = cumulative_all_table(report, p.population)
+        cumulative_all = cumulative_all_table(report, p.population, p.camp_params)
         logging.info("Computing cumulative_age_table")
         cumulative_age = cumulative_age_table(report, p.camp_params)
 

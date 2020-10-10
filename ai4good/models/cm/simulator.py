@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 from ai4good.models.cm.initialise_parameters import Parameters
 
+AGE_SEP = ': '  # separate compartment and age in column name
 
 def timing_function(t,time_vector):
     for ii in range(ceil(len(time_vector)/2)):
@@ -433,7 +434,7 @@ def generate_csv_raw(category_map, data_to_save, params, population_frame):
     for j in range(population_frame.shape[0]):
         for i in range(params.number_compartments):
             col_names.append(
-                params.categories[category_map[str(i)]]['longname'] + ': ' + str(population_frame.Age.values[j]))
+                params.categories[category_map[str(i)]]['longname'] + AGE_SEP + str(population_frame.Age.values[j]))
     col_names.append('Time')
     number_of_categories = len(params.categories)
     for j in range(number_of_categories):  # params.number_compartments
