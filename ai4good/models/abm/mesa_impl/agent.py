@@ -22,7 +22,9 @@ class Person(Agent, PersonHelper):
         super().__init__(unique_id, model)
         self.model = model
 
+        # TODO: fix logic around day_counter
         self.day_counter = model.agents_day_counter[unique_id]  # initial day counter value
+
         self.disease_state = model.agents_disease_states[unique_id]  # initial disease state
         self.gender = model.agents_gender[unique_id]  # agent's gender
         self.age = model.agents_age[unique_id]  # agent's age
@@ -55,6 +57,7 @@ class Person(Agent, PersonHelper):
 
     def step(self) -> None:
         # An agent in the camp can do following activities at any given time based on their route
+        # TODO: Fix this method
 
         # if a person is quarantined, they don't do any activities (toilet visits and food line visits during quarantine
         # are not modelled)
@@ -70,20 +73,24 @@ class Person(Agent, PersonHelper):
         
         [self.move() for _ in range(activity)]
         self.visit_toilet()
+        self.goto_household(0.5)
         [self.move() for _ in range(activity)]
         self.visit_food_line(prob_visit=self.model.params.pct_food_visit)
         [self.move() for _ in range(activity)]
         self.visit_toilet()
+        self.goto_household(0.5)
         [self.move() for _ in range(activity)]
         self.visit_food_line(prob_visit=self.model.params.pct_food_visit)
         [self.move() for _ in range(activity)]
         self.visit_toilet()
+        self.goto_household(0.5)
         [self.move() for _ in range(activity)]
         self.visit_food_line(prob_visit=self.model.params.pct_food_visit)
         [self.move() for _ in range(activity)]
         self.visit_toilet()
+        self.goto_household(0.5)
         [self.move() for _ in range(activity)]
-        self.goto_household(0.9)  # at the end of the day, agent goes back to his/her household with high probability
+        self.goto_household(0.5)  # at the end of the day, agent goes back to his/her household with high probability
 
         # update the model data
         self.model.agents_day_counter[self.unique_id] = self.day_counter
@@ -260,7 +267,17 @@ class Person(Agent, PersonHelper):
             return
 
         if self.route == WANDERING:
-            # TODO
+
+            # create filter array
+            people = self.model.get_filter_array()
+
+            # get the degree of interaction with people while wandering outside household
+            h = self.wandering_infection_spread(people, self.unique_id, self.model.households[:, 2:])
+
+            p_im = 1.0 - (1.0 - self.model.Pa) ** h  # probability value that agent got infected
+
+            # change state from susceptible to exposed with probability `p_im`
+            self._change_state(p_im, EXPOSED)
             return
 
         if self.route == FOOD_LINE:

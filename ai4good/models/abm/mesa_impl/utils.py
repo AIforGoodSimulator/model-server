@@ -27,6 +27,10 @@ def read_age_gender(num_ppl):
     age_and_gender = pd.read_csv(get_am_aug_pop())
     age_and_gender = age_and_gender.loc[:, ~age_and_gender.columns.str.contains('^Unnamed')]
     age_and_gender = age_and_gender.values
+
+    if age_and_gender.shape[0] < num_ppl:
+        logging.warning("Number of agents are more than data provided in age_and_gender.csv")
+
     age_and_gender = age_and_gender[np.random.randint(age_and_gender.shape[0], size=num_ppl)]
     return age_and_gender
 
@@ -38,16 +42,6 @@ def get_incubation_period(num_ppl):
     k = (2.3/6.4)**(-1.086)
     l = 6.4 / (math.gamma(1 + 1/k))
     return np.array([random.weibullvariate(l, k) for _ in np.arange(num_ppl)])
-
-
-@njit
-def _clip_coordinates(val, low=0.0, high=CAMP_SIZE):
-    # Clip value `val` from `low` and `high`
-    if val < low:
-        return low
-    if val > high:
-        return high
-    return val
 
 
 def log(name="function"):

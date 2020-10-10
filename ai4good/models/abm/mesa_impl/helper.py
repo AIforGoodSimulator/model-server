@@ -4,7 +4,6 @@ import numpy as np
 from numba import njit
 
 from ai4good.models.abm.mesa_impl.common import *
-from ai4good.models.abm.mesa_impl.utils import _clip_coordinates
 
 
 class CampHelper(object):
@@ -57,7 +56,8 @@ class CampHelper(object):
 
         Parameters
         ----------
-            people: A 2D array where each row contains [route, household_id, disease_state, ethnic group] for agent
+            people: A 2D array where each row contains [route, household_id, disease_state, ethnic group, home range]
+                for agent
             skip_agent_id: Unique id of the agent to skip in result (value: -1 means ignore filter)
             route: Current route of the agents (value: -1 means ignore filter)
             household_id: Household id of the agents (value: -1 means ignore filter)
@@ -111,100 +111,6 @@ class CampHelper(object):
         # return as numpy array
         return np.array(out)
 
-    @staticmethod
-    @njit
-    def _prob_m(hh_pos, people):
-        """
-        TODO: Implement this in agent.py
-        The probability that susceptible individual i becomes infected on day d while moving about its home range.
-        To understand the math behind this method, refer to "Infection as individuals move about the camp" section
-        of tucker model.
-
-        Parameters
-        ----------
-            hh_pos: (?, 2) array containing co-ordinates of households
-            people: A 2D array containing [household id, home range, ethnic group id, disease state] for each agent
-
-        Returns
-        -------
-
-        """
-
-        # number of people
-        n_ppl = people.shape[0]
-
-        # probability response value
-        out = []
-
-        # iterate through each pair of individual in the camp
-        for i in range(n_ppl):
-
-            hh_id = people[i, 0]  # household id for person i
-            hh_pos_i = hh_pos[hh_id, :]  # position of household for individual i
-            ri = people[i, 1]  # home range for individual i
-
-            # the rate at which individual i interacts with infected individuals in its home range on day d
-            qid = 0.0
-
-            # assumption: only individuals without symptoms interact in their home ranges
-            if people[i, 3] not in [SUSCEPTIBLE, EXPOSED, PRESYMPTOMATIC,
-                                    ASYMPTOMATIC1, ASYMPTOMATIC2, RECOVERED]:
-                continue
-
-            for j in range(n_ppl):
-
-                if i == j:
-                    continue
-
-                # assumption: only individuals without symptoms interact in their home ranges
-                if people[j, 3] not in [SUSCEPTIBLE, EXPOSED, PRESYMPTOMATIC,
-                                        ASYMPTOMATIC1, ASYMPTOMATIC2,
-                                        RECOVERED]:
-                    continue
-
-                hh_id = people[j, 0]  # household id for person j
-                hh_pos_j = hh_pos[hh_id, :]  # position of household for individual j
-                rj = people[j, 1]  # home range for individual j
-
-                # the summation runs over all individuals in the model that do not share a household with individual i
-                if people[i, 0] == people[j, 0]:
-                    continue
-
-                # distance between households of individuals i and j
-                dij = (hh_pos_i[0] - hh_pos_j[0]) ** 2 + (hh_pos_i[1] - hh_pos_j[1]) ** 2
-                dij = dij ** 0.5
-
-                if dij > (ri + rj):
-                    # no overlap condition
-                    continue
-
-                # factor to account ethnicity
-                # In particular, gij = 1 if individuals i and j have the same background, and gij = 0.2 otherwise
-                gij = 1 if people[i, 2] == people[j, 2] else 0.2
-
-                # area of overlap in home ranges (equation (5) of tucker model)
-                aij = ri * ri * math.acos((dij * dij + ri * ri - rj * rj) / (2.0 * dij * ri)) + \
-                      rj * rj * math.acos((dij * dij - ri * ri + rj * rj) / (2.0 * dij * rj)) - \
-                      (((-dij + ri + rj) * (dij + ri - rj) * (dij - ri + rj) * (dij + ri + rj)) ** 0.5) / 2.0
-
-                # The proportion of time that individuals i and j spend together in the area of overlap
-                # (equation (6) of tucker model)
-                # sij = (aij * aij) / (math.pi * math.pi * ri*ri * rj*rj) : redundant for code
-
-                # The relative encounter rate between individuals i and j (equation (7) of tucker model)
-                # rer = sij/aij : redundant for code
-
-                # the daily rate of interaction between individuals i and j (equation (8) of tucker model)
-                fij = 0.02 * 0.02 * aij * gij / (math.pi * ri * ri * rj * rj)
-
-                qid += fij
-
-            # The probability that susceptible individual i becomes infected on day d while moving about its home range
-            p_idm = 1 - math.exp(-qid * 0.1)
-            out.append(p_idm)
-
-        return out
-
 
 class PersonHelper(object):
     """
@@ -212,7 +118,7 @@ class PersonHelper(object):
     """
 
     @staticmethod
-    @njit
+    @njit(fastmath=True)
     def _move(center, radius):
         # random wandering simulation: person will move within the home range centered at household
         r = random.random() * radius
@@ -223,13 +129,13 @@ class PersonHelper(object):
         new_y = center[1] + r * math.sin(theta)
 
         # clip position so as to not move outside the camp
-        new_x = _clip_coordinates(new_x)
-        new_y = _clip_coordinates(new_y)
+        new_x = 0.0 if new_x < 0.0 else (CAMP_SIZE if new_x > CAMP_SIZE else new_x)
+        new_y = 0.0 if new_y < 0.0 else (CAMP_SIZE if new_y > CAMP_SIZE else new_y)
 
         return new_x, new_y
 
     @staticmethod
-    @njit
+    @njit(fastmath=True)
     def find_nearest(pos, others, condn=None):
         # Find and return the index of the entity nearest to subject positioned at `pos`
         # The co-ordinates of the entities are defined in `others` array (?, 2)
@@ -253,6 +159,75 @@ class PersonHelper(object):
 
         # return index of the nearest entity and the nearest distance associated with that entity
         return d_min_index, d_min
+
+    @staticmethod
+    @njit(fastmath=True)
+    def wandering_infection_spread(people: np.array, i: int, hh_pos: np.array) -> float:
+        # Calculate the probability that infection spread will happen while agent `i` is wandering
+        # Agent `i` will be susceptible
+        # [0:route, 1:household, 2:disease state, 3:ethnicity, 4:home range, 5:x, 6:y]
+
+        num = 0.0
+        num_ppl = people.shape[0]  # number of people
+
+        hi = int(people[i, 1])  # household id of agent `i`
+        ri = people[i, 4]  # home range of agent `i`
+
+        # Loop through all agents `j` in the camp
+        # For each agent `j`, we check if `j` infects `i`
+        for j in range(num_ppl):
+
+            # skip agent `j`:
+            # if agent `i` and `j` are same OR
+            # if `j` share household with `i` OR
+            # if `j` is not infected
+            # if `j` is under isolated/quarantined because isolated agents/households cannot infect other agents
+            if i == j \
+                    or int(people[i, 1]) == int(people[j, 1]) \
+                    or int(people[j, 2]) in (SUSCEPTIBLE, EXPOSED, RECOVERED, DECEASED) \
+                    or int(people[j, 0]) == QUARANTINED:
+                continue
+
+            hj = int(people[j, 1])  # household id of agent `j`
+            rj = people[j, 4]  # home range of agent `j`
+
+            # get distance between household centers of agent i and j
+            d = (hh_pos[hi, 0] - hh_pos[hj, 0]) ** 2 + (hh_pos[hi, 1] - hh_pos[hj, 1]) ** 2
+            d = d ** 0.5
+
+            if d >= (ri + rj):
+                # the circles centered at households of `i` and `j` must overlap in order for infection spread
+                # if the circles don't overlap, skip agent `j`
+                continue
+
+            # Check if agents `i` and `j` are inside overlapping area of their house ranges
+            # di1: distance between agent i and agent i's household center
+            di1 = (people[i, 5] - hh_pos[hi, 0]) ** 2 + (people[i, 6] - hh_pos[hi, 1]) ** 2
+            # di2: distance between agent i and agent j's household center
+            di2 = (people[i, 5] - hh_pos[hj, 0]) ** 2 + (people[i, 6] - hh_pos[hj, 1]) ** 2
+            # dj1: distance between agent j and agent i's household center
+            dj1 = (people[j, 5] - hh_pos[hi, 0]) ** 2 + (people[j, 6] - hh_pos[hi, 1]) ** 2
+            # dj2: distance between agent j and agent j's household center
+            dj2 = (people[j, 5] - hh_pos[hj, 0]) ** 2 + (people[j, 6] - hh_pos[hj, 1]) ** 2
+
+            # if agent `i` and agent `j` are not both inside the area of overlap of their home ranges, then skip as
+            #  no infection spread possible between `i` and `j`
+            # else, agent `i` and `j` are both inside the area of overlap, add to result
+            if di1 < ri * ri and di2 < rj * rj and \
+                    dj1 < ri * ri and dj2 < rj * rj:
+                # agent `j` can infect agent `i` since both `i` and `j` are insider overlapping region AND
+                # agent `j` is infected
+
+                # To obtain the interaction rate between individuals i and j from the relative encounter rate, we scale
+                # by a factor gij to account for ethnicity or country of origin. In particular, gij = 1 if individuals i
+                # and j have the same background, and gij = 0.2 otherwise
+                # In particular, gij = 1 if individuals i and j have the same background, and gij = 0.2 otherwise
+                gij = 1 if int(people[i, 3]) == int(people[j, 3]) else 0.2
+
+                # add to interaction rate for agent `i`
+                num += gij
+
+        return num
 
     @staticmethod
     def _is_showing_symptoms(disease_state):

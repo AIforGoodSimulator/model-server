@@ -140,7 +140,8 @@ class Camp(Model, CampHelper):
     def simulate(self) -> None:
         # simulate for number of days
 
-        logging.info("Starting simulation for x{} days".format(self.params.number_of_steps))
+        logging.info("Starting simulation of x{} agents for x{} days".format(self.people_count,
+                                                                             self.params.number_of_steps))
         for t in tqdm(range(self.params.number_of_steps)):
             # check if simulation can stop
             if self.stop_simulation(self.agents_disease_states):
@@ -315,16 +316,17 @@ class Camp(Model, CampHelper):
     @property
     def people_count(self):
         # number of people in the camp
-        return self.params.total_population
+        return self.params.number_of_people_in_isoboxes + self.params.number_of_tents
 
     def get_filter_array(self):
         # returns compatible `people` array which is then passed to `_filter_agents` function
-        # Agent columns needed: route, household_id, disease state, ethnic group
+        # Agent columns: route, household_id, disease state, ethnic group, home range
         return np.dstack([
             self.agents_route,
             self.agents_households,
             self.agents_disease_states,
-            self.agents_ethnic_groups
+            self.agents_ethnic_groups,
+            self.agents_home_ranges
         ]).squeeze()
 
     def _assign_households_to_agents(self):
