@@ -45,7 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-        ref: uat
+          ref: uat
 
       - name: Set up Python
         uses: actions/setup-python@master
