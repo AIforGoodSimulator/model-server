@@ -4,6 +4,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 from urllib.parse import urlparse, parse_qs
+import ai4good.webapp.login_page as login_page
 import ai4good.webapp.run_model_page as run_model_page
 import ai4good.webapp.cm_model_results_page as cm_model_results_page
 import ai4good.webapp.cm_model_report_page as cm_model_report_page
@@ -38,7 +39,7 @@ def display_page(pathname, query=None):
     logging.info("Displaying page %s with query %s", pathname, query)
     if pathname == '/sim/input' or pathname == '/sim/':
         print ("input")
-        return run_model_page.layout
+        return login_page.layout
     elif pathname == '/sim/run_model':
         return run_model_page.layout
     elif pathname == '/sim/results':
@@ -70,7 +71,6 @@ def display_page(pathname, query=None):
         return nm_admin_page.layout()
     else:
         return '404'
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
