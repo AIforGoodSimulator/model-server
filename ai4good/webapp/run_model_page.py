@@ -2,11 +2,11 @@ import numpy as np
 import pandas as pd
 import dash
 import dash_core_components as dcc
+import dash_bootstrap_components as dbc
 import dash_html_components as html
 from ai4good.webapp.apps import dash_app, facade, model_runner
 from ai4good.webapp.model_runner import ModelScheduleRunResult
 from dash.dependencies import Input, Output, State
-import dash_bootstrap_components as dbc
 import dash_table
 
 
@@ -131,7 +131,7 @@ def history_table():
     return html.Div([
         dbc.Row([
          html.H3('Model Running Queue ')
-        ], style={'margin-top': 100, 'margin-left': 15,'color':'Black','border':'10px'}),
+        ], style={'margin-top': 20, 'margin-left': 20,'color':'Black','border':'0px'}),
         dbc.Row([
         dbc.Col(
             html.Div([
@@ -154,7 +154,7 @@ def history_table():
                     }
 
                 )
-            ],style={'margin-left':20}),
+            ],style={'margin-left': 55}),
             width=6,
         )
     ])
@@ -184,20 +184,20 @@ layout = html.Div(
             camp_selector(),
             model_selector(),
             profile_selector(),
-        ], style={'margin': 10}),
+        ], style={'margin': 20}),
         
         html.Div(
         [
             html.H3('Run Model'),
             model_run_buttons(),
-        ], style={'margin': 10}),
+        ], style={'margin': 20}),
         
         history_table(),
         dcc.Interval(
             id='interval-component',
             interval=5 * 1000  # in milliseconds
         )
-    ], style={'margin': 10}
+    ]
 )
 
 
