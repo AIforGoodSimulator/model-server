@@ -193,12 +193,18 @@ The following workflow should be used for development:
 
 * Now create a pull request to the 'Master' branch.  This pull request can be merged by the following people :
 
-* https://github.com/pardf
-* https://github.com/kariso2000
-* https://github.com/billlyzhaoyh
-* https://github.com/titorenko
-* https://github.com/LucasMartinCalderon
-* https://github.com/TensorMan
+[pardf](https://github.com/pardf)
+
+[kariso2000](https://github.com/kariso2000)
+
+[billlyzhaoyh](https://github.com/billlyzhaoyh)
+
+[titorenko](https://github.com/titorenko)
+
+[LucasMartinCalderon](https://github.com/LucasMartinCalderon)
+
+[TensorMan](https://github.com/TensorMan)
+
 
 * Deploy to PROD server with master branch is currently manual.
 
