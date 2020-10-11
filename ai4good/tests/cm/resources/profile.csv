@@ -1,0 +1,10 @@
+Profile,Parameter,Start Time,End Time,Value
+custom,better_hygiene,0,30,0.3
+custom,ICU_capacity,<no_edit>,<no_edit>,6
+custom,remove_symptomatic,0,40,10
+custom,shielding,<no_edit>,<no_edit>,False
+custom,remove_high_risk,0,0,20
+custom,remove_high_risk_categories,<no_edit>,<no_edit>,2
+custom,t_sim,<no_edit>,<no_edit>,200
+custom,numberOfIterations,<no_edit>,<no_edit>,2
+custom,nProcesses,<no_edit>,<no_edit>,4

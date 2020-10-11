@@ -20,7 +20,4 @@ jobs:
 
       - name: Run acceptance tests
         run: |
-#          waitress-serve --port 8050 --host 0.0.0.0 ai4good.webapp.server:flask_app
           python ai4good/webapp/tests/dev_web_tests.py --zaluser ${{ secrets.ZALUSER }} --zalpassword ${{ secrets.ZALPASSWORD }} --zalhost ${{ secrets.ZALHOST }}
-
-    
