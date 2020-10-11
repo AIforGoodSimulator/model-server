@@ -212,7 +212,7 @@ The following workflow should be used for development:
 
     http://51.132.48.142/dashboard/#
 
-Please contact https://github.com/kariso2000 on slack for userid and password.
+Please contact [kariso2000](https://github.com/kariso2000) on slack for userid and password.
 
 ### FAQ
 Will the web server be a separate container?
