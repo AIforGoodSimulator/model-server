@@ -190,7 +190,9 @@ The following workflow should be used for development:
 
     http://ai4good-uat.azurewebsites.net/sim/run_model (UAT)
 
-* Now create a pull request to the 'Master' branch
+* Now create a pull request to the 'Master' branch.  This pull request can be merged by the following people :
+
+@kariso2000
 
 **TBC** Gatekeepers to UAT and MASTER branch.  These users will be responsible for doing the merge.
 
