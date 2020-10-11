@@ -15,7 +15,7 @@ class Parameters:
         self.ps = ps
         self.camp = camp
         disease_params = ps.get_disease_params()
-        camp_params = ps.get_camp_params(camp)
+        self.camp_params = ps.get_camp_params(camp)
         # ------------------------------------------------------------
         # disease params
         parameter_csv = disease_params
@@ -80,7 +80,7 @@ class Parameters:
         all_categs['fill_colour'] = all_categs.apply(lambda row: 'rgba' + row['colour'][3:-1] + ',0.1)', axis=1)
         self.categories: dict = all_categs.set_index(all_categs['category']).transpose().to_dict()
 
-        self.population_frame, self.population = self.prepare_population_frame(camp_params)
+        self.population_frame, self.population = self.prepare_population_frame(self.camp_params)
 
         self.control_dict, self.icu_count = self.load_control_dict(profile, profile_override_dict)
 

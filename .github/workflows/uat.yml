@@ -11,6 +11,7 @@ env:
 
 jobs:
   build:
+    name: Deploy to UAT Azure Web App
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -37,3 +38,25 @@ jobs:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_UAT_CREDENTIALS }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+
+  runwebtest:
+    name: Web Test
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+        ref: uat
+
+      - name: Set up Python
+        uses: actions/setup-python@master
+        with:
+          python-version: 3.8
+        
+      - name: Set up dependancies
+        run: |
+          pip install -r requirements.txt
+          pip install selenium        
+
+      - name: Run acceptance tests
+        run: |
+          python ai4good/webapp/tests/dev_web_tests.py --zaluser ${{ secrets.ZALUSER }} --zalpassword ${{ secrets.ZALPASSWORD }} --zalhost ${{ secrets.ZALHOST }}
