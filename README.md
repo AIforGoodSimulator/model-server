@@ -184,6 +184,7 @@ The following workflow should be used for development:
 
     http://ai4good-dev.azurewebsites.net/sim/run_model (DEV)
 
+
 * Now create a pull request to the 'uat' branch and merge. Tests will be run again and the uat branch will be deployed to the uat server.
 * You can view your changes on : (Note build and deployment can take 5+ minutes) 
 * This is the branch the the testing team will do UAT testing on.
@@ -192,11 +193,20 @@ The following workflow should be used for development:
 
 * Now create a pull request to the 'Master' branch.  This pull request can be merged by the following people :
 
-@kariso2000
+* https://github.com/pardf
+* https://github.com/kariso2000
+* https://github.com/billlyzhaoyh
+* https://github.com/titorenko
+* https://github.com/LucasMartinCalderon
+* https://github.com/TensorMan
 
-**TBC** Gatekeepers to UAT and MASTER branch.  These users will be responsible for doing the merge.
+* Deploy to PROD server with master branch is currently manual.
 
+* You can also view web tests running on our Zalenium instance :
 
+    http://51.132.48.142/dashboard/#
+
+Please contact https://github.com/kariso2000 on slack for userid and password.
 
 ### FAQ
 Will the web server be a separate container?
