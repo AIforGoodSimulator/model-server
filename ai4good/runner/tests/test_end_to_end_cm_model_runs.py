@@ -2,7 +2,6 @@ import unittest
 import pandas as pd
 import pandas.testing as pdt
 from ai4good.models.cm.cm_model import CompartmentalModel
-from ai4good.models.abm.abm_model import ABM
 import ai4good.runner.console_runner as cr
 import ai4good.utils.path_utils as pu
 
@@ -24,7 +23,7 @@ class TestEndToEndRuns(unittest.TestCase):
         actual_report_df = mr.get('report')
         # actual_report_df.to_csv(pu._path('../runner/tests', 'expected_report.csv'), index=False) # for making new snapshot
         expected_df = pd.read_csv(pu._path('../runner/tests', 'expected_report.csv'))
-        pdt.assert_frame_equal(expected_df, actual_report_df, check_exact=False, check_less_precise=1)
+        pdt.assert_frame_equal(expected_df, actual_report_df, check_exact=False, check_less_precise=0)
 
         # check(mr.get('prevalence_age'), 'expected_page.csv')
         # check(mr.get('prevalence_all'), 'expected_pall.csv')
