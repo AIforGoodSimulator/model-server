@@ -320,7 +320,7 @@ def nav_bar():
 
 layout = html.Div(
     [
-        navbar(),
+        nav_bar(),
         html.H3('Run Model'),
         camp_selector(),
         model_selector(),
