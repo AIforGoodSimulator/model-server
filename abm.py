@@ -18,7 +18,7 @@ def get_params():
     overrides = '{"numberOfIterations": 1, "nProcesses": 1}'
     facade = Facade.simple()
     params = create_params(facade.ps, _model, _profile, camp, overrides)
-    params.number_of_steps = 500
+    # params.number_of_steps = 500
     return params
 
 
@@ -91,7 +91,11 @@ class TestRun(object):
 
 if __name__ == "__main__":
     test = TestRun()
+
+    # for running on console
     test.run()
+
+    # for real time plotting
     # test.plot()
     #
     # for t in range(test.camp.params.number_of_steps):
