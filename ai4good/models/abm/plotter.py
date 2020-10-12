@@ -40,7 +40,26 @@ def figure_generator(track_states, params, disease_states):
             "qua_severe_tl",
             "qua_recovered_tl"
             ]
-    track_states_df = pd.DataFrame(track_states, columns=cols)
+    labels = ["Susceptible",
+            "Exposed",
+            "Presymptomatic",
+            "Symptomatic",
+            "Mild",
+            "Severe",
+            "Recovered",
+            "Susceptible on quarantine",
+            "Exposed on quarantine",
+            "Presymptomatic on quarantine",
+            "Symptomatic on quarantine",
+            "Mild on quarantine",
+            "Severe on quarantine",
+            "Recovered on quarantine"
+            ]
+
+    labels_dict = dict(zip(cols,labels))
+    #params
+    track_states_df = pd.DataFrame(params.track_states, columns=cols)
+    # track_states_df2 = pd.DataFrame(params.track_states, columns=cols)
     xx = list(range(len(track_states_df))) #['day']  # sols[0]['t']
 
     for state in disease_states:
@@ -49,11 +68,11 @@ def figure_generator(track_states, params, disease_states):
         # y_plot = np.asarray(100*sol['y_plot'][categories['A']['index']]) - np.asarray(100*sol['y_plot'][categories['I']['index']])
 
         line = {'x': xx, 'y': track_states_df[state] / total,
-                'hovertemplate': '%{y:.2f}%, %{text}',
-                'text': track_states_df[state],
+                'hovertemplate': '%{y:.2f}%, '+labels_dict[state],
+                'text': labels_dict[state],
                 # 'line': {'color': str(categories[name]['colour'])},
-                'legendgroup': state,
-                'name': state}  # categories[name]['longname']}
+                'legendgroup': labels_dict[state],
+                'name': labels_dict[state]}  # categories[name]['longname']}
         lines_to_plot.append(line)
 
 
