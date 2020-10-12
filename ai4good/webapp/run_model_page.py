@@ -320,13 +320,13 @@ def nav_bar():
 
 layout = html.Div(
     [
+        navbar(),
         html.H3('Run Model'),
         camp_selector(),
         model_selector(),
         profile_selector(),
         model_run_buttons(),
         history_table(),
-        nav_bar(),
         dcc.Interval(
             id='interval-component',
             interval=5 * 1000  # in milliseconds
