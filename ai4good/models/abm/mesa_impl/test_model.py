@@ -23,44 +23,44 @@ class MyTestCase(unittest.TestCase):
         params = get_params()
         mod = mm.Camp(params=params)
 
-        np.savetxt('agents_age.csv', mod.agents_age, delimiter=',', header='agent_age')
-        np.savetxt('agents_disease_states.csv', mod.agents_disease_states, delimiter=',',
-                   header='agents_disease_states')
-        np.savetxt('agents_gender.csv', mod.agents_gender, delimiter=',',
-                   header='agents_gender')
-        np.savetxt('agents_home_ranges.csv', mod.agents_home_ranges, delimiter=',',
-                   header='agents_home_ranges')
-        np.savetxt('agents_households.csv', mod.agents_households, delimiter=',',
-                   header='agents_households')
-        np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
-                   header='agents_incubation_periods')
-        np.savetxt('agents_pos.csv', mod.agents_pos, delimiter=',',
-                   header='agents_pos1,agents_pos2')
-        np.savetxt('agents_route.csv', mod.agents_route, delimiter=',',
-                   header='agents_route')
-        print("foodline_queue: " + str(mod.foodline_queue))
-        np.savetxt('toilets.csv', mod.toilets, delimiter=',',
-                   header='toilets1,toilets2')
-        print("toilets_queue: " + str(mod.toilets_queue))
+        # np.savetxt('agents_age.csv', mod.agents_age, delimiter=',', header='agent_age')
+        # np.savetxt('agents_disease_states.csv', mod.agents_disease_states, delimiter=',',
+        #            header='agents_disease_states')
+        # np.savetxt('agents_gender.csv', mod.agents_gender, delimiter=',',
+        #            header='agents_gender')
+        # np.savetxt('agents_home_ranges.csv', mod.agents_home_ranges, delimiter=',',
+        #            header='agents_home_ranges')
+        # np.savetxt('agents_households.csv', mod.agents_households, delimiter=',',
+        #            header='agents_households')
+        # np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
+        #            header='agents_incubation_periods')
+        # np.savetxt('agents_pos.csv', mod.agents_pos, delimiter=',',
+        #            header='agents_pos1,agents_pos2')
+        # np.savetxt('agents_route.csv', mod.agents_route, delimiter=',',
+        #            header='agents_route')
+        # print("foodline_queue: " + str(mod.foodline_queue))
+        # np.savetxt('toilets.csv', mod.toilets, delimiter=',',
+        #            header='toilets1,toilets2')
+        # print("toilets_queue: " + str(mod.toilets_queue))
+        #
+        # np.savetxt('foodlines.csv', mod.foodlines, delimiter=',',
+        #            header='foodlines1,foodlines2')
+        # np.savetxt('households.csv', mod.households, delimiter=',',
+        #            header='households1,households2')
 
-        np.savetxt('foodlines.csv', mod.foodlines, delimiter=',',
-                   header='foodlines1,foodlines2')
-        np.savetxt('households.csv', mod.households, delimiter=',',
-                   header='households1,households2')
+        # print("people_count: " + str(mod.people_count))
+        # print("running: " + str(mod.running))
 
-        print("people_count: " + str(mod.people_count))
-        print("running: " + str(mod.running))
+        # np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
+        #            header='agents_incubation_periods')
+        # np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
+        #            header='agents_incubation_periods')
+        # np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
+        #            header='agents_incubation_periods')
 
-        np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
-                   header='agents_incubation_periods')
-        np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
-                   header='agents_incubation_periods')
-        np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
-                   header='agents_incubation_periods')
+        # print("ethnic groups: " + mod.agents_ethnic_groups)
 
-        print("ethnic groups: " + mod.agents_ethnic_groups)
-
-        print("agents_ethnic_groups: " + str(mod.agents_ethnic_groups))
+        # print("agents_ethnic_groups: " + str(mod.agents_ethnic_groups))
 
 
         print(mod)
