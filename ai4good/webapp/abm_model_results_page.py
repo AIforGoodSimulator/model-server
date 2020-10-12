@@ -12,6 +12,8 @@ def charts(mr):
     sol = mr.get('standard_sol')
     percentiles = mr.get('percentiles')
     p = mr.get('params')
+    # params = mr.get('result_data')
+    # p = params.get('params')
 
     # multiple_categories_to_plot = ['E', 'A', 'I', 'R', 'H', 'C', 'D', 'O', 'Q', 'U']  # categories to plot
     single_category_to_plot = 'C'  # categories to plot in final 3 plots #TODO: make selectable
