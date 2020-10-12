@@ -145,6 +145,28 @@ class Camp(Model, CampHelper):
         for t in tqdm(range(self.params.number_of_steps)):
             # check if simulation can stop
             if self.stop_simulation(self.agents_disease_states):
+                logging.info("Stopping simulation at step {} as infection spread has ended.".format(t))
+
+                logging.info("SUS={}, EXP={}, PRE={}, SYM={}, MIL={}, SEV={}, AS1={}, AS2={}, REC={}".format(
+                    np.count_nonzero(self.agents_disease_states == SUSCEPTIBLE),
+                    np.count_nonzero(self.agents_disease_states == EXPOSED),
+                    np.count_nonzero(self.agents_disease_states == PRESYMPTOMATIC),
+                    np.count_nonzero(self.agents_disease_states == SYMPTOMATIC),
+                    np.count_nonzero(self.agents_disease_states == MILD),
+                    np.count_nonzero(self.agents_disease_states == SEVERE),
+                    np.count_nonzero(self.agents_disease_states == ASYMPTOMATIC1),
+                    np.count_nonzero(self.agents_disease_states == ASYMPTOMATIC2),
+                    np.count_nonzero(self.agents_disease_states == RECOVERED)
+                ))
+
+                logging.info("HSH={}, TLT={}, FDL={}, WDR={}, QRT={}, HSP={}".format(
+                    np.count_nonzero(self.agents_route == HOUSEHOLD),
+                    np.count_nonzero(self.agents_route == TOILET),
+                    np.count_nonzero(self.agents_route == FOOD_LINE),
+                    np.count_nonzero(self.agents_route == WANDERING),
+                    np.count_nonzero(self.agents_route == QUARANTINED),
+                    np.count_nonzero(self.agents_route == HOSPITALIZED)
+                ))
                 return
 
             # simulate 1 day

@@ -13,7 +13,7 @@ class CampHelper(object):
 
     @staticmethod
     @njit
-    def _position_blocks(grid_size: int) -> np.array:
+    def position_blocks(grid_size: int) -> np.array:
         """
         Uniform placement of blocks (typically food line or toilet) in the camp.
 

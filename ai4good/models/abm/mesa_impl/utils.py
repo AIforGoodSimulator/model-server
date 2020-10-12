@@ -29,7 +29,8 @@ def read_age_gender(num_ppl):
     age_and_gender = age_and_gender.values
 
     if age_and_gender.shape[0] < num_ppl:
-        logging.warning("Number of agents are more than data provided in age_and_gender.csv")
+        logging.warning("Number of agents are more than data provided in age_and_gender.csv by {}".
+                        format(num_ppl - age_and_gender.shape[0]))
 
     age_and_gender = age_and_gender[np.random.randint(age_and_gender.shape[0], size=num_ppl)]
     return age_and_gender
@@ -41,7 +42,7 @@ def get_incubation_period(num_ppl):
     # days (Backer et al. 2020)
     k = (2.3/6.4)**(-1.086)
     l = 6.4 / (math.gamma(1 + 1/k))
-    return np.array([random.weibullvariate(l, k) for _ in np.arange(num_ppl)])
+    return np.around([random.weibullvariate(l, k) for _ in np.arange(num_ppl)]).astype(np.int32)
 
 
 def log(name="function"):
