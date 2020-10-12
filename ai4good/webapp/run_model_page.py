@@ -90,7 +90,7 @@ def profile_selector():
              'border': '1px solid rgb(0,0,0)',
             'backgroundColor': 'rgb(240, 240, 240)',
             'color': 'black'
-        },              
+        },
           {
             'if': {
                 'row_index': 0,  # number | 'odd' | 'even'
@@ -217,7 +217,6 @@ def profile_selector():
             },
            'cursor':'not-allowed'
         },]  
-                tooltip{}
             ),
             dbc.Button("Save", id="save_profile_button", color="primary", className="mr-1", disabled=True,
                        style={'display': 'none'}, outline=True)
@@ -302,9 +301,9 @@ def history_table():
                     }
 
                 )
-            ],style={'margin-left':20}),        
-            width=6, 
-        )   
+            ],style={'margin-left':20}),
+            width=6,
+        )
     ], style={'margin-top': 100, 'margin-left': 5})
 
 def nav_bar():
