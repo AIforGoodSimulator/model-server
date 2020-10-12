@@ -1,3 +1,4 @@
+import pandas as pd
 from tqdm import tqdm
 from scipy.cluster.vq import kmeans
 
@@ -86,6 +87,14 @@ class Moria(Camp):
 
         logging.info("Agents: {}".format(agents.shape))
 
+        self.data_collector = pd.DataFrame({
+            'DAY': [],
+            'SUSCEPTIBLE': [], 'EXPOSED': [], 'PRESYMPTOMATIC': [], 'SYMPTOMATIC': [], 'MILD': [], 'SEVERE': [],
+            'ASYMPTOMATIC1': [], 'ASYMPTOMATIC2': [], 'RECOVERED': [],
+            'HOSPITALIZED': []
+        })
+        self.data_collector.to_csv("abm_progress.csv", index=False)
+
     def simulate(self):
         # Run simulation on Moria camp
         for _ in tqdm(range(self.params.number_of_steps)):
@@ -96,6 +105,9 @@ class Moria(Camp):
 
             # simulate one day
             self.day()
+
+            # save the progress
+            self.save_progress()
 
     def day(self):
         # Run 1 day of simulation in the moria camp
@@ -160,7 +172,7 @@ class Moria(Camp):
             self.check_and_deisolate()
 
         # logs: number of agents in each disease state
-        logging.info("{}. SUS={}, EXP={}, PRE={}, SYM={}, MIL={}, SEV={}, AS1={}, AS2={}, REC={}".format(
+        logging.debug("{}. SUS={}, EXP={}, PRE={}, SYM={}, MIL={}, SEV={}, AS1={}, AS2={}, REC={}".format(
             self.t,
             np.count_nonzero(self.agents[:, A_DISEASE] == INF_SUSCEPTIBLE),
             np.count_nonzero(self.agents[:, A_DISEASE] == INF_EXPOSED),
@@ -174,7 +186,7 @@ class Moria(Camp):
         ))
 
         # logs: number of agents in each activity zone
-        logging.info("{}. HSH={}, TLT={}, FDL={}, WDR={}, QRT={}, HSP={}".format(
+        logging.debug("{}. HSH={}, TLT={}, FDL={}, WDR={}, QRT={}, HSP={}".format(
             self.t,
             np.count_nonzero(self.agents[:, A_ACTIVITY] == ACTIVITY_HOUSEHOLD),
             np.count_nonzero(self.agents[:, A_ACTIVITY] == ACTIVITY_TOILET),
@@ -357,6 +369,23 @@ class Moria(Camp):
 
         # update agents activity route who are removed from isolation
         self.agents[num_hh_mates == num_hh_mates_to_deisolate, A_ACTIVITY] = ACTIVITY_HOUSEHOLD
+
+    def save_progress(self):
+        self.data_collector = pd.read_csv("abm_progress.csv")
+        row = [self.t,
+               np.count_nonzero(self.agents[:, A_DISEASE] == INF_SUSCEPTIBLE),
+               np.count_nonzero(self.agents[:, A_DISEASE] == INF_EXPOSED),
+               np.count_nonzero(self.agents[:, A_DISEASE] == INF_PRESYMPTOMATIC),
+               np.count_nonzero(self.agents[:, A_DISEASE] == INF_SYMPTOMATIC),
+               np.count_nonzero(self.agents[:, A_DISEASE] == INF_MILD),
+               np.count_nonzero(self.agents[:, A_DISEASE] == INF_SEVERE),
+               np.count_nonzero(self.agents[:, A_DISEASE] == INF_ASYMPTOMATIC1),
+               np.count_nonzero(self.agents[:, A_DISEASE] == INF_ASYMPTOMATIC2),
+               np.count_nonzero(self.agents[:, A_DISEASE] == INF_RECOVERED),
+               np.count_nonzero(self.agents[:, A_ACTIVITY] == ACTIVITY_HOSPITALIZED)
+               ]
+        self.data_collector.loc[self.data_collector.shape[0]] = row
+        self.data_collector.to_csv("abm_progress.csv", index=False)
 
     def _assign_households_to_agents(self, households: np.array, agents_ethnic_groups: np.array) -> np.array:
         # assign households to agents based on capacity
