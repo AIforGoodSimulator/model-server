@@ -219,7 +219,7 @@ def profile_selector():
         },]                               
             ),
             dbc.Button("Save", id="save_profile_button", color="primary", className="mr-1", disabled=True,
-                       style={'display': 'none'})
+                       style={'display': 'none'}, outline=True)
         ]))], style={'height': '100%'}), width=6),
 
         dbc.Modal([
@@ -286,12 +286,37 @@ def history_table():
                     id='history_table',
                     columns=[{"name": i, "id": i} for i in cols],
                     data=[{}],
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': 'rgb(248, 248, 248)',
+
+                        }
+                    ],
+                    style_header={
+                        'backgroundColor': 'rgb(89,169,255)',
+                        'fontWeight': 'bold',
+                        'color': 'rgb(255,255,255)',
+                        'text-align': 'center'
+                    }
+
                 )
-            ]),
-            width=6,
-        )
+            ],style={'margin-left':20}),        
+            width=6, 
+        )   
     ], style={'margin-top': 100, 'margin-left': 5})
 
+def nav_bar():
+    return dbc.NavbarSimple(
+        children=[
+            dbc.NavItem(dbc.NavLink("About US", href="#")),
+
+        ],
+        brand="AIforGood",
+        brand_href="#",
+        color="primary",
+        dark=True,
+    )
 
 layout = html.Div(
     [
@@ -301,6 +326,7 @@ layout = html.Div(
         profile_selector(),
         model_run_buttons(),
         history_table(),
+        nav_bar(),
         dcc.Interval(
             id='interval-component',
             interval=5 * 1000  # in milliseconds
