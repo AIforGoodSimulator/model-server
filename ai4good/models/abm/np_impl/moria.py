@@ -41,7 +41,7 @@ class Moria(Camp):
     """
     
     # ethnic groups and their proportions in the camp
-    # Tucker model refers to 8 ethnic groups. But abm.py contained only 7. verify this.
+    # TODO: tucker model refers to 8 ethnic groups. But abm.py contained only 7. verify this.
     # In abm.py, people count per ethnic group was mentioned. We have transformed it into proportions to work for any 
     # population size
     ethnic_groups = [  # [ethnic group name, proportion of people in ethnic group]
@@ -57,24 +57,13 @@ class Moria(Camp):
     def __init__(self, params: Parameters):
         super().__init__(params, CAMP_SIZE)
 
-        self.ethnic_groups = [
-            'ethnic_group1', params.ethnic_group1,
-            'ethnic_group2', params.ethnic_group2,
-            'ethnic_group3', params.ethnic_group3,
-            'ethnic_group4', params.ethnic_group4,
-            'ethnic_group5', params.ethnic_group5,
-            'ethnic_group6', params.ethnic_group6,
-            'ethnic_group7', params.ethnic_group7,
-            'ethnic_others', params.ethnic_others
-        ]
-
         self.P_detect = 0.0  # probability that camp manager detects agent with symptoms
         self.P_n = 0  # number of days after recovery when agent can go back to camp
 
         # This number is used to specify the amount of activities happening in the camp. More the activities, more the
         # interactions of agents in the camp
-        # DONE: parameterize it => I should be static: toilet + food + wandering + house = 4
-        self.num_activities = 4
+        # TODO: parameterize it
+        self.num_activities = 10
 
         # number of days passed in simulation
         self.t = 0
@@ -125,10 +114,6 @@ class Moria(Camp):
         # initialize toilet and food line queues
         self._init_queue("toilet", self.params.toilets_blocks[0])
         self._init_queue("food_line", self.params.foodline_blocks[0])
-        self.percentage_of_toilet_queue_cleared_at_each_step = \
-            self.params.percentage_of_toilet_queue_cleared_at_each_step
-
-        self.shared_households = []
 
         logging.info("Shape of agents array: {}".format(agents.shape))
 
@@ -156,15 +141,6 @@ class Moria(Camp):
         # self.intervention_sectoring(self.params.foodline_blocks)
         # 4. Apply lockdown
         # self.intervention_lockdown()
-
-    def get_shared_households(self):
-        if len(self.shared_households) == 0:
-            hh = self.agents[:, [A_HOUSEHOLD_X, A_HOUSEHOLD_Y]]
-            sharing_hh = OptimizedOps.distance_matrix(hh) <= SMALL_ERROR
-            self.shared_households = sharing_hh
-            return self.shared_households
-        else:
-            return self.shared_households
 
     def simulate(self):
         # Run simulation on Moria camp
@@ -236,11 +212,12 @@ class Moria(Camp):
         # Disease progress at the end of the day
         self.agents = Camp.disease_progression(self.agents)
 
+        # If P_detect value is present, then isolate/de-isolate agents
         if self.P_detect > SMALL_ERROR:
             # Camp managers can detect agents with symptoms with some probability and isolate them
-            self.detect_and_isolate()
+            self.agents = Moria.detect_and_isolate(self.agents, self.P_detect)
             # If all agents of isolated household are not showing symptoms for some days, then send them back to camp
-            self.check_and_deisolate()
+            self.agents = Moria.check_and_deisolate(self.agents, self.P_n)
 
         # logs: number of agents in each disease state
         logging.debug("{}. SUS={}, EXP={}, PRE={}, SYM={}, MIL={}, SEV={}, AS1={}, AS2={}, REC={}".format(
@@ -332,6 +309,8 @@ class Moria(Camp):
         # scale transmission probability
         self.prob_spread = self.prob_spread * vt
 
+        logging.info("INTERVENTION: After applying transmission reduction methods, new Pa={}".format(self.prob_spread))
+
     def intervention_sectoring(self, sector_size):
         # The camp in our baseline model has a single food line, where transmission can potentially occur between two
         # individuals from any parts of the camp. This facilitates the rapid spread of COVID-19 infection. A plausible
@@ -345,6 +324,8 @@ class Moria(Camp):
 
         # initialize food lines based on `sector` parameter
         self._init_queue("food_line", sector_size)
+
+        logging.info("INTERVENTION: Creating sectors in the camp of size ({}x{})".format(sector_size, sector_size))
 
     def intervention_lockdown(self, rl, wl):
         # Some countries have attempted to limit the spread of COVID-19 by requiring people to stay in or close to
@@ -365,6 +346,9 @@ class Moria(Camp):
         self.agents[will_violate, A_HOME_RANGE] = 0.1 * CAMP_SIZE
         self.agents[~will_violate, A_HOME_RANGE] = rl * CAMP_SIZE
 
+        logging.info("INTERVENTION: In lockdown, {} agents are violating home ranges".
+                     format(np.count_nonzero(will_violate)))
+
     def intervention_isolation(self, b, n=7):
         # Managers of some populations, including Moria, have planned interventions in which people with COVID-19
         # infections and their households will be removed from populations and kept in isolation until the infected
@@ -384,74 +368,113 @@ class Moria(Camp):
         self.P_detect = b
         self.P_n = n
 
+        logging.info("INTERVENTION: Camp managers can detect agents with symptoms with probability of {}".format(b))
+
     def intervention_social_distancing(self, degree):
-        # DONE: Apply a repel force between each agent outside the household to simulate social distancing
-        # There is no probabilities/implementation in Tucker's model so no need to implement this.
+        # TODO: Apply a repel force between each agent outside the household to simulate social distancing
         pass
 
-    def detect_and_isolate(self):
+    @staticmethod
+    @nb.njit
+    def detect_and_isolate(agents: np.array, prob_detect: float) -> np.array:
         # Check if agent needs to be quarantined.
         # An agent in the camp who is showing symptoms can be quarantined with some probability.
         # The detected agent will be removed along with its household.
 
-        # create filter for agents in the camp who are showing symptoms and are detected by camp managers
-        detected_agent_filter = (self.agents[:, A_ACTIVITY] != ACTIVITY_QUARANTINED) & \
-                                (OptimizedOps.showing_symptoms(self.agents[:, A_DISEASE])) & \
-                                (np.random.random((self.num_people,)) <= self.P_detect)
+        n = agents.shape[0]  # number of agents in the camp
 
+        for i in range(n):  # Iterate for each agent in the camp
 
-        # get household position of all agents
-        # hh = self.agents[:, [A_HOUSEHOLD_X, A_HOUSEHOLD_Y]]
-        # get boolean matrix indicating households sharing by the agents
-        # `sharing_hh[i, j]` = 1  when agent `i` and `j` share household, else 0
-        # can be cached instead of recalculation since household is fixed per agent?
-        # DONE: Replaced with a function
-        # sharing_hh = OptimizedOps.distance_matrix(hh) <= SMALL_ERROR
-        sharing_hh = self.get_shared_households()
+            # If agent i is already quarantined, don't process
+            if agents[i, A_ACTIVITY] == ACTIVITY_QUARANTINED:
+                continue
 
-        # Get all agents to be isolated
-        # Take all the households and filter out the ones where a symptomatic agent is detected by the camp manager.
-        # Each element `sharing_hh[i, j]` will be 1 if agent `i` with symptoms is detected by the camp manager OR agent
-        # `j` is sharing the household with `i` hence will be isolated too
-        sharing_hh = sharing_hh | detected_agent_filter.reshape((-1, 1))
+            # An agent who is showing infection symptoms can be detected by camp manager with some probability
+            i_detected = (agents[i, A_DISEASE] == INF_SYMPTOMATIC or agents[i, A_DISEASE] == INF_MILD or
+                          agents[i, A_DISEASE] == INF_SEVERE) and random.random() <= prob_detect
 
-        # Get all agents who either are detected or share household with detected agent
-        isolate_agent_filter = np.sum(sharing_hh, axis=0) > 0.0
-        # Isolate all of them
-        self.agents[isolate_agent_filter, A_ACTIVITY] = ACTIVITY_QUARANTINED
+            # if agent is not detected, skip
+            if i_detected == 0:
+                continue
 
-    def check_and_deisolate(self):
+            # when agent i is detected by camp managers, isolate everyone in agent i's household
+            for j in range(n):
+
+                # Skip if agent j DOES NOT share household with agent i
+                # This is checked by calculating the distance between i's household and j's household, if the distance
+                # -> 0 then we say agent i and j share household
+                d = (agents[i, A_HOUSEHOLD_X] - agents[j, A_HOUSEHOLD_X]) ** 2 + \
+                    (agents[i, A_HOUSEHOLD_Y] - agents[j, A_HOUSEHOLD_Y]) ** 2
+                d = d ** 0.5
+                if d > SMALL_ERROR:
+                    continue
+
+                # Quarantine agent j who shares household with detected agent i
+                # Since agent i is also covered  in the j loop, no need to explicitly quarantine agent i
+                agents[j, A_ACTIVITY] = ACTIVITY_QUARANTINED
+                # When agent is quarantined, they will remain in their household
+                agents[j, A_X] = agents[j, A_HOUSEHOLD_X]
+                agents[j, A_Y] = agents[j, A_HOUSEHOLD_Y]
+
+        return agents
+
+    @staticmethod
+    @nb.njit
+    def check_and_deisolate(agents: np.array, n: int) -> np.array:
         """
         Check agents who are in isolation and return them back to the camp if no agent in their household is showing
-        any symptoms for the past `P_n` days.
+        any symptoms for the past n days.
         From tucker model:
             "We assume that individuals are returned to the camp 7 days after they have recovered, or if they do not
             become infected, 7 days after the last infected person in their household has recovered"
-        In our implementation, this "7 days" is parameterized in `P_n`
+        In our implementation, this "7 days" is parameterized in `P_n` (class level) or n (function level).
         """
 
-        # Filter agents who are in quarantine and not showing symptoms0 at least past `P_n` days
-        to_deisolate = (self.agents[:, A_ACTIVITY] == ACTIVITY_QUARANTINED) & \
-                       ~OptimizedOps.showing_symptoms(self.agents[:, A_DISEASE]) & \
-                       (self.agents[:, A_DAY_COUNTER] >= self.P_n)
+        n = agents.shape[0]  # number of agents in the camp
 
-        # Check for each pair of agents i and j, if both i and j can be removed from isolation and sent back to camp
-        # `to_deisolate_ij[i, j]` = 1 when agents `i` and `j` are both Ok to be removed from isolation
-        to_deisolate_ij = to_deisolate.reshape((-1, 1)) & to_deisolate.reshape((1, -1))
+        for i in range(n):  # Iterate for each agent in the camp
 
-        # get household position of all agents
-        hh = self.agents[:, [A_HOUSEHOLD_X, A_HOUSEHOLD_Y]]
-        # get boolean matrix indicating households sharing by the agents
-        # `sharing_hh[i, j]` = 1  when agents `i` and `j` share household, else 0
-        sharing_hh = OptimizedOps.distance_matrix(hh) <= SMALL_ERROR
+            # If agent i is not quarantined, don't process
+            if agents[i, A_ACTIVITY] != ACTIVITY_QUARANTINED:
+                continue
 
-        # number of agents in same household for each agent
-        num_hh_mates = np.sum(sharing_hh, axis=1)
-        # number of household mates that are Ok to sent back to camp
-        num_hh_mates_to_deisolate = np.sum(to_deisolate_ij & sharing_hh, axis=1)
+            # Storing agents who are sharing household with agent i.
+            housemate_ids = []
+            # Number of agents who are sharing household with agent i and are not showing symptoms for the past n days
+            num_not_showing_sym = 0
 
-        # update agents activity route who are removed from isolation
-        self.agents[num_hh_mates == num_hh_mates_to_deisolate, A_ACTIVITY] = ACTIVITY_HOUSEHOLD
+            # For a quarantined agent i in the camp, check for his/her housemates (who would be also quarantined) and
+            # check if they all can now go back to the camp or not.
+            for j in range(n):
+
+                # Skip if agent j DOES NOT share household with agent i
+                # This is checked by calculating the distance between i's household and j's household, if the distance
+                # -> 0 then we say agent i and j share household
+                d = (agents[i, A_HOUSEHOLD_X] - agents[j, A_HOUSEHOLD_X]) ** 2 + \
+                    (agents[i, A_HOUSEHOLD_Y] - agents[j, A_HOUSEHOLD_Y]) ** 2
+                d = d ** 0.5
+                if d > SMALL_ERROR:
+                    continue
+
+                housemate_ids.append(j)  # add agent j as housemate of agent i
+
+                # Check if agent j (housemate of agent i) is not showing symptoms for the past `P_n` days
+                if agents[j, A_DISEASE] not in (INF_SYMPTOMATIC, INF_MILD, INF_SEVERE) and agents[j, A_DAY_COUNTER] >= n:
+                    num_not_showing_sym += 1
+
+            # Skip if all any housemate is not Ok to be back in the camp. All of them should be not showing symptoms
+            # for n days in order to be sent back to the camp.
+            if len(housemate_ids) == 0 or len(housemate_ids) != num_not_showing_sym:
+                continue
+
+            # At this point we know that all housemates of agent i are without symptoms for past n days, so now send
+            # them back to camp.
+            # Update their activity to household so they can do other activities (like wandering, going to toilet and
+            # food line, etc.) in the camp
+            agents[np.array(housemate_ids), A_ACTIVITY] = ACTIVITY_HOUSEHOLD
+
+        # return updated agents array
+        return agents
 
     def save_progress(self):
         # Function to save the progress of the simulation at any time step

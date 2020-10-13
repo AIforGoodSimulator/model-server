@@ -31,11 +31,6 @@ class TestRun(object):
 
         logging.info("Starting simulation of x{} agents for x{} days".format(self.camp.num_people,
                                                                              self.camp.params.number_of_steps))
-        logging.info("Number of tents: {}".format(self.camp.params.number_of_tents))
-        logging.info("Number of iso-boxes: {}".format(self.camp.params.number_of_isoboxes))
-        logging.info("Area covered by iso-boxes: {}".format(self.camp.params.area_covered_by_isoboxes))
-        logging.info("Probability of infection in household: {}".format(
-            self.camp.params.probability_infecting_person_in_household_per_day))
 
         self.fig, self.ax = plt.subplots(figsize=(10, 8))
         self.ax.set_xlim([0, self.camp.camp_size])

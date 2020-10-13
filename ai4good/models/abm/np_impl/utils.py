@@ -51,7 +51,6 @@ def get_incubation_period(num_ppl):
 
 def plot_progress(file):
     df = pd.read_csv(file)
-    # df = df.loc[:100, :]
 
     t = df.loc[:, 'DAY']
 
@@ -70,8 +69,40 @@ def plot_progress(file):
     plt.show()
 
 
+def plot_sir(file):
+    # Group disease states under susceptible, infected and recovered
+    df = pd.read_csv(file)
+
+    t = df.loc[:, 'DAY']
+
+    sus = df.loc[:, 'SUSCEPTIBLE']
+    inf = df.loc[:, ['EXPOSED', 'PRESYMPTOMATIC', 'SYMPTOMATIC', 'MILD', 'SEVERE', 'ASYMPTOMATIC1', 'ASYMPTOMATIC2']]\
+        .sum(axis=1)
+    rec = df.loc[:, 'RECOVERED']
+
+    plt.plot(t, sus, label='Susceptible')
+    plt.plot(t, inf, label='Infected')
+    plt.plot(t, rec, label='Recovered')
+
+    plt.legend()
+    plt.show()
+
+
+def plot_hospitalized(file):
+    df = pd.read_csv(file)
+
+    t = df.loc[:, 'DAY']
+
+    plt.plot(t, df.loc[:, 'HOSPITALIZED'], label='Hospitalized')
+
+    plt.legend()
+    plt.show()
+
+
 if __name__ == "__main__":
     # If this file is called directly from command line, one can pass the progress file name to get a time series plot
     # of disease states
     f_name = sys.argv[1]  # use like > python utils.py path/to/filename.csv
     plot_progress(f_name)
+    plot_sir(f_name)
+    plot_hospitalized(f_name)
