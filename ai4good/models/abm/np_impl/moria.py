@@ -309,6 +309,8 @@ class Moria(Camp):
         # scale transmission probability
         self.prob_spread = self.prob_spread * vt
 
+        logging.info("INTERVENTION: After applying transmission reduction methods, new Pa={}".format(self.prob_spread))
+
     def intervention_sectoring(self, sector_size):
         # The camp in our baseline model has a single food line, where transmission can potentially occur between two
         # individuals from any parts of the camp. This facilitates the rapid spread of COVID-19 infection. A plausible
@@ -322,6 +324,8 @@ class Moria(Camp):
 
         # initialize food lines based on `sector` parameter
         self._init_queue("food_line", sector_size)
+
+        logging.info("INTERVENTION: Creating sectors in the camp of size ({}x{})".format(sector_size, sector_size))
 
     def intervention_lockdown(self, rl, wl):
         # Some countries have attempted to limit the spread of COVID-19 by requiring people to stay in or close to
@@ -342,6 +346,9 @@ class Moria(Camp):
         self.agents[will_violate, A_HOME_RANGE] = 0.1 * CAMP_SIZE
         self.agents[~will_violate, A_HOME_RANGE] = rl * CAMP_SIZE
 
+        logging.info("INTERVENTION: In lockdown, {} agents are violating home ranges".
+                     format(np.count_nonzero(will_violate)))
+
     def intervention_isolation(self, b, n=7):
         # Managers of some populations, including Moria, have planned interventions in which people with COVID-19
         # infections and their households will be removed from populations and kept in isolation until the infected
@@ -360,6 +367,8 @@ class Moria(Camp):
 
         self.P_detect = b
         self.P_n = n
+
+        logging.info("INTERVENTION: Camp managers can detect agents with symptoms with probability of {}".format(b))
 
     def intervention_social_distancing(self, degree):
         # TODO: Apply a repel force between each agent outside the household to simulate social distancing

@@ -26,7 +26,7 @@ INF_SEVERE = 5  # Agent is infected and has severe condition
 INF_ASYMPTOMATIC1 = 6  # Agent is infected but not showing symptoms (first phase)
 INF_ASYMPTOMATIC2 = 7  # Agent is infected but not showing symptoms (second phase)
 INF_RECOVERED = 8  # Agent has recovered or died due to infection. Recovered agents will not contract infection again
-
+INF_DECEASED = 9  # Agent has passed away due to infection severity
 
 # Activity routes for the agents
 ACTIVITY_HOUSEHOLD = 0  # Agent is inside their household
@@ -195,6 +195,7 @@ class Camp:
         self.camp_size = camp_size
         self.params = params
         self.num_people = self.params.number_of_people_in_isoboxes + self.params.number_of_people_in_tents
+        # TODO: parameterize infection radius
         self.infection_radius = 0.05 * self.camp_size
         self.prob_spread = 0.1
 
