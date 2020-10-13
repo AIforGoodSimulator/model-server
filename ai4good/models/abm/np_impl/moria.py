@@ -126,6 +126,8 @@ class Moria(Camp):
         # initialize toilet and food line queues
         self._init_queue("toilet", self.params.toilets_blocks[0])
         self._init_queue("food_line", self.params.foodline_blocks[0])
+        self.percentage_of_toilet_queue_cleared_at_each_step = \
+            params.percentage_of_toilet_queue_cleared_at_each_step
 
         logging.info("Shape of agents array: {}".format(agents.shape))
 
