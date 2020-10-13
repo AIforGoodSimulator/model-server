@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from  ai4good.utils.path_utils import get_nm_aug_pop
+from ai4good.utils.path_utils import get_nm_aug_pop
 
 
 # Death rate per age calculation - parameters found by fitting a sigmoid curve
