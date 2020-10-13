@@ -10,8 +10,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from ai4good.utils.path_utils import get_am_aug_pop
-
 
 def read_age_gender(num_ppl):
     """
@@ -27,6 +25,9 @@ def read_age_gender(num_ppl):
 
     """
     # Data frame. V1 = age, V2 is sex (1 = male?, 0  = female?).
+
+    from ai4good.utils.path_utils import get_am_aug_pop
+
     age_and_gender = pd.read_csv(get_am_aug_pop())
     age_and_gender = age_and_gender.loc[:, ~age_and_gender.columns.str.contains('^Unnamed')]
     age_and_gender = age_and_gender.values

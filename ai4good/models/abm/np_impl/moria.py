@@ -131,6 +131,17 @@ class Moria(Camp):
         # Save initialized progress to file
         data_collector.to_csv(self.progress_file_name, index=False)
 
+        # Set initial intervention params (if any)
+        # 1. Apply transmission reduction by scaling down the probability of infection spread
+        self.intervention_transmission_reduction(self.params.transmission_reduction)
+        # 2. Apply isolation parameters
+        self.intervention_isolation(self.params.probability_spotting_symptoms_per_day)
+        # 3. Apply sectoring
+        # NOTE: This is already done since initial food line queue initialization is done with `foodline_blocks` param
+        # self.intervention_sectoring(self.params.foodline_blocks)
+        # 4. Apply lockdown
+        # self.intervention_lockdown()
+
     def simulate(self):
         # Run simulation on Moria camp
         for _ in tqdm(range(self.params.number_of_steps)):
@@ -291,6 +302,8 @@ class Moria(Camp):
         # (~20,000 people km-2), maintaining safe distances among people may also be difficult or impossible.
         # However, people in Moria have been provided with face masks. We simulated a population in which all
         # individuals wear face masks outside their homes by setting vt = 0.32 (Jefferson et al. 2009)
+
+        assert 0.0 <= vt <= 1.0, "Transmission reduction factor must be between 0.0 and 1.0"
 
         # scale transmission probability
         self.prob_spread = self.prob_spread * vt
