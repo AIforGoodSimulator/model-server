@@ -374,7 +374,7 @@ class Camp:
         for t in self.toilet_queue:
             # at each step during the day, we clear 80% of all agents in the queue
             # TODO: how can we parameterize it?
-            dequeue_count = np.ceil(0.8 * len(self.toilet_queue[t]))
+            dequeue_count = int(np.ceil(0.8 * len(self.toilet_queue[t])))
             try:
                 # get first `dequeue_count` agents at front of the queue
                 front = self.toilet_queue[t][:dequeue_count]
@@ -386,7 +386,7 @@ class Camp:
                 pass
         for f in self.food_line_queue:
             # at each step of the day, we clear 80% of all agents in the queue
-            dequeue_count = np.ceil(0.8 * len(self.food_line_queue[f]))
+            dequeue_count = int(np.ceil(0.8 * len(self.food_line_queue[f])))
             try:
                 # get first `dequeue_count` agents at front of the queue
                 front = self.food_line_queue[f][:dequeue_count]
