@@ -31,51 +31,35 @@ def normalize_report(df, params):
 @timing
 def prevalence_all_table(df):
     # calculate Peak Day IQR and Peak Number IQR for each of the 'incident' variables to table
-    table_params = ['Infected (symptomatic)', 'Hospitalised', 'Critical', 'Change in Deaths']
-    grouped = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])
-    incident_rs = {}
-    for index, group in grouped:
-        # for each RO value find out the peak days for each table params
-        group = group.set_index('Time')
-        incident = {}
-        for param in table_params:
-            incident[param] = (group.loc[:, param].idxmax(), group.loc[:, param].max())
-        incident_rs[index] = incident
-    iqr_table = {}
-    for param in table_params:
-        day = []
-        number = []
-        for elem in incident_rs.values():
-            day.append(elem[param][0])
-            number.append(elem[param][1])
-        q75_day, q25_day = np.percentile(day, [75, 25])
-        q75_number, q25_number = np.percentile(number, [75, 25])
-        iqr_table[param] = (
-            (int(round(q25_day)), int(round(q75_day))), (int(round(q25_number)), int(round(q75_number))))
+    df = df.filter(regex='^Time$|^R0$|^latentRate$|^removalRate$|^hospRate$|^deathRateICU$|^deathRateNoIcu$|^Infected \(symptomatic\)$|^Hospitalised$|^Critical$|^Change in Deaths$')
+    groupby_columns = ['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu']
+    grouped = df.groupby(groupby_columns)
+    indices_to_drop = groupby_columns + ['Time']
+    peak_days = get_quantile_report(grouped.apply(lambda x: x.set_index('Time').idxmax()), indices_to_drop)
+    peak_numbers = get_quantile_report(grouped.max(), indices_to_drop)
+
+    resultdf = pd.DataFrame.from_dict({'Peak Day IQR': peak_days, 'Peak Number IQR': peak_numbers})
+    resultdf.index.name = 'Outcome'
+
     table_columns = {'Infected (symptomatic)': 'Prevalence of Symptomatic Cases',
                      'Hospitalised': 'Hospitalisation Demand',
                      'Critical': 'Critical Care Demand', 'Change in Deaths': 'Prevalence of Deaths'}
-    outcome = []
-    peak_day = []
-    peak_number = []
-    for param in table_params:
-        outcome.append(table_columns[param])
-        peak_day.append(f'{iqr_table[param][0][0]}{DIGIT_SEP}{iqr_table[param][0][1]}')
-        peak_number.append(f'{iqr_table[param][1][0]}{DIGIT_SEP}{iqr_table[param][1][1]}')
-    data = {'Outcome': outcome, 'Peak Day IQR': peak_day, 'Peak Number IQR': peak_number}
-    return pd.DataFrame.from_dict(data)
 
-def get_quantile_report(x):
+    return resultdf.reindex(index=table_columns.keys()).rename(index=table_columns).reset_index()
+
+def get_quantile_report(x, indices_to_drop):
     return x.stack().groupby(level=-1).quantile([.25, .75])\
-        .apply(round).astype(int).astype(str).groupby(level=0).apply(lambda x: DIGIT_SEP.join(x.values))
+        .apply(round).astype(int).astype(str).groupby(level=0).apply(lambda x: DIGIT_SEP.join(x.values)).drop(index = indices_to_drop, errors='ignore')
 
 @timing
 def prevalence_age_table(df):
     # calculate age specific Peak Day IQR and Peak Number IQR for each of the 'prevalent' variables to contruct table
     df = df.filter(regex='^Time$|^R0$|^latentRate$|^removalRate$|^hospRate$|^deathRateICU$|^deathRateNoIcu$|^Infected \(symptomatic\)|^Hospitalised|^Critical')
-    grouped = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])
-    peak_days = get_quantile_report(grouped.apply(lambda x: x.set_index('Time').idxmax()))
-    peak_numbers = get_quantile_report(grouped.max().drop(['Time'], axis=1))
+    groupby_columns = ['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu']
+    grouped = df.groupby(groupby_columns)
+    indices_to_drop = groupby_columns + ['Time']
+    peak_days = get_quantile_report(grouped.apply(lambda x: x.set_index('Time').idxmax()), indices_to_drop)
+    peak_numbers = get_quantile_report(grouped.max(), indices_to_drop)
 
     resultdf = pd.DataFrame.from_dict({'Peak Day, IQR': peak_days, 'Peak Number, IQR': peak_numbers})
 
