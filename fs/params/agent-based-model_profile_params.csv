@@ -35,6 +35,7 @@ baseline,ethnic_group6,,,0.011
 baseline,ethnic_group7,,,0.008
 baseline,ethnic_others,,,0
 baseline,percentage_of_toilet_queue_cleared_at_each_step,,,0.8
+baseline,infection_radius,,,0.05
 small,number_of_people_in_isoboxes,,,30
 small,number_of_people_in_one_isobox,,,3
 small,number_of_people_in_tents,,,86
@@ -71,3 +72,5 @@ small,ethnic_group6,,,0.011
 small,ethnic_group7,,,0.008
 small,ethnic_others,,,0
 small,percentage_of_toilet_queue_cleared_at_each_step,,,0.8
+small,infection_radius,,,0.05
+

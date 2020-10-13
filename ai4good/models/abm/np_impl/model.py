@@ -195,8 +195,8 @@ class Camp:
         self.camp_size = camp_size
         self.params = params
         self.num_people = self.params.number_of_people_in_isoboxes + self.params.number_of_people_in_tents
-        # TODO: parameterize infection radius
-        self.infection_radius = 0.05 * self.camp_size
+        # DONE: parameterize infection radius
+        self.infection_radius = params.infection_radius * self.camp_size
         self.prob_spread = 0.1
 
         self.agents: np.array = None

@@ -41,7 +41,7 @@ class Moria(Camp):
     """
     
     # ethnic groups and their proportions in the camp
-    # TODO: tucker model refers to 8 ethnic groups. But abm.py contained only 7. verify this.
+    # DONE: tucker model refers to 8 ethnic groups. But abm.py contained only 7. verify this.
     # In abm.py, people count per ethnic group was mentioned. We have transformed it into proportions to work for any 
     # population size
     ethnic_groups = [  # [ethnic group name, proportion of people in ethnic group]
@@ -62,8 +62,8 @@ class Moria(Camp):
 
         # This number is used to specify the amount of activities happening in the camp. More the activities, more the
         # interactions of agents in the camp
-        # TODO: parameterize it
-        self.num_activities = 10
+        # DONE: parameterize it => we are given **daily** probability so: toilet + fl + wandering + hh = 4
+        self.num_activities = 4
 
         # number of days passed in simulation
         self.t = 0
@@ -371,7 +371,8 @@ class Moria(Camp):
         logging.info("INTERVENTION: Camp managers can detect agents with symptoms with probability of {}".format(b))
 
     def intervention_social_distancing(self, degree):
-        # TODO: Apply a repel force between each agent outside the household to simulate social distancing
+        # DONE: Apply a repel force between each agent outside the household to simulate social distancing
+        # Since there is no social distancing in Tucker's model no need to implement it
         pass
 
     @staticmethod
