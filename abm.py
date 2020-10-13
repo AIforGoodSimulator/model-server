@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 from ai4good.runner.facade import Facade
-from ai4good.models.abm.mesa_impl.new.moria import *
+from ai4good.models.abm.np_impl.moria import *
 from ai4good.models.model_registry import create_params
 
 logging.basicConfig(level=logging.INFO)

@@ -391,22 +391,36 @@ class Camp:
 
     @staticmethod
     @nb.njit
-    def disease_progression(agents):
-        n = agents.shape[0]
+    def disease_progression(agents: np.array) -> np.array:
+        """
+        Update the disease state of the agent defined by `agents` numpy array. This is inspired partly by tucker model.
+        Parameters
+        ----------
+        agents: The numpy array containing the agents information
 
-        # After 5 days, individuals pass from the symptomatic to the “mild” or “severe” states, with age- and
-        # condition-dependent probabilities following Verity and colleagues (2020) and Tuite and colleagues (preprint).
+        Returns
+        -------
+        out: The updated agents numpy array
+
+        """
+
+        n = agents.shape[0]  # number of agents in the camp
+
+        # After 5 days showing symptoms, individuals pass from the symptomatic to the “mild” or “severe” states, with
+        # age- and condition-dependent probabilities following Verity and colleagues (2020) and Tuite and colleagues
+        # (preprint).
         # Verity (low-risk) : probability values for each age slot [0-10, 10-20, ...90+]
         asp = np.array([0, .000408, .0104, .0343, .0425, .0816, .118, .166, .184])
         # Tuite (high-risk) : probability values for each age slot [0-10, 10-20, ...90+]
         aspc = np.array([.0101, .0209, .0410, .0642, .0721, .2173, .2483, .6921, .6987])
-        is_high_risk = agents[:, A_AGE] > 80
 
+        # Iterate all agents one by one and update the disease state
         for i in range(n):
 
-            disease_state = int(agents[i, A_DISEASE])
-            is_asymptomatic = int(agents[i, A_IS_ASYMPTOMATIC])
-            incubation_period = int(agents[i, A_INCUBATION_PERIOD])
+            is_high_risk = int(agents[i, A_AGE] > 80)  # define which agents are considered as high risk
+            disease_state = int(agents[i, A_DISEASE])  # current disease state
+            is_asymptomatic = int(agents[i, A_IS_ASYMPTOMATIC])  # flag if agent is asymptomatic by nature
+            incubation_period = int(agents[i, A_INCUBATION_PERIOD])  # incubation period of the agent
 
             # In the first half of this period, the individual is “exposed” but not infectious. In the second half, the
             # individual is “pre-symptomatic” and infectious
@@ -431,12 +445,12 @@ class Camp:
             # condition-dependent probabilities following Verity and colleagues (2020) and Tuite and colleagues
             # (preprint). All individuals in the 1st asymptomatic state pass to the “2nd asymptomatic” state
             elif disease_state == INF_SYMPTOMATIC and agents[i, A_DAY_COUNTER] >= SYMP_PERIOD and \
-                    is_high_risk[i] == 0 and random.random() <= asp[int(agents[i, A_AGE]/10.0)]:
+                    is_high_risk == 0 and random.random() <= asp[int(agents[i, A_AGE]/10.0)]:
                 disease_state = INF_MILD
                 agents[i, A_DAY_COUNTER] = 0
 
             elif disease_state == INF_SYMPTOMATIC and agents[i, A_DAY_COUNTER] >= SYMP_PERIOD and \
-                    is_high_risk[i] == 1 and random.random() <= aspc[int(agents[i, A_AGE]/10.0)]:
+                    is_high_risk == 1 and random.random() <= aspc[int(agents[i, A_AGE]/10.0)]:
                 disease_state = INF_SEVERE
                 agents[i, A_ACTIVITY] = ACTIVITY_HOSPITALIZED
                 agents[i, A_DAY_COUNTER] = 0
@@ -454,6 +468,7 @@ class Camp:
                 # Agents who recovered in hospital can go back to household
                 if agents[i, A_ACTIVITY] == ACTIVITY_HOSPITALIZED:
                     agents[i, A_ACTIVITY] = ACTIVITY_HOUSEHOLD
+
             elif disease_state == INF_SEVERE and random.random() <= 0.071:
                 disease_state = INF_RECOVERED
                 agents[i, A_DAY_COUNTER] = 0

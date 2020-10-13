@@ -2,7 +2,7 @@ import pandas as pd
 from tqdm import tqdm
 from scipy.cluster.vq import kmeans
 
-from ai4good.models.abm.mesa_impl.new.model import *
+from ai4good.models.abm.np_impl.model import *
 from ai4good.models.abm.initialise_parameters import Parameters
 from ai4good.models.abm.mesa_impl.utils import read_age_gender, get_incubation_period
 
