@@ -103,12 +103,9 @@ class Parameters:
         self.percentage_of_toilet_queue_cleared_at_each_step = \
             float(profile.loc['percentage_of_toilet_queue_cleared_at_each_step', 'Value'])
 
-        self.infection_radius = \
-            float(profile.loc['infection_radius', 'Value'])
+        self.infection_radius = float(profile.loc['infection_radius', 'Value'])
 
         self.control_dict = {}
-
-
 
     def sha1_hash(self) -> str:
         hash_params = [

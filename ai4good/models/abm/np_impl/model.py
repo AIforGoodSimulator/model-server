@@ -195,8 +195,7 @@ class Camp:
         self.camp_size = camp_size
         self.params = params
         self.num_people = self.params.number_of_people_in_isoboxes + self.params.number_of_people_in_tents
-        # DONE: parameterize infection radius
-        self.infection_radius = params.infection_radius * self.camp_size
+        self.infection_radius = self.params.infection_radius * self.camp_size
         self.prob_spread = 0.1
 
         self.agents: np.array = None
@@ -370,15 +369,11 @@ class Camp:
 
         logging.debug("{} new agents were exposed through {}".format(np.count_nonzero(newly_exposed_ids), queue_name))
 
-    def update_queues(self):
+    def update_queues(self, pct_dequeue: float) -> None:
         # remove agents from the front of the queues
         for t in self.toilet_queue:
             # at each step during the day, we clear 80% of all agents in the queue
-            # DONE: how can we parameterize it?
-            # parameter: percentage_of_toilet_queue_cleared_at_each_step
-            # I am not sure if we need it but OK.
-            dequeue_count = int(np.ceil(self.percentage_of_toilet_queue_cleared_at_each_step *
-                                        len(self.toilet_queue[t])))
+            dequeue_count = int(np.ceil(pct_dequeue * len(self.toilet_queue[t])))
             try:
                 # get first `dequeue_count` agents at front of the queue
                 front = self.toilet_queue[t][:dequeue_count]
@@ -390,7 +385,7 @@ class Camp:
                 pass
         for f in self.food_line_queue:
             # at each step of the day, we clear 80% of all agents in the queue
-            dequeue_count = int(np.ceil(0.8 * len(self.food_line_queue[f])))
+            dequeue_count = int(np.ceil(pct_dequeue * len(self.food_line_queue[f])))
             try:
                 # get first `dequeue_count` agents at front of the queue
                 front = self.food_line_queue[f][:dequeue_count]

@@ -26,7 +26,7 @@ baseline,probability_spotting_symptoms_per_day,,,0.05
 baseline,clearday,,,14
 baseline,toilets_blocks,,,"12,12"
 baseline,foodline_blocks,,,"6,6"
-baseline,ethnic_group1,,,0.781
+baseline,ethnic_group1,,,0.78
 baseline,ethnic_group2,,,0.072
 baseline,ethnic_group3,,,0.07
 baseline,ethnic_group4,,,0.044
@@ -63,7 +63,7 @@ small,probability_spotting_symptoms_per_day,,,0.05
 small,clearday,,,14
 small,toilets_blocks,,,"2,2"
 small,foodline_blocks,,,"1,1"
-small,ethnic_group1,,,0.781
+small,ethnic_group1,,,0.78
 small,ethnic_group2,,,0.072
 small,ethnic_group3,,,0.07
 small,ethnic_group4,,,0.044

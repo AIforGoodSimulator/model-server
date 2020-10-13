@@ -40,37 +40,24 @@ class Moria(Camp):
     18. _init_queue()           : Initialize queues (toilets or food line) in the camp
     """
     
-    # ethnic groups and their proportions in the camp
-    # DONE: tucker model refers to 8 ethnic groups. But abm.py contained only 7. verify this.
-    # In abm.py, people count per ethnic group was mentioned. We have transformed it into proportions to work for any 
-    # population size
-    ethnic_groups = [  # [ethnic group name, proportion of people in ethnic group]
-        ['afghan', 7919 / 10135],
-        ['cameroon', 149 / 10135],
-        ['congo', 706 / 10135],
-        ['iran', 107 / 10135],
-        ['iraq', 83 / 10135],
-        ['somalia', 442 / 10135],
-        ['syria', 729 / 10135]
-    ]
-    
     def __init__(self, params: Parameters):
         super().__init__(params, CAMP_SIZE)
 
         self.P_detect = 0.0  # probability that camp manager detects agent with symptoms
         self.P_n = 0  # number of days after recovery when agent can go back to camp
 
+        # ethnic groups and their proportions in the camp
         self.ethnic_groups = [  # [ethnic group name, proportion of people in ethnic group]
-            ['ethnic_group1', params.ethnic_group1],
-            ['ethnic_group2', params.ethnic_group2],
-            ['ethnic_group3', params.ethnic_group3],
-            ['ethnic_group4', params.ethnic_group4],
-            ['ethnic_group5', params.ethnic_group5],
-            ['ethnic_group6', params.ethnic_group6],
-            ['ethnic_group7', params.ethnic_group7],
-            ['ethnic_others', params.ethnic_others]
+            ['ethnic_group1', self.params.ethnic_group1],
+            ['ethnic_group2', self.params.ethnic_group2],
+            ['ethnic_group3', self.params.ethnic_group3],
+            ['ethnic_group4', self.params.ethnic_group4],
+            ['ethnic_group5', self.params.ethnic_group5],
+            ['ethnic_group6', self.params.ethnic_group6],
+            ['ethnic_group7', self.params.ethnic_group7],
+            ['ethnic_others', self.params.ethnic_others]
         ]
-
+        assert sum([eth[1] for eth in self.ethnic_groups]) <= 1.0, "Sum of ethnic group proportions should be ~1"
 
         # This number is used to specify the amount of activities happening in the camp. More the activities, more the
         # interactions of agents in the camp
@@ -126,8 +113,6 @@ class Moria(Camp):
         # initialize toilet and food line queues
         self._init_queue("toilet", self.params.toilets_blocks[0])
         self._init_queue("food_line", self.params.foodline_blocks[0])
-        self.percentage_of_toilet_queue_cleared_at_each_step = \
-            params.percentage_of_toilet_queue_cleared_at_each_step
 
         logging.info("Shape of agents array: {}".format(agents.shape))
 
@@ -204,7 +189,7 @@ class Moria(Camp):
             self.simulate_households((activities == ACTIVITY_HOUSEHOLD) | (activities == ACTIVITY_QUARANTINED))
 
             # updating toilet and food line queues
-            self.update_queues()
+            self.update_queues(self.params.percentage_of_toilet_queue_cleared_at_each_step)
 
         # increment timer
         self.t += 1
