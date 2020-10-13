@@ -60,6 +60,18 @@ class Moria(Camp):
         self.P_detect = 0.0  # probability that camp manager detects agent with symptoms
         self.P_n = 0  # number of days after recovery when agent can go back to camp
 
+        self.ethnic_groups = [  # [ethnic group name, proportion of people in ethnic group]
+            ['ethnic_group1', params.ethnic_group1],
+            ['ethnic_group2', params.ethnic_group2],
+            ['ethnic_group3', params.ethnic_group3],
+            ['ethnic_group4', params.ethnic_group4],
+            ['ethnic_group5', params.ethnic_group5],
+            ['ethnic_group6', params.ethnic_group6],
+            ['ethnic_group7', params.ethnic_group7],
+            ['ethnic_others', params.ethnic_others]
+        ]
+
+
         # This number is used to specify the amount of activities happening in the camp. More the activities, more the
         # interactions of agents in the camp
         # DONE: parameterize it => we are given **daily** probability so: toilet + fl + wandering + hh = 4
