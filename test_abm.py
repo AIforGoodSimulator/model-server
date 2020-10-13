@@ -1,4 +1,3 @@
-import logging
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
@@ -6,6 +5,8 @@ from ai4good.runner.facade import Facade
 from ai4good.models.abm.np_impl.moria import *
 from ai4good.models.model_registry import create_params
 
+
+# Don't add info/debug logs from numba
 logging.basicConfig(level=logging.INFO)
 numba_logger = logging.getLogger('numba')
 numba_logger.setLevel(logging.WARNING)
@@ -13,12 +14,12 @@ numba_logger.setLevel(logging.WARNING)
 
 def get_params():
     _model = 'agent-based-model'
+    # Possible values: "baseline", "small", ...
     _profile = 'baseline'
     camp = 'Moria'
     overrides = '{"numberOfIterations": 1, "nProcesses": 1}'
     facade = Facade.simple()
     params = create_params(facade.ps, _model, _profile, camp, overrides)
-    # params.number_of_steps = 500
     return params
 
 
@@ -44,7 +45,7 @@ class TestRun(object):
         self.anim = None
 
         # highlight households
-        hh = self.ax.scatter(self.camp.households[:, 2], self.camp.households[:, 3], c='black', s=5)
+        self.ax.scatter(self.camp.households[:, 2], self.camp.households[:, 3], c='black', s=5)
 
         self.highlight_central_sq()
 
@@ -68,8 +69,6 @@ class TestRun(object):
         # minimum and maximum co-ordinates for central square
         p_min = (CAMP_SIZE - center_sq_side) / 2.0
         p_max = (CAMP_SIZE + center_sq_side) / 2.0
-
-        logging.info("Central square : {}->{}".format(p_min, p_max))
 
         self.ax.plot([p_min, p_max, p_max, p_min, p_min], [p_min, p_min, p_max, p_max, p_min], c='gray')
 
@@ -95,7 +94,7 @@ if __name__ == "__main__":
     # for running on console
     test.run()
 
-    # for real time plotting
+    # for real time plotting. This can be very slow for large data
     # test.plot()
     #
     # for t in range(test.camp.params.number_of_steps):

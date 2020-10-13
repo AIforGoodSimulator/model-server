@@ -187,6 +187,10 @@ class OptimizedOps(object):
 
 class Camp:
 
+    """
+    Base class for camp operations.
+    """
+
     def __init__(self, params: Parameters, camp_size: float):
         self.camp_size = camp_size
         self.params = params
@@ -231,11 +235,12 @@ class Camp:
         agents[newly_exposed_ids, A_DISEASE] = INF_EXPOSED
         agents[newly_exposed_ids, A_DAY_COUNTER] = 0
 
-        logging.debug("{} new agents were exposed through household".format(np.count_nonzero(newly_exposed_ids)))
+        logging.debug("{} new agents were exposed through household interactions".
+                      format(np.count_nonzero(newly_exposed_ids)))
 
         self.agents[ids, :] = agents
 
-    def simulate_wander(self, ids: np.array):
+    def simulate_wander(self, ids: np.array) -> None:
         """
         Simulate wandering of the agents in the camp. During wandering, agents will also infect others or get infected
         by others.
@@ -363,28 +368,31 @@ class Camp:
         self.agents[newly_exposed_ids, A_DAY_COUNTER] = 0
 
         logging.debug("{} new agents were exposed through {}".format(np.count_nonzero(newly_exposed_ids), queue_name))
-        logging.debug("{}".format(self.food_line_queue))
-        logging.debug("{}".format(self.toilet_queue))
 
     def update_queues(self):
         # remove agents from the front of the queues
         for t in self.toilet_queue:
-            # at each step of the day, we clear 80% of all agents in the queue
-            dequeue_count = int(0.8 * len(self.toilet_queue[t]))
+            # at each step during the day, we clear 80% of all agents in the queue
+            # TODO: how can we parameterize it?
+            dequeue_count = np.ceil(0.8 * len(self.toilet_queue[t]))
             try:
                 # get first `dequeue_count` agents at front of the queue
                 front = self.toilet_queue[t][:dequeue_count]
+                # remove them from the queue
                 self.toilet_queue[t] = self.toilet_queue[t][dequeue_count:]
+                # change activity status to wandering for people who left toilet
                 self.agents[front, A_ACTIVITY] = ACTIVITY_WANDERING
             except IndexError:
                 pass
         for f in self.food_line_queue:
             # at each step of the day, we clear 80% of all agents in the queue
-            dequeue_count = int(0.8 * len(self.food_line_queue[f]))
+            dequeue_count = np.ceil(0.8 * len(self.food_line_queue[f]))
             try:
                 # get first `dequeue_count` agents at front of the queue
                 front = self.food_line_queue[f][:dequeue_count]
+                # remove them from the queue
                 self.food_line_queue[f] = self.food_line_queue[f][dequeue_count:]
+                # change activity status to wandering for people who left food line
                 self.agents[front, A_ACTIVITY] = ACTIVITY_WANDERING
             except IndexError:
                 pass

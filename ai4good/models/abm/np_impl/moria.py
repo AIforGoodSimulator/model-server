@@ -1,15 +1,44 @@
+import datetime
 import pandas as pd
 from tqdm import tqdm
 from scipy.cluster.vq import kmeans
 
 from ai4good.models.abm.np_impl.model import *
 from ai4good.models.abm.initialise_parameters import Parameters
-from ai4good.models.abm.mesa_impl.utils import read_age_gender, get_incubation_period
+from ai4good.models.abm.np_impl.utils import get_incubation_period, read_age_gender
 
 CAMP_SIZE = 100.0
 
 
 class Moria(Camp):
+    """
+    Implementation of Moria camp for ABM.
+    Methods defined:
+    ----------------
+    1. simulate()               : To start simulation. Internally calls day() to simulate each day
+    2. day()                    : Simulate each day in Moria camp
+    3. get_activities()         : Get the activities to be performed by each agent on each day
+    4. stop_simulation()        : Get flag to check if simulation can be stopped
+    5. intervention_transmission_reduction()
+                                : To apply intervention to reduce transmission probability
+    6. intervention_sectoring() : To apply intervention to add sectors in camp where each sector has its own food line
+    7. intervention_lockdown()  : To apply intervention to update home ranges of agents
+    8. intervention_isolation() : To apply intervention to isolate agents with symptoms by camp managers
+    9. intervention_social_distancing()
+                                : Not implemented yet! This will apply social distancing between agents
+    10. detect_and_isolate()    : To simulate isolation intervention on each day (camp->isolation). Also referred as
+                                  quarantine.
+    11. check_and_deisolate()   : To simulate deisolation (isolation->camp)
+    12. save_progress()         : To save the progress of the simulation in a .csv file
+    13. _assign_households_to_agents()
+                                : Assign households to each agent by clustering agents with same ethnicity
+    14. _get_households()       : Get households information in the moria camp
+    15. _get_iso_boxes()        : Get iso-boxes information in the moria camp
+    16. _get_tents()            : Get tents information in the moria camp
+    17. _assign_ethnicity_to_agents()
+                                : Based on data defined in `ethnic_groups`, assign ethnicity to the agents of the camp
+    18. _init_queue()           : Initialize queues (toilets or food line) in the camp
+    """
     
     # ethnic groups and their proportions in the camp
     # TODO: tucker model refers to 8 ethnic groups. But abm.py contained only 7. verify this.
@@ -36,6 +65,7 @@ class Moria(Camp):
         # TODO: parameterize it
         self.num_activities = 10
 
+        # number of days passed in simulation
         self.t = 0
 
         # get households in the moria camp
@@ -82,18 +112,24 @@ class Moria(Camp):
         self.set_agents(agents)
 
         # initialize toilet and food line queues
-        self._init_queues("toilet", self.params.toilets_blocks[0])
-        self._init_queues("food_line", self.params.foodline_blocks[0])
+        self._init_queue("toilet", self.params.toilets_blocks[0])
+        self._init_queue("food_line", self.params.foodline_blocks[0])
 
-        logging.info("Agents: {}".format(agents.shape))
+        logging.info("Shape of agents array: {}".format(agents.shape))
 
-        self.data_collector = pd.DataFrame({
+        # Name of the file to store progress
+        self.progress_file_name = "abm_moria_{}.csv".format(
+            datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")
+        )
+        # Initialize progress dataset
+        data_collector = pd.DataFrame({
             'DAY': [],
             'SUSCEPTIBLE': [], 'EXPOSED': [], 'PRESYMPTOMATIC': [], 'SYMPTOMATIC': [], 'MILD': [], 'SEVERE': [],
             'ASYMPTOMATIC1': [], 'ASYMPTOMATIC2': [], 'RECOVERED': [],
             'HOSPITALIZED': []
         })
-        self.data_collector.to_csv("abm_progress.csv", index=False)
+        # Save initialized progress to file
+        data_collector.to_csv(self.progress_file_name, index=False)
 
     def simulate(self):
         # Run simulation on Moria camp
@@ -271,7 +307,7 @@ class Moria(Camp):
         self.agents[in_food_line, A_ACTIVITY] = ACTIVITY_HOUSEHOLD  # send people back to their households
 
         # initialize food lines based on `sector` parameter
-        self._init_queues("food_line", sector_size)
+        self._init_queue("food_line", sector_size)
 
     def intervention_lockdown(self, rl, wl):
         # Some countries have attempted to limit the spread of COVID-19 by requiring people to stay in or close to
@@ -311,30 +347,36 @@ class Moria(Camp):
         self.P_detect = b
         self.P_n = n
 
-    def detect_and_isolate(self):
-        # Check if agent needs to be quarantined
-        # An agent in the camp who is showing symptoms can be quarantined with some probability
-        # The detected agent will be removed along with its household
+    def intervention_social_distancing(self, degree):
+        # TODO: Apply a repel force between each agent outside the household to simulate social distancing
+        pass
 
-        # create filter
+    def detect_and_isolate(self):
+        # Check if agent needs to be quarantined.
+        # An agent in the camp who is showing symptoms can be quarantined with some probability.
+        # The detected agent will be removed along with its household.
+
+        # create filter for agents in the camp who are showing symptoms and are detected by camp managers
         detected_agent_filter = (self.agents[:, A_ACTIVITY] != ACTIVITY_QUARANTINED) & \
                                 (OptimizedOps.showing_symptoms(self.agents[:, A_DISEASE])) & \
                                 (np.random.random((self.num_people,)) <= self.P_detect)
 
-        # get households shared by the agents. TODO: can be cached?
         # get household position of all agents
         hh = self.agents[:, [A_HOUSEHOLD_X, A_HOUSEHOLD_Y]]
         # get boolean matrix indicating households sharing by the agents
         # `sharing_hh[i, j]` = 1  when agent `i` and `j` share household, else 0
+        # TODO: can be cached instead of recalculation since household is fixed per agent?
         sharing_hh = OptimizedOps.distance_matrix(hh) <= SMALL_ERROR
 
         # Get all agents to be isolated
         # Take all the households and filter out the ones where a symptomatic agent is detected by the camp manager.
-        # Each element `sharing_hh[i, j]` will be 1 if agent `i` is detected by the camp manager and agent `j` is
-        # sharing the household with `i` hence will be isolated too
-        sharing_hh = sharing_hh * detected_agent_filter.reshape((-1, 1))
+        # Each element `sharing_hh[i, j]` will be 1 if agent `i` with symptoms is detected by the camp manager OR agent
+        # `j` is sharing the household with `i` hence will be isolated too
+        sharing_hh = sharing_hh | detected_agent_filter.reshape((-1, 1))
 
+        # Get all agents who either are detected or share household with detected agent
         isolate_agent_filter = np.sum(sharing_hh, axis=0) > 0.0
+        # Isolate all of them
         self.agents[isolate_agent_filter, A_ACTIVITY] = ACTIVITY_QUARANTINED
 
     def check_and_deisolate(self):
@@ -371,7 +413,11 @@ class Moria(Camp):
         self.agents[num_hh_mates == num_hh_mates_to_deisolate, A_ACTIVITY] = ACTIVITY_HOUSEHOLD
 
     def save_progress(self):
-        self.data_collector = pd.read_csv("abm_progress.csv")
+        # Function to save the progress of the simulation at any time step
+
+        # First, read the previously saved progress
+        data_collector = pd.read_csv(self.progress_file_name)
+        # Add latest day progress in the data set
         row = [self.t,
                np.count_nonzero(self.agents[:, A_DISEASE] == INF_SUSCEPTIBLE),
                np.count_nonzero(self.agents[:, A_DISEASE] == INF_EXPOSED),
@@ -384,8 +430,9 @@ class Moria(Camp):
                np.count_nonzero(self.agents[:, A_DISEASE] == INF_RECOVERED),
                np.count_nonzero(self.agents[:, A_ACTIVITY] == ACTIVITY_HOSPITALIZED)
                ]
-        self.data_collector.loc[self.data_collector.shape[0]] = row
-        self.data_collector.to_csv("abm_progress.csv", index=False)
+        data_collector.loc[data_collector.shape[0]] = row
+        # Save the progress
+        data_collector.to_csv(self.progress_file_name, index=False)
 
     def _assign_households_to_agents(self, households: np.array, agents_ethnic_groups: np.array) -> np.array:
         # assign households to agents based on capacity
@@ -580,7 +627,17 @@ class Moria(Camp):
         return pos  # return tents co-ordinates
 
     def _assign_ethnicity_to_agents(self):
-        # assign ethnicity to agents of the camp based on `ethnic_groups` array
+        """
+        Assign ethnicity to agents of the camp based on `ethnic_groups` list.
+        Ethnic groups are defined in `ethnic_groups` list. Agents in the camp are assigned ethnicity based on the
+        proportion of the ethnic population. For example, if 0.1 proportion of the population is Afghan, then ~`N`/10
+        agents will be assigned Afghan ethnicity where `N` is the total number of agents in the camp.
+
+        This is slight variation from tucker model. Originally, each household was assigned an ethnicity and households
+        with similar ethnicity were clustered.
+        Now, ethnicity is assigned for each agent (based on given data) and agents will form spatial clusters in the
+        camp during `_assign_households_to_agents` function call.
+        """
 
         # number of ethnic groups
         num_eth = len(self.ethnic_groups)
@@ -592,7 +649,7 @@ class Moria(Camp):
         o = 0  # counter for `out`
 
         for i, grp in enumerate(self.ethnic_groups):
-            # calculate number of people in ethnic group from percentage
+            # calculate number of people in ethnic group from proportion
             grp_ppl_count = int(grp[1] * self.num_people)
             # assign calculated number of people to ethnic group `grp`
             out[o: o + grp_ppl_count] = i
@@ -606,8 +663,21 @@ class Moria(Camp):
         np.random.shuffle(out)
         return out
 
-    def _init_queues(self, queue_name, grid_size):
-        # initialize queues
+    def _init_queue(self, queue_name, grid_size) -> None:
+        """
+        Initialize a queue (toilet or food line).
+        Steps for initialization:
+            1. Uniformly position queues throughout the camp
+            2. Mark all queues as empty in the beginning i.e. no person is standing/waiting in the line
+            3. Find the queue nearest to each agent's household and assign it to him/her. The agent will always use
+                the assigned queue.
+
+        Parameters
+        ----------
+        queue_name: Name of the queue to initialize. Possible values are "toilet" and "food_line"
+        grid_size: Number of grids for uniform distribution of queues throughout the camp
+
+        """
 
         if queue_name == "toilet":
             # add toilets to the camp
