@@ -23,6 +23,8 @@ class MyTestCase(unittest.TestCase):
         params = get_params()
         mod = mm.Camp(params=params)
 
+        test = 1
+
         np.savetxt('agents_age.csv', mod.agents_age, delimiter=',', header='agent_age')
         np.savetxt('agents_disease_states.csv', mod.agents_disease_states, delimiter=',',
                    header='agents_disease_states')
@@ -48,19 +50,21 @@ class MyTestCase(unittest.TestCase):
         np.savetxt('households.csv', mod.households, delimiter=',',
                    header='households1,households2')
 
-        print("people_count: " + str(mod.people_count))
-        print("running: " + str(mod.running))
+        np.savetxt('agents_ethnic_groups.csv', mod.agents_ethnic_groups, delimiter=',',
+                   header='agents_ethnic_groups')
+        # print("people_count: " + str(mod.people_count))
+        # print("running: " + str(mod.running))
 
-        np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
-                   header='agents_incubation_periods')
-        np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
-                   header='agents_incubation_periods')
-        np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
-                   header='agents_incubation_periods')
+        # np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
+        #            header='agents_incubation_periods')
+        # np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
+        #            header='agents_incubation_periods')
+        # np.savetxt('agents_incubation_periods.csv', mod.agents_incubation_periods, delimiter=',',
+        #            header='agents_incubation_periods')
 
-        print("ethnic groups: " + mod.agents_ethnic_groups)
+        # print("ethnic groups: " + mod.agents_ethnic_groups)
 
-        print("agents_ethnic_groups: " + str(mod.agents_ethnic_groups))
+        # print("agents_ethnic_groups: " + str(mod.agents_ethnic_groups))
 
 
         print(mod)

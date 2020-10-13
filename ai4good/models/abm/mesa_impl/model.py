@@ -97,12 +97,12 @@ class Camp(Model, CampHelper):
 
         # There are 144 toilets evenly distributed throughout the camp. Toilets are placed at the centres of the
         # squares that form a 12 x 12 grid covering the camp (baseline)
-        self.toilets = self._position_blocks(self.params.toilets_blocks[0])
+        self.toilets = self.position_blocks(self.params.toilets_blocks[0])
         self.toilets_queue = {}  # dict containing toilet_id: [ list of agents unique ids ] for toilet occupancy
 
         # The camp has one food line (baseline)
         # each person going to the food line to collect food will enter this queue
-        self.foodlines = self._position_blocks(self.params.foodline_blocks[0])  # initial food lines
+        self.foodlines = self.position_blocks(self.params.foodline_blocks[0])  # initial food lines
         self.foodline_queue = {}  # dict containing foodline_id: [ list of agents unique ids ] who are standing in line
 
         # mesa_impl scheduler
