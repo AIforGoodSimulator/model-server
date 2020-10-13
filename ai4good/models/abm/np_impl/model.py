@@ -373,8 +373,11 @@ class Camp:
         # remove agents from the front of the queues
         for t in self.toilet_queue:
             # at each step during the day, we clear 80% of all agents in the queue
-            # TODO: how can we parameterize it?
-            dequeue_count = int(np.ceil(0.8 * len(self.toilet_queue[t])))
+            # DONE: how can we parameterize it?
+            # parameter: percentage_of_toilet_queue_cleared_at_each_step
+            # I am not sure if we need it but OK.
+            dequeue_count = int(np.ceil(self.percentage_of_toilet_queue_cleared_at_each_step *
+                                        len(self.toilet_queue[t])))
             try:
                 # get first `dequeue_count` agents at front of the queue
                 front = self.toilet_queue[t][:dequeue_count]

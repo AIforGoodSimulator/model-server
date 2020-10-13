@@ -41,7 +41,7 @@ class Moria(Camp):
     """
     
     # ethnic groups and their proportions in the camp
-    # TODO: tucker model refers to 8 ethnic groups. But abm.py contained only 7. verify this.
+    # Tucker model refers to 8 ethnic groups. But abm.py contained only 7. verify this.
     # In abm.py, people count per ethnic group was mentioned. We have transformed it into proportions to work for any 
     # population size
     ethnic_groups = [  # [ethnic group name, proportion of people in ethnic group]
@@ -57,13 +57,24 @@ class Moria(Camp):
     def __init__(self, params: Parameters):
         super().__init__(params, CAMP_SIZE)
 
+        self.ethnic_groups = [
+            'ethnic_group1', params.ethnic_group1,
+            'ethnic_group2', params.ethnic_group2,
+            'ethnic_group3', params.ethnic_group3,
+            'ethnic_group4', params.ethnic_group4,
+            'ethnic_group5', params.ethnic_group5,
+            'ethnic_group6', params.ethnic_group6,
+            'ethnic_group7', params.ethnic_group7,
+            'ethnic_others', params.ethnic_others
+        ]
+
         self.P_detect = 0.0  # probability that camp manager detects agent with symptoms
         self.P_n = 0  # number of days after recovery when agent can go back to camp
 
         # This number is used to specify the amount of activities happening in the camp. More the activities, more the
         # interactions of agents in the camp
-        # TODO: parameterize it
-        self.num_activities = 10
+        # DONE: parameterize it => I should be static: toilet + food + wandering + house = 4
+        self.num_activities = 4
 
         # number of days passed in simulation
         self.t = 0
@@ -114,6 +125,10 @@ class Moria(Camp):
         # initialize toilet and food line queues
         self._init_queue("toilet", self.params.toilets_blocks[0])
         self._init_queue("food_line", self.params.foodline_blocks[0])
+        self.percentage_of_toilet_queue_cleared_at_each_step = \
+            self.params.percentage_of_toilet_queue_cleared_at_each_step
+
+        self.shared_households = []
 
         logging.info("Shape of agents array: {}".format(agents.shape))
 
@@ -141,6 +156,15 @@ class Moria(Camp):
         # self.intervention_sectoring(self.params.foodline_blocks)
         # 4. Apply lockdown
         # self.intervention_lockdown()
+
+    def get_shared_households(self):
+        if len(self.shared_households) == 0:
+            hh = self.agents[:, [A_HOUSEHOLD_X, A_HOUSEHOLD_Y]]
+            sharing_hh = OptimizedOps.distance_matrix(hh) <= SMALL_ERROR
+            self.shared_households = sharing_hh
+            return self.shared_households
+        else:
+            return self.shared_households
 
     def simulate(self):
         # Run simulation on Moria camp
@@ -361,7 +385,8 @@ class Moria(Camp):
         self.P_n = n
 
     def intervention_social_distancing(self, degree):
-        # TODO: Apply a repel force between each agent outside the household to simulate social distancing
+        # DONE: Apply a repel force between each agent outside the household to simulate social distancing
+        # There is no probabilities/implementation in Tucker's model so no need to implement this.
         pass
 
     def detect_and_isolate(self):
@@ -374,12 +399,15 @@ class Moria(Camp):
                                 (OptimizedOps.showing_symptoms(self.agents[:, A_DISEASE])) & \
                                 (np.random.random((self.num_people,)) <= self.P_detect)
 
+
         # get household position of all agents
-        hh = self.agents[:, [A_HOUSEHOLD_X, A_HOUSEHOLD_Y]]
+        # hh = self.agents[:, [A_HOUSEHOLD_X, A_HOUSEHOLD_Y]]
         # get boolean matrix indicating households sharing by the agents
         # `sharing_hh[i, j]` = 1  when agent `i` and `j` share household, else 0
-        # TODO: can be cached instead of recalculation since household is fixed per agent?
-        sharing_hh = OptimizedOps.distance_matrix(hh) <= SMALL_ERROR
+        # can be cached instead of recalculation since household is fixed per agent?
+        # DONE: Replaced with a function
+        # sharing_hh = OptimizedOps.distance_matrix(hh) <= SMALL_ERROR
+        sharing_hh = self.get_shared_households()
 
         # Get all agents to be isolated
         # Take all the households and filter out the ones where a symptomatic agent is detected by the camp manager.

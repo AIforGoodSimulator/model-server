@@ -91,7 +91,17 @@ class Parameters:
         self.ethnical_corellations = abm.create_ethnic_groups(self.households_location, self.relative_strength_of_interaction)
         self.local_interaction_space = abm.interaction_neighbours(self.households_location, self.smaller_movement_radius, self.larger_movement_radius, self.overlapping_rages_radius, self.ethnical_corellations)
 
+        self.ethnic_group1 = float(profile.loc['ethnic_group1', 'Value'])
+        self.ethnic_group2 = float(profile.loc['ethnic_group2', 'Value'])
+        self.ethnic_group3 = float(profile.loc['ethnic_group3', 'Value'])
+        self.ethnic_group4 = float(profile.loc['ethnic_group4', 'Value'])
+        self.ethnic_group5 = float(profile.loc['ethnic_group5', 'Value'])
+        self.ethnic_group6 = float(profile.loc['ethnic_group6', 'Value'])
+        self.ethnic_group7 = float(profile.loc['ethnic_group7', 'Value'])
+        self.ethnic_others = float(profile.loc['ethnic_others', 'Value'])
 
+        self.percentage_of_toilet_queue_cleared_at_each_step = \
+            float(profile.loc['percentage_of_toilet_queue_cleared_at_each_step', 'Value'])
 
         self.control_dict = {}
 
