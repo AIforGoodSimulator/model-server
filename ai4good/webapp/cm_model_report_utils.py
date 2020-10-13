@@ -65,137 +65,30 @@ def prevalence_all_table(df):
     data = {'Outcome': outcome, 'Peak Day IQR': peak_day, 'Peak Number IQR': peak_number}
     return pd.DataFrame.from_dict(data)
 
+def get_quantile_report(x):
+    return x.stack().groupby(level=-1).quantile([.25, .75])\
+        .apply(round).astype(int).astype(str).groupby(level=0).apply(lambda x: DIGIT_SEP.join(x.values))
+
 @timing
 def prevalence_age_table(df):
     # calculate age specific Peak Day IQR and Peak Number IQR for each of the 'prevalent' variables to contruct table
-    table_params = ['Infected (symptomatic)', 'Hospitalised', 'Critical']
+    df = df.filter(regex='^Time$|^R0$|^latentRate$|^removalRate$|^hospRate$|^deathRateICU$|^deathRateNoIcu$|^Infected \(symptomatic\)|^Hospitalised|^Critical')
     grouped = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])
-    prevalent_age = {}
-    params_age = []
-    for index, group in grouped:
-        # for each RO value find out the peak days for each table params
-        group = group.set_index('Time')
-        prevalent = {}
-        for param in table_params:
-            for column in df.columns:
-                if column.startswith(param):
-                    prevalent[column] = (group.loc[:, column].idxmax(), group.loc[:, column].max())
-                    params_age.append(column)
-        prevalent_age[index] = prevalent
-    params_age_dedup = list(set(params_age))
-    prevalent_age_bucket = {}
-    for elem in prevalent_age.values():
-        for key, value in elem.items():
-            if key in prevalent_age_bucket:
-                prevalent_age_bucket[key].append(value)
-            else:
-                prevalent_age_bucket[key] = [value]
-    iqr_table_age = {}
-    for key, value in prevalent_age_bucket.items():
-        day = [x[0] for x in value]
-        number = [x[1] for x in value]
-        q75_day, q25_day = np.percentile(day, [75, 25])
-        q75_number, q25_number = np.percentile(number, [75, 25])
-        iqr_table_age[key] = (
-            (int(round(q25_day)), int(round(q75_day))), (int(round(q25_number)), int(round(q75_number))))
+    peak_days = get_quantile_report(grouped.apply(lambda x: x.set_index('Time').idxmax()))
+    peak_numbers = get_quantile_report(grouped.max().drop(['Time'], axis=1))
+
+    resultdf = pd.DataFrame.from_dict({'Peak Day, IQR': peak_days, 'Peak Number, IQR': peak_numbers})
+
     arrays = [np.array(['Incident Cases']*9 + ['Hospital Demand']*9 + ['Critical Demand']*9),
               np.array(
                   ['all ages', '<9 years', '10-19 years', '20-29 years', '30-39 years', '40-49 years', '50-59 years',
                    '60-69 years', '70+ years']*3)]
-    peak_day = np.empty(27, dtype="S10")
-    peak_number = np.empty(27, dtype="S10")
-    for key, item in iqr_table_age.items():
-        if key == 'Infected (symptomatic)':
-            peak_day[0] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-            peak_number[0] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-        elif key == 'Hospitalised':
-            peak_day[9] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-            peak_number[9] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-        elif key == 'Critical':
-            peak_day[18] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-            peak_number[18] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-        elif '0-9' in key:
-            if key.startswith('Infected (symptomatic)'):
-                peak_day[1] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[1] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Hospitalised'):
-                peak_day[10] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[10] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Critical'):
-                peak_day[19] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[19] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-        elif '10-19' in key:
-            if key.startswith('Infected (symptomatic)'):
-                peak_day[2] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[2] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Hospitalised'):
-                peak_day[11] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[11] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Critical'):
-                peak_day[20] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[20] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-        elif '20-29' in key:
-            if key.startswith('Infected (symptomatic)'):
-                peak_day[3] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[3] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Hospitalised'):
-                peak_day[12] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[12] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Critical'):
-                peak_day[21] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[21] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-        elif '30-39' in key:
-            if key.startswith('Infected (symptomatic)'):
-                peak_day[4] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[4] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Hospitalised'):
-                peak_day[13] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[13] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Critical'):
-                peak_day[22] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[22] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-        elif '40-49' in key:
-            if key.startswith('Infected (symptomatic)'):
-                peak_day[5] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[5] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Hospitalised'):
-                peak_day[14] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[14] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Critical'):
-                peak_day[23] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[23] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-        elif '50-59' in key:
-            if key.startswith('Infected (symptomatic)'):
-                peak_day[6] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[6] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Hospitalised'):
-                peak_day[15] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[15] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Critical'):
-                peak_day[24] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[24] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-        elif '60-69' in key:
-            if key.startswith('Infected (symptomatic)'):
-                peak_day[7] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[7] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Hospitalised'):
-                peak_day[16] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[16] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Critical'):
-                peak_day[25] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[25] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-        elif '70+' in key:
-            if key.startswith('Infected (symptomatic)'):
-                peak_day[8] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[8] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Hospitalised'):
-                peak_day[17] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[17] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-            elif key.startswith('Critical'):
-                peak_day[26] = f'{iqr_table_age[key][0][0]}{DIGIT_SEP}{iqr_table_age[key][0][1]}'
-                peak_number[26] = f'{iqr_table_age[key][1][0]}{DIGIT_SEP}{iqr_table_age[key][1][1]}'
-    d = {'Peak Day, IQR': peak_day.astype(str), 'Peak Number, IQR': peak_number.astype(str)}
-    return pd.DataFrame(data=d, index=arrays)
+    sorted_index = resultdf.sort_index().index.values
+    my_comp_order = ['Infected (symptomatic)', 'Hospitalised', 'Critical']
+    my_sorted_index = sum([list(filter(lambda column: comp in column, sorted_index)) for comp in my_comp_order], [])
+    sortedresultdf = resultdf.reindex(index=my_sorted_index)
+    sortedresultdf.index = pd.MultiIndex.from_arrays(arrays)
+    return sortedresultdf
 
 @timing
 def cumulative_all_table(df, population, camp_params):
