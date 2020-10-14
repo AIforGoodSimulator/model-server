@@ -78,7 +78,7 @@ def profile_selector():
                 'row_index': 2,  # number | 'odd' | 'even'
                 'column_id': 'Start Time'
             },
-              'border': '1px solid rgb(0,0,0)',
+            'border': '1px solid rgb(0,0,0)',
             'backgroundColor': 'rgb(240, 240, 240)',
             'color': 'black'
         },
@@ -244,9 +244,9 @@ def model_run_buttons():
     return html.Div([
         dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True),
         dbc.Button("See Results", id="model_results_button", color="success", className="mr-1",
-                   target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'),
+            target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'),
         dbc.Button("See Report", id="model_report_button", color="success", className="mr-1",
-                   disabled=True, key='model_report_button_key'),
+            disabled=True, key='model_report_button_key'),
         dbc.Toast(
             [],
             id="run_model_toast",
