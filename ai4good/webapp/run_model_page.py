@@ -8,7 +8,7 @@ from ai4good.webapp.model_runner import ModelScheduleRunResult
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_table
-
+import csv
 
 def camp_selector():
     return dbc.Row([
@@ -62,10 +62,165 @@ def profile_selector():
             dash_table.DataTable(
                 id='profile_table',
                 columns=[],
-                data=[]
+                data=[],
+                style_data_conditional=[
+            {
+            'if': {
+                'column_id': 'Value'
+            },
+
+            'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+           {
+            'if': {
+                'row_index': 2,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+              'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+           {
+            'if': {
+                'row_index': 4,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+             'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+          {
+            'if': {
+                'row_index': 0,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+            'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+          {
+            'if': {
+                'row_index': 1,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 3,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 5,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 6,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 7,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 8,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 0,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+              'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+          {
+            'if': {
+                'row_index': 2,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+              'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black',
+        },
+           {
+            'if': {
+                'row_index': 4,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+              'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+           {
+            'if': {
+                'row_index': 1,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 3,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 5,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 6,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 7,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 8,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'column_editable': False
+            },
+           'cursor':'not-allowed'
+        },], 
+                tooltip{}   
             ),
-            dbc.Button("Save", id="save_profile_button",outline=True, color="info", className="mr-1",
-                       style={'display': 'none'})
+            dbc.Button("Save", id="save_profile_button", color="primary", className="mr-1", disabled=True,
+                       style={'display': 'none'}, outline=True)
         ]))], style={'height': '100%'}), width=6),
 
         dbc.Modal([
@@ -124,13 +279,10 @@ def model_run_buttons():
 def history_table():
     cols = model_runner.history_columns()
 
-    return html.Div([
-        dbc.Row([
-         html.H3('Run Queue ')
-        ], style={'margin-top': 100, 'margin-left': 15,'color':'Black','border':'10px'}),
-        dbc.Row([
+    return dbc.Row([
         dbc.Col(
             html.Div([
+                html.H3('Run Queue'),
                 dash_table.DataTable(
                     id='history_table',
                     columns=[{"name": i, "id": i} for i in cols],
@@ -153,9 +305,7 @@ def history_table():
             ],style={'margin-left':20}),
             width=6,
         )
-    ])
-    ])
-
+    ], style={'margin-top': 100, 'margin-left': 5})
 
 def nav_bar():
     return dbc.NavbarSimple(
@@ -168,7 +318,6 @@ def nav_bar():
         color="primary",
         dark=True,
     )
-
 
 layout = html.Div(
     [
@@ -186,6 +335,12 @@ layout = html.Div(
     ], style={'margin': 10}
 )
 
+def findToolTip(query):
+    with open('fs\params\Parameters_mouse-over_des.csv', encoding='utf-8') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        for row in csv_reader:
+            if query == row["Parameter"]:
+                return row["Description"]
 
 @dash_app.callback(
     Output('camp-info', 'children'),
@@ -211,13 +366,14 @@ def update_model_info(value):
 @dash_app.callback(
     [Output('profile_help', 'children'),
      Output('profile_table', 'columns'), Output('profile_table', 'data'),
-     Output('save_profile_button', 'style')],
+     Output('save_profile_button', 'style'),
+     Output('profile_table', 'tooltip_data')],
     [Input('model-dropdown', 'value'), Input('profile-dropdown', 'value')])
 def update_profile_info(model, profile):
     if model is not None and profile is not None:
         df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
-        return '', [{"name": i, "id": i, 'editable': i != 'Parameter'} for i in df.columns], \
-               df.to_dict('records'), {'float': 'right', 'margin-top': 12}
+        return '', [{"name": i, "id": i, 'editable': i != 'Parameter'} for i in df.columns],
+               df.to_dict('records'), {'float': 'right', 'margin-top': 12}, [{c:{'type': 'text','value': findToolTip(r)} for c in df.columns}for r in df[df.columns[0]].values]
     else:
         return ['Select profile', [], [], {'display': 'none'}]
 
@@ -367,4 +523,3 @@ def on_run_report_button_click(n_open, n_show, n_cancel, is_open, model, profile
 def update_run_report_link(interventions, model, profile, camp):
     p = "&".join(map(lambda i: f'intervention={i}', interventions))
     return f'/sim/report?model={model}&profile={profile}&camp={camp}&{p}',
-
