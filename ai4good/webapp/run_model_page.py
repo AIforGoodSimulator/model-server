@@ -148,8 +148,8 @@ def profile_selector():
                 'column_id': 'End Time'
             },
               'border': '1px solid rgb(0,0,0)',
-              'backgroundColor': 'rgb(240, 240, 240)',
-              'color': 'black'
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
         },
           {
             'if': {
@@ -217,7 +217,7 @@ def profile_selector():
             },
            'cursor':'not-allowed'
         },], 
-                tooltip{}   
+                tooltip = {}
             ),
             dbc.Button("Save", id="save_profile_button", color="primary", className="mr-1", disabled=True,
                        style={'display': 'none'}, outline=True)
@@ -336,7 +336,7 @@ layout = html.Div(
 )
 
 def findToolTip(query):
-    with open('fs\params\Parameters_mouse-over_des.csv', encoding='utf-8') as csv_file:
+    with open('fs/params/Parameters_mouse-over_des.csv', encoding='utf-8') as csv_file:
         csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
             if query == row["Parameter"]:
@@ -372,8 +372,8 @@ def update_model_info(value):
 def update_profile_info(model, profile):
     if model is not None and profile is not None:
         df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
-        return '', [{"name": i, "id": i, 'editable': i != 'Parameter'} for i in df.columns],
-               df.to_dict('records'), {'float': 'right', 'margin-top': 12}, [{c:{'type': 'text','value': findToolTip(r)} for c in df.columns}for r in df[df.columns[0]].values]
+        return '', [{"name": i, "id": i, 'editable': i != 'Parameter'} for i in df.columns], \
+            df.to_dict('records'), {'float': 'right', 'margin-top': 12}, [{c:{'type': 'text','value': findToolTip(r)} for c in df.columns}for r in df[df.columns[0]].values] 
     else:
         return ['Select profile', [], [], {'display': 'none'}]
 
