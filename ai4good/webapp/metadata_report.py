@@ -10,12 +10,18 @@ def GenerateMetadataDict(model_id, camp, profile, model_runner, additional_metad
             successes_df = history_df.drop(history_df[history_df.Details != "Success"].index) #Only keep rows where a model has finished running.
             current_model_successes_df = successes_df.drop(successes_df[successes_df.Key != str((model_id, profile, camp))].index).reset_index() #Only keep rows which meet the parameters of the report.
             model_finish_time = current_model_successes_df["Time"][0] #Select the most recent model run (the report page only shows the most recent) finish time.
+            try:
+                version_date = current_model_successes_df["Version Date"][0] # Select the most recent model run (the report page only shows the most recent) finish time.
+            # Avoids error when generating a report that was not generated to store the version date
+            except:
+                version_date = "Unavailable"
+
             started_df = history_df.drop(history_df[history_df.Status != "ModelRunResult.RUNNING"].index) #May be used in future to display the time the model was started.
         else:
             started_df = "Unknown" #No results in the history_df.
     except:
         started_df = "Unknown" #Some other error occured when trying to find the model finish time.
-    metadata = {"Model ID": model_id, "Camp": camp, "Profile": profile, "Time Model Finished": model_finish_time, "Time Report Generated": current_time.strftime("%Y-%m-%d %H:%M:%S.%f")} #Add the metadata to a dictionary.
+    metadata = {"Model ID": model_id, "Camp": camp, "Profile": profile, "Time Model Finished": model_finish_time, "Time Report Generated": current_time.strftime("%Y-%m-%d %H:%M:%S.%f"), "Version Date": version_date} #Add the metadata to a dictionary.
     if type(additional_metadata) is dict and additional_metadata != None:
         for key, value in dict.items():
             metadata[key] = value #Add any additional metadata to the dictionary which was passed into the function.
