@@ -17,22 +17,22 @@ layout = html.Div(
  
         html.Div([
             dbc.Container([
-                    dbc.Row(
-                        dbc.Col(
-                            dbc.Card([
-                                    html.H4('Login',className='card-title'),
-                                    dbc.Input(id='login-email',placeholder='User'),
-                                    html.Br(),
-                                    dbc.Input(id='login-password',placeholder='Password',type='password'),
-                                    dbc.Button('Log-in',id='login-button',color='success',block=True),
-                                    html.Br(),
-                                    html.Div(id='login-alert')
-                                ], body=True
-                            ), width=3
-                        ), justify='center'
-                    )
-                ]
-            )
+                dbc.Row(
+                    dbc.Col(
+                        dbc.Card([
+                            html.H4('Login', className='card-title'),
+                            html.P('Welcome to AI for Good Simulator for COVID-19', className='card-text'),
+                            dbc.Input(id='login-email', placeholder='User'),
+                            html.Br(),
+                            dbc.Input(id='login-password', placeholder='Password', type='password'),
+                            dbc.Button('Log-in', id='login-button', color='success', href='/sim/input_page_1', block=True),
+                            html.Br(),
+                            html.Div(id='login-alert')
+                            ], body=True
+                        ), width=3
+                    ), justify='center'
+                )
+            ])
         ])
     ]
 )
