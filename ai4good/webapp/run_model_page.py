@@ -79,8 +79,8 @@ def profile_selector():
                 'column_id': 'Start Time'
             },
               'border': '1px solid rgb(0,0,0)',
-            'backgroundColor': 'rgb(240, 240, 240)',
-            'color': 'black'
+              'backgroundColor': 'rgb(240, 240, 240)',
+              'color': 'black'
         },
            {
             'if': {
@@ -88,8 +88,8 @@ def profile_selector():
                 'column_id': 'Start Time'
             },
              'border': '1px solid rgb(0,0,0)',
-            'backgroundColor': 'rgb(240, 240, 240)',
-            'color': 'black'
+             'backgroundColor': 'rgb(240, 240, 240)',
+             'color': 'black'
         },
           {
             'if': {
