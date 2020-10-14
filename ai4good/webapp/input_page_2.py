@@ -42,7 +42,7 @@ layout = html.Div(
                             html.P('70 years or older', className='card-text'),
                             dbc.Input(id='Age-percentage-70+', placeholder='Required', type='number', min=0, max=100, step=1),                            
                             html.Br(),
-                            dbc.Button('Next', id='page-2-button', color='success', href='/sim/input_page_3', block=True),
+                            dbc.CardFooter(dbc.Button('Next', id='page-2-button', color='dark', href='/sim/input_page_3')),
                             html.Br(),
                             html.Div(id='input-page-2-alert')
                             ], body=True
