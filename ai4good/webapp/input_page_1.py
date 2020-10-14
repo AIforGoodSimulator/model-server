@@ -21,6 +21,7 @@ layout = html.Div(
                     dbc.Col(
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
+                            html.Center(html.Img(src='/static/placeholder286x180.png', title='Step 1 of 4', style={'width':'50%'})), 
                             html.P('Fill in the fllowing fields to provide data in order to run the simulation',className='card-text'),
                             html.H5('Settlement information', className='card-text'),
                             html.P('Name of Settlement', className='card-text'),

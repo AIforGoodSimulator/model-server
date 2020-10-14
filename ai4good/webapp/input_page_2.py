@@ -21,6 +21,7 @@ layout = html.Div(
                     dbc.Col(
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
+                            html.Center(html.Img(src='/static/placeholder286x180.png', title='Step 2 of 4', style={'width':'50%'})), 
                             html.P('Enter the percentage of the total population that each range represents',className='card-text'),
                             html.H5('Age Distribution (%)', className='card-text'),
                             html.P('0 - 5 years', className='card-text'),
