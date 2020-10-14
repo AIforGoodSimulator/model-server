@@ -10,11 +10,10 @@ from ai4good.webapp.model_runner import ModelScheduleRunResult
 from dash.dependencies import Input, Output, State
 import dash_table
 
-
 layout = html.Div(
     [
         run_model_page.nav_bar(),
- 
+        
         html.Div([
             dbc.Container([
                 dbc.Row(
@@ -25,15 +24,14 @@ layout = html.Div(
                             dbc.Input(id='login-email', placeholder='User'),
                             html.Br(),
                             dbc.Input(id='login-password', placeholder='Password', type='password'),
-                            dbc.Button('Log-in', id='login-button', color='success', href='/sim/input_page_1', block=True),
-                            html.Br(),
+                            dbc.CardFooter(dbc.Button('Log-in', id='login-button', color='dark', href='/sim/input_page_1')),
                             html.Div(id='login-alert')
                             ], body=True
-                        ), width=3
+                        ), width=3, style={'padding':'10px'}
                     ), justify='center'
                 )
             ])
-        ])
+        ], style={'padding':'100px'})
     ]
 )
 

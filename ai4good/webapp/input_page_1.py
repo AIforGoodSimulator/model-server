@@ -32,7 +32,7 @@ layout = html.Div(
                             dbc.Input(id='population', placeholder='Required', type='number', min=0, max=100000, step=10),
                             html.P('Total Area (sq. km)', className='card-text'),
                             dbc.Input(id='population', placeholder='Optional', type='number', min=0, max=100000, step=100),
-                            dbc.Button('Next', id='page--button', color='success', href='/sim/input_page_2', block=True),
+                            dbc.CardFooter(dbc.Button('Next', id='page-1-button', color='dark', href='/sim/input_page_2')),
                             html.Br(),
                             html.Div(id='input-page-1-alert')
                             ], body=True
