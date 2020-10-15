@@ -21,7 +21,7 @@ layout = html.Div(
                         dbc.Card([
                             html.H4('Login', className='card-title'),
                             html.P('Welcome to AI for Good Simulator for COVID-19', className='card-text'),
-                            dbc.Input(id='login-email', placeholder='Email', type='email', style={'margin-bottom':'25px'}),
+                            dbc.Input(id='login-email', placeholder='Email', type='email', style={'margin-bottom':'15px'}),
                             dbc.Input(id='login-password', placeholder='Password', type='password', style={'margin-bottom':'25px'}),
                             dbc.CardFooter(
                                 html.Div([
@@ -31,7 +31,7 @@ layout = html.Div(
                                         dbc.NavLink('Forgot password?', id='forgot-password', href='#')
                                     ]), 
                                     dbc.Tooltip('Please contact AI for Good if your password is lost', target='forgot-password')
-                                ], style={'display':'grid', 'grid-template-columns':'40% 20% 40%'}), 
+                                ], style={'display':'grid', 'grid-template-columns':'30% 20% 50%'}), 
                             ), 
                             html.Div(id='login-alert')
                             ], body=True

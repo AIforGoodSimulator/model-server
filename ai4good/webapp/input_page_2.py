@@ -22,7 +22,7 @@ def generate_html_age_group(age, id_age_perc, dist):
                    'type':'age-dist-input',
                    'index':id_age_perc
                }, placeholder='Required', value=dist, type='number', min=0, max=100, step=1, bs_size='sm', style={'justify':'right', 'margin-bottom':'25px'}), 
-           ], style={'display':'grid', 'grid-template-columns':'20% 60% 20%', 'margin-below':'25px'})
+           ], style={'display':'grid', 'grid-template-columns':'20% 50% 30%', 'margin-below':'25px'})
 
 layout = html.Div(
     [
@@ -39,9 +39,9 @@ layout = html.Div(
                             html.H5('Age Group Distribution (%)', className='card-text'),
                             html.Div([
                                 html.H5(''), 
-                                html.H5('Age Group (years)'), 
-                                html.H5('Distribution (%)')], 
-                                style={'display':'grid', 'grid-template-columns':'10% 60% 30%'}),
+                                html.H6('Age Group (years)'), 
+                                html.H6('Distribution (%)')], 
+                                style={'display':'grid', 'grid-template-columns':'10% 50% 40%'}),
                             generate_html_age_group(age[0], id_age_perc[0], dist[0]),
                             generate_html_age_group(age[1], id_age_perc[1], dist[1]),
                             generate_html_age_group(age[2], id_age_perc[2], dist[2]),
@@ -55,13 +55,13 @@ layout = html.Div(
                                 html.B(''), 
                                 html.B('Total:'), 
                                 html.B('100%', id='age_percentage_total')], 
-                                style={'display':'grid', 'grid-template-columns':'20% 60% 20%', 'margin-below':'25px'}),
+                                style={'display':'grid', 'grid-template-columns':'20% 50% 30%', 'margin-below':'25px'}),
                             html.Div([
                                 html.P(''), 
                                 html.P('Must equal to 100%', className='card-text', style={'color':'darkgray'}), 
                                 html.P('')], 
-                                style={'display':'grid', 'grid-template-columns':'20% 60% 20%', 'margin-below':'25px'}),
-                            dbc.CardFooter(dbc.Button('Next', id='page-2-button', color='dark', href='/sim/input_page_3')),
+                                style={'display':'grid', 'grid-template-columns':'20% 50% 30%', 'margin-below':'25px'}),
+                            dbc.CardFooter(dbc.Button('Next', id='page-2-button', color='secondary', disabled=False, href='/sim/input_page_3')),
                             html.Div(id='input-page-2-alert')
                             ], body=True
                         ), width=6
@@ -73,7 +73,11 @@ layout = html.Div(
 )
 
 @dash_app.callback(
-    Output('age_percentage_total', 'children'), 
+    [Output('age_percentage_total', 'children'), Output('page-2-button', 'disabled')], 
     [Input({'type':'age-dist-input', 'index':ALL}, 'value')])
 def update_age_range_input_moved_off_site(values):
-    return ([str(sum(values)) + '%'])
+    sum_values = sum(values)
+    if (100==sum_values):
+        return ([str(sum_values) + '%']), False
+    else:
+        return ([str(sum_values) + '%']), True
