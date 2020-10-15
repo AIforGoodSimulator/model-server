@@ -7,7 +7,7 @@ import pandas as pd
 import json
 import hashlib
 from ai4good.params.param_store import ParamStore
-
+from ai4good.utils import path_utils as pu
 
 class Parameters:
     def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
@@ -329,3 +329,27 @@ class Parameters:
             infection_matrix[divider:, divider] = self.shield_increase * infection_matrix[divider:, divider:]
 
         return infection_matrix, beta_list, largest_eigenvalue
+
+
+def generate_contact_matrix(camp_name: str, age_limits: np.array, contact_matrix: np.ndarray):
+    camp_params_df = pd.read_csv(pu.params_path('camp_params.csv'))
+    population_array = camp_params_df[camp_params_df['Camp'] == camp_name]['Population_structure'].to_numpy()
+
+    n_categories = len(age_limits) - 1
+    ind_limits = np.array(age_limits / 5, dtype=int)
+
+    p = np.zeros(16)
+    for i in range(n_categories):
+        p[ind_limits[i]: ind_limits[i + 1]] = population_array[i] / (ind_limits[i + 1] - ind_limits[i])
+
+    transformed_matrix = np.zeros((n_categories, n_categories))
+
+    for i in range(n_categories):
+        for j in range(n_categories):
+            sump = sum(p[ind_limits[i]: ind_limits[i + 1]])
+            b = contact_matrix[ind_limits[i]: ind_limits[i + 1], ind_limits[j]: ind_limits[j + 1]] * np.array(
+                p[ind_limits[i]: ind_limits[i + 1]]).transpose()
+            v1 = b.sum() / sump
+            transformed_matrix[i, j] = v1
+
+    return transformed_matrix
