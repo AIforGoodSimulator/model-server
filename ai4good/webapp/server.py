@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 @flask_app.route("/")
 def index():
-    return redirect('/sim/input')
+    return redirect('/sim/login')
 
 
 dash_app.layout = html.Div([
@@ -39,7 +39,7 @@ dash_app.layout = html.Div([
                    [Input('url', 'pathname'), Input('url', 'search')])
 def display_page(pathname, query=None):
     logging.info("Displaying page %s with query %s", pathname, query)
-    if pathname == '/sim/input' or pathname == '/sim/':
+    if pathname == '/sim/login' or pathname == '/sim/':
         return login_page.layout
     elif pathname == '/sim/input_page_1':
         return input_page_1.layout

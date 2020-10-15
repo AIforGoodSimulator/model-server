@@ -44,9 +44,9 @@ layout = html.Div(
                             html.Header('Location', className='card-text'),
                             dbc.Input(id='location', placeholder='Required', bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Total Population', className='card-text'),
-                            dbc.Input(id='population', placeholder='Required', type='number', min=0, max=100000, step=10, bs_size='sm', style={'margin-bottom':'25px'}),
+                            dbc.Input(id='total-population', placeholder='Required', type='number', min=0, max=100000, step=10, bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Total Area (sq. km)', className='card-text'),
-                            dbc.Input(id='population', placeholder='Optional', type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
+                            dbc.Input(id='total-area', placeholder='Optional', type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-1-button', color='dark', href='/sim/input_page_2')),
                             html.Div(id='input-page-1-alert')
                             ], body=True
