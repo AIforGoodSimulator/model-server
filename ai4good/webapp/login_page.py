@@ -27,7 +27,7 @@ layout = html.Div(
                             dbc.CardFooter(dbc.Button('Log-in', id='login-button', color='dark', href='/sim/input_page_1')),
                             html.Div(id='login-alert')
                             ], body=True
-                        ), width=3, style={'padding':'10px'}
+                        ), width=3
                     ), justify='center'
                 )
             ])
