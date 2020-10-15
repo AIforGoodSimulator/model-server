@@ -57,7 +57,6 @@ layout = html.Div(
                                     {'label':'No', 'value':0},
                                 ], value=1, id='remove-high-risk-off-site', inline=True, style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-3-button', color='dark', href='/sim/input_page_4')),
-                            html.Br(),
                             html.Div(id='input-page-3-alert')
                             ], body=True
                         ), width=6
@@ -73,4 +72,3 @@ layout = html.Div(
     [Input('age-range-moved-off-site', 'value')])
 def update_age_range_input_moved_off_site(value):
     return value[0], value[1]
-
