@@ -31,7 +31,7 @@ layout = html.Div(
                                         dbc.NavLink('Forgot password?', id='forgot-password', href='#')
                                     ]), 
                                     dbc.Tooltip('Please contact AI for Good if your password is lost', target='forgot-password')
-                                ], style={'display':'grid', 'grid-template-columns':'20% 40% 40%'}), 
+                                ], style={'display':'grid', 'grid-template-columns':'40% 20% 40%'}), 
                             ), 
                             html.Div(id='login-alert')
                             ], body=True
