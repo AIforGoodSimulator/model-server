@@ -22,22 +22,23 @@ layout = html.Div(
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
                             html.Center(html.Img(src='/static/placeholder286x180.png', title='Step 1 of 4', style={'width':'50%'})), 
-                            html.P('Fill in the following fields to provide data in order to run the simulation',className='card-text'),
+                            html.P('Fill in the fllowing fields to provide data in order to run the simulation',className='card-text'),
                             html.H5('Settlement information', className='card-text'),
-                            html.Header('Name of Settlement', className='card-text'),
-                            dbc.Input(id='name-settlement', placeholder='Required', bs_size='sm', style={'margin-bottom':'25px'}),
-                            html.Header('Location', className='card-text'),
-                            dbc.Input(id='location', placeholder='Required', bs_size='sm', style={'margin-bottom':'25px'}),
-                            html.Header('Total Population', className='card-text'),
-                            dbc.Input(id='population', placeholder='Required', type='number', min=0, max=100000, step=10, bs_size='sm', style={'margin-bottom':'25px'}),
-                            html.Header('Total Area (sq. km)', className='card-text'),
-                            dbc.Input(id='population', placeholder='Optional', type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
+                            html.P('Name of Settlement', className='card-text'),
+                            dbc.Input(id='name-settlement', placeholder='Required'),
+                            html.Br(),
+                            html.P('Location', className='card-text'),
+                            dbc.Input(id='location', placeholder='Required'),
+                            html.P('Total Population', className='card-text'),
+                            dbc.Input(id='population', placeholder='Required', type='number', min=0, max=100000, step=10),
+                            html.P('Total Area (sq. km)', className='card-text'),
+                            dbc.Input(id='population', placeholder='Optional', type='number', min=0, max=100000, step=100),
                             dbc.CardFooter(dbc.Button('Next', id='page-1-button', color='dark', href='/sim/input_page_2')),
                             html.Br(),
                             html.Div(id='input-page-1-alert')
                             ], body=True
                         ), width=6
-                    ), justify='center', style={'margin-top':'50px'}
+                    ), justify='center'
                 )
             ])
         ])

@@ -7,6 +7,8 @@ from urllib.parse import urlparse, parse_qs
 import ai4good.webapp.login_page as login_page
 import ai4good.webapp.input_page_1 as input_page_1
 import ai4good.webapp.input_page_2 as input_page_2
+import ai4good.webapp.input_page_3 as input_page_3
+import ai4good.webapp.input_page_4 as input_page_4
 import ai4good.webapp.run_model_page as run_model_page
 import ai4good.webapp.cm_model_results_page as cm_model_results_page
 import ai4good.webapp.cm_model_report_page as cm_model_report_page
@@ -43,6 +45,10 @@ def display_page(pathname, query=None):
         return input_page_1.layout
     elif pathname == '/sim/input_page_2':
         return input_page_2.layout
+    elif pathname == '/sim/input_page_3':
+        return input_page_3.layout
+    elif pathname == '/sim/input_page_4':
+        return input_page_4.layout
     elif pathname == '/sim/run_model':
         return run_model_page.layout
     elif pathname == '/sim/results':
