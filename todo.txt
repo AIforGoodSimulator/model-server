@@ -1,4 +1,19 @@
-) add more complex charts to webapp
+Models:
+  * optimize/scale network-model-python
+    - try to improve graph algos
+    - confirm correct usage
+    - scale out to run different profiles on on-demand azure instances 50-100 parallel profiles
+
+Platform:
+    - Mongo installation and integration
+
+Org:
+    - intro document for db new joiners
+    - db representatives to join weekly call
+
+Misc:
+    - see todo.txt in model-server
+
 
 ) model run page run queue ux improvements:
   * progress
@@ -8,10 +23,8 @@
 ) move R code that generates params to python
 ) setup mongo + impl parameter store and model result store
 ) better info page in model run in webapp
-) add profile customization, convert to table form
 ) TODO: add save csv specific to model
 ) #TODO: make specific to model
-) add flask cache ideally using azure infra + local
 ) github PR model
 ) add azure authentication
 ) convert run model page to use form
@@ -26,6 +39,18 @@ B) parameter generator to populate into Mongo
 
 
 Completed/in progress:
+
+) Compartmental model: - report page optimize
+- Flask cache with memcached or redis on azure, simple local
+) add profile customization, convert to table form
+) add flask cache ideally using azure infra + local
+) fix shared state thing
+) optimize report page / remove request timeout / move expensive tables to result compute stage
+) console info for cached data
+) add more complex charts to webapp
+) cleanup report page
+) add scenario description
+) clean model cache
 abstract params
 abstract models a bit
 cleanup data input / profile

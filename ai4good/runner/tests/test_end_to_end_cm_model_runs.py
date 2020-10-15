@@ -20,7 +20,42 @@ class TestEndToEndRuns(unittest.TestCase):
             is_save_report=False,
             overrides='{"numberOfIterations": 4, "nProcesses": 1}'
         )
-        actual_report_df = cr.get_report(mr)
+        actual_report_df = mr.get('report')
+        # actual_report_df.to_csv(pu._path('../runner/tests', 'expected_report.csv'), index=False) # for making new snapshot
         expected_df = pd.read_csv(pu._path('../runner/tests', 'expected_report.csv'))
-        pdt.assert_frame_equal(expected_df, actual_report_df)
+        pdt.assert_frame_equal(expected_df, actual_report_df, check_exact=False, check_less_precise=0)
+
+        # check(mr.get('prevalence_age'), 'expected_page.csv')
+        # check(mr.get('prevalence_all'), 'expected_pall.csv')
+        # check(mr.get('cumulative_all'), 'expected_call.csv')
+        # check(mr.get('cumulative_age'), 'expected_cage.csv')
+
+    # def test_custom_run_ABM(self):
+    #     mr = cr.run_model(
+    #         _model=ABM.ID,
+    #         _profile='small',
+    #         camp='Moria',
+    #         load_from_cache=False,
+    #         save_to_cache=False,
+    #         is_save_plots=False,
+    #         is_show_plots=False,
+    #         is_save_report=False,
+    #         overrides='{"numberOfIterations": 1, "nProcesses": 1}'
+    #     )
+    #     actual_report_df = mr.get('report')
+    #     expected_df = pd.read_csv(pu._path('../runner/tests', 'expected_report.csv'))
+    #     pdt.assert_frame_equal(expected_df, actual_report_df, check_exact=False, check_less_precise=1)
+
+        # check(mr.get('prevalence_age'), 'expected_page.csv')
+        # check(mr.get('prevalence_all'), 'expected_pall.csv')
+        # check(mr.get('cumulative_all'), 'expected_call.csv')
+        # check(mr.get('cumulative_age'), 'expected_cage.csv')
+
+def check(actual, expected):
+    actual = actual.reset_index()
+    # actual.to_csv(expected, index=False)
+    expected_df = pd.read_csv(pu._path('../runner/tests', expected))
+    pdt.assert_frame_equal(expected_df, actual)
+
+
 

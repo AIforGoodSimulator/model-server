@@ -7,12 +7,13 @@ readme_local.txt
 env/
 .idea/
 __pycache__/
-*.pyc
 *.pyo
+*.pyc
 .DS_Store
 fs/figs/
 fs/model_results/
 fs/reports/
+fs/cache/
 dask-worker-space/
 .DS_Store
 workbook.ipynb
@@ -20,3 +21,9 @@ workbook.ipynb
 activate.cmd
 notebook.cmd
 removal_log.txt
+/COVID19 report Moria V1.ipynb
+old/
+ai4good/models/am/*
+temp/
+.vscode
+.gitignore

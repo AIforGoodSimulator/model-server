@@ -1,0 +1,13 @@
+category;shortname;longname;colour;colour_name
+S;   Sus.;Susceptible;rgb(0,0,255);  blue
+E;  Exp.;Exposed;rgb(255,150,255);  pink
+I;  Inf. (symp.);Infected (symptomatic);rgb(255,150,50);   orange
+A;  Asym.;Asymptomatically Infected;rgb(255,50,50);    dunno
+R;  Rec.;Recovered;rgb(0,255,0);  green
+H;  Hosp.;Hospitalised;rgb(255,0,0);  red
+C;  Crit.;Critical;rgb(50,50,50);     black
+D;  Deaths;Deaths;rgb(130,0,255);    purple
+O;  Offsite;Offsite;rgb(130,100,150);  dunno
+Q;  Quar.;Quarantined;rgb(150,130,100);  dunno
+U;  No ICU;No ICU Care;rgb(150,100,150);  dunno
+

@@ -8,7 +8,7 @@ from ai4good.webapp.model_runner import ModelScheduleRunResult
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_table
-
+import csv
 
 def camp_selector():
     return dbc.Row([
@@ -62,10 +62,165 @@ def profile_selector():
             dash_table.DataTable(
                 id='profile_table',
                 columns=[],
-                data=[]
+                data=[],
+                style_data_conditional=[
+            {
+            'if': {
+                'column_id': 'Value'
+            },
+
+            'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+           {
+            'if': {
+                'row_index': 2,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+            'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+           {
+            'if': {
+                'row_index': 4,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+             'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+          {
+            'if': {
+                'row_index': 0,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+            'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+          {
+            'if': {
+                'row_index': 1,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 3,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 5,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 6,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 7,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 8,  # number | 'odd' | 'even'
+                'column_id': 'Start Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'row_index': 0,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+              'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+          {
+            'if': {
+                'row_index': 2,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+              'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black',
+        },
+           {
+            'if': {
+                'row_index': 4,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+              'border': '1px solid rgb(0,0,0)',
+            'backgroundColor': 'rgb(240, 240, 240)',
+            'color': 'black'
+        },
+           {
+            'if': {
+                'row_index': 1,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 3,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 5,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 6,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 7,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+           {
+            'if': {
+                'row_index': 8,  # number | 'odd' | 'even'
+                'column_id': 'End Time'
+            },
+           'cursor':'not-allowed'
+        },
+          {
+            'if': {
+                'column_editable': False
+            },
+           'cursor':'not-allowed'
+        },], 
+                tooltip = {}
             ),
             dbc.Button("Save", id="save_profile_button", color="primary", className="mr-1", disabled=True,
-                       style={'display': 'none'})
+                       style={'display': 'none'}, outline=True)
         ]))], style={'height': '100%'}), width=6),
 
         dbc.Modal([
@@ -89,9 +244,9 @@ def model_run_buttons():
     return html.Div([
         dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True),
         dbc.Button("See Results", id="model_results_button", color="success", className="mr-1",
-                   target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'),
+            target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'),
         dbc.Button("See Report", id="model_report_button", color="success", className="mr-1",
-                   target="_blank", disabled=True, external_link=True, href='none', key='model_report_button_key'),
+            disabled=True, key='model_report_button_key'),
         dbc.Toast(
             [],
             id="run_model_toast",
@@ -101,7 +256,23 @@ def model_run_buttons():
             dismissable=True,
             is_open=False
         ),
-        html.Div([], id='model_run_tooltip_holder')
+        html.Div([], id='model_run_tooltip_holder'),
+        dbc.Modal([
+            dbc.ModalHeader(id='show_report_header'),
+            dbc.ModalBody([
+                html.Div("Select intervention profiles to compare:"),
+                dbc.Checklist(options=[], value=[], id="show_report_intervention_checklist")
+            ]),
+            dbc.ModalFooter([
+                dbc.Button(
+                    "OK", id="do_show_report", className="ml-auto", target="_blank", external_link=True, href='none'
+                ),
+                dbc.Button(
+                    "Cancel", id="cancel_show_report", className="ml-auto"
+                )
+            ]),
+        ], id="show_report_dialog", centered=True)
+
     ], id='run_buttons_div')
 
 
@@ -116,15 +287,41 @@ def history_table():
                     id='history_table',
                     columns=[{"name": i, "id": i} for i in cols],
                     data=[{}],
+                    style_data_conditional=[
+                        {
+                            'if': {'row_index': 'odd'},
+                            'backgroundColor': 'rgb(248, 248, 248)',
+
+                        }
+                    ],
+                    style_header={
+                        'backgroundColor': 'rgb(89,169,255)',
+                        'fontWeight': 'bold',
+                        'color': 'rgb(255,255,255)',
+                        'text-align': 'center'
+                    }
+
                 )
-            ]),
+            ],style={'margin-left':20}),
             width=6,
         )
     ], style={'margin-top': 100, 'margin-left': 5})
 
+def nav_bar():
+    return dbc.NavbarSimple(
+        children=[
+            dbc.NavItem(dbc.NavLink("About US", href="#")),
+
+        ],
+        brand="AIforGood",
+        brand_href="#",
+        color="primary",
+        dark=True,
+    )
 
 layout = html.Div(
     [
+        nav_bar(),
         html.H3('Run Model'),
         camp_selector(),
         model_selector(),
@@ -138,6 +335,12 @@ layout = html.Div(
     ], style={'margin': 10}
 )
 
+def findToolTip(query):
+    with open('fs/params/Parameters_mouse-over_des.csv', encoding='utf-8') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        for row in csv_reader:
+            if query == row["Parameter"]:
+                return row["Description"]
 
 @dash_app.callback(
     Output('camp-info', 'children'),
@@ -163,13 +366,14 @@ def update_model_info(value):
 @dash_app.callback(
     [Output('profile_help', 'children'),
      Output('profile_table', 'columns'), Output('profile_table', 'data'),
-     Output('save_profile_button', 'style')],
+     Output('save_profile_button', 'style'),
+     Output('profile_table', 'tooltip_data')],
     [Input('model-dropdown', 'value'), Input('profile-dropdown', 'value')])
 def update_profile_info(model, profile):
     if model is not None and profile is not None:
         df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
         return '', [{"name": i, "id": i, 'editable': i != 'Parameter'} for i in df.columns], \
-               df.to_dict('records'), {'float': 'right', 'margin-top': 12}
+            df.to_dict('records'), {'float': 'right', 'margin-top': 12}, [{c:{'type': 'text','value': findToolTip(r)} for c in df.columns}for r in df[df.columns[0]].values] 
     else:
         return ['Select profile', [], [], {'display': 'none'}]
 
@@ -248,7 +452,6 @@ def update_history(n):
         Output('model_results_button', 'disabled'),
         Output('model_results_button', 'href'),
         Output('model_report_button', 'disabled'),
-        Output('model_report_button', 'href'),
         Output("model_run_tooltip_holder", "children")
     ],
     [
@@ -263,16 +466,60 @@ def on_see_results_click_and_state_update(n, camp, model, profile):
     if camp is None or model is None or profile is None:
         return True, \
                True, '', \
-               True, '', \
+               True, \
                dbc.Tooltip('Select camp, model and profile to see results', id='_mr_tt', target="run_buttons_div")
     else:
         if model_runner.results_exist(model, profile, camp):
             return False, \
                    False, f'/sim/results?model={model}&profile={profile}&camp={camp}', \
-                   False, f'/sim/report?model={model}&profile={profile}&camp={camp}', \
+                   False, \
                    []
         else:
             return False, \
                    True, '', \
-                   True, '', \
+                   True, \
                    dbc.Tooltip('No cached results, please run model first', id='_mr_tt', target='run_buttons_div'),
+
+
+@dash_app.callback(
+    [Output("show_report_dialog", "is_open"),
+     Output('show_report_header', 'children'),
+     Output('show_report_intervention_checklist', 'options'),
+     Output('show_report_intervention_checklist', 'value')
+    ],
+    [Input("model_report_button", "n_clicks"), Input("do_show_report", "n_clicks"), Input("cancel_show_report", "n_clicks")],
+    [State("show_report_dialog", "is_open"), State('model-dropdown', 'value'),
+     State('profile-dropdown', 'value'), State('camp-dropdown', 'value')]
+)
+def on_run_report_button_click(n_open, n_show, n_cancel, is_open, model, profile, camp):
+
+    def is_enabled(p):
+        return (p != profile) and model_runner.results_exist(model, p, camp)
+
+    ctx = dash.callback_context
+    if ctx.triggered and (n_open or n_show or n_cancel):
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        if button_id == 'do_show_report':
+            return False, [], [], []
+        elif button_id == 'cancel_show_report':
+            return False, [], [], []
+        elif button_id == 'model_report_button':
+            profiles = facade.ps.get_profiles(model)
+            selected_profiles = [p for p in profiles if is_enabled(p)]
+            profile_options = [{'label': p, 'value': p} for p in selected_profiles]
+
+            if len(selected_profiles) == 0:
+                profile_options = [{'label': 'No model runs available', 'value': 'None', 'disabled': True}]
+            return True, f'Report for {profile} profile', profile_options, selected_profiles
+    else:
+        return is_open, dash.no_update, dash.no_update, dash.no_update
+
+
+@dash_app.callback(
+    Output("do_show_report", "href"),
+    [Input("show_report_intervention_checklist", "value")],
+    [State('model-dropdown', 'value'), State('profile-dropdown', 'value'), State('camp-dropdown', 'value')]
+)
+def update_run_report_link(interventions, model, profile, camp):
+    p = "&".join(map(lambda i: f'intervention={i}', interventions))
+    return f'/sim/report?model={model}&profile={profile}&camp={camp}&{p}',

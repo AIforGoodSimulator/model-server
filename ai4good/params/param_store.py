@@ -64,14 +64,14 @@ class ParamStore(ABC):
 class SimpleParamStore(ParamStore):
 
     def get_models(self) -> List[str]:
-        return ['compartmental-model']
+        return ['compartmental-model', 'network-model', 'agent-based-model']
 
     def get_profiles(self, model: str) -> List[str]:
         df = self._read_csv(model + "_profile_params.csv")
         return df['Profile'].unique().tolist()
 
     def get_params(self, model: str, profile: str) -> pd.DataFrame:
-        df = self._read_csv(model+"_profile_params.csv")
+        df = self._read_csv(model + "_profile_params.csv")
         return df[df['Profile'] == profile].copy()
 
     def store_params(self, model: str, profile: str, profile_df: pd.DataFrame):
@@ -90,12 +90,19 @@ class SimpleParamStore(ParamStore):
         df = self._read_csv("camp_params.csv")
         return df[df.Camp == camp].copy()
 
+    def get_camp_params_network_model(self, camp: str) -> pd.DataFrame:
+        df = self._read_csv("network-model_camp_params.csv")
+        return df[df.Camp == camp].copy()
+
     def get_contact_matrix_params(self, camp: str) -> pd.DataFrame:
         df = self._read_csv("contact_matrix_params.csv")
         return df[df.Camp == camp].copy()
 
     def get_disease_params(self) -> pd.DataFrame:
         return self._read_csv("disease_params.csv")
+
+    def get_disease_params_network_model(self) -> pd.DataFrame:
+        return self._read_csv("network-model_disease_params.csv")
 
     def get_generated_disease_param_vectors(self) -> pd.DataFrame:
         return self._read_csv("generated_params.csv")
