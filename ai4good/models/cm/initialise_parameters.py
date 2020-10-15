@@ -9,6 +9,7 @@ import hashlib
 from ai4good.params.param_store import ParamStore
 from ai4good.utils import path_utils as pu
 
+
 class Parameters:
     def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
         self.ps = ps
@@ -201,7 +202,8 @@ class Parameters:
         return infection_matrix, beta_list, largest_eigenvalue
 
 
-def generate_contact_matrix(camp_name: str, age_limits: np.array, contact_matrix: np.ndarray):
+def generate_contact_matrix(camp_name: str, country: str, age_limits: np.array):
+    contact_matrix = pd.read_csv(pu.cm_params_path(f'contact_matrices/{country}.csv')).to_numpy()
     camp_params_df = pd.read_csv(pu.params_path('camp_params.csv'))
     population_array = camp_params_df[camp_params_df['Camp'] == camp_name]['Population_structure'].to_numpy()
 
