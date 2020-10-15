@@ -13,7 +13,7 @@ FEMALE = 0
 MALE = 1
 
 # Individuals remain in the symptomatic or 1st asymptomatic states for 5 days, and are infectious during this period.
-# This period of "5 days" can be parameterized in `SYMP_PERIOD`
+# This period of "5 days" as defined by Tucker Gilman is parameterized in `SYMP_PERIOD`
 SYMP_PERIOD = 5
 
 # Disease states of the agents
@@ -401,6 +401,7 @@ class Camp:
     def disease_progression(agents: np.array) -> np.array:
         """
         Update the disease state of the agent defined by `agents` numpy array. This is inspired partly by tucker model.
+        This method is called at the end of each day.
         Parameters
         ----------
         agents: The numpy array containing the agents information
@@ -416,73 +417,111 @@ class Camp:
         # After 5 days showing symptoms, individuals pass from the symptomatic to the “mild” or “severe” states, with
         # age- and condition-dependent probabilities following Verity and colleagues (2020) and Tuite and colleagues
         # (preprint).
+
         # Verity (low-risk) : probability values for each age slot [0-10, 10-20, ...90+]
-        asp = np.array([0, .000408, .0104, .0343, .0425, .0816, .118, .166, .184])
+        # Symptomatic agent (with low risk) in age slot `a` will have `P_symp2mild[a]` probability of turning mild
+        # TODO: check if this is correct or not, since according to Verity, this is severe->hospitalized probability
+        P_symp2mild = [0, .000408, .0104, .0343, .0425, .0816, .118, .166, .184]
+
         # Tuite (high-risk) : probability values for each age slot [0-10, 10-20, ...90+]
-        aspc = np.array([.0101, .0209, .0410, .0642, .0721, .2173, .2483, .6921, .6987])
+        # Symptomatic agent (with high risk) in age slot `a` will have `P_symp2sevr[a]` probability of turning severe
+        P_symp2sevr = [.0101, .0209, .0410, .0642, .0721, .2173, .2483, .6921, .6987]
+
+        # Probability that a severely infected agent in a given age slot will be hospitalized
+        # These probability values are taken from "Estimates of the severity of coronavirus disease 2019: a model-based
+        # analysis" paper by Robert Verity et al. (DOI https://doi.org/10.1016/S1473-3099(20)30243-7)
+        P_sevr2hosp = [0.0, 0.000408, 0.0104, 0.0343, 0.0425, 0.0816, 0.118, 0.166, 0.184]
+
+        # Probability that a hospitalized agent in a given age slot will die
+        P_hosp2dead = [0.0000161, 0.0000695, 0.000309, 0.000844, 0.00161, 0.00595, 0.0193, 0.0428, 0.0780]
 
         # Iterate all agents one by one and update the disease state
         for i in range(n):
 
+            # read current attributes of the agent
+
+            # TODO: previous abm.py file had `create_chronic_column` function. Should we use it instead during agent
+            # TODO: initialization?
             is_high_risk = int(agents[i, A_AGE] > 80)  # define which agents are considered as high risk
+
             disease_state = int(agents[i, A_DISEASE])  # current disease state
+            activity = int(agents[i, A_ACTIVITY])  # current activity of the agent
+            day_count = int(agents[i, A_DAY_COUNTER])  # current disease state day count
             is_asymptomatic = int(agents[i, A_IS_ASYMPTOMATIC])  # flag if agent is asymptomatic by nature
             incubation_period = int(agents[i, A_INCUBATION_PERIOD])  # incubation period of the agent
+            age_slot = int(agents[i, A_AGE]/10.0)  # age slot of the agent
 
             # In the first half of this period, the individual is “exposed” but not infectious. In the second half, the
             # individual is “pre-symptomatic” and infectious
-            if disease_state == INF_EXPOSED and agents[i, A_DAY_COUNTER] >= incubation_period / 2.0:
+            if disease_state == INF_EXPOSED and day_count >= incubation_period / 2.0:
                 disease_state = INF_PRESYMPTOMATIC
 
             # After the incubation period, the individual enters one of two states: “symptomatic” or “1st asymptomatic.”
             # All children under the age of 16 become asymptomatic (ref), and others become asymptomatic with
             # probability 0.178 (Mizumoto et al. 2020). Individuals remain in the symptomatic or 1st asymptomatic states
             # for 5 days, and are infectious during this period
-            elif disease_state == INF_PRESYMPTOMATIC and agents[i, A_DAY_COUNTER] >= incubation_period \
+            elif disease_state == INF_PRESYMPTOMATIC and day_count >= incubation_period \
                     and is_asymptomatic == 1:
                 disease_state = INF_ASYMPTOMATIC1
-                agents[i, A_DAY_COUNTER] = 0
+                day_count = 0
 
-            elif disease_state == INF_PRESYMPTOMATIC and agents[i, A_DAY_COUNTER] >= incubation_period \
+            elif disease_state == INF_PRESYMPTOMATIC and day_count >= incubation_period \
                     and is_asymptomatic == 0:
                 disease_state = INF_SYMPTOMATIC
-                agents[i, A_DAY_COUNTER] = 0
+                day_count = 0
 
             # After 5 days, individuals pass from the symptomatic to the “mild” or “severe” states, with age- and
             # condition-dependent probabilities following Verity and colleagues (2020) and Tuite and colleagues
             # (preprint). All individuals in the 1st asymptomatic state pass to the “2nd asymptomatic” state
-            elif disease_state == INF_SYMPTOMATIC and agents[i, A_DAY_COUNTER] >= SYMP_PERIOD and \
-                    is_high_risk == 0 and random.random() <= asp[int(agents[i, A_AGE]/10.0)]:
+            elif disease_state == INF_SYMPTOMATIC and day_count >= SYMP_PERIOD and \
+                    is_high_risk == 0 and random.random() <= P_symp2mild[age_slot]:
+                # A low-risk agent under symptomatic condition for more than `SYMP_PERIOD` days will go into mild state
                 disease_state = INF_MILD
-                agents[i, A_DAY_COUNTER] = 0
+                day_count = 0
 
-            elif disease_state == INF_SYMPTOMATIC and agents[i, A_DAY_COUNTER] >= SYMP_PERIOD and \
-                    is_high_risk == 1 and random.random() <= aspc[int(agents[i, A_AGE]/10.0)]:
+            elif disease_state == INF_SYMPTOMATIC and day_count >= SYMP_PERIOD and \
+                    is_high_risk == 1 and random.random() <= P_symp2sevr[age_slot]:
+                # A high-risk agent under symptomatic condition for more than SYMP_PERIOD days will go into severe state
                 disease_state = INF_SEVERE
-                agents[i, A_ACTIVITY] = ACTIVITY_HOSPITALIZED
-                agents[i, A_DAY_COUNTER] = 0
+                day_count = 0
 
-            elif disease_state == INF_ASYMPTOMATIC1 and agents[i, A_DAY_COUNTER] >= SYMP_PERIOD:
+            elif disease_state == INF_ASYMPTOMATIC1 and day_count >= SYMP_PERIOD:
+                # An agent in asymptomatic 1 condition for more than SYMP_PERIOD days will go into asymptomatic 2 state
                 disease_state = INF_ASYMPTOMATIC2
-                agents[i, A_DAY_COUNTER] = 0
+                day_count = 0
 
             # On each day, individuals in the mild or 2nd asymptomatic state pass to the recovered state with
             # probability 0.37 (Lui et al. 2020), and individuals in the severe state pass to the recovered state with
             # probability 0.071 (Cai et al., preprint).
             elif (agents[i, A_DISEASE] == INF_MILD or disease_state == INF_ASYMPTOMATIC2) and random.random() <= 0.37:
                 disease_state = INF_RECOVERED
-                agents[i, A_DAY_COUNTER] = 0
-                # Agents who recovered in hospital can go back to household
-                if agents[i, A_ACTIVITY] == ACTIVITY_HOSPITALIZED:
-                    agents[i, A_ACTIVITY] = ACTIVITY_HOUSEHOLD
+                day_count = 0
 
-            elif disease_state == INF_SEVERE and random.random() <= 0.071:
-                disease_state = INF_RECOVERED
-                agents[i, A_DAY_COUNTER] = 0
-                # Agents who recovered in hospital can go back to household
-                if agents[i, A_ACTIVITY] == ACTIVITY_HOSPITALIZED:
-                    agents[i, A_ACTIVITY] = ACTIVITY_HOUSEHOLD
+            elif disease_state == INF_SEVERE:
+                p = random.random()
+                if day_count > 10 or (activity == ACTIVITY_HOSPITALIZED and p <= P_hosp2dead[age_slot]):
+                    # Agents in severe state for more than 10 days die AND
+                    # Agents in severe state and in hospital die with some probability
+                    disease_state = INF_DECEASED
+                    if activity == ACTIVITY_HOSPITALIZED:
+                        activity = -2  # died in hospital
+                    else:
+                        activity = -1  # died outside hospital
+                elif p <= 0.071:
+                    # Severe case recovered
+                    disease_state = INF_RECOVERED
+                    day_count = 0
+                elif activity != ACTIVITY_HOSPITALIZED and p <= P_sevr2hosp[age_slot]:
+                    # Severe case hospitalized
+                    activity = ACTIVITY_HOSPITALIZED
 
+            # Agents who recovered in hospital can go back to household
+            if disease_state == INF_RECOVERED and activity == ACTIVITY_HOSPITALIZED:
+                activity = ACTIVITY_HOUSEHOLD
+
+            # Update array with updated values
             agents[i, A_DISEASE] = disease_state
+            agents[i, A_ACTIVITY] = activity
+            agents[i, A_DAY_COUNTER] = day_count
 
         return agents

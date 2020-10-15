@@ -104,6 +104,21 @@ class Parameters:
             float(profile.loc['percentage_of_toilet_queue_cleared_at_each_step', 'Value'])
 
         self.infection_radius = float(profile.loc['infection_radius', 'Value'])
+        self.pct_female = float(profile.loc['pct_female', 'Value'])
+
+        # Age proportions by age slot i.e. 0-9, 10-19, 20-29, ... 80-89, 90+
+        self.pct_0_9 = float(profile.loc['pct_0_9', 'Value'])
+        self.pct_10_19 = float(profile.loc['pct_10_19', 'Value'])
+        self.pct_20_29 = float(profile.loc['pct_20_29', 'Value'])
+        self.pct_30_39 = float(profile.loc['pct_30_39', 'Value'])
+        self.pct_40_49 = float(profile.loc['pct_40_49', 'Value'])
+        self.pct_50_59 = float(profile.loc['pct_50_59', 'Value'])
+        self.pct_60_69 = float(profile.loc['pct_60_69', 'Value'])
+        self.pct_70_79 = float(profile.loc['pct_70_79', 'Value'])
+        self.pct_80_89 = float(profile.loc['pct_80_89', 'Value'])
+        self.pct_90 = float(profile.loc['pct_90', 'Value'])
+
+        self.validate()
 
         self.control_dict = {}
 
@@ -120,3 +135,16 @@ class Parameters:
         _hash = hash_object.hexdigest()
         return _hash
 
+    def validate(self):
+        # Validate parameter values
+        # TODO: add more validations on the parameter values here
+
+        assert 0.0 <= self.infection_radius <= 1.0, "Infection radius must be between 0 and 1"
+
+        # Proportion of females in the camp provided must be 0->1
+        assert 0.0 <= self.pct_female <= 1.0, "Female proportion in the camp must be a number between 0 and 1"
+
+        # Sum of proportions of agents in different age slots must be ~1
+        assert 0.9 <= (self.pct_0_9 + self.pct_10_19 + self.pct_20_29 + self.pct_30_39 + self.pct_40_49 + self.pct_50_59 +
+                self.pct_60_69 + self.pct_70_79 + self.pct_80_89 + self.pct_90) <= 1.0, \
+            "Age proportions must add up to ~1"

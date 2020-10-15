@@ -72,7 +72,31 @@ class Moria(Camp):
         # initialize agents array
         agents = np.empty((self.num_people, A_FEATURES))
 
-        # get age and gender of the agents
+        # TODO: after confirming from Gaia and Vera, use this block instead of age_and_gender.csv (read_age_gender)
+        # Assign gender to agents based on parameters
+        # We first get the parameter for proportion of females in the camp (a number between 0 and 1). From this we can
+        # also derive the number of males in the camp. Finally, we can randomly assign agents to available gender ratios
+        # num_females = int(self.num_people * self.params.pct_female)  # number of females in the camp
+        # gender = [FEMALE] * num_females + [MALE] * (self.num_people - num_females)  # initialize population with genders
+        # np.random.shuffle(gender)
+        # agents[:, A_GENDER] = gender  # update agents with genders
+        # Assign age to agents based on age bucket parameters
+        # pct_age = [self.params.pct_0_9, self.params.pct_10_19, self.params.pct_20_29, self.params.pct_30_39,
+        #            self.params.pct_40_49, self.params.pct_50_59, self.params.pct_60_69, self.params.pct_70_79,
+        #            self.params.pct_80_89, self.params.pct_90]
+        # ages = []  # initialize agent's age array
+        # for i, pct_a in enumerate(pct_age):
+        #     if i == len(pct_a) - 1:
+        #         # For last age slot, assign age to all unassigned agents
+        #         n = self.num_people - len(ages)
+        #         ages.extend([i+5] * n)
+        #     else:
+        #         # Assign age to agents based on proportions
+        #         n = int(pct_a * self.num_people)
+        #         ages.extend([i+5] * n)
+        # np.random.shuffle(ages)
+        # agents[:, A_AGE] = ages
+        # get age and gender of the agents from available dataset
         agents[:, A_AGE] = read_age_gender(self.num_people)[:, 0]
         agents[:, A_GENDER] = read_age_gender(self.num_people)[:, 1]
 
@@ -124,7 +148,7 @@ class Moria(Camp):
         data_collector = pd.DataFrame({
             'DAY': [],
             'SUSCEPTIBLE': [], 'EXPOSED': [], 'PRESYMPTOMATIC': [], 'SYMPTOMATIC': [], 'MILD': [], 'SEVERE': [],
-            'ASYMPTOMATIC1': [], 'ASYMPTOMATIC2': [], 'RECOVERED': [],
+            'ASYMPTOMATIC1': [], 'ASYMPTOMATIC2': [], 'RECOVERED': [], 'DECEASED': [],
             'HOSPITALIZED': []
         })
         # Save initialized progress to file
@@ -254,6 +278,10 @@ class Moria(Camp):
 
         # Iterate all agents
         for i in range(n):
+
+            if agents[i, A_DISEASE] == INF_DECEASED:
+                # Deceased agents are no longer processed
+                continue
 
             # Check if agent is showing symptoms
             showing_symptoms = agents[i, A_DISEASE] in (INF_SYMPTOMATIC, INF_MILD, INF_SEVERE)
@@ -492,6 +520,7 @@ class Moria(Camp):
                np.count_nonzero(self.agents[:, A_DISEASE] == INF_ASYMPTOMATIC1),
                np.count_nonzero(self.agents[:, A_DISEASE] == INF_ASYMPTOMATIC2),
                np.count_nonzero(self.agents[:, A_DISEASE] == INF_RECOVERED),
+               np.count_nonzero(self.agents[:, A_DISEASE] == INF_DECEASED),
                np.count_nonzero(self.agents[:, A_ACTIVITY] == ACTIVITY_HOSPITALIZED)
                ]
         data_collector.loc[data_collector.shape[0]] = row
