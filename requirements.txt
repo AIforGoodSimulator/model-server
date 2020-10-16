@@ -29,7 +29,6 @@ dask==2.20.0
 decorator==4.4.2
 defusedxml==0.6.0
 distributed==2.18.0
-distro-info===0.18ubuntu0.18.04.1
 entrypoints==0.3
 Flask==1.1.2
 Flask-Caching==1.9.0
