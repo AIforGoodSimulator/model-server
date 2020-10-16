@@ -32,8 +32,8 @@ layout = html.Div(
                             dbc.Input(id='population', placeholder='Required', type='number', min=0, max=100000, step=10, bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Advanced parameter 4', className='card-text'),
                             dbc.Input(id='population', placeholder='Optional', type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
-                            dbc.CardFooter(dbc.Button('Next', id='page-4-button', color='dark', href='/sim/run_model')),
-                            html.Div(id='input-page-1-alert')
+                            dbc.CardFooter(dbc.Button('Next', id='page-4-button', color='secondary', href='/sim/run_model')),
+                            html.Div(id='input-page-4-alert')
                             ], body=True
                         ), width=6
                     ), justify='center', style={'margin-top':'50px'}
