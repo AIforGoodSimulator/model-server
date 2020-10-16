@@ -128,7 +128,6 @@ service-identity==16.0.0
 simplegeneric==0.8.1
 six==1.15.0
 sortedcontainers==2.1.0
-systemd-python==234
 tables==3.6.1
 tblib==1.6.0
 terminado==0.8.3
