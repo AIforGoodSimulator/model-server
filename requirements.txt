@@ -140,7 +140,6 @@ traitlets==4.3.3
 Twisted==17.9.0
 typeguard==2.8.0
 typing-extensions==3.7.4.2
-ufw==0.36
 unattended-upgrades==0.1
 urllib3==1.25.9
 waitress==1.4.4
