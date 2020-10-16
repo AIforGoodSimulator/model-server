@@ -6,12 +6,24 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 import re
+import argparse
+import sys
+
+
+# Get command line parameters to pass to Zalenium
+parser = argparse.ArgumentParser()
+parser.add_argument('--zaluser', default='none')
+parser.add_argument('--zalpassword', default='none')
+parser.add_argument('--zalhost', default='none')
+
+args = parser.parse_args()
+
 
 driver = webdriver.Remote(
-   command_executor='http://192.168.30.112:4444/wd/hub',
+   command_executor='http://'+args.zaluser+':'+args.zalpassword+'@'+args.zalhost+'/wd/hub',
    desired_capabilities=DesiredCapabilities.CHROME)
 
-driver.get("http://192.168.30.100:8050/sim/run_model")
+driver.get("http://ai4good-dev.azurewebsites.net/sim/run_model")
 
 # assert "Python" in driver.title
 #elem = driver.find_element_by_id("react-entry-point")

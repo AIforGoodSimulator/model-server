@@ -10,6 +10,7 @@ from ai4good.models.model_registry import get_models, create_params
 from datetime import datetime
 import pickle
 import socket
+from ai4good.webapp.commit_date import get_version_date 
 
 MAX_CONCURRENT_MODELS = 3
 HISTORY_SIZE = 10
@@ -33,6 +34,7 @@ class ModelRunHistory:
 
     def __init__(self, _redis: redis.Redis):
         self._redis = _redis
+        
 
     def _append(self, t):
         with self._redis.pipeline() as pipe:
@@ -41,16 +43,16 @@ class ModelRunHistory:
             pipe.execute()
 
     def record_scheduled(self, key):
-        self._append((key, ModelRunResult.RUNNING, datetime.now(), None))
+        self._append((key, ModelRunResult.RUNNING, datetime.now(), None, str(get_version_date())))
 
     def record_finished(self, key, mr):
-        self._append((key, ModelRunResult.SUCCESS, datetime.now(), "Success"))
+        self._append((key, ModelRunResult.SUCCESS, datetime.now(), "Success", str(get_version_date())))
 
     def record_cancelled(self, key):
-        self._append((key, ModelRunResult.CANCELLED, datetime.now(), None))
+        self._append((key, ModelRunResult.CANCELLED, datetime.now(), None, str(get_version_date())))
 
     def record_error(self, key, error_details):
-        self._append((key, ModelRunResult.CANCELLED, datetime.now(), error_details))
+        self._append((key, ModelRunResult.CANCELLED, datetime.now(), error_details, str(get_version_date())))
 
     def history(self):
         history = self._redis.lrange(self._CACHE_KEY, 0, HISTORY_SIZE)
@@ -125,23 +127,33 @@ class ModelRunner:
             self.history.record_scheduled(key)
             future: Future = client.submit(self._sync_run_model, self.facade, _model, _profile, camp)
             future.add_done_callback(on_future_done)
-
+        
         key = (_model, _profile, camp)
         return self.models_running_now.start_run(key, submit)
 
     @staticmethod
     def history_columns() -> List[str]:
-        return ['Key', 'Status', 'Time', 'Details']
+        return ['Key', 'Status', 'Time', 'Details', 'Version Date'] 
 
     def history_df(self) -> pd.DataFrame:
         rows = []
         for r in self.history.history():
-            rows.append({
-                'Key': str(r[0]),
-                'Status': str(r[1]),
-                'Time': str(r[2]),
-                'Details': str(r[3]),
-            })
+            try:
+                rows.append({
+                    'Key': str(r[0]),
+                    'Status': str(r[1]),
+                    'Time': str(r[2]),
+                    'Details': str(r[3]),
+                    'Version Date': str(r[4]),
+                })
+            except IndexError: # avoids error when using a history for a model run before the version date parameter was added
+                rows.append({
+                    'Key': str(r[0]),
+                    'Status': str(r[1]),
+                    'Time': str(r[2]),
+                    'Details': str(r[3]),
+                })        
+            
         return pd.DataFrame(rows)
 
     @staticmethod
