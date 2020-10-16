@@ -97,6 +97,7 @@ Werkzeug==1.0.1
 widgetsnbextension==3.5.1
 zict==2.0.0
 zipp==3.1.0
+zope.interface==4.3.2
 seirsplus~=1.0.9
 networkx~=2.4
 PyGithub~=1.53
