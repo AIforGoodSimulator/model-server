@@ -4,6 +4,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 from urllib.parse import urlparse, parse_qs
+import ai4good.webapp.landing_page as landing_page
 import ai4good.webapp.login_page as login_page
 import ai4good.webapp.input_page_1 as input_page_1
 import ai4good.webapp.input_page_2 as input_page_2
@@ -28,7 +29,7 @@ numba_logger.setLevel(logging.WARNING)
 
 @flask_app.route("/")
 def index():
-    return redirect('/sim/login')
+    return redirect('/sim/landing')
 
 
 dash_app.layout = html.Div([
@@ -41,7 +42,9 @@ dash_app.layout = html.Div([
                    [Input('url', 'pathname'), Input('url', 'search')])
 def display_page(pathname, query=None):
     logging.info("Displaying page %s with query %s", pathname, query)
-    if pathname == '/sim/login' or pathname == '/sim/':
+    if pathname == '/sim/landing' or pathname == '/sim/':
+        return landing_page.layout
+    elif pathname == '/sim/login_page':
         return login_page.layout
     elif pathname == '/sim/input_page_1':
         return input_page_1.layout

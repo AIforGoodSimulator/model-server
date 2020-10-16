@@ -35,7 +35,7 @@ layout = html.Div(
                                 options=[
                                     {'label':'Yes', 'value':1}, 
                                     {'label':'No', 'value':0},
-                                    {'label':'Do not know', 'value':-1},
+                                    {'label':'Not Sure', 'value':-1},
                                 ], value=-1, id='remove-high-risk-off-site', inline=True, style={'margin-bottom':'25px'}),
                             html.Header('What is the age range of people that are moved off-site at the settlement?', className='card-text', style={'color':'darkgray'}), 
                             html.Div([
@@ -56,7 +56,7 @@ layout = html.Div(
                                     {'label':'Yes', 'value':1}, 
                                     {'label':'No', 'value':0},
                                 ], value=1, id='remove-high-risk-off-site', inline=True, style={'margin-bottom':'25px'}),
-                            dbc.CardFooter(dbc.Button('Next', id='page-3-button', color='dark', href='/sim/input_page_4')),
+                            dbc.CardFooter(dbc.Button('Next', id='page-3-button', color='secondary', href='/sim/input_page_4')),
                             html.Div(id='input-page-3-alert')
                             ], body=True
                         ), width=6
