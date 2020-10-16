@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 
 from ai4good.runner.facade import Facade
@@ -32,6 +33,11 @@ class TestRun(object):
         logging.info("Starting simulation of x{} agents for x{} days".format(self.camp.num_people,
                                                                              self.camp.params.number_of_steps))
 
+    def run(self):
+        self.camp.simulate()
+
+    def plot(self):
+
         self.fig, self.ax = plt.subplots(figsize=(10, 8))
         self.ax.set_xlim([0, self.camp.camp_size])
         self.ax.set_ylim([0, self.camp.camp_size])
@@ -44,10 +50,6 @@ class TestRun(object):
 
         self.highlight_central_sq()
 
-    def run(self):
-        self.camp.simulate()
-
-    def plot(self):
         self.anim = FuncAnimation(self.fig, self.animate, interval=500, frames=self.camp.params.number_of_steps - 1)
         plt.draw()
         plt.show()
@@ -82,13 +84,48 @@ class TestRun(object):
 
         return colors
 
+    def plot_households(self):
+        fig = plt.figure(figsize=(8, 6))
+        ax1 = fig.add_subplot(121, projection='3d')
+        ax2 = fig.add_subplot(122)
+
+        household_pos = self.camp.households[:, 2:]
+        x = household_pos[:, 0]
+        y = household_pos[:, 1]
+
+        # calculate distance between each household and agent
+        dx2 = (x.reshape((-1, 1)) - self.camp.agents[:, A_X].reshape((1, -1))) ** 2
+        dy2 = (y.reshape((-1, 1)) - self.camp.agents[:, A_Y].reshape((1, -1))) ** 2
+        d = ((dx2 + dy2) ** 0.5) < SMALL_ERROR  # get agents who belong to the household
+
+        top = d.sum(axis=1)  # number of agents per household
+
+        bottom = np.zeros_like(top)
+        width = depth = 1
+
+        ax1.bar3d(x, y, bottom, width, depth, top, shade=True)
+        ax1.set_title("Number of agents per household")
+
+        ax2.scatter(self.camp.agents[:, A_X], self.camp.agents[:, A_Y], c=self.camp.agents[:, A_ETHNICITY])
+        ax2.set_title("Agents ethnicities")
+
+        plt.show()
+
 
 if __name__ == "__main__":
     test = TestRun()
 
+    # Uncomment following code blocks to execute diff things
+
+    ################################
+    # for plotting households in 3d
+    # test.plot_households()
+
+    ################################
     # for running on console
     test.run()
 
+    ################################
     # for real time plotting. This can be very slow for large data
     # test.plot()
     #

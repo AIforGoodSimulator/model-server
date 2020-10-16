@@ -119,6 +119,7 @@ class Moria(Camp):
         # assign households to the agents
         agents_households: np.array = self._assign_households_to_agents(self.households, agents[:, A_ETHNICITY])
         agents[:, [A_HOUSEHOLD_X, A_HOUSEHOLD_Y]] = self.households[agents_households, 2:]
+        agents[:, [A_X, A_Y]] = agents[:, [A_HOUSEHOLD_X, A_HOUSEHOLD_Y]].copy()
 
         # initially, everyone's inside their households
         agents[:, A_ACTIVITY] = ACTIVITY_HOUSEHOLD
