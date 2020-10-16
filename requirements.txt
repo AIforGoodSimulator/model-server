@@ -12,7 +12,6 @@ certifi==2020.4.5.1
 cffi==1.14.0
 chardet==3.0.4
 click==7.1.2
-cloud-init~=20.3
 cloudpickle==1.4.1
 colorama==0.4.3
 command-not-found==0.3
@@ -164,3 +163,4 @@ zipp==3.1.0
 zope.interface==4.3.2
 PyGithub~=1.53
 numba==0.51.2
+cloud-init~=20.3
