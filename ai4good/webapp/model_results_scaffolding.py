@@ -70,38 +70,6 @@ def get_model_result(camp: str, profile: str):
     return mr, profile_df, params, report
 
 
-def render_profile_df(df, params):
-    res = []
-    for idx, r in df.iterrows():
-        p = r['Parameter']
-        s = r['Start Time']
-        e = r['End Time']
-        v = r['Value']
-        dct = {'Parameter': p}
-
-        if s != '<no_edit>' and abs(float(s) - float(e)) < 1E-1:
-            value = 'Not active'
-        elif p == 'better_hygiene':
-            value = f'{params.control_dict["better_hygiene"]["value"]} from day {s} to {e}'
-        elif p == 'ICU_capacity':
-            value = f'{v} units'
-        elif p == 'remove_symptomatic':
-            value = f'{v} people/day from day {s} to {e}'
-        elif p == 'shielding':
-            value = 'Used' if params.control_dict["shielding"]["used"] else 'Not used'
-        elif p == 'remove_high_risk':
-            value = f'{v} people/day from day {s} to {e} from ' \
-                    f'{params.control_dict["remove_high_risk"]["n_categories_removed"]} high risk categories'
-        elif p == 't_sim':
-            value = f'{v} days'
-        else:
-            value = None
-        if value:
-            dct['Value'] = value
-            res.append(dct)
-    return pd.DataFrame(res)
-
-
 def base_profile_chart_section():
     options = [
         {'label': 'All ages', 'value': 'ALL'},
@@ -219,36 +187,7 @@ def intervention(camp, cmp_profile_name, idx, base_df, base_params, base_profile
     _, cmp_profile, cmp_params, cmp_df = get_model_result(
         camp, cmp_profile_name)
 
-    tbl = diff_table(base_df, cmp_df, cmp_params.population)
-    profile_diff = profile_diff_tbl(
-        base_profile, base_params, cmp_profile, cmp_params)
-
-    return [
-        dcc.Markdown(textwrap.dedent(f'''
-        ## 2.{idx} {cmp_profile_name} intervention comparison
-        
-        Here we compare {cmp_profile_name} model profile with base {base_profile_name} profile explored in the main 
-        section. Compared to base profile {cmp_profile_name} has following changes:
-        ''')),
-        dbc.Row([
-            dbc.Col([
-                html.B(
-                    f'{cmp_profile_name} parameter changes compared to {base_profile_name}'),
-                dbc.Table.from_dataframe(
-                    profile_diff, bordered=True, hover=True,  striped=True),
-            ], width=4)
-        ]),
-        dcc.Markdown(textwrap.dedent(f'''
-        #### Comparison results
-        ''')),
-        dbc.Row([
-            dbc.Col([
-                html.B(
-                    f'{cmp_profile_name} to {base_profile_name} comparison table'),
-                dbc.Table.from_dataframe(tbl, bordered=True, hover=True)
-            ], width=4)
-        ])
-    ] + intervention_plots(base_df, cmp_df, base_profile_name, cmp_profile_name)
+    return intervention_plots(base_df, cmp_df, base_profile_name, cmp_profile_name)
 
 
 def intervention_plots(base_df, cmp_df, base_profile_name, cmp_profile_name):
@@ -292,24 +231,6 @@ def intervention_plots(base_df, cmp_df, base_profile_name, cmp_profile_name):
             style={'width': '100%'}
         )
     ]
-
-
-def profile_diff_tbl(base_profile, base_params, cmp_profile, cmp_params):
-    bp = render_profile_df(base_profile, base_params)
-    cp = render_profile_df(cmp_profile, cmp_params)
-
-    j = bp.merge(cp, how='left', on='Parameter')
-
-    cmp_result = []
-    for index, r in j.iterrows():
-        is_eq = r[f'Value_x'] == r[f'Value_y']
-        if not is_eq:
-            cmp_row = {
-                'Parameter': r['Parameter'],
-                'Value': f"{r['Value_x']} -> {r['Value_y']}"
-            }
-            cmp_result.append(cmp_row)
-    return pd.DataFrame(cmp_result)
 
 
 color_scheme_main = ['rgba(0, 176, 246, 0.2)',
