@@ -8,12 +8,15 @@ import json
 import hashlib
 from ai4good.params.param_store import ParamStore
 from ai4good.utils import path_utils as pu
+from ai4good.models.cm.country_map import countries_map
 
 
 class Parameters:
-    def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
+    def __init__(self, ps: ParamStore, camp: str, country: str, profile: pd.DataFrame, profile_override_dict={}):
         self.ps = ps
         self.camp = camp
+        self.age_limits = np.array([0, 10, 20, 30, 40, 50, 60, 70, 80], dtype=int)
+        self.country = country
         disease_params = ps.get_disease_params()
         self.camp_params = ps.get_camp_params(camp)
         # ------------------------------------------------------------
@@ -97,6 +100,7 @@ class Parameters:
             self.population_frame.to_dict('records'),
             self.population,
             self.camp,
+            self.country,
             self.calculated_categories,
             self.model_params.to_dict('records')
         ]
@@ -182,8 +186,7 @@ class Parameters:
         return population_frame, population_size
 
     def generate_infection_matrix(self):
-        infection_matrix = np.asarray(self.ps.get_contact_matrix_params(self.camp))
-        infection_matrix = infection_matrix[:, 2:].astype(np.double)
+        infection_matrix = self.generate_contact_matrix(self.age_limits)
         assert infection_matrix.shape[0] == infection_matrix.shape[1]
         next_generation_matrix = np.matmul(0.01 * np.diag(self.population_frame.Population_structure), infection_matrix)
         largest_eigenvalue = max(np.linalg.eig(next_generation_matrix)[0])  # max eigenvalue
@@ -201,27 +204,30 @@ class Parameters:
 
         return infection_matrix, beta_list, largest_eigenvalue
 
+    def generate_contact_matrix(self, age_limits: np.array):
+        if self.country not in countries_map:
+            return self.ps.get_contact_matrix_params(self.camp).to_numpy()[:, 2:].astype(np.double)
 
-def generate_contact_matrix(camp_name: str, country: str, age_limits: np.array):
-    contact_matrix = pd.read_csv(pu.cm_params_path(f'contact_matrices/{country}.csv')).to_numpy()
-    camp_params_df = pd.read_csv(pu.params_path('camp_params.csv'))
-    population_array = camp_params_df[camp_params_df['Camp'] == camp_name]['Population_structure'].to_numpy()
+        cm_path = countries_map[self.country]
+        contact_matrix = pd.read_csv(pu.cm_params_path(f'contact_matrices/{cm_path}')).to_numpy()
+        population_array = self.camp_params[self.camp_params['Camp'] == self.camp]['Population_structure'].to_numpy()
 
-    n_categories = len(age_limits) - 1
-    ind_limits = np.array(age_limits / 5, dtype=int)
+        n_categories = len(age_limits) - 1
+        ind_limits = np.array(age_limits / 5, dtype=int)
 
-    p = np.zeros(16)
-    for i in range(n_categories):
-        p[ind_limits[i]: ind_limits[i + 1]] = population_array[i] / (ind_limits[i + 1] - ind_limits[i])
+        p = np.zeros(16)
+        for i in range(n_categories):
+            p[ind_limits[i]: ind_limits[i + 1]] = population_array[i] / (ind_limits[i + 1] - ind_limits[i])
 
-    transformed_matrix = np.zeros((n_categories, n_categories))
+        transformed_matrix = np.zeros((n_categories, n_categories))
 
-    for i in range(n_categories):
-        for j in range(n_categories):
-            sump = sum(p[ind_limits[i]: ind_limits[i + 1]])
-            b = contact_matrix[ind_limits[i]: ind_limits[i + 1], ind_limits[j]: ind_limits[j + 1]] * np.array(
-                p[ind_limits[i]: ind_limits[i + 1]]).transpose()
-            v1 = b.sum() / sump
-            transformed_matrix[i, j] = v1
+        for i in range(n_categories):
+            for j in range(n_categories):
+                sump = sum(p[ind_limits[i]: ind_limits[i + 1]])
+                b = contact_matrix[ind_limits[i]: ind_limits[i + 1], ind_limits[j]: ind_limits[j + 1]] * np.array(
+                    p[ind_limits[i]: ind_limits[i + 1]]).transpose()
+                v1 = b.sum() / sump
+                transformed_matrix[i, j] = v1
 
-    return transformed_matrix
+        return transformed_matrix
+

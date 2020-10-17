@@ -13,6 +13,7 @@ class TestEndToEndRuns(unittest.TestCase):
             _model=CompartmentalModel.ID,
             _profile='custom',
             camp='Moria',
+            country='Greece',
             load_from_cache=False,
             save_to_cache=False,
             is_save_plots=False,

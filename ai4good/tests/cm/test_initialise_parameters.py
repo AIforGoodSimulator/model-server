@@ -1,19 +1,21 @@
 import os
 import unittest
+import numpy as np
 import pandas as pd
+from pandas.testing import assert_frame_equal
+from ai4good.models.cm.cm_model import CompartmentalModel
 from ai4good.runner.facade import Facade
-from ai4good.models.model_registry import get_models, create_params
+from ai4good.models.cm.initialise_parameters import Parameters
 
 
 class InitialiseParameters(unittest.TestCase):
     def setUp(self) -> None:
         self.facade = Facade.simple()
-        self.mdl = get_models()['compartmental-model'](self.facade.ps)
+        self.profile_df = self.facade.ps.get_params(CompartmentalModel.ID, 'baseline')
 
     def test_cm_category(self):
-        params = create_params(self.facade.ps, 'compartmental-model',
-                               self.facade.ps.get_profiles('compartmental-model')[0],
-                               'Moria', None)
+        params = Parameters(self.facade.ps, 'Moria', '',
+                            self.profile_df, {})
 
         self.assertCountEqual(params.change_in_categories, ['C' + x for x in params.calculated_categories])
         self.assertEqual(len(params.categories), 2*len(params.calculated_categories) + 1)
@@ -22,8 +24,8 @@ class InitialiseParameters(unittest.TestCase):
 
     def test_cm_custom_profile(self):
         custom_profile_df = pd.read_csv(os.path.join(os.path.dirname(__file__), 'resources/profile.csv'))
-        params = create_params(self.facade.ps, 'compartmental-model',
-                               custom_profile_df, 'Moria', None)
+        params = Parameters(self.facade.ps, 'Moria', '',
+                            custom_profile_df, {})
         self.assertEqual(params.control_dict['ICU_capacity']['value'],
                          int(custom_profile_df[custom_profile_df['Parameter'] == 'ICU_capacity']['Value'])/params.population)
 
@@ -36,3 +38,15 @@ class InitialiseParameters(unittest.TestCase):
 
         self.assertEqual(params.control_dict['numberOfIterations'], 2)
         self.assertEqual(params.control_dict['t_sim'], 200)
+        expected = pd.read_csv('cm/resources/Albania_contact_matrix.csv', index_col=0)
+        actual = pd.DataFrame(params.infection_matrix)
+        np.array_equal(expected.values, actual.values)
+        np.array_equal(params.camp_params.to_numpy(), self.facade.ps.get_camp_params('Moria').to_numpy())
+
+    def test_default_contact_matrix(self):
+        params = Parameters(self.facade.ps, 'Moria', 'Albania',
+                            self.profile_df, {})
+        expected = pd.read_csv('cm/resources/Albania_contact_matrix.csv', index_col=0)
+        actual = pd.DataFrame(params.infection_matrix)
+        np.array_equal(expected.values, actual.values)
+        np.array_equal(params.camp_params.to_numpy(), self.facade.ps.get_camp_params('Moria').to_numpy())
