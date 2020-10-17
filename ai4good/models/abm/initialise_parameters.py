@@ -91,6 +91,17 @@ class Parameters:
         self.ethnical_corellations = abm.create_ethnic_groups(self.households_location, self.relative_strength_of_interaction)
         self.local_interaction_space = abm.interaction_neighbours(self.households_location, self.smaller_movement_radius, self.larger_movement_radius, self.overlapping_rages_radius, self.ethnical_corellations)
 
+        # The probability that a person's disease state will change from mild->recovered (0.37)
+        # Liu et al 2020 The Lancet.
+        self.mild_rec = np.random.uniform(0, 1, self.total_population) > math.exp(0.2 * math.log(0.1))
+
+        # The probability that a person's disease state will change from severe->recovered (0.071)
+        # Cai et al.
+        self.sev_rec = np.random.uniform(0, 1, self.total_population) > math.exp(math.log(63 / 153) / 12)
+
+        # Get random numbers to determine health states
+        self.pick_sick = np.random.uniform(0, 1, self.total_population)
+
         self.ethnic_group1 = float(profile.loc['ethnic_group1', 'Value'])
         self.ethnic_group2 = float(profile.loc['ethnic_group2', 'Value'])
         self.ethnic_group3 = float(profile.loc['ethnic_group3', 'Value'])
