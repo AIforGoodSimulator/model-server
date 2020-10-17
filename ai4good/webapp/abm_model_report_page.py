@@ -13,15 +13,17 @@ from ai4good.models.abm.abm_model import ABM
 from ai4good.models.abm.initialise_parameters import Parameters
 from ai4good.webapp.apps import dash_app, facade, model_runner, cache, local_cache, cache_timeout
 # from ai4good.webapp.abm_model_report_utils import *
+from ai4good.webapp.metadata_report import GenerateMetadataDict, GenerateMetadataHTML
 
 
 @cache.memoize(timeout=cache_timeout)
 def layout(camp, profile, cmp_profiles):
-
+    
     _, profile_df, params, _ = get_model_result(camp, profile)
 
     return html.Div(
         [
+            GenerateMetadataHTML(GenerateMetadataDict(ABM.ID, camp, profile, model_runner)),
             dcc.Markdown(disclaimer(camp), style={'margin': 30}),
             html.H1(f'AI for Good Simulator Model Report for {camp} Camp {profile} profile', style={'margin': 30}),
             #dcc.Markdown(glossary(), style={'margin': 30}),

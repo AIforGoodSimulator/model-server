@@ -171,6 +171,48 @@ Difference instances of model server are available:
     apt install python3-waitress
     waitress-serve --port 8050 --host your_host_ip ai4good.webapp.server:flask_app
     ```
+### CI/CD Workflow 
+
+The following workflow should be used for development:
+
+* Run local tests, once all tests pass commit your branch to github
+
+* Your commit will run the tests on Github using actions. You can view the tests running under the 'Actions' menu item above.
+
+* Once your tests pass create a pull request to the 'dev' branch and merge.  Tests will be run again and the dev branch will be deployed to the dev server.
+* You can view your changes on : (Note build and deployment can take 5+ minutes) 
+
+    http://ai4good-dev.azurewebsites.net/sim/run_model (DEV)
+
+
+* Now create a pull request to the 'uat' branch and merge. Tests will be run again and the uat branch will be deployed to the uat server.
+* You can view your changes on : (Note build and deployment can take 5+ minutes) 
+* This is the branch the the testing team will do UAT testing on.
+
+    http://ai4good-uat.azurewebsites.net/sim/run_model (UAT)
+
+* Now create a pull request to the 'Master' branch.  This pull request can be merged by the following people :
+
+    [pardf](https://github.com/pardf)
+
+    [kariso2000](https://github.com/kariso2000)
+
+    [billlyzhaoyh](https://github.com/billlyzhaoyh)
+
+    [titorenko](https://github.com/titorenko)
+
+    [LucasMartinCalderon](https://github.com/LucasMartinCalderon)
+
+    [TensorMan](https://github.com/TensorMan)
+
+
+* Deploy to PROD server with master branch is currently manual.
+
+* You can also view web tests running on our Zalenium instance :
+
+    http://51.132.48.142/dashboard/#
+
+Please contact [kariso2000](https://github.com/kariso2000) on slack for userid and password.
 
 ### FAQ
 Will the web server be a separate container?

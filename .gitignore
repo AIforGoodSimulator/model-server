@@ -25,3 +25,5 @@ removal_log.txt
 old/
 ai4good/models/am/*
 temp/
+.vscode
+.gitignore

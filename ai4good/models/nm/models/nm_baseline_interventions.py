@@ -1,14 +1,12 @@
 from seirsplus.models import *
 from ai4good.models.nm.utils.network_utils import *
 from ai4good.models.nm.utils.intervention_utils import *
-import ai4good.models.nm.parameters.camp_params as cp
-
 
 # Load graphs and process
-def process_graph_sq(p, graph, nodes_per_struct):
+def process_graph_bm_interventions(p, graph, nodes_per_struct):
     # Add 1 food queue
     graph = connect_food_queue(
-        graph, nodes_per_struct, cp.food_weight, "food")
+        graph, nodes_per_struct, p.food_weight, "food")
 
     # Create quarantine graph - This also includes neighbor/friendship edges
     quarantine_graph = remove_edges_from_graph(graph, scale=2, edge_label_list=[
@@ -18,16 +16,13 @@ def process_graph_sq(p, graph, nodes_per_struct):
     interventions = Interventions()
 
     # Simulate quarantine + masks
-    q_start = 30
-    interventions.add(quarantine_graph, q_start, beta=p.beta_q)
+    interventions.add(quarantine_graph, p.q_start, beta=p.beta_q)
 
     # Simulate HALT of quarantine but people still have to wear masks
-    q_end = 60
-    interventions.add(graph, q_end, beta=p.beta_q)
+    interventions.add(graph, p.q_end, beta=p.beta_q)
 
     # Simulate HALT of wearing masks
-    m_end = 90
-    interventions.add(graph, m_end, beta=p.beta)
+    interventions.add(graph, p.m_end, beta=p.beta)
 
     checkpoints = interventions.get_checkpoints()
 
@@ -41,7 +36,7 @@ def process_graph_sq(p, graph, nodes_per_struct):
                                  initE=p.init_exposed)
 
     # Run model
-    node_states, simulation_results = run_simulation(model, p.t_steps)
+    node_states, simulation_results = run_simulation(model, p.t_steps, checkpoints)
     # Construct results dataframe
     output_df = results_to_df(simulation_results)
 
