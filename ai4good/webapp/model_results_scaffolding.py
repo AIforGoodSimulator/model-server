@@ -13,7 +13,6 @@ from ai4good.models.cm.cm_model import CompartmentalModel
 from ai4good.models.cm.initialise_parameters import Parameters
 from ai4good.webapp.apps import dash_app, facade, model_runner, cache, local_cache, cache_timeout
 from ai4good.webapp.cm_model_report_utils import *
-from ai4good.webapp.metadata_report import GenerateMetadataDict, GenerateMetadataHTML
 
 
 @cache.memoize(timeout=cache_timeout)
