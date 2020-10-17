@@ -95,17 +95,6 @@ class ABM(Model):
         if abm.epidemic_finish(np.concatenate((p.track_states[t, 1:6], p.track_states[t, 7:p.number_of_states])), t):
             return
 
-        # The probability that a person's disease state will change from mild->recovered (0.37)
-        # Liu et al 2020 The Lancet.
-        p.mild_rec = np.random.uniform(0, 1, p.total_population) > math.exp(0.2 * math.log(0.1))
-
-        # The probability that a person's disease state will change from severe->recovered (0.071)
-        # Cai et al.
-        p.sev_rec = np.random.uniform(0, 1, p.total_population) > math.exp(math.log(63 / 153) / 12)
-
-        # Get random numbers to determine health states
-        p.pick_sick = np.random.uniform(0, 1, p.total_population)
-
         if p.ACTIVATE_INTERVENTION and t != 0:
             p.iat1 = t
             p.ACTIVATE_INTERVENTION = False

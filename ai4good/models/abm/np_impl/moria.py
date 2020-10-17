@@ -62,7 +62,7 @@ class Moria(Camp):
         # This number is used to specify the amount of activities happening in the camp. More the activities, more the
         # interactions of agents in the camp
         # DONE: parameterize it => we are given **daily** probability so: toilet + fl + wandering + hh = 4
-        self.num_activities = 4
+        self.num_activities = 10
 
         # number of days passed in simulation
         self.t = 0
