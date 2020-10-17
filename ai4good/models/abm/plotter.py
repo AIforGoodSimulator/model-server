@@ -25,6 +25,7 @@ def figure_generator(track_states, params, disease_states):
     #
     lines_to_plot = []
     #
+
     cols = ["susceptible_tl",
             "exposed_tl",
             "presymptomatic_tl",
