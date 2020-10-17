@@ -9,8 +9,13 @@ import ai4good.webapp.run_model_page as run_model_page
 from ai4good.webapp.model_runner import ModelScheduleRunResult
 from dash.dependencies import Input, Output, State
 import dash_table
+import os
 
 text_disclaimer = 'Disclaimer: This tool is for informational and research purposes only and should not be considered as a medical predictor. The input parameters you have provided is a determining factor in the simulation results. '
+
+path_country = 'fs/params/cm_model/contact_matrices/'
+country_raw = [f for f in os.listdir(path_country) if os.path.isfile(os.path.join(path_country, f))]
+country_clean = sorted([f.split('.')[0] for f in country_raw])
 
 layout = html.Div(
     [
@@ -44,7 +49,10 @@ layout = html.Div(
                             html.Header('Location', className='card-text'),
                             dbc.Input(id='location', placeholder='Required', bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Country', className='card-text'),
-                            dbc.Input(id='country', placeholder='Required', bs_size='sm', style={'margin-bottom':'25px'}),
+                            html.Small(dcc.Dropdown(
+                                options=[{'label': k, 'value': k} for k in country_clean], 
+                                id='countries-dropdown', placeholder='Required', value='America', style={'margin-bottom':'25px'})),
+                            
                             html.Header('Total Population', className='card-text'),
                             dbc.Input(id='total-population', placeholder='Required', type='number', min=0, max=100000, step=10, bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Total Area (sq. km)', className='card-text'),
