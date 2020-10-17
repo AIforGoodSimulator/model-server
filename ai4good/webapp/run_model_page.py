@@ -243,14 +243,15 @@ def profile_selector():
 def model_run_buttons():
     return html.Div([
         html.Label('Start simulation', style={'font-weight': 'bold'}),
-        html.Div([], id='start_simulation'),
-        dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True),
-        dbc.Button("Validate Model", id="validate_model_button", color="secondary", className="mr-1", disabled=True),
-        html.Div([], id='new_row'),
+        html.Div([
+            dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True), 
+            dbc.Button("Validate Model", id="validate_model_button", color="secondary", className="mr-1", disabled=True),
+        ], id='start_simulation', style={'margin-bottom':'25px'}),
         html.Label('Display outputs', style={'font-weight': 'bold'}),
-        html.Div([], id='display_outputs'),
-        dbc.Button("See Results", id="model_results_button", color="success", className="mr-1", target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'),
-        dbc.Button("See Report", id="model_report_button", color="success", className="mr-1", disabled=True, key='model_report_button_key'),
+        html.Div([
+            dbc.Button("See Results", id="model_results_button", color="success", className="mr-1", target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'), 
+            dbc.Button("See Report", id="model_report_button", color="success", className="mr-1", disabled=True, key='model_report_button_key'),
+        ], id='display_outputs', style={'margin-bottom':'25px'}),
         dbc.Toast(
             [],
             id="run_model_toast",
@@ -286,7 +287,7 @@ def history_table():
     return html.Div([
         dbc.Row([
             html.H3('Model Running Queue ')
-        ], style={'margin-top': 100, 'margin-left': 15,'color':'Black','border':'10px'}),
+        ], style={'margin-top': 20, 'margin-left': 20,'color':'Black','border':'0px'}),
         dbc.Row([
             dbc.Col(
                 html.Div([
@@ -306,11 +307,12 @@ def history_table():
                             'text-align': 'center'
                         }
                     )
-                ],style={'margin-left':20}), width=6,
+                ],style={'margin-left':55}), width=6,
             )
         ])
     ])
-        
+
+
 def nav_bar():
     return dbc.NavbarSimple(
         children=[
