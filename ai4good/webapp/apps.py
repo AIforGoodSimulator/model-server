@@ -37,7 +37,6 @@ dash_app = dash.Dash(
     routes_pathname_prefix='/sim/',
     suppress_callback_exceptions=True,
     external_stylesheets=[dbc.themes.BOOTSTRAP, '/static/css/ai4good.css']
-
 )
 dash_app.title = "AI4Good COVID-19 Model Server"
 

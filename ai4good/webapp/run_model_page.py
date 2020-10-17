@@ -50,7 +50,7 @@ def profile_selector():
     return dbc.Row([
         dbc.Col(
             html.Div([
-                html.Label([html.A('Profile', href='https://github.com/AIforGoodSimulator/model-server/blob/master/fs/params/Parameters_mouse-over_des.csv', target="_blank")], style={'font-weight':'bold'}),
+                html.Label([html.A('Profile', href='https://raw.githubusercontent.com/AIforGoodSimulator/model-server/master/fs/params/Parameters_mouse-over_des.csv', target="_blank")], style={'font-weight':'bold'}),
                 dcc.Dropdown(
                     id='profile-dropdown'
                 ),
@@ -285,36 +285,32 @@ def history_table():
 
     return html.Div([
         dbc.Row([
-         html.H3('Model Running Queue ')
-        ], style={'margin-top': 20, 'margin-left': 20,'color':'Black','border':'0px'}),
+            html.H3('Model Running Queue ')
+        ], style={'margin-top': 100, 'margin-left': 15,'color':'Black','border':'10px'}),
         dbc.Row([
-        dbc.Col(
-            html.Div([
-                html.H3('Run Queue'),
-                dash_table.DataTable(
-                    id='history_table',
-                    columns=[{"name": i, "id": i} for i in cols],
-                    data=[{}],
-                    style_data_conditional=[
-                        {
-                            'if': {'row_index': 'odd'},
-                            'backgroundColor': 'rgb(248, 248, 248)',
-
+            dbc.Col(
+                html.Div([
+                    dash_table.DataTable(
+                        id='history_table',
+                        columns=[{"name": i, "id": i} for i in cols],
+                        data=[{}],
+                        style_data_conditional=[{
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': 'rgb(248, 248, 248)',
+                            }
+                        ],
+                        style_header={
+                            'backgroundColor': 'rgb(89,169,255)',
+                            'fontWeight': 'bold',
+                            'color': 'rgb(255,255,255)',
+                            'text-align': 'center'
                         }
-                    ],
-                    style_header={
-                        'backgroundColor': 'rgb(89,169,255)',
-                        'fontWeight': 'bold',
-                        'color': 'rgb(255,255,255)',
-                        'text-align': 'center'
-                    }
-
-                )
-            ],style={'margin-left': 55}),
-            width=6,
-        )
-    ], style={'margin-top': 100, 'margin-left': 5})
-
+                    )
+                ],style={'margin-left':20}), width=6,
+            )
+        ])
+    ])
+        
 def nav_bar():
     return dbc.NavbarSimple(
         children=[
