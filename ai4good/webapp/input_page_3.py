@@ -48,14 +48,14 @@ layout = html.Div(
                             dbc.Input(id='number-known-comobidity', placeholder='Optional', type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Isolation Capacity', className='card-text'),
                             html.Header('What is the total capacity of the isolation centre at the settlement?', className='card-text', style={'color':'darkgray'}), 
-                            dbc.Input(id='capacity-isolation-centre', placeholder='Required', type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
+                            dbc.Input(id='isolation-capacity', placeholder='Required', type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Community Shielding', className='card-text'),
                             html.Header('Is it possible to implement shielding or has it been implemented already?', className='card-text', style={'color':'darkgray'}), 
                             dbc.RadioItems(
                                 options=[
                                     {'label':'Yes', 'value':1}, 
                                     {'label':'No', 'value':0},
-                                ], value=1, id='remove-high-risk-off-site', inline=True, style={'margin-bottom':'25px'}),
+                                ], value=1, id='community-shielding', inline=True, style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-3-button', color='secondary', href='/sim/input_page_4')),
                             html.Div(id='input-page-3-alert')
                             ], body=True
