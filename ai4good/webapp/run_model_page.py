@@ -9,6 +9,7 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_table
 import csv
+from ai4good.utils import path_utils as pu
 
 def camp_selector():
     return dbc.Row([
@@ -336,7 +337,7 @@ layout = html.Div(
 )
 
 def findToolTip(query):
-    with open('fs/params/Parameters_mouse-over_des.csv', encoding='utf-8') as csv_file:
+    with open(pu.get_param_mouse_over('Parameters_mouse-over_des.csv'), encoding='utf-8') as csv_file:
         csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
             if query == row["Parameter"]:
