@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@600&display=swap');
+
+*
+{
+  font-family: 'Roboto Mono', monospace;
+  font-family: 'Open Sans', sans-serif;
+}
+
+#test
+{
+  width: 100px;
+  height: 100px;
+  background-color: red;
+}
+
+.card
+{
+  border: 0 solid black;
+  border-radius: 0px;
+  -webkit-box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.75);
+  box-shadow: 0px 2px 5px 0px rgba(0,0,0,0.75);
+}
+
+.lighternav
+{
+  background-color: #f8f9fa!important;
+}
+.lighternav a
+{
+  color: black!important;
+}
+.darkButton
+{
+  background-color: black!important;
+  border: 0px solid black;
+}
