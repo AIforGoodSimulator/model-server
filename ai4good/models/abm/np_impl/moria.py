@@ -4,8 +4,8 @@ from tqdm import tqdm
 from scipy.cluster.vq import kmeans
 
 from ai4good.models.abm.np_impl.model import *
-from ai4good.models.abm.initialise_parameters import Parameters
-from ai4good.models.abm.np_impl.utils import get_incubation_period, read_age_gender
+from ai4good.models.abm.np_impl.parameters import Parameters
+from ai4good.models.abm.np_impl.utils import get_incubation_period
 
 CAMP_SIZE = 100.0
 
@@ -46,23 +46,13 @@ class Moria(Camp):
         self.P_detect = 0.0  # probability that camp manager detects agent with symptoms
         self.P_n = 0  # number of days after recovery when agent can go back to camp
 
-        # ethnic groups and their proportions in the camp
-        self.ethnic_groups = [  # [ethnic group name, proportion of people in ethnic group]
-            ['ethnic_group1', self.params.ethnic_group1],
-            ['ethnic_group2', self.params.ethnic_group2],
-            ['ethnic_group3', self.params.ethnic_group3],
-            ['ethnic_group4', self.params.ethnic_group4],
-            ['ethnic_group5', self.params.ethnic_group5],
-            ['ethnic_group6', self.params.ethnic_group6],
-            ['ethnic_group7', self.params.ethnic_group7],
-            ['ethnic_others', self.params.ethnic_others]
-        ]
-        assert sum([eth[1] for eth in self.ethnic_groups]) <= 1.0, "Sum of ethnic group proportions should be ~1"
-
         # This number is used to specify the amount of activities happening in the camp. More the activities, more the
         # interactions of agents in the camp
         # DONE: parameterize it => we are given **daily** probability so: toilet + fl + wandering + hh = 4
-        self.num_activities = 4
+        self.num_activities = 10
+
+        assert self.params.num_food_visit <= self.num_activities
+        assert self.params.num_toilet_visit <= self.num_activities
 
         # number of days passed in simulation
         self.t = 0
@@ -72,33 +62,8 @@ class Moria(Camp):
         # initialize agents array
         agents = np.empty((self.num_people, A_FEATURES))
 
-        # TODO: after confirming from Gaia and Vera, use this block instead of age_and_gender.csv (read_age_gender)
-        # Assign gender to agents based on parameters
-        # We first get the parameter for proportion of females in the camp (a number between 0 and 1). From this we can
-        # also derive the number of males in the camp. Finally, we can randomly assign agents to available gender ratios
-        # num_females = int(self.num_people * self.params.pct_female)  # number of females in the camp
-        # gender = [FEMALE] * num_females + [MALE] * (self.num_people - num_females)  # initialize population with genders
-        # np.random.shuffle(gender)
-        # agents[:, A_GENDER] = gender  # update agents with genders
-        # Assign age to agents based on age bucket parameters
-        # pct_age = [self.params.pct_0_9, self.params.pct_10_19, self.params.pct_20_29, self.params.pct_30_39,
-        #            self.params.pct_40_49, self.params.pct_50_59, self.params.pct_60_69, self.params.pct_70_79,
-        #            self.params.pct_80_89, self.params.pct_90]
-        # ages = []  # initialize agent's age array
-        # for i, pct_a in enumerate(pct_age):
-        #     if i == len(pct_a) - 1:
-        #         # For last age slot, assign age to all unassigned agents
-        #         n = self.num_people - len(ages)
-        #         ages.extend([i+5] * n)
-        #     else:
-        #         # Assign age to agents based on proportions
-        #         n = int(pct_a * self.num_people)
-        #         ages.extend([i+5] * n)
-        # np.random.shuffle(ages)
-        # agents[:, A_AGE] = ages
-        # get age and gender of the agents from available dataset
-        agents[:, A_AGE] = read_age_gender(self.num_people)[:, 0]
-        agents[:, A_GENDER] = read_age_gender(self.num_people)[:, 1]
+        agents[:, A_AGE] = self.params.age_and_gender[:, 0]
+        agents[:, A_GENDER] = self.params.age_and_gender[:, 1]
 
         # initialize all agents as susceptible initially
         agents[:, A_DISEASE] = np.array([INF_SUSCEPTIBLE] * self.num_people)
@@ -145,6 +110,7 @@ class Moria(Camp):
         self.progress_file_name = "abm_moria_{}.csv".format(
             datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")
         )
+        logging.info("Results will be saved in {}".format(self.progress_file_name))
         # Initialize progress dataset
         data_collector = pd.DataFrame({
             'DAY': [],
@@ -159,12 +125,12 @@ class Moria(Camp):
         # 1. Apply transmission reduction by scaling down the probability of infection spread
         self.intervention_transmission_reduction(self.params.transmission_reduction)
         # 2. Apply isolation parameters
-        self.intervention_isolation(self.params.probability_spotting_symptoms_per_day)
+        self.intervention_isolation(self.params.probability_spotting_symptoms_per_day, self.params.clear_day)
         # 3. Apply sectoring
         # NOTE: This is already done since initial food line queue initialization is done with `foodline_blocks` param
         # self.intervention_sectoring(self.params.foodline_blocks)
         # 4. Apply lockdown
-        # self.intervention_lockdown()
+        # self.intervention_lockdown(rl=?, vl=self.params.prop_violating_lockdown)
 
     def simulate(self):
         # Run simulation on Moria camp
@@ -193,7 +159,7 @@ class Moria(Camp):
                 prob_food_line = self.params.pct_food_visit if s % s_food == 0 else 0.0
 
             # get the activities asymptomatic agents will do in this time step
-            activities = Moria.get_activities(self.agents, prob_food_line)
+            activities = Moria.get_activities(self.agents, prob_food_line, self.params.num_toilet_visit/self.num_activities)
 
             in_queue = (self.agents[:, A_ACTIVITY] == ACTIVITY_TOILET) | \
                        (self.agents[:, A_ACTIVITY] == ACTIVITY_FOOD_LINE)
@@ -270,7 +236,7 @@ class Moria(Camp):
 
     @staticmethod
     @nb.njit
-    def get_activities(agents: np.array, prob_food_line) -> np.array:
+    def get_activities(agents: np.array, prob_food_line, prob_toilet) -> np.array:
         # Return the activities all agents will do at any point in time.
         # This method gets called multiple times in a day depending on the around of activities agents are doing in camp
 
@@ -294,7 +260,7 @@ class Moria(Camp):
             # If agent is not showing symptoms, go to toilet with some probability
             # An agent already in the toilet will remain there till the `update_queues` method dequeues it
             elif agents[i, A_ACTIVITY] == ACTIVITY_TOILET or \
-                    (not showing_symptoms and random.random() <= 0.3):
+                    (not showing_symptoms and random.random() <= prob_toilet):
                 out[i] = ACTIVITY_TOILET
             # Same logic in food line
             elif agents[i, A_ACTIVITY] == ACTIVITY_FOOD_LINE or \
@@ -332,8 +298,6 @@ class Moria(Camp):
         # However, people in Moria have been provided with face masks. We simulated a population in which all
         # individuals wear face masks outside their homes by setting vt = 0.32 (Jefferson et al. 2009)
 
-        assert 0.0 <= vt <= 1.0, "Transmission reduction factor must be between 0.0 and 1.0"
-
         # scale transmission probability
         self.prob_spread = self.prob_spread * vt
 
@@ -355,20 +319,23 @@ class Moria(Camp):
 
         logging.info("INTERVENTION: Creating sectors in the camp of size ({}x{})".format(sector_size, sector_size))
 
-    def intervention_lockdown(self, rl, wl):
+    def intervention_lockdown(self, rl=None, vl=None):
         # Some countries have attempted to limit the spread of COVID-19 by requiring people to stay in or close to
         # their homes (ref). This intervention has been called "lockdown". We simulated a lockdown in which most
         # individuals are restricted to a home range with radius rl around their households. We assumed that a
-        # proportion wl of the population will violate the lockdown. Thus, for each individual in the population,
-        # we set their home range to rl with probability (1- wl), and to 0.1 otherwise. By manipulating rl and wl we
+        # proportion vl of the population will violate the lockdown. Thus, for each individual in the population,
+        # we set their home range to rl with probability (1- vl), and to 0.1 otherwise. By manipulating rl and vl we
         # simulated lockdowns that are more or less restrictive and/or strictly enforced.
 
         # Parameters:
         #   rl: new home range (for all agents)
-        #   wl: proportion of people who violate lockdown
+        #   vl: proportion of people who violate lockdown
+
+        if rl is None or vl is None:
+            return
 
         # check if agents will violate lockdown
-        will_violate = np.random.random(size=(self.num_people,)) < wl
+        will_violate = np.random.random(size=(self.num_people,)) < vl
 
         # assign new home ranges
         self.agents[will_violate, A_HOME_RANGE] = 0.1 * CAMP_SIZE
@@ -377,7 +344,7 @@ class Moria(Camp):
         logging.info("INTERVENTION: In lockdown, {} agents are violating home ranges".
                      format(np.count_nonzero(will_violate)))
 
-    def intervention_isolation(self, b, n=7):
+    def intervention_isolation(self, b=None, n=None):
         # Managers of some populations, including Moria, have planned interventions in which people with COVID-19
         # infections and their households will be removed from populations and kept in isolation until the infected
         # people have recovered. To simulate such remove-and-isolate interventions, we conduct simulations in which in
@@ -389,6 +356,9 @@ class Moria(Camp):
         # if they do not become infected, 7 days after the last infected person in their household has recovered. By
         # setting different values of b, we can simulate remove-and-isolate interventions with different detection
         # efficiencies.
+
+        if b is None or n is None:
+            return
 
         assert 0.0 <= b <= 1.0, "Probability of detecting symptoms must be within [0,1]"
         assert n > 0, "Invalid value for isolation parameter: n"
@@ -544,8 +514,7 @@ class Moria(Camp):
         # NOTE: In our implementation, we assign agents to ethnicities instead of assigning households to ethnicities
 
         # check if provided population can be fit into given number of households
-        camp_capacity = self.params.number_of_people_in_one_isobox * self.params.number_of_isoboxes + \
-                        self.params.number_of_people_in_one_tent * self.params.number_of_tents
+        camp_capacity = self.params.number_of_people_in_isoboxes + self.params.number_of_people_in_tents
         assert camp_capacity >= self.num_people, \
             "Number of people ({}) exceeds camp capacity ({})".format(self.num_people, camp_capacity)
 
@@ -559,10 +528,10 @@ class Moria(Camp):
         # create clusters based on number of ethnic groups
         # use kmeans algorithm to cluster households
         # `cluster_pts` contains co-ordinates where clusters are centered. This may not be exactly a household position
-        cluster_pts, _ = kmeans(households[:, 2:], len(self.ethnic_groups))
+        cluster_pts, _ = kmeans(households[:, 2:], len(self.params.ethnic_groups))
 
         # iterate for all ethnic groups available
-        for i, eth in enumerate(self.ethnic_groups):
+        for i, eth in enumerate(self.params.ethnic_groups):
             # number of people in same ethnic group (not any one assigned to a household initially)
             num_eth_ppl = np.count_nonzero(agents_ethnic_groups == i)
             # cluster center co-ordinates
@@ -605,8 +574,8 @@ class Moria(Camp):
             out: An 2D array (?, 4) containing id, capacity and x,y co-ordinates of the households
         """
 
-        num_iso_boxes = self.params.number_of_isoboxes
-        num_tents = self.params.number_of_tents
+        num_iso_boxes = int(np.ceil(self.params.number_of_people_in_isoboxes / self.params.number_of_people_in_one_isobox))
+        num_tents = int(np.ceil(self.params.number_of_people_in_tents / self.params.number_of_people_in_one_tent))
 
         # get positions, ids and capacities of iso-boxes
         iso_boxes_pos = self._get_iso_boxes(num_iso_boxes, self.params.area_covered_by_isoboxes)
@@ -734,7 +703,7 @@ class Moria(Camp):
         """
 
         # number of ethnic groups
-        num_eth = len(self.ethnic_groups)
+        num_eth = len(self.params.ethnic_groups)
 
         assert self.num_people >= num_eth, "Minimum {} people required for calculations".format(num_eth)
 
@@ -742,7 +711,7 @@ class Moria(Camp):
         out = np.zeros((self.num_people,), dtype=np.int32)
         o = 0  # counter for `out`
 
-        for i, grp in enumerate(self.ethnic_groups):
+        for i, grp in enumerate(self.params.ethnic_groups):
             # calculate number of people in ethnic group from proportion
             grp_ppl_count = int(grp[1] * self.num_people)
             # assign calculated number of people to ethnic group `grp`

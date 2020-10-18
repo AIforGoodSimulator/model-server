@@ -15,7 +15,7 @@ BaselineHTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Para
 BaselineHTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
 BaselineHTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
 BaselineHTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
-BaselineHTHI,transmission_reduction,Reduction in trasmission due to intervention,Baseline High Transmission High Interaction,1
+BaselineHTHI,transmission_reduction,Reduction in transmission due to intervention,Baseline High Transmission High Interaction,1
 BaselineHTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Baseline High Transmission High Interaction,0.05
 BaselineHTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
 BaselineHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
@@ -199,8 +199,8 @@ AllInterventionsHTHI,num_toilet_contact,Number of contacts in the toilets area,C
 AllInterventionsHTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
 AllInterventionsHTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
 AllInterventionsHTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
-AllInterventionsHTHI,transmission_reduction,Reduction in trasmission due to intervention,AllInterventionsHTHI,0.32
-AllInterventionsHTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,AllInterventionsHTHI,0.5
+AllInterventionsHTHI,transmission_reduction,Reduction in transmission due to intervention,AllInterventionsHTHI,0.32
+AllInterventionsHTHI,probability_spotting_symptoms_per_day,Probability of spotting that an individual is symptomatic per day,AllInterventionsHTHI,0.5
 AllInterventionsHTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
 AllInterventionsHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 AllInterventionsHTHI,foodline_blocks,Number of foodlines in the camp,AllInterventionsHTHI,"16,16"

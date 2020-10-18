@@ -16,7 +16,7 @@ numba_logger.setLevel(logging.WARNING)
 def get_params():
     _model = 'agent-based-model'
     # Possible values: "baseline", "small", ...
-    _profile = 'baseline'
+    _profile = 'BaselineHTHI'
     camp = 'Moria'
     overrides = '{"numberOfIterations": 1, "nProcesses": 1}'
     facade = Facade.simple()

@@ -5,39 +5,9 @@ This file contains small helper utility functions
 import sys
 import math
 import random
-import logging
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
-
-def read_age_gender(num_ppl):
-    """
-    Read file containing people's age and gender.
-
-    Parameters
-    ----------
-        num_ppl : Number of records to return
-
-    Returns
-    -------
-        out : Numpy array of size (`num_ppl`, 2) containing rows: (age, gender)
-
-    """
-    # Data frame. V1 = age, V2 is sex (1 = male?, 0  = female?).
-
-    from ai4good.utils.path_utils import get_am_aug_pop
-
-    age_and_gender = pd.read_csv(get_am_aug_pop())
-    age_and_gender = age_and_gender.loc[:, ~age_and_gender.columns.str.contains('^Unnamed')]
-    age_and_gender = age_and_gender.values
-
-    if age_and_gender.shape[0] < num_ppl:
-        logging.warning("Number of agents are more than data provided in age_and_gender.csv by {}".
-                        format(num_ppl - age_and_gender.shape[0]))
-
-    age_and_gender = age_and_gender[np.random.randint(age_and_gender.shape[0], size=num_ppl)]
-    return age_and_gender
 
 
 def get_incubation_period(num_ppl):
