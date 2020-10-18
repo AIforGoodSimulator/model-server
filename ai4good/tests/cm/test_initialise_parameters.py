@@ -2,7 +2,6 @@ import os
 import unittest
 import numpy as np
 import pandas as pd
-from pandas.testing import assert_frame_equal
 from ai4good.models.cm.cm_model import CompartmentalModel
 from ai4good.runner.facade import Facade
 from ai4good.models.cm.initialise_parameters import Parameters
@@ -43,7 +42,7 @@ class InitialiseParameters(unittest.TestCase):
         np.array_equal(expected.values, actual.values)
         np.array_equal(params.camp_params.to_numpy(), self.facade.ps.get_camp_params('Moria').to_numpy())
 
-    def test_default_contact_matrix(self):
+    def test_specific_country_contact_matrix(self):
         params = Parameters(self.facade.ps, 'Moria', 'Albania',
                             self.profile_df, {})
         expected = pd.read_csv('cm/resources/Albania_contact_matrix.csv', index_col=0)

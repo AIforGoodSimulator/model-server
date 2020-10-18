@@ -1,12 +1,10 @@
 import argparse
 import logging
-import json
 import plotly.graph_objects as go
 from typeguard import typechecked
 from ai4good.models.model import Model, ModelResult
 from ai4good.models.model_registry import get_models, create_params
 from ai4good.models.cm.cm_model import CompartmentalModel
-from ai4good.models.cm.country_map import countries_map
 from ai4good.runner.facade import Facade
 from ai4good.models.cm.plotter import figure_generator, age_structure_plot, stacked_bar_plot, uncertainty_plot
 import ai4good.utils.path_utils as pu
@@ -114,8 +112,9 @@ if __name__ == '__main__':
 
     camp_group = parser.add_mutually_exclusive_group()
     camp_group.add_argument('--camp', type=str, help='Camp to run model for', default='Moria')
-    camp_group.add_argument('--country', type=str, choices=countries_map.keys(),
-                            help="Country to run model on", default='Greece')
+    camp_group.add_argument('--country', type=str, choices=facade.ps.get_supported_countries(),
+                            help="Country to run model on (Enclose in double quotes for country with spaces)",
+                            default='Greece')
     camp_group.add_argument('--run_all_camps', action='store_true', help='Run all camps', default=False)
 
     parser.add_argument('--do_not_load_from_model_result_cache', dest='load_from_cache', action='store_false',

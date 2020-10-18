@@ -8,7 +8,6 @@ import json
 import hashlib
 from ai4good.params.param_store import ParamStore
 from ai4good.utils import path_utils as pu
-from ai4good.models.cm.country_map import countries_map
 
 
 class Parameters:
@@ -205,11 +204,12 @@ class Parameters:
         return infection_matrix, beta_list, largest_eigenvalue
 
     def generate_contact_matrix(self, age_limits: np.array):
-        if self.country not in countries_map:
+        supported_countries = self.ps.get_supported_countries()
+        if self.country not in supported_countries:
             return self.ps.get_contact_matrix_params(self.camp).to_numpy()[:, 2:].astype(np.double)
 
-        cm_path = countries_map[self.country]
-        contact_matrix = pd.read_csv(pu.cm_params_path(f'contact_matrices/{cm_path}')).to_numpy()
+        contact_matrix_path = pu.cm_params_path(f'contact_matrices/{self.country}.csv')
+        contact_matrix = pd.read_csv(contact_matrix_path).to_numpy()
         population_array = self.camp_params[self.camp_params['Camp'] == self.camp]['Population_structure'].to_numpy()
 
         n_categories = len(age_limits) - 1
@@ -230,4 +230,3 @@ class Parameters:
                 transformed_matrix[i, j] = v1
 
         return transformed_matrix
-
