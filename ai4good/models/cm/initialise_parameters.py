@@ -87,6 +87,35 @@ class Parameters:
         self.infection_matrix, self.im_beta_list, self.largest_eigenvalue = self.generate_infection_matrix()
         self.generated_disease_vectors = self.ps.get_generated_disease_param_vectors()
 
+    def csv_name(self) -> str:
+        """
+        csv naming pattern for the comparment model is currently: 
+        better_hygiene_{startTime}_{finishTime}_{Value}-ICU_capacity_{Value}-remove_symptomatic_{startTime}_{finishTime}_{Rate}-shielding_{OnorOff}-remove_high_risk_{StartTime}_{FinishTime}_{Rate}_{RemoveCategories}.csv
+        """
+        filtered_control_dict = {i: self.control_dict[i] for i in self.control_dict if ((i != 'nProcesses') and (i != 'numberOfIterations') and (i!='t_sim'))}
+        #here after the filtering the dictionary should be a dict of dict
+        name_list = []
+        for key,value_dict in filtered_control_dict.items():
+            string_name=''
+            string_name+=str(key)
+            for subkey,value in value_dict.items():
+                if subkey == "timing":
+                    string_name+='_'
+                    timing_string = map(str,value)
+                    string_name+='_'.join(timing_string)
+                elif key == "ICU_capacity" and subkey == "value":
+                    string_name+='_'
+                    string_name+=str(round(self.population * value))
+                elif key in ["remove_symptomatic","remove_high_risk"] and subkey == "rate":
+                    string_name+='_'
+                    string_name+=str(round(self.population * value))
+                else:
+                    string_name+='_'
+                    string_name+=str(value)
+            name_list.append(string_name)
+        _csv_name = '-'.join(name_list)
+        return _csv_name
+
     def sha1_hash(self) -> str:
         hash_params = [
             {i: self.control_dict[i] for i in self.control_dict if i != 'nProcesses'},
