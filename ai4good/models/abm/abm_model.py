@@ -17,6 +17,7 @@ class ABM(Model):
 
     def __init__(self, ps: ParamStore):
         Model.__init__(self, ps)
+        self.ACTIVATE_INTERVENTION = True
 
     def id(self) -> str:
         return self.ID
@@ -73,7 +74,7 @@ class ABM(Model):
         return mr
 
     @staticmethod
-    def step(p: Parameters, t):
+    def step(self, p: Parameters, t):
         """
         Execute abm simulation step
 
@@ -95,20 +96,9 @@ class ABM(Model):
         if abm.epidemic_finish(np.concatenate((p.track_states[t, 1:6], p.track_states[t, 7:p.number_of_states])), t):
             return
 
-        # The probability that a person's disease state will change from mild->recovered (0.37)
-        # Liu et al 2020 The Lancet.
-        p.mild_rec = np.random.uniform(0, 1, p.total_population) > math.exp(0.2 * math.log(0.1))
-
-        # The probability that a person's disease state will change from severe->recovered (0.071)
-        # Cai et al.
-        p.sev_rec = np.random.uniform(0, 1, p.total_population) > math.exp(math.log(63 / 153) / 12)
-
-        # Get random numbers to determine health states
-        p.pick_sick = np.random.uniform(0, 1, p.total_population)
-
-        if p.ACTIVATE_INTERVENTION and t != 0:
+        if self.ACTIVATE_INTERVENTION and t != 0:
             p.iat1 = t
-            p.ACTIVATE_INTERVENTION = False
+            self.ACTIVATE_INTERVENTION = False
             p.smaller_movement_radius = 0.001
             p.transmission_reduction = 0.25  # TODO: why is this here?
             p.foodpoints_location, p.foodpoints_numbers, p.foodpoints_sharing = abm.position_foodline(

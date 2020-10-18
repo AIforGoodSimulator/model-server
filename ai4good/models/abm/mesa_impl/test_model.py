@@ -8,7 +8,7 @@ import numpy as np
 
 def get_params():
     _model = 'agent-based-model'
-    _profile = 'small'
+    _profile = 'BaselineHTHI'
     camp = 'Moria'
     overrides = '{"numberOfIterations": 1, "nProcesses": 1}'
     facade = Facade.simple()

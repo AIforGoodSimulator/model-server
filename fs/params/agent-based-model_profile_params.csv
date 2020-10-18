@@ -38,7 +38,7 @@ BaselineHTLI,num_toilet_contact,Number of contacts in the toilets area,Camp Para
 BaselineHTLI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
 BaselineHTLI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
 BaselineHTLI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
-BaselineHTLI,transmission_reduction,Reduction in trasmission due to intervention,Baseline High Transmission Low Interaction,1
+BaselineHTLI,transmission_reduction,Reduction in transmission due to intervention,Baseline High Transmission Low Interaction,1
 BaselineHTLI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Baseline High Transmission Low Interaction,0.05
 BaselineHTLI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
 BaselineHTLI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
@@ -61,7 +61,7 @@ BaselineLTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Para
 BaselineLTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
 BaselineLTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
 BaselineLTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
-BaselineLTHI,transmission_reduction,Reduction in trasmission due to intervention,Baseline Low Transmission High Interaction,1
+BaselineLTHI,transmission_reduction,Reduction in transmission due to intervention,Baseline Low Transmission High Interaction,1
 BaselineLTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Baseline Low Transmission High Interaction,0.05
 BaselineLTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
 BaselineLTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
@@ -84,7 +84,7 @@ BaselineLTLI,num_toilet_contact,Number of contacts in the toilets area,Camp Para
 BaselineLTLI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
 BaselineLTLI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
 BaselineLTLI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
-BaselineLTLI,transmission_reduction,Reduction in trasmission due to intervention,Baseline Low Transmission Low Interaction,1
+BaselineLTLI,transmission_reduction,Reduction in transmission due to intervention,Baseline Low Transmission Low Interaction,1
 BaselineLTLI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Baseline Low Transmission Low Interaction,0.05
 BaselineLTLI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
 BaselineLTLI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
@@ -107,7 +107,7 @@ SectoringHTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Par
 SectoringHTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
 SectoringHTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
 SectoringHTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
-SectoringHTHI,transmission_reduction,Reduction in trasmission due to intervention,Sectoring High Transmission High Interaction,1
+SectoringHTHI,transmission_reduction,Reduction in transmission due to intervention,Sectoring High Transmission High Interaction,1
 SectoringHTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Sectoring High Transmission High Interaction,0.05
 SectoringHTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
 SectoringHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
@@ -130,7 +130,7 @@ FaceMasksHTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Par
 FaceMasksHTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
 FaceMasksHTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
 FaceMasksHTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
-FaceMasksHTHI,transmission_reduction,Reduction in trasmission due to intervention,FaceMasks Transmission High Interaction,0.32
+FaceMasksHTHI,transmission_reduction,Reduction in transmission due to intervention,FaceMasks Transmission High Interaction,0.32
 FaceMasksHTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,FaceMasks Transmission High Interaction,0.05
 FaceMasksHTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
 FaceMasksHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
@@ -153,7 +153,7 @@ QuarantineHTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Pa
 QuarantineHTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
 QuarantineHTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
 QuarantineHTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
-QuarantineHTHI,transmission_reduction,Reduction in trasmission due to intervention,Quarantine High Transmission High Interaction,1
+QuarantineHTHI,transmission_reduction,Reduction in transmission due to intervention,Quarantine High Transmission High Interaction,1
 QuarantineHTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Quarantine High Transmission High Interaction,0.5
 QuarantineHTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
 QuarantineHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
@@ -176,7 +176,7 @@ LockdownHTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Para
 LockdownHTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
 LockdownHTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
 LockdownHTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
-LockdownHTHI,transmission_reduction,Reduction in trasmission due to intervention,Lockdown High Transmission High Interaction,1
+LockdownHTHI,transmission_reduction,Reduction in transmission due to intervention,Lockdown High Transmission High Interaction,1
 LockdownHTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Lockdown High Transmission High Interaction,0.05
 LockdownHTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
 LockdownHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
@@ -200,7 +200,7 @@ AllInterventionsHTHI,num_food_visit,Number of visits to the food lane per day,Ca
 AllInterventionsHTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
 AllInterventionsHTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
 AllInterventionsHTHI,transmission_reduction,Reduction in transmission due to intervention,AllInterventionsHTHI,0.32
-AllInterventionsHTHI,probability_spotting_symptoms_per_day,Probability of spotting that an individual is symptomatic per day,AllInterventionsHTHI,0.5
+AllInterventionsHTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,AllInterventionsHTHI,0.5
 AllInterventionsHTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
 AllInterventionsHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 AllInterventionsHTHI,foodline_blocks,Number of foodlines in the camp,AllInterventionsHTHI,"16,16"
