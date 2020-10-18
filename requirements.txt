@@ -149,5 +149,7 @@ widgetsnbextension==3.5.1
 xlrd==1.2.0
 zict==2.0.0
 zipp==3.1.0
+seirsplus~=1.0.9
+numba==0.51.2
+mesa==0.8.7
 PyGithub~=1.53
-numba==0.51.
