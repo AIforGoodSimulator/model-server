@@ -45,9 +45,9 @@ NM model,neighbor_proximity,People in refugee camps may live in isoboxes (prefab
 NM model,neighbor_weight,Denotes the strength of connections between individuals and the neighbors that they interact with
 NM model,food_weight,Denotes the strength of connections between people in a food queue
 NM model,household_weight,Denotes the strength of connections between people that live in the same household
-NM model,food_queues,Number of food queues that the camp has
+NM model,food_queues,Number of food queues that the camp has. This pair of numbers denotes the number of isoboxes across the horizontal axis and the vertical axis of a grid resembling the isobox (center-east) area of the camp. 
 NM model,number_of_ethnic_groups,Number of ethnic groups in the camp
-NM model,dimensions_of_isoboxes,People in refugee camps may live in isoboxes (prefabricated units), this pair of numbers denotes the number of isoboxes across the horizontal axis and the vertical axis of a grid resembling the isobox (center-east) area of the camp.
+NM model,dimensions_of_isoboxes,People in refugee camps may live in isoboxes (prefabricated units)
 NM model,dimensions_of_block1,People in refugee camps may live in tents and we have distributed all tents in blocks according to camp zones. This pair of numbers denotes the number of tents across the horizontal axis and the vertical axis of a grid resembling the north side of the camp.
 NM model,dimensions_of_block2,People in refugee camps may live in tents and we have distributed all tents in blocks according to camp zones. This pair of numbers denotes the number of tents across the horizontal axis and the vertical axis of a grid resembling the west side of the camp.
 NM model,dimensions_of_block3,People in refugee camps may live in tents and we have distributed all tents in blocks according to camp zones. This pair of numbers denotes the number of tents across the horizontal axis and the vertical axis of a grid resembling the south side of the camp.
