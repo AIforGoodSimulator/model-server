@@ -25,6 +25,11 @@ def layout(camp, profile, cmp_profiles):
             html.H1(f'AI for Good Simulator: Model Results Dashboard for {camp} Camp', style={
                     'margin': 30}),
             dcc.Markdown(overview(camp, params), style={'margin': 30}),
+            dcc.Markdown(high_level_message_1(), style={'margin': 30}),
+            dcc.Markdown(high_level_message_2(), style={'margin': 30}),
+            dcc.Markdown(high_level_message_3(), style={'margin': 30}),
+            dcc.Markdown(high_level_message_4(), style={'margin': 30}),
+            dcc.Markdown(high_level_message_5(), style={'margin': 30}),
             dcc.Loading(
                 html.Div([], id='main_section_part2', style={'margin': 30})),
             base_profile_chart_section(),
@@ -55,6 +60,40 @@ def overview(camp: str, params: Parameters):
     of intervention strategies in place to:
     * Compare the potential efficacies of different interventions and prioritise the ones that are going to help contain the virus.
     * Have a realistic estimate of the clinic capacity, PPE, ICU transfer and other supplies and logistical measures needed.
+    ''')
+
+
+def high_level_message_1():
+    return textwrap.indent(f'''
+    As shown by comparing implementing different interventions for 1 month, 3 month and 6 month during the period of epidemic,
+    it is important to prioritize long-term non-pharmaceutical intervention over short-term interventions.
+    ''')
+
+
+def high_level_message_2():
+    return textwrap.indent(f'''
+    It is also important to switch on interventions at the correct time, rather than having them on all the time.
+    This is shown by comparing implementing different interventions starting at different points during the epidemic.
+    ''')
+
+
+def high_level_message_3():
+    return textwrap.indent(f'''
+    Reducing activities for the residents might not be an effective intervention. A camp lockdown is comparatively more effective 
+    but must not be implemented the whole time as people will start becoming more relaxed.
+    ''')
+
+
+def high_level_message_4():
+    return textwrap.indent(f'''
+    Isolating the symptomatically infected residents can be effective, but it is resource intensive and there is uncertainty about the final outcome.
+    ''')
+
+
+def high_level_message_5():
+    return textwrap.indent(f'''
+    Each non-pharmaceutical intervention has its different characteristics. It is important to implement a combinatorial approach, 
+    where using several less-effective policies laid over each other prove to be more effective than using any single intervention on its own. 
     ''')
 
 
