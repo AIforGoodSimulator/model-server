@@ -65,7 +65,7 @@ class Parameters:
         self.number_of_states = 14
         self.track_states = np.zeros(
             (self.number_of_steps, self.number_of_states))
-        self.ACTIVATE_INTERVENTION = profile.loc['ACTIVATE_INTERVENTION', 'Value']
+        # self.ACTIVATE_INTERVENTION = profile.loc['ACTIVATE_INTERVENTION', 'Value']
         # int(profile.loc['total_number_of_hospitalized','Value'])
         self.total_number_of_hospitalized = 0
 
