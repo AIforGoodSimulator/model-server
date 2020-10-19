@@ -40,7 +40,7 @@ class Moria(Camp):
     18. _init_queue()           : Initialize queues (toilets or food line) in the camp
     """
     
-    def __init__(self, params: Parameters):
+    def __init__(self, params: Parameters, profile: str):
         super().__init__(params, CAMP_SIZE)
 
         self.P_detect = 0.0  # probability that camp manager detects agent with symptoms
@@ -107,7 +107,8 @@ class Moria(Camp):
         logging.info("Shape of agents array: {}".format(agents.shape))
 
         # Name of the file to store progress
-        self.progress_file_name = "abm_moria_{}.csv".format(
+        self.progress_file_name = "abm_moria_{}_{}.csv".format(
+            profile,
             datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")
         )
         logging.info("Results will be saved in {}".format(self.progress_file_name))
