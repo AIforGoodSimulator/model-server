@@ -14,10 +14,10 @@ import os
 
 text_disclaimer = 'Disclaimer: This tool is for informational and research purposes only and should not be considered as a medical predictor. The input parameters you have provided is a determining factor in the simulation results. '
 
-base = '../../fs'
-path_country = pu._path(f'{base}/params/cm_model/contact_matrices/', '')
-country_raw = [f for f in os.listdir(path_country) if os.path.isfile(os.path.join(path_country, f))]
-country_clean = sorted([f.split('.')[0] for f in country_raw])
+#base = '../../fs'
+#path_country = pu._path(f'{base}/params/cm_model/contact_matrices/', '')
+#country_raw = [f for f in os.listdir(path_country) if os.path.isfile(os.path.join(path_country, f))]
+#country_clean = sorted([f.split('.')[0] for f in country_raw])
 
 layout = html.Div(
     [
@@ -51,9 +51,9 @@ layout = html.Div(
                             html.Header('Location', className='card-text'),
                             dbc.Input(id='location', placeholder='Required', bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Country', className='card-text'),
-                            html.Small(dcc.Dropdown(
-                                options=[{'label': k, 'value': k} for k in country_clean], 
-                                id='countries-dropdown', placeholder='Required', style={'margin-bottom':'25px'})),
+#                            html.Small(dcc.Dropdown(
+#                                options=[{'label': k, 'value': k} for k in country_clean], 
+#                                id='countries-dropdown', placeholder='Required', style={'margin-bottom':'25px'})),
                             html.Header('Total Area (sq. m)', className='card-text'),
                             dbc.Input(id='total-area', placeholder='Optional', type='number', min=0, max=10000000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-1-button', color='secondary', href='/sim/input_page_2')),
