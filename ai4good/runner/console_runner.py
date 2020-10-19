@@ -1,6 +1,5 @@
 import argparse
 import logging
-import json
 import plotly.graph_objects as go
 from typeguard import typechecked
 from ai4good.models.model import Model, ModelResult
@@ -14,17 +13,19 @@ facade = Facade.simple()
 
 
 @typechecked
-def run_model(_model: str, _profile: str, camp: str, load_from_cache: bool, save_to_cache: bool,
-              is_save_plots: bool, is_show_plots: bool, is_save_report: bool, overrides) -> ModelResult:
+def run_model(_model: str, _profile: str, camp: str, country: str, load_from_cache: bool,
+              save_to_cache: bool, is_save_plots: bool, is_show_plots: bool,
+              is_save_report: bool, overrides) -> ModelResult:
     logging.info('Running %s model with %s profile', _model, _profile)
     _mdl: Model = get_models()[_model](facade.ps)
-    params = create_params(facade.ps, _model, _profile, camp, overrides)
+    params = create_params(facade.ps, _model, _profile, camp, country, overrides)
     res_id = _mdl.result_id(params)
     if load_from_cache and facade.rs.exists(_mdl.id(), res_id):
         logging.info("Loading from model result cache")
         mr: ModelResult = facade.rs.load(_mdl.id(), res_id)
     else:
         logging.info("Running model for camp %s", camp)
+        logging.info("Running model for country %s", country)
         mr: ModelResult = _mdl.run(params)
         if save_to_cache:
             logging.info("Saving model result to cache")
@@ -111,6 +112,9 @@ if __name__ == '__main__':
 
     camp_group = parser.add_mutually_exclusive_group()
     camp_group.add_argument('--camp', type=str, help='Camp to run model for', default='Moria')
+    camp_group.add_argument('--country', type=str, choices=facade.ps.get_supported_countries(),
+                            help="Country to run model on (Enclose in double quotes for country with spaces)",
+                            default='Greece')
     camp_group.add_argument('--run_all_camps', action='store_true', help='Run all camps', default=False)
 
     parser.add_argument('--do_not_load_from_model_result_cache', dest='load_from_cache', action='store_false',
@@ -129,10 +133,10 @@ if __name__ == '__main__':
         for profile in facade.ps.get_profiles(model):
             if args.run_all_camps:
                 for camp in facade.ps.get_camps():
-                    run_model(model, profile, camp, args.load_from_cache, args.save_to_cache, args.save_plots,
+                    run_model(model, profile, camp, '', args.load_from_cache, args.save_to_cache, args.save_plots,
                               args.show_plots, args.save_report, args.profile_overrides)
             else:
-                run_model(model, profile, args.camp, args.load_from_cache, args.save_to_cache, args.save_plots,
+                run_model(model, profile, args.camp, args.country, args.load_from_cache, args.save_to_cache, args.save_plots,
                           args.show_plots, args.save_report, args.profile_overrides)
     else:
         if args.profile is None:
@@ -142,10 +146,10 @@ if __name__ == '__main__':
 
         if args.run_all_camps:
             for camp in facade.ps.get_camps():
-                run_model(model, profile, camp, args.load_from_cache, args.save_to_cache, args.save_plots,
+                run_model(model, profile, camp, '', args.load_from_cache, args.save_to_cache, args.save_plots,
                           args.show_plots, args.save_report, args.profile_overrides)
         else:
-            run_model(model, profile, args.camp, args.load_from_cache, args.save_to_cache, args.save_plots,
-                      args.show_plots, args.save_report, args.profile_overrides)
+            run_model(model, profile, args.camp, args.country, args.load_from_cache, args.save_to_cache,
+                      args.save_plots, args.show_plots, args.save_report, args.profile_overrides)
 
     logging.info('Model Runner finished normally')
