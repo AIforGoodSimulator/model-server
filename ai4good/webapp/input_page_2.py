@@ -125,7 +125,7 @@ def update_age_group_total(input_values, slider_values, total_value):
 @dash_app.callback(
     [Output({'type':'age-popu-input', 'index':ALL}, 'max'), Output({'type':'age-popu-slider', 'index':ALL}, 'max'), Output({'type':'age-popu-slider', 'index':ALL}, 'value')], 
     [Input('total-population', 'value')],
-    [State({'type':'age-popu-input', 'index':ALL}, 'value'), State({'type':'age-popu-slider', 'index':ALL}, 'value'), State('total-population', 'min'), State('total-population', 'max')])
+    [State({'type':'age-popu-input', 'index':ALL}, 'value'), State('total-population', 'min'), State('total-population', 'max')])
 def update_age_popu_max(total_value, input_values, slider_values, total_min, total_max):
     updated_maxs = [total_value]*len(input_values)
     if total_value is None:
