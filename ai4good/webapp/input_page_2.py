@@ -21,11 +21,6 @@ def int_perc_1dp(nom, dem):
     perc_1dp = "{:.1f}".format(perc)
     return str(perc_1dp)+'%'
 
-def list_perc_1dp(nom_list, dem):
-    perc = [x/dem*100 if dem !=0 else 0 for x in nom_list]
-    perc_1dp = ["{:.1f}".format(x) for x in perc]
-    return [str(x)+'%' for x in perc_1dp]
-
 def generate_html_age_group(age, id_age_popu, age_perc, total_popu):
     age_group_popu = total_popu*age_perc/100
     return html.Div([
