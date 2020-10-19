@@ -21,7 +21,7 @@ layout = html.Div(
                     dbc.Col(
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
-                            html.Center(html.Img(src='/static/placeholder286x180.png', title='Step 4 of 4', style={'width':'50%'})), 
+                            html.Center(html.Img(src='/static/input_step4.png', title='Step 4 of 4', style={'width':'50%'})), 
                             html.P('More insights might be obtained when the following parameters are provided',className='card-text'),
                             html.H5('Advanced parameters', className='card-text'),
                             html.Header('Advanced parameter 1', className='card-text'),

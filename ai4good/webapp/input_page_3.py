@@ -20,7 +20,7 @@ layout = html.Div(
                     dbc.Col(
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
-                            html.Center(html.Img(src='/static/placeholder286x180.png', title='Step 3 of 4', style={'width':'50%'})), 
+                            html.Center(html.Img(src='/static/input_step3.png', title='Step 3 of 4', style={'width':'50%'})), 
                             html.P('Provide your best estimate if data is not available',className='card-text'),
                             html.H5('Health Interventions', className='card-text'),
                             html.Header('Available ICU Beds', className='card-text'),

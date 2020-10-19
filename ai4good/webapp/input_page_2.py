@@ -49,7 +49,7 @@ layout = html.Div(
                     dbc.Col(
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
-                            html.Center(html.Img(src='/static/placeholder286x180.png', title='Step 2 of 4', style={'width':'50%'})), 
+                            html.Center(html.Img(src='/static/input_step2.png', title='Step 2 of 4', style={'width':'50%'})), 
                             html.P('Fill in the following about the age structure of the settlement',className='card-text'),
                             html.H5('Age Group Distribution', className='card-text'),
                             html.Header('Total Population', className='card-text'),
