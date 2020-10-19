@@ -154,3 +154,4 @@ numba==0.51.2
 mesa==0.8.7
 PyGithub~=1.53
 dash==1.16.3
+dash_bootstrap_components==0.10.7
