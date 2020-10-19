@@ -1,0 +1,27 @@
+parameter,id_parameter,value
+Name of Settlement,name-settlement,
+Location,location,
+Country,country,
+Total Population,total-population,
+Total Area (sq. km),total-area,
+Age Group Population (0-5 years),age-population-0-5,
+Age Group Population (6-9 years),age-population-6-9,
+Age Group Population (10-19 years),age-population-10-19,
+Age Group Population (20-29 years),age-population-20-29,
+Age Group Population (30-39 years),age-population-30-39,
+Age Group Population (40-49 years),age-population-40-49,
+Age Group Population (50-59 years),age-population-50-59,
+Age Group Population (60-69 years),age-population-60-69,
+Age Group Population (70+ years),age-population-70+,
+Available ICU Beds,available-ICU-beds,
+Increased ICU Capacity Available,increased-ICU-beds,
+Remove High-risk Residents Boolean,remove-high-risk-off-site,
+Remove High-risk Residents Age Min,age-min-moved-off-site,
+Remove High-risk Residents Age Max,age-max-moved-off-site,
+Residents with Comorbidity,number-known-comobidity,
+Isolation Capacity,isolation-capacity,
+Community Shielding,community-shielding,
+
+
+
+
