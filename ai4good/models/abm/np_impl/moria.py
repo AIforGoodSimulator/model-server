@@ -149,38 +149,52 @@ class Moria(Camp):
     def day(self):
         # Run 1 day of simulation in the moria camp
 
-        s_food = int(self.num_activities / (3.0+1.0))  # food line is on 3 times a day, hence split day in 4 equal parts
+        # Get the instance of the day when food line will form
+        s_food = int(self.num_activities / 3.0)  # food line is on 3 times a day in Moria
 
         # In each day, agents will perform number of activities. This number is denoted by `num_activities`.
         for s in range(self.num_activities):
 
             prob_food_line = 0.0
-            if s % s_food == 0:
+            if s != 0 and s % s_food == 0:  # check if food line will open on this time of the day
                 prob_food_line = self.params.pct_food_visit if s % s_food == 0 else 0.0
 
             # get the activities asymptomatic agents will do in this time step
-            activities = Moria.get_activities(self.agents, prob_food_line, self.params.num_toilet_visit/self.num_activities)
+            activities = Moria.get_activities(self.agents, prob_food_line,
+                                              self.params.num_toilet_visit/self.num_activities)
 
             in_queue = (self.agents[:, A_ACTIVITY] == ACTIVITY_TOILET) | \
                        (self.agents[:, A_ACTIVITY] == ACTIVITY_FOOD_LINE)
 
-            # perform simulations
+            # Perform activities simulations
 
-            # people wandering in the camp
-            self.simulate_wander(activities == ACTIVITY_WANDERING)
+            # simulate agents wandering in the camp
+            # self.simulate_wander(activities == ACTIVITY_WANDERING)
+            wanderer_ids = activities == ACTIVITY_WANDERING
+            self.agents[wanderer_ids, :], new_wd_inf = Camp.simulate_wander(self.agents[wanderer_ids, :], CAMP_SIZE,
+                                                                            self.params.relative_strength_of_interaction,
+                                                                            self.params.infection_radius,
+                                                                            self.prob_spread)
 
-            # going to toilet
-            self.simulate_queues(np.argwhere((activities == ACTIVITY_TOILET) & ~in_queue).reshape((-1,)), "toilet")
+            # simulate going to toilet
+            new_inf_t = self.simulate_queues(np.argwhere((activities == ACTIVITY_TOILET) & ~in_queue).reshape((-1,)),
+                                             "toilet")
 
-            # going to food line
-            self.simulate_queues(np.argwhere((activities == ACTIVITY_FOOD_LINE) & ~in_queue).reshape((-1,)),
-                                 "food_line")
+            # simulate going to food line
+            new_inf_f = self.simulate_queues(np.argwhere((activities == ACTIVITY_FOOD_LINE) & ~in_queue).reshape((-1,)),
+                                             "food_line")
 
-            # going to households
-            self.simulate_households((activities == ACTIVITY_HOUSEHOLD) | (activities == ACTIVITY_QUARANTINED))
+            # simulate going to households
+            hh_ids = activities == ACTIVITY_HOUSEHOLD
+            self.agents[hh_ids, :], new_hh_inf = Camp.simulate_households(self.agents[hh_ids, :], self.prob_spread)
 
             # updating toilet and food line queues
             self.update_queues(self.params.percentage_of_toilet_queue_cleared_at_each_step)
+
+            logging.debug("{} new agents were exposed through interactions during wandering".format(new_wd_inf))
+            logging.debug("{} new agents were exposed through interactions in toilet queues".format(new_inf_t))
+            logging.debug("{} new agents were exposed through interactions in food line queues".format(new_inf_f))
+            logging.debug("{} new agents were exposed through household interactions".format(new_hh_inf))
 
         # increment timer
         self.t += 1
@@ -236,7 +250,7 @@ class Moria(Camp):
 
     @staticmethod
     @nb.njit
-    def get_activities(agents: np.array, prob_food_line, prob_toilet) -> np.array:
+    def get_activities(agents: np.array, prob_food_line: float, prob_toilet: float) -> np.array:
         # Return the activities all agents will do at any point in time.
         # This method gets called multiple times in a day depending on the around of activities agents are doing in camp
 
@@ -458,7 +472,8 @@ class Moria(Camp):
                 housemate_ids.append(j)  # add agent j as housemate of agent i
 
                 # Check if agent j (housemate of agent i) is not showing symptoms for the past `P_n` days
-                if agents[j, A_DISEASE] not in (INF_SYMPTOMATIC, INF_MILD, INF_SEVERE) and agents[j, A_DAY_COUNTER] >= n:
+                if agents[j, A_DISEASE] not in (INF_SYMPTOMATIC, INF_MILD, INF_SEVERE) \
+                        and agents[j, A_DAY_COUNTER] >= n:
                     num_not_showing_sym += 1
 
             # Skip if all any housemate is not Ok to be back in the camp. All of them should be not showing symptoms
@@ -574,7 +589,9 @@ class Moria(Camp):
             out: An 2D array (?, 4) containing id, capacity and x,y co-ordinates of the households
         """
 
-        num_iso_boxes = int(np.ceil(self.params.number_of_people_in_isoboxes / self.params.number_of_people_in_one_isobox))
+        num_iso_boxes = int(np.ceil(
+            self.params.number_of_people_in_isoboxes / self.params.number_of_people_in_one_isobox
+        ))
         num_tents = int(np.ceil(self.params.number_of_people_in_tents / self.params.number_of_people_in_one_tent))
 
         # get positions, ids and capacities of iso-boxes

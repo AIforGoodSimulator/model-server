@@ -34,6 +34,9 @@ class Parameters(object):
 
         # Number of days of simulation
         self.number_of_steps = int(profile.loc['number_of_steps', VALUE])
+        # If a susceptible and an infectious individual interact, then the infection is transmitted with probability
+        # This param can be updated by using the `transmission_reduction` parameter
+        self.prob_spread = float(profile.loc['prob_spread', VALUE])
 
         ###############################################################################################################
         # Parameters about the camp
@@ -52,7 +55,8 @@ class Parameters(object):
         self.num_toilet_visit = int(profile.loc['num_toilet_visit', VALUE])
         # Average number of food line visits per day
         self.num_food_visit = int(profile.loc['num_food_visit', VALUE])
-        # TODO
+        # Probability that agent will attend food line on any given day. For Moria, person attends once every 4 days, so
+        # probability value would be 0.75
         self.pct_food_visit = float(profile.loc['pct_food_visit', VALUE])
         # Grid size for toilet placement
         tb = profile.loc['toilets_blocks', VALUE].split(',')
