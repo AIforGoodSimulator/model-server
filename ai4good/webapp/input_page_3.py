@@ -56,6 +56,14 @@ layout = html.Div(
                                     {'label':'Yes', 'value':1}, 
                                     {'label':'No', 'value':0},
                                 ], value=1, id='community-shielding', inline=True, style={'margin-bottom':'25px'}),
+                            html.Header('COVID-19 Community Measures', className='card-text'),
+                            html.Header('Do you conduct inspections and checks as well as implement corrective actions?', className='card-text', style={'color':'darkgray'}), 
+                            dbc.RadioItems(
+                                options=[
+                                    {'label':'Yes', 'value':1}, 
+                                    {'label':'No', 'value':0},
+                                    {'label':'Not Sure', 'value':-1},
+                                ], value=-1, id='conduct-inspections-implement-corrections', inline=True, style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-3-button', color='secondary', href='/sim/input_page_4')),
                             html.Div(id='input-page-3-alert')
                             ], body=True
