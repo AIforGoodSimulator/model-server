@@ -52,8 +52,6 @@ layout = html.Div(
                             html.Small(dcc.Dropdown(
                                 options=[{'label': k, 'value': k} for k in country_clean], 
                                 id='countries-dropdown', placeholder='Required', style={'margin-bottom':'25px'})),
-                            html.Header('Total Population', className='card-text'),
-                            dbc.Input(id='total-population', placeholder='Required', type='number', min=0, max=100000, step=10, bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Total Area (sq. km)', className='card-text'),
                             dbc.Input(id='total-area', placeholder='Optional', type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-1-button', color='secondary', href='/sim/input_page_2')),
