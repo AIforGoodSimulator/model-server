@@ -7,13 +7,15 @@ import dash_html_components as html
 from ai4good.webapp.apps import dash_app, facade, model_runner
 import ai4good.webapp.run_model_page as run_model_page
 from ai4good.webapp.model_runner import ModelScheduleRunResult
+import ai4good.utils.path_utils as pu
 from dash.dependencies import Input, Output, State
 import dash_table
 import os
 
 text_disclaimer = 'Disclaimer: This tool is for informational and research purposes only and should not be considered as a medical predictor. The input parameters you have provided is a determining factor in the simulation results. '
 
-path_country = 'fs/params/cm_model/contact_matrices/'
+base = '../../fs'
+path_country = pu._path(f'{base}/params/cm_model/contact_matrices/', '')
 country_raw = [f for f in os.listdir(path_country) if os.path.isfile(os.path.join(path_country, f))]
 country_clean = sorted([f.split('.')[0] for f in country_raw])
 
@@ -52,8 +54,8 @@ layout = html.Div(
                             html.Small(dcc.Dropdown(
                                 options=[{'label': k, 'value': k} for k in country_clean], 
                                 id='countries-dropdown', placeholder='Required', style={'margin-bottom':'25px'})),
-                            html.Header('Total Area (sq. km)', className='card-text'),
-                            dbc.Input(id='total-area', placeholder='Optional', type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
+                            html.Header('Total Area (sq. m)', className='card-text'),
+                            dbc.Input(id='total-area', placeholder='Optional', type='number', min=0, max=10000000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-1-button', color='secondary', href='/sim/input_page_2')),
                             html.Div(id='input-page-1-alert')
                             ], body=True
