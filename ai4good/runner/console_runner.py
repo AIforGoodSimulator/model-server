@@ -25,7 +25,6 @@ def run_model(_model: str, _profile: str, camp: str, load_from_cache: bool,
         mr: ModelResult = facade.rs.load(_mdl.id(), res_id)
     else:
         logging.info("Running model for camp %s", camp)
-        logging.info("Running model for country %s", country)
         mr: ModelResult = _mdl.run(params)
         if save_to_cache:
             logging.info("Saving model result to cache")
