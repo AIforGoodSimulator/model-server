@@ -16,6 +16,15 @@ id_age_popu =['age-population-' + x.replace(' ','') for x in age]
 age_perc = [10, 10, 10, 10, 10, 10, 10, 10, 20] # starting age group population percentage
 total_popu = 20000 # starting total population
 
+accommodation_info = ['Type 1', 'Type 2', 'Type 3']
+accommodation_info_full = ['Accommodation Type 1', 'Accommodation Type 2', 'Accommodation Type 3']
+accommodation_info_required = ['Optional', 'Optional', 'Optional']
+accommodation_info_detail = ['Area covered (sq. m)', 'No. of Individuals in Residences', 'No. of Living Units (e.g. Building, Isoboxes, Tents)']
+tab_id_accommodation_info = ['tab-accommodation_info-' + x.lower() for x in accommodation_info]
+id_accommodation_area = ['id-accommodation-area' + x.lower() for x in accommodation_info]
+id_accommodation_no_person = ['id-accommodation-no-person' + x.lower() for x in accommodation_info]
+id_accommodation_no_unit = ['id-accommodation-no-unit' + x.lower() for x in accommodation_info]
+
 def int_perc_1dp(nom, dem):
     perc = nom/dem*100 if dem !=0 else 0
     perc_1dp = "{:.1f}".format(perc)
@@ -29,7 +38,7 @@ def generate_html_age_group(age, id_age_popu, age_perc, total_popu):
                dbc.Input(id={
                    'type':'age-popu-input',
                    'index':id_age_popu
-               }, placeholder='Required', type='number', value=age_group_popu, min=0, max=total_popu, step=1, bs_size='sm', style={'justify':'right', 'margin-bottom':'25px'}), 
+               }, placeholder='Required', type='number', value=age_group_popu, min=0, max=total_popu, step=1, bs_size='sm', style={'justify':'right', 'margin-bottom':'5px'}), 
                dcc.Slider(id={
                    'type':'age-popu-slider', 
                    'index':id_age_popu
@@ -38,6 +47,19 @@ def generate_html_age_group(age, id_age_popu, age_perc, total_popu):
                    'type':'age-perc-label', 
                    'index':id_age_popu}), 
     ], id=id_age_popu, style={'display':'grid', 'grid-template-columns':'5% 20% 20% 45% 10%', 'margin-below':'25px'})
+
+def generate_accommodation_info_children(id_index):
+    children = [html.Div([
+        html.P(''), 
+        dbc.Label(accommodation_info_full[id_index], color='secondary'), 
+        html.Header(accommodation_info_detail[0], className='card-text'), 
+        dbc.Input(id=id_accommodation_area[0], placeholder=accommodation_info_required[id_index], type='number', min=0, max=1000000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),        
+        html.Header(accommodation_info_detail[1], className='card-text'), 
+        dbc.Input(id=id_accommodation_no_person[1], placeholder=accommodation_info_required[id_index], type='number', min=0, max=100000, step=1, bs_size='sm', style={'margin-bottom':'25px'}),        
+        html.Header(accommodation_info_detail[2], className='card-text'), 
+        dbc.Input(id=id_accommodation_no_unit[2], placeholder=accommodation_info_required[id_index], type='number', min=0, max=10000, step=1, bs_size='sm', style={'margin-bottom':'25px'}),        
+    ], style={'margin-left':'25px', 'margin-right':'25px', 'margin-bottom':'20px'})]
+    return children
 
 layout = html.Div(
     [
@@ -81,6 +103,19 @@ layout = html.Div(
                                 style={'display':'grid', 'grid-template-columns':'5% 25% 26% 32% 12%', 'margin-below':'25px'}),
                             html.Div(
                                 html.P(html.Center('Must equal to total population or 100%', className='card-text', style={'color':'darkgray'}))),
+                            html.P(''),
+                            html.H5('Accommodation Information', className='card-text'),
+                            html.Header('Population Accommodation', className='card-text'),
+                            html.Header('Accommodation details provide population density estimate and suggest mobility pattern', className='card-text', style={'color':'darkgray'}), 
+                            html.Div([
+                                dbc.Tabs([
+                                    dbc.Tab(label=accommodation_info[0], tab_id=tab_id_accommodation_info[0], children=generate_accommodation_info_children(0)), 
+                                    dbc.Tab(label=accommodation_info[1], tab_id=tab_id_accommodation_info[1], children=generate_accommodation_info_children(1)), 
+                                    dbc.Tab(label=accommodation_info[2], tab_id=tab_id_accommodation_info[2], children=generate_accommodation_info_children(2)), 
+                                ], id='tabs-accommodation-info', active_tab=tab_id_accommodation_info[0]), 
+                            ], style={'border':'1px lightgray solid'}),
+                            html.P(''),
+
                             dbc.CardFooter(dbc.Button('Next', id='page-2-button', color='secondary', disabled=False, href='/sim/input_page_3')),
                             html.Div(id='input-page-2-alert')
                             ], body=True
