@@ -56,7 +56,7 @@ layout = html.Div(
                                     {'label':'Yes', 'value':1}, 
                                     {'label':'No', 'value':0},
                                 ], value=1, id='community-shielding', inline=True, style={'margin-bottom':'25px'}),
-                            html.Header('COVID-19 Community Measures', className='card-text'),
+                            html.Header('Community Measures', className='card-text'),
                             html.Header('Does someone conduct inspections and checks as well as implement corrective actions?', className='card-text', style={'color':'darkgray'}), 
                             dbc.RadioItems(
                                 options=[
@@ -65,7 +65,7 @@ layout = html.Div(
                                     {'label':'Not Sure', 'value':-1},
                                 ], value=-1, id='conduct-inspections-implement-corrections', inline=True, style={'margin-bottom':'25px'}),
                             html.Header('Isolation Policy', className='card-text'),
-                            html.Header('What is the total number of days of quarantine for an individual who tested COVID-19 postive?', className='card-text', style={'color':'darkgray'}), 
+                            html.Header('What is the total number of days of quarantine for an individual who has tested postive for an infectious disease?', className='card-text', style={'color':'darkgray'}), 
                             dbc.Input(id='days-quarantine-tested-positive', placeholder='Optional', type='number', min=0, max=30, step=1, bs_size='sm', style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-3-button', color='secondary', href='/sim/input_page_4')),
                             html.Div(id='input-page-3-alert')
