@@ -885,7 +885,7 @@ def transmission_within_household(
         probability_of_infection_household
     )
 
-    # Compute proportions infecteds at toilets and in food lines.
+    # Compute proportions infected at toilets and in food lines.
     probability_of_transmission_at_toilet = infected_prob_activity(
         toilets_shared_by_households,
         households_with_asymp_presymp_symp_sympteen,

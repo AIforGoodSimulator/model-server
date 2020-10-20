@@ -11,22 +11,26 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v1
       with:
         ref: dev
 
-    - name: Set up Python 3.x
-      uses: actions/setup-python@v2
+    - name: Set up Python
+      uses: actions/setup-python@master
       with:
-        python-version: 3.x
-    
+        python-version: 3.6    
+        
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        python -m pip install -U wheel setuptools
         sudo apt-get install -y gcc
+        sudo apt-get install -y build-essential libssl-dev libffi-dev python3.6-dev
+        sudo apt-get install -y python-numba python3-dask
         pip install -r requirements.txt
+        pip install "dask[distributed]" --upgrade
 
     - name: Building web app
       uses: azure/appservice-build@v2-beta

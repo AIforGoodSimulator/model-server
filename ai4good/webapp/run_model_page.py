@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 import dash
 import dash_core_components as dcc
+import dash_bootstrap_components as dbc
 import dash_html_components as html
 from ai4good.webapp.apps import dash_app, facade, model_runner
 from ai4good.webapp.model_runner import ModelScheduleRunResult
 from dash.dependencies import Input, Output, State
-import dash_bootstrap_components as dbc
 import dash_table
 import csv
+from ai4good.utils import path_utils as pu
 
 def camp_selector():
     return dbc.Row([
@@ -50,7 +51,7 @@ def profile_selector():
     return dbc.Row([
         dbc.Col(
             html.Div([
-                html.Label('Profile', style={'font-weight': 'bold'}),
+                html.Label([html.A('Profile', href='https://raw.githubusercontent.com/AIforGoodSimulator/model-server/master/fs/params/Parameters_mouse-over_des.csv', target="_blank")], style={'font-weight':'bold'}),
                 dcc.Dropdown(
                     id='profile-dropdown'
                 ),
@@ -242,11 +243,16 @@ def profile_selector():
 
 def model_run_buttons():
     return html.Div([
-        dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True),
-        dbc.Button("See Results", id="model_results_button", color="success", className="mr-1",
-            target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'),
-        dbc.Button("See Report", id="model_report_button", color="success", className="mr-1",
-            disabled=True, key='model_report_button_key'),
+        html.Label('Start simulation', style={'font-weight': 'bold'}),
+        html.Div([
+            dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True), 
+            dbc.Button("Validate Model", id="validate_model_button", color="secondary", className="mr-1", disabled=True),
+        ], id='start_simulation', style={'margin-bottom':'25px'}),
+        html.Label('Display outputs', style={'font-weight': 'bold'}),
+        html.Div([
+            dbc.Button("See Results", id="model_results_button", color="success", className="mr-1", target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'), 
+            dbc.Button("See Report", id="model_report_button", color="success", className="mr-1", disabled=True, key='model_report_button_key'),
+        ], id='display_outputs', style={'margin-bottom':'25px'}),
         dbc.Toast(
             [],
             id="run_model_toast",
@@ -273,47 +279,49 @@ def model_run_buttons():
             ]),
         ], id="show_report_dialog", centered=True)
 
-    ], id='run_buttons_div')
+    ], id='run_buttons_div', style={'margin': 20})
 
 
 def history_table():
     cols = model_runner.history_columns()
 
-    return dbc.Row([
-        dbc.Col(
-            html.Div([
-                html.H3('Run Queue'),
-                dash_table.DataTable(
-                    id='history_table',
-                    columns=[{"name": i, "id": i} for i in cols],
-                    data=[{}],
-                    style_data_conditional=[
-                        {
-                            'if': {'row_index': 'odd'},
-                            'backgroundColor': 'rgb(248, 248, 248)',
-
+    return html.Div([
+        dbc.Row([
+            html.H3('Model Running Queue ')
+        ], style={'margin-top': 20, 'margin-left': 20,'color':'Black','border':'0px'}),
+        dbc.Row([
+            dbc.Col(
+                html.Div([
+                    dash_table.DataTable(
+                        id='history_table',
+                        columns=[{"name": i, "id": i} for i in cols],
+                        data=[{}],
+                        style_data_conditional=[{
+                                'if': {'row_index': 'odd'},
+                                'backgroundColor': 'rgb(248, 248, 248)',
+                            }
+                        ],
+                        style_header={
+                            'backgroundColor': 'rgb(89,169,255)',
+                            'fontWeight': 'bold',
+                            'color': 'rgb(255,255,255)',
+                            'text-align': 'center'
                         }
-                    ],
-                    style_header={
-                        'backgroundColor': 'rgb(89,169,255)',
-                        'fontWeight': 'bold',
-                        'color': 'rgb(255,255,255)',
-                        'text-align': 'center'
-                    }
+                    )
+                ],style={'margin-left':55}), width=6,
+            )
+        ])
+    ])
 
-                )
-            ],style={'margin-left':20}),
-            width=6,
-        )
-    ], style={'margin-top': 100, 'margin-left': 5})
 
 def nav_bar():
     return dbc.NavbarSimple(
         children=[
-            dbc.NavItem(dbc.NavLink("About US", href="#")),
-
+            dbc.NavItem(dbc.NavLink("Home", href="https://www.aiforgood.co.uk/", target="_blank")),
+            dbc.NavItem(dbc.NavLink("What is it?", href="https://www.aiforgoodsimulator.com/", target="_blank")),
+            dbc.NavItem(dbc.NavLink("About us", href="https://www.aiforgood.co.uk/about-us", target="_blank")),
         ],
-        brand="AIforGood",
+        brand="AI for Good Simulator",
         brand_href="#",
         color="primary",
         dark=True,
@@ -322,21 +330,30 @@ def nav_bar():
 layout = html.Div(
     [
         nav_bar(),
-        html.H3('Run Model'),
-        camp_selector(),
-        model_selector(),
-        profile_selector(),
-        model_run_buttons(),
+        html.Div(
+        [
+            html.H3('Select Parameters'),
+            camp_selector(),
+            model_selector(),
+            profile_selector(),
+        ], style={'margin': 20}),
+        
+        html.Div(
+        [
+            html.H3('Run Model'),
+            model_run_buttons(),
+        ], style={'margin': 20}),
+        
         history_table(),
         dcc.Interval(
             id='interval-component',
             interval=5 * 1000  # in milliseconds
         )
-    ], style={'margin': 10}
+    ]
 )
 
 def findToolTip(query):
-    with open('fs/params/Parameters_mouse-over_des.csv', encoding='utf-8') as csv_file:
+    with open(pu.get_param_mouse_over('Parameters_mouse-over_des.csv'), encoding='utf-8') as csv_file:
         csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
             if query == row["Parameter"]:

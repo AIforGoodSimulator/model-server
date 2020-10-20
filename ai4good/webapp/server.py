@@ -4,6 +4,12 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 from urllib.parse import urlparse, parse_qs
+import ai4good.webapp.landing_page as landing_page
+import ai4good.webapp.login_page as login_page
+import ai4good.webapp.input_page_1 as input_page_1
+import ai4good.webapp.input_page_2 as input_page_2
+import ai4good.webapp.input_page_3 as input_page_3
+import ai4good.webapp.input_page_4 as input_page_4
 import ai4good.webapp.run_model_page as run_model_page
 import ai4good.webapp.cm_model_results_page as cm_model_results_page
 import ai4good.webapp.cm_model_report_page as cm_model_report_page
@@ -23,7 +29,7 @@ numba_logger.setLevel(logging.WARNING)
 
 @flask_app.route("/")
 def index():
-    return redirect('/sim/run_model')
+    return redirect('/sim/landing')
 
 
 dash_app.layout = html.Div([
@@ -36,7 +42,19 @@ dash_app.layout = html.Div([
                    [Input('url', 'pathname'), Input('url', 'search')])
 def display_page(pathname, query=None):
     logging.info("Displaying page %s with query %s", pathname, query)
-    if pathname == '/sim/run_model' or pathname == '/sim/':
+    if pathname == '/sim/landing' or pathname == '/sim/':
+        return landing_page.layout
+    elif pathname == '/sim/login_page':
+        return login_page.layout
+    elif pathname == '/sim/input_page_1':
+        return input_page_1.layout
+    elif pathname == '/sim/input_page_2':
+        return input_page_2.layout
+    elif pathname == '/sim/input_page_3':
+        return input_page_3.layout
+    elif pathname == '/sim/input_page_4':
+        return input_page_4.layout
+    elif pathname == '/sim/run_model':
         return run_model_page.layout
     elif pathname == '/sim/results':
         query = parse_qs(urlparse(query).query)
@@ -67,7 +85,6 @@ def display_page(pathname, query=None):
         return nm_admin_page.layout()
     else:
         return '404'
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
