@@ -46,9 +46,11 @@ layout = html.Div(
                             html.Header('Residents with Comorbidity', className='card-text'),
                             html.Header('What is the total number of people with known comorbidity?', className='card-text', style={'color':'darkgray'}), 
                             dbc.Input(id='number-known-comobidity', placeholder='Optional', type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
-                            html.Header('Isolation Capacity', className='card-text'),
-                            html.Header('What is the total capacity of the isolation centre at the settlement?', className='card-text', style={'color':'darkgray'}), 
-                            dbc.Input(id='isolation-capacity', placeholder='Required', type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
+                            html.Header('Isolation Capacity and Policy', className='card-text'),
+                            html.Header('What is the total capacity of the isolation or quarantine centre at the settlement?', className='card-text', style={'color':'darkgray'}), 
+                            dbc.Input(id='isolation-centre-capacity', placeholder='Required', type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
+                            html.Header('How many days do the residents need to spend in isolation or quarantine centre if they are suspected or tested positive', className='card-text', style={'color':'darkgray'}), 
+                            dbc.Input(id='days-quarantine-tested-positive', placeholder='Optional', type='number', min=0, max=30, step=1, bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Community Shielding', className='card-text'),
                             html.Header('Is it possible to implement shielding or has it been implemented already?', className='card-text', style={'color':'darkgray'}), 
                             dbc.RadioItems(
@@ -56,17 +58,14 @@ layout = html.Div(
                                     {'label':'Yes', 'value':1}, 
                                     {'label':'No', 'value':0},
                                 ], value=1, id='community-shielding', inline=True, style={'margin-bottom':'25px'}),
-                            html.Header('Community Measures', className='card-text'),
-                            html.Header('Does someone conduct inspections and checks as well as implement corrective actions?', className='card-text', style={'color':'darkgray'}), 
+                            html.Header('COVID-19 Community Surveillance Program', className='card-text'),
+                            html.Header('Are the health or other actors in the camp actively surveilling for COVID-19 cases within the camp?', className='card-text', style={'color':'darkgray'}), 
                             dbc.RadioItems(
                                 options=[
                                     {'label':'Yes', 'value':1}, 
                                     {'label':'No', 'value':0},
                                     {'label':'Not Sure', 'value':-1},
-                                ], value=-1, id='conduct-inspections-implement-corrections', inline=True, style={'margin-bottom':'25px'}),
-                            html.Header('Isolation Policy', className='card-text'),
-                            html.Header('What is the total number of days of quarantine for an individual who has tested postive for an infectious disease?', className='card-text', style={'color':'darkgray'}), 
-                            dbc.Input(id='days-quarantine-tested-positive', placeholder='Optional', type='number', min=0, max=30, step=1, bs_size='sm', style={'margin-bottom':'25px'}),
+                                ], value=-1, id='community-surveillance-program', inline=True, style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-3-button', color='secondary', href='/sim/input_page_4')),
                             html.Div(id='input-page-3-alert')
                             ], body=True

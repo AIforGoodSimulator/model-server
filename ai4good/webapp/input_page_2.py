@@ -87,7 +87,7 @@ layout = html.Div(
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
                             html.Center(html.Img(src='/static/input_step2.png', title='Step 2 of 4', style={'width':'50%'})), 
-                            html.P('Fill in the following about the age structure of the settlement',className='card-text'),
+                            html.P('Fill in the following about the age structure accommodation type of the settlement',className='card-text'),
                             html.H5('Population', className='card-text'),
                             html.Header('Total Population', className='card-text'),
                             dbc.Input(id='total-population', placeholder='Required', value=20000, type='number', min=0, max=100000, step=10, n_submit=0, bs_size='sm', style={'margin-bottom':'25px'}),
@@ -127,7 +127,7 @@ layout = html.Div(
                                 style={'display':'grid', 'grid-template-columns':'36% 36% 28%', 'color':'darkgray'}),
                             generate_three_column_input(id_gender_perc, 100), 
                             html.Header('Ethnic Group Distribution', className='card-text'),
-                            html.Header('Enter the percentage population that each ethnic group represents',className='card-text', style={'color':'darkgray'}),
+                            html.Header('Enter the population that each ethnic group represents',className='card-text', style={'color':'darkgray'}),
                             generate_three_column_input(id_ethnic_no_top, 10000,'10px'), 
                             generate_three_column_input(id_ethnic_no_mid, 10000,'10px'), 
                             generate_three_column_input(id_ethnic_no_dwn, 10000), 
