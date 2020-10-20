@@ -434,8 +434,8 @@ class Camp:
 
         return np.count_nonzero(newly_exposed_ids)
 
-    def update_queues(self, pct_dequeue: float) -> None:
-        # remove agents from the front of the queues
+    def update_queues(self, pct_dequeue: float, dequeue_activity: int = ACTIVITY_WANDERING) -> None:
+        # remove agents from the front of the queues and send them to location defined by `dequeue_activity`
         for t in self.toilet_queue:
             # at each step during the day, we clear 80% of all agents in the queue
             dequeue_count = int(np.ceil(pct_dequeue * len(self.toilet_queue[t])))
@@ -445,7 +445,7 @@ class Camp:
                 # remove them from the queue
                 self.toilet_queue[t] = self.toilet_queue[t][dequeue_count:]
                 # change activity status to wandering for people who left toilet
-                self.agents[front, A_ACTIVITY] = ACTIVITY_WANDERING
+                self.agents[front, A_ACTIVITY] = dequeue_activity
             except IndexError:
                 pass
         for f in self.food_line_queue:
@@ -457,7 +457,7 @@ class Camp:
                 # remove them from the queue
                 self.food_line_queue[f] = self.food_line_queue[f][dequeue_count:]
                 # change activity status to wandering for people who left food line
-                self.agents[front, A_ACTIVITY] = ACTIVITY_WANDERING
+                self.agents[front, A_ACTIVITY] = dequeue_activity
             except IndexError:
                 pass
 

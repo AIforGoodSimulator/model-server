@@ -75,7 +75,7 @@ class Parameters(object):
             # TODO: add to parameters after confirming with Gaia and Vera
             self.infection_radius = float(profile.loc['infection_radius', VALUE])
         except KeyError:
-            self.infection_radius = 0.0001
+            self.infection_radius = 0.0001  # for 1x1 km sq. camp, this is 1 meter.
 
         ###############################################################################################################
         # Parameters about the agents
