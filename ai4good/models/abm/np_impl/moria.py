@@ -107,16 +107,25 @@ class Moria(Camp):
         logging.info("Shape of agents array: {}".format(agents.shape))
 
         # Name of the file to store progress
-        self.progress_file_name = "abm_moria_{}_{}.csv".format(
+        self.tot_progress_file_name = "abm_moria_tot_{}_{}.csv".format(
+            profile,
+            datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")
+        )
+        self.age_progress_file_name = "abm_moria_age_{}_{}.csv".format(
             profile,
             datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")
         )
         # Initialize progress dataset
-        self.data_collector = pd.DataFrame({
+        self.data_collector_tot = pd.DataFrame({
             'DAY': [],
             'SUSCEPTIBLE': [], 'EXPOSED': [], 'PRESYMPTOMATIC': [], 'SYMPTOMATIC': [], 'MILD': [], 'SEVERE': [],
             'ASYMPTOMATIC1': [], 'ASYMPTOMATIC2': [], 'RECOVERED': [], 'DECEASED': [],
             'HOSPITALIZED': []
+        })
+        self.data_collector_age = pd.DataFrame({
+            'DAY': [],
+            'INF_AGE0-9': [], 'INF_AGE10-19': [], 'INF_AGE20-29': [], 'INF_AGE30-39': [], 'INF_AGE40-49': [],
+            'INF_AGE50-59': [], 'INF_AGE60-69': [], 'INF_AGE70+': []
         })
 
         # Set initial intervention params (if any)
@@ -145,8 +154,8 @@ class Moria(Camp):
             self.save_progress()
 
         # Save initialized progress to file
-        self.data_collector.to_csv(self.progress_file_name, index=False)
-        logging.info("Results saved in {}".format(self.progress_file_name))
+        self.data_collector_tot.to_csv(self.tot_progress_file_name, index=False)
+        self.data_collector_age.to_csv(self.age_progress_file_name, index=False)
 
     def day(self):
         # Run 1 day of simulation in the moria camp
@@ -217,7 +226,6 @@ class Moria(Camp):
         self.t += 1
 
         # Increase day counter to track number of days in current disease state
-        # not_fine = (self.agents[:, A_DISEASE] != INF_SUSCEPTIBLE) & (self.agents[:, A_DISEASE] != INF_RECOVERED)
         self.agents[:, A_DAY_COUNTER] += 1
 
         # Disease progress at the end of the day
@@ -303,7 +311,7 @@ class Moria(Camp):
         # point the epidemic had ended
         n = disease_states.shape[0]
         for i in range(n):
-            if disease_states[i] not in [INF_SUSCEPTIBLE, INF_RECOVERED]:
+            if disease_states[i] not in [INF_SUSCEPTIBLE, INF_RECOVERED, INF_DECEASED]:
                 # DO NOT stop the simulation if any person is NOT (susceptible or recovered)
                 return 0
 
@@ -496,23 +504,39 @@ class Moria(Camp):
         return agents
 
     def save_progress(self):
-        # Function to save the progress of the simulation at any time step
+        # Function to save the progress of the simulation at any time step into dataframe
 
         # Add latest day progress in the data set
-        row = [self.t,
-               np.count_nonzero(self.agents[:, A_DISEASE] == INF_SUSCEPTIBLE),
-               np.count_nonzero(self.agents[:, A_DISEASE] == INF_EXPOSED),
-               np.count_nonzero(self.agents[:, A_DISEASE] == INF_PRESYMPTOMATIC),
-               np.count_nonzero(self.agents[:, A_DISEASE] == INF_SYMPTOMATIC),
-               np.count_nonzero(self.agents[:, A_DISEASE] == INF_MILD),
-               np.count_nonzero(self.agents[:, A_DISEASE] == INF_SEVERE),
-               np.count_nonzero(self.agents[:, A_DISEASE] == INF_ASYMPTOMATIC1),
-               np.count_nonzero(self.agents[:, A_DISEASE] == INF_ASYMPTOMATIC2),
-               np.count_nonzero(self.agents[:, A_DISEASE] == INF_RECOVERED),
-               np.count_nonzero(self.agents[:, A_DISEASE] == INF_DECEASED),
-               np.count_nonzero(self.agents[:, A_ACTIVITY] == ACTIVITY_HOSPITALIZED)
-               ]
-        self.data_collector.loc[self.data_collector.shape[0]] = row
+        row = [
+            self.t,
+            np.count_nonzero(self.agents[:, A_DISEASE] == INF_SUSCEPTIBLE),
+            np.count_nonzero(self.agents[:, A_DISEASE] == INF_EXPOSED),
+            np.count_nonzero(self.agents[:, A_DISEASE] == INF_PRESYMPTOMATIC),
+            np.count_nonzero(self.agents[:, A_DISEASE] == INF_SYMPTOMATIC),
+            np.count_nonzero(self.agents[:, A_DISEASE] == INF_MILD),
+            np.count_nonzero(self.agents[:, A_DISEASE] == INF_SEVERE),
+            np.count_nonzero(self.agents[:, A_DISEASE] == INF_ASYMPTOMATIC1),
+            np.count_nonzero(self.agents[:, A_DISEASE] == INF_ASYMPTOMATIC2),
+            np.count_nonzero(self.agents[:, A_DISEASE] == INF_RECOVERED),
+            np.count_nonzero(self.agents[:, A_DISEASE] == INF_DECEASED),
+            np.count_nonzero(self.agents[:, A_ACTIVITY] == ACTIVITY_HOSPITALIZED)
+        ]
+        self.data_collector_tot.loc[self.data_collector_tot.shape[0]] = row
+
+        # count of infectious and alive agents (age-wise)
+        infected_agents = OptimizedOps.is_infected(self.agents[:, A_DISEASE])
+        row = [
+            self.t,
+            np.count_nonzero(infected_agents & ( self.agents[:, A_AGE] < 10 )),
+            np.count_nonzero(infected_agents & ( (self.agents[:, A_AGE] >= 10) & (self.agents[:, A_AGE] < 20) )),
+            np.count_nonzero(infected_agents & ( (self.agents[:, A_AGE] >= 20) & (self.agents[:, A_AGE] < 30) )),
+            np.count_nonzero(infected_agents & ( (self.agents[:, A_AGE] >= 30) & (self.agents[:, A_AGE] < 40) )),
+            np.count_nonzero(infected_agents & ( (self.agents[:, A_AGE] >= 40) & (self.agents[:, A_AGE] < 50) )),
+            np.count_nonzero(infected_agents & ( (self.agents[:, A_AGE] >= 50) & (self.agents[:, A_AGE] < 60) )),
+            np.count_nonzero(infected_agents & ( (self.agents[:, A_AGE] >= 60) & (self.agents[:, A_AGE] < 70) )),
+            np.count_nonzero(infected_agents & ( self.agents[:, A_AGE] >= 70 ))
+        ]
+        self.data_collector_age.loc[self.data_collector_age.shape[0]] = row
 
     def _assign_households_to_agents(self, households: np.array, agents_ethnic_groups: np.array) -> np.array:
         # assign households to agents based on capacity

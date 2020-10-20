@@ -181,7 +181,7 @@ class OptimizedOps(object):
         out = np.zeros_like(disease_states, dtype=np.int32)
         for i in range(n):
             out[i] = not (disease_states[i] == INF_SUSCEPTIBLE or disease_states[i] == INF_EXPOSED or
-                          disease_states[i] == INF_RECOVERED)
+                          disease_states[i] == INF_RECOVERED or disease_states[i] == INF_DECEASED)
         return out
 
 
@@ -249,7 +249,7 @@ class Camp:
 
                 # Agent j will infect agent i if agent j is infectious
                 if (agents[j, A_DISEASE] == INF_SUSCEPTIBLE or agents[j, A_DISEASE] == INF_EXPOSED or
-                        agents[j, A_DISEASE] == INF_RECOVERED):
+                        agents[j, A_DISEASE] == INF_RECOVERED or agents[j, A_DISEASE] == INF_DECEASED):
                     # Skip if agent j is not infectious
                     continue
 
@@ -332,7 +332,7 @@ class Camp:
             for j in range(n):
                 # Agent j will infect agent i if agent j is infectious
                 if (agents[j, A_DISEASE] == INF_SUSCEPTIBLE or agents[j, A_DISEASE] == INF_EXPOSED or
-                        agents[j, A_DISEASE] == INF_RECOVERED):
+                        agents[j, A_DISEASE] == INF_RECOVERED or agents[j, A_DISEASE] == INF_DECEASED):
                     # Skip if agent j is not infectious
                     continue
 
@@ -408,10 +408,10 @@ class Camp:
                     # infectious. If they are, then add to the `interactions` array
                     if i-1 >= 0:
                         interactions[t_ids[i]] += (self.agents[t_ids[i-1], A_DISEASE]
-                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED))
+                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED))
                     if i+1 <= len(t_ids)-1:
                         interactions[t_ids[i]] += (self.agents[t_ids[i+1], A_DISEASE]
-                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED))
+                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED))
         elif queue_name == "food_line":
             for f in self.food_line_queue:
                 f_ids = self.food_line_queue[f]
@@ -420,10 +420,10 @@ class Camp:
                     # infectious. If they are, then add to the `interactions` array
                     if i-1 >= 0:
                         interactions[f_ids[i]] += (self.agents[f_ids[i-1], A_DISEASE]
-                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED))
+                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED))
                     if i+1 <= len(f_ids)-1:
                         interactions[f_ids[i]] += (self.agents[f_ids[i+1], A_DISEASE]
-                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED))
+                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED))
 
         # find probability of infection spread per agent via queue interaction
         prob = 1.0 - (1.0 - self.prob_spread) ** interactions
