@@ -51,7 +51,7 @@ def generate_html_age_group(age, id_age_popu, age_perc, total_popu):
                dbc.Label(str(age_perc)+'%', id={
                    'type':'age-perc-label', 
                    'index':id_age_popu}), 
-    ], id=id_age_popu, style={'display':'grid', 'grid-template-columns':'5% 20% 20% 45% 10%', 'margin-bottom':'10px'})
+    ], id=id_age_popu, style={'display':'grid', 'grid-template-columns':'5% 20% 20% 45% 10%', 'margin-bottom':'5px'})
 
 def generate_three_column_input(id_three_column, max_no, margin_bottom='25px'):
     children = html.Div([
@@ -115,7 +115,7 @@ layout = html.Div(
                                 html.B('', id='age_population_total'), 
                                 html.B('Percentage Total:'), 
                                 html.B('', id='age_percentage_total')], 
-                                style={'display':'grid', 'grid-template-columns':'5% 25% 26% 32% 12%', 'margin-bottom':'25px'}),
+                                style={'display':'grid', 'grid-template-columns':'5% 25% 26% 32% 12%'}),
                             html.Div(
                                 html.P(html.Center('Must equal to total population or 100%', className='card-text', style={'color':'darkgray'}))),
                             html.P(''),
@@ -131,6 +131,7 @@ layout = html.Div(
                             generate_three_column_input(id_ethnic_no_top, 10000,'10px'), 
                             generate_three_column_input(id_ethnic_no_mid, 10000,'10px'), 
                             generate_three_column_input(id_ethnic_no_dwn, 10000), 
+                            html.P(''),
                             html.H5('Accommodation Information', className='card-text'),
                             html.Header('Population Accommodation', className='card-text'),
                             html.Header('Accommodation details provide population density estimate and suggest mobility pattern', className='card-text', style={'color':'darkgray'}), 

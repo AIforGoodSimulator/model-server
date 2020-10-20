@@ -42,7 +42,7 @@ layout = html.Div(
                                 dbc.Label('10', id='age-min-moved-off-site'), 
                                 dcc.RangeSlider(id='age-range-moved-off-site', min=0, max=100, step=5, value=[10, 50], updatemode='drag', allowCross=False), 
                                 dbc.Label('50', id='age-max-moved-off-site')], 
-                                style={'display':'grid', 'grid-template-columns':'10% 80% 10%', 'margin-below':'25px'}),
+                                style={'display':'grid', 'grid-template-columns':'10% 80% 10%', 'margin-bottom':'25px'}),
                             html.Header('Residents with Comorbidity', className='card-text'),
                             html.Header('What is the total number of people with known comorbidity?', className='card-text', style={'color':'darkgray'}), 
                             dbc.Input(id='number-known-comobidity', placeholder='Optional', type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
