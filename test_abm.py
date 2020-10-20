@@ -46,18 +46,67 @@ class SampleRun:
             job.start()
 
     @staticmethod
-    def plot_age_df(f_name):
+    def plot_df(f_name):
         df = pd.read_csv(f_name)
+
+        # Plot total count of infectious people in the camp on each day
         pad = 1
-        plt.bar(range(0, pad*df.shape[0], pad), df.loc[:, 'INF_AGE0-9'], 1, label='Age 0-9')
-        plt.bar(range(0, pad*df.shape[0], pad), df.loc[:, 'INF_AGE10-19'], 1, bottom=df.loc[:, 'INF_AGE0-9'], label='Age 10-19')
-        plt.bar(range(0, pad*df.shape[0], pad), df.loc[:, 'INF_AGE20-29'], 1, bottom=df.loc[:, 'INF_AGE10-19'], label='Age 20-29')
-        plt.bar(range(0, pad*df.shape[0], pad), df.loc[:, 'INF_AGE30-39'], 1, bottom=df.loc[:, 'INF_AGE20-29'], label='Age 30-39')
-        plt.bar(range(0, pad*df.shape[0], pad), df.loc[:, 'INF_AGE40-49'], 1, bottom=df.loc[:, 'INF_AGE30-39'], label='Age 40-49')
-        plt.bar(range(0, pad*df.shape[0], pad), df.loc[:, 'INF_AGE50-59'], 1, bottom=df.loc[:, 'INF_AGE40-49'], label='Age 50-59')
-        plt.bar(range(0, pad*df.shape[0], pad), df.loc[:, 'INF_AGE60-69'], 1, bottom=df.loc[:, 'INF_AGE50-59'], label='Age 60-69')
-        plt.bar(range(0, pad*df.shape[0], pad), df.loc[:, 'INF_AGE70+'], 1, bottom=df.loc[:, 'INF_AGE60-69'], label='Age 70+')
-        plt.title("Count of infectious people in the camp")
+        fig, ax = plt.subplots(1, figsize=(10, 6))
+
+        a0 = df.loc[:, 'INF_AGE0-9']
+        a1 = df.loc[:, 'INF_AGE10-19']
+        a2 = df.loc[:, 'INF_AGE20-29']
+        a3 = df.loc[:, 'INF_AGE30-39']
+        a4 = df.loc[:, 'INF_AGE40-49']
+        a5 = df.loc[:, 'INF_AGE50-59']
+        a6 = df.loc[:, 'INF_AGE60-69']
+        a7 = df.loc[:, 'INF_AGE70+']
+
+        ax.bar(range(0, pad*df.shape[0], pad), a0, 1, label='Age 0-9')
+        ax.bar(range(0, pad*df.shape[0], pad), a1, 1, bottom=a0, label='Age 10-19')
+        ax.bar(range(0, pad*df.shape[0], pad), a2, 1, bottom=a0+a1, label='Age 20-29')
+        ax.bar(range(0, pad*df.shape[0], pad), a3, 1, bottom=a0+a1+a2, label='Age 30-39')
+        ax.bar(range(0, pad*df.shape[0], pad), a4, 1, bottom=a0+a1+a2+a3, label='Age 40-49')
+        ax.bar(range(0, pad*df.shape[0], pad), a5, 1, bottom=a0+a1+a2+a3+a4, label='Age 50-59')
+        ax.bar(range(0, pad*df.shape[0], pad), a6, 1, bottom=a0+a1+a2+a3+a4+a5, label='Age 60-69')
+        ax.bar(range(0, pad*df.shape[0], pad), a7, 1, bottom=a0+a1+a2+a3+a4+a5+a6, label='Age 70+')
+        ax.title.set_text("Count of infectious people in the camp")
+        plt.legend()
+        plt.show()
+
+        # Plot total count of agents per disease state on each day
+        fig, ax = plt.subplots(1, figsize=(10, 6))
+
+        t = df.loc[:, 'DAY']
+        ax.plot(t, df.loc[:, 'SUSCEPTIBLE'], label='Susceptible')
+        ax.plot(t, df.loc[:, 'EXPOSED'], label='Exposed')
+        ax.plot(t, df.loc[:, 'PRESYMPTOMATIC'], label='Presymptomatic')
+        ax.plot(t, df.loc[:, 'SYMPTOMATIC'], label='Symptomatic')
+        ax.plot(t, df.loc[:, 'MILD'], label='Mild')
+        ax.plot(t, df.loc[:, 'SEVERE'], label='Severe')
+        ax.plot(t, df.loc[:, 'ASYMPTOMATIC1'], label='Asymptomatic1')
+        ax.plot(t, df.loc[:, 'ASYMPTOMATIC2'], label='Asymptomatic2')
+        ax.plot(t, df.loc[:, 'RECOVERED'], label='Recovered')
+        ax.plot(t, df.loc[:, 'HOSPITALIZED'], label='Hospitalized')
+        ax.title.set_text("Total count in each disease state")
+
+        plt.legend()
+        plt.show()
+
+        # Plot count of new infections for each activity on each day
+        fig, ax = plt.subplots(1, figsize=(10, 6))
+
+        h = df.loc[:, 'NEW_INF_HOUSEHOLD']
+        w = df.loc[:, 'NEW_INF_WANDERING']
+        t = df.loc[:, 'NEW_INF_TOILET']
+        f = df.loc[:, 'NEW_INF_FOOD_LINE']
+
+        pad = 1
+        ax.bar(range(0, pad * df.shape[0], pad), h, 1, label='In household')
+        ax.bar(range(0, pad * df.shape[0], pad), w, 1, bottom=h, label='Wandering')
+        ax.bar(range(0, pad * df.shape[0], pad), t, 1, bottom=h+w, label='In toilet queue')
+        ax.bar(range(0, pad * df.shape[0], pad), f, 1, bottom=h+w+t, label='In food line queue')
+        ax.title.set_text("Count of new infections (location wise)")
         plt.legend()
         plt.show()
 
@@ -92,10 +141,10 @@ if __name__ == "__main__":
 
     # Just pass the profiles in order here
     sampleRun = SampleRun([
-        "QuarantineHTHI"
+        "BaselineLTHI"
     ])
 
     if "--plot" in sys.argv:
-        SampleRun.plot_age_df(sys.argv[2])
+        SampleRun.plot_df(sys.argv[2])
     else:
         sampleRun.run()

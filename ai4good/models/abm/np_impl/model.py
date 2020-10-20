@@ -169,8 +169,7 @@ class OptimizedOps(object):
         n = disease_state.shape[0]
         out = np.zeros_like(disease_state, dtype=np.int32)
         for i in range(n):
-            out[i] = (disease_state[i] == INF_SYMPTOMATIC or disease_state[i] == INF_MILD or
-                      disease_state[i] == INF_SEVERE)
+            out[i] = disease_state[i] in (INF_SYMPTOMATIC, INF_MILD, INF_SEVERE)
         return out
 
     @staticmethod
@@ -180,8 +179,7 @@ class OptimizedOps(object):
         n = disease_states.shape[0]
         out = np.zeros_like(disease_states, dtype=np.int32)
         for i in range(n):
-            out[i] = not (disease_states[i] == INF_SUSCEPTIBLE or disease_states[i] == INF_EXPOSED or
-                          disease_states[i] == INF_RECOVERED or disease_states[i] == INF_DECEASED)
+            out[i] = disease_states[i] not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED)
         return out
 
 
@@ -195,7 +193,6 @@ class Camp:
         self.camp_size = camp_size
         self.params = params
         self.num_people = self.params.number_of_people_in_isoboxes + self.params.number_of_people_in_tents
-        self.infection_radius = self.params.infection_radius * self.camp_size
         # If a susceptible and an infectious individual interact, then the infection is transmitted with probability pa
         self.prob_spread = self.params.prob_spread
 
@@ -203,7 +200,7 @@ class Camp:
         self.toilet_queue = {}
         self.food_line_queue = {}
 
-    def set_agents(self, agents: np.array):
+    def set_agents(self, agents: np.array) -> None:
         self.agents = agents
 
     @staticmethod
@@ -248,8 +245,7 @@ class Camp:
             for j in nb.prange(n):
 
                 # Agent j will infect agent i if agent j is infectious
-                if (agents[j, A_DISEASE] == INF_SUSCEPTIBLE or agents[j, A_DISEASE] == INF_EXPOSED or
-                        agents[j, A_DISEASE] == INF_RECOVERED or agents[j, A_DISEASE] == INF_DECEASED):
+                if agents[j, A_DISEASE] in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED):
                     # Skip if agent j is not infectious
                     continue
 
@@ -306,7 +302,7 @@ class Camp:
 
             # Find r and θ for finding random point in circle centered at agent's household.
             # This r and θ values are then used to calculate the new position of the agents around their households.
-            r = A_HOME_RANGE * random.random()
+            r = agents[i, A_HOME_RANGE] * random.random()
             theta = 2.0 * np.pi * random.random()
 
             # Calculate new co-ordinates from r and θ.
@@ -321,7 +317,7 @@ class Camp:
 
         # Simulate infection dynamics for the wanderers.
         # Susceptible agent i contract infection from an infectious agent j.
-        for i in range(n):
+        for i in nb.prange(n):
             # Agent i will be infected iff he/she is susceptible
             if agents[i, A_DISEASE] != INF_SUSCEPTIBLE:
                 # Skip if agent i is not susceptible
@@ -329,10 +325,9 @@ class Camp:
 
             num_inf_interactions = 0  # Number of infectious interactions agent i has with other wanderers
 
-            for j in range(n):
+            for j in nb.prange(n):
                 # Agent j will infect agent i if agent j is infectious
-                if (agents[j, A_DISEASE] == INF_SUSCEPTIBLE or agents[j, A_DISEASE] == INF_EXPOSED or
-                        agents[j, A_DISEASE] == INF_RECOVERED or agents[j, A_DISEASE] == INF_DECEASED):
+                if agents[j, A_DISEASE] in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED):
                     # Skip if agent j is not infectious
                     continue
 

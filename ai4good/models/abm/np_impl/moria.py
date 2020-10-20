@@ -107,25 +107,19 @@ class Moria(Camp):
         logging.info("Shape of agents array: {}".format(agents.shape))
 
         # Name of the file to store progress
-        self.tot_progress_file_name = "abm_moria_tot_{}_{}.csv".format(
-            profile,
-            datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")
-        )
-        self.age_progress_file_name = "abm_moria_age_{}_{}.csv".format(
+        self.progress_file_name = "abm_moria_{}_{}.csv".format(
             profile,
             datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")
         )
         # Initialize progress dataset
-        self.data_collector_tot = pd.DataFrame({
+        self.data_collector = pd.DataFrame({
             'DAY': [],
             'SUSCEPTIBLE': [], 'EXPOSED': [], 'PRESYMPTOMATIC': [], 'SYMPTOMATIC': [], 'MILD': [], 'SEVERE': [],
             'ASYMPTOMATIC1': [], 'ASYMPTOMATIC2': [], 'RECOVERED': [], 'DECEASED': [],
-            'HOSPITALIZED': []
-        })
-        self.data_collector_age = pd.DataFrame({
-            'DAY': [],
+            'HOSPITALIZED': [],
             'INF_AGE0-9': [], 'INF_AGE10-19': [], 'INF_AGE20-29': [], 'INF_AGE30-39': [], 'INF_AGE40-49': [],
-            'INF_AGE50-59': [], 'INF_AGE60-69': [], 'INF_AGE70+': []
+            'INF_AGE50-59': [], 'INF_AGE60-69': [], 'INF_AGE70+': [],
+            'NEW_INF_HOUSEHOLD': [], 'NEW_INF_WANDERING': [], 'NEW_INF_TOILET': [], 'NEW_INF_FOOD_LINE': []
         })
 
         # Set initial intervention params (if any)
@@ -147,18 +141,21 @@ class Moria(Camp):
             if Moria.stop_simulation(self.agents[:, A_DISEASE]) == 1:
                 break
 
-            # simulate one day
-            self.day()
+            # simulate one day and get the new infections occurred during each activity
+            new_infections = self.day()
 
             # save the progress
-            self.save_progress()
+            self.save_progress(new_infections)
 
         # Save initialized progress to file
-        self.data_collector_tot.to_csv(self.tot_progress_file_name, index=False)
-        self.data_collector_age.to_csv(self.age_progress_file_name, index=False)
+        self.data_collector.to_csv(self.progress_file_name, index=False)
 
     def day(self):
-        # Run 1 day of simulation in the moria camp
+        # Run 1 day of simulation in the moria camp and return number of new infections in each activity
+
+        # Number of new infections in each activity i.e. ACTIVITY_HOUSEHOLD, ACTIVITY_WANDERING, ACTIVITY_TOILET,
+        # ACTIVITY_FOOD_LINE, ACTIVITY_QUARANTINED, ACTIVITY_HOSPITALIZED
+        new_infections = [0, 0, 0, 0, 0, 0]
 
         # Get the instance of the day when food line will form
         s_food = int(self.num_activities / 3.0)  # food line is on 3 times a day in Moria
@@ -189,7 +186,7 @@ class Moria(Camp):
             wanderer_ids = activities == ACTIVITY_WANDERING
             self.agents[wanderer_ids, :], new_wd_inf = Camp.simulate_wander(self.agents[wanderer_ids, :], CAMP_SIZE,
                                                                             self.params.relative_strength_of_interaction,
-                                                                            self.params.infection_radius,
+                                                                            self.params.infection_radius * CAMP_SIZE,
                                                                             self.prob_spread)
 
             # 2. Simulate agent's visit to toilet
@@ -207,6 +204,11 @@ class Moria(Camp):
             # 5. Update toilet and food line queues
             self.update_queues(self.params.percentage_of_toilet_queue_cleared_at_each_step)
 
+            new_infections[ACTIVITY_HOUSEHOLD] += new_hh_inf
+            new_infections[ACTIVITY_WANDERING] += new_wd_inf
+            new_infections[ACTIVITY_TOILET] += new_inf_t
+            new_infections[ACTIVITY_FOOD_LINE] += new_inf_f
+
             # logging.debug("{} new agents were exposed through interactions during wandering".format(new_wd_inf))
             # logging.debug("{} new agents were exposed through interactions in toilet queues".format(new_inf_t))
             # logging.debug("{} new agents were exposed through interactions in food line queues".format(new_inf_f))
@@ -218,9 +220,11 @@ class Moria(Camp):
         self.update_queues(1.0, dequeue_activity=ACTIVITY_HOUSEHOLD)
         # Get activities for all agents at the end of the day. Current implementation sends all agents back to their
         # households at the end of the day. TODO: uncomment after confirmation from Gaia and Vera
-        # activities = Moria.get_activities(self.agents, 0.0, 0.0, force_activity=ACTIVITY_HOUSEHOLD)
-        # hh_ids = activities == ACTIVITY_HOUSEHOLD
-        # self.agents[hh_ids, :], _ = Camp.simulate_households(self.agents[hh_ids, :], self.prob_spread)
+        activities = Moria.get_activities(self.agents, 0.0, 0.0, force_activity=ACTIVITY_HOUSEHOLD)
+        hh_ids = activities == ACTIVITY_HOUSEHOLD
+        self.agents[hh_ids, :], new_hh_inf = Camp.simulate_households(self.agents[hh_ids, :], self.prob_spread)
+
+        new_infections[ACTIVITY_HOUSEHOLD] += new_hh_inf
 
         # Increment day
         self.t += 1
@@ -237,6 +241,8 @@ class Moria(Camp):
             self.agents = Moria.detect_and_isolate(self.agents, self.P_detect)
             # If all agents of isolated household are not showing symptoms for some days, then send them back to camp
             self.agents = Moria.check_and_deisolate(self.agents, self.P_n)
+
+        return new_infections
 
     @staticmethod
     @nb.njit
@@ -312,7 +318,7 @@ class Moria(Camp):
         n = disease_states.shape[0]
         for i in range(n):
             if disease_states[i] not in [INF_SUSCEPTIBLE, INF_RECOVERED, INF_DECEASED]:
-                # DO NOT stop the simulation if any person is NOT (susceptible or recovered)
+                # DO NOT stop the simulation if any person is NOT (susceptible or recovered or deceased)
                 return 0
 
         # if all agents are either susceptible or recovered, time to stop the simulation
@@ -416,8 +422,8 @@ class Moria(Camp):
                 continue
 
             # An agent who is showing infection symptoms can be detected by camp manager with some probability
-            i_detected = (agents[i, A_DISEASE] == INF_SYMPTOMATIC or agents[i, A_DISEASE] == INF_MILD or
-                          agents[i, A_DISEASE] == INF_SEVERE) and random.random() <= prob_detect
+            i_detected = agents[i, A_DISEASE] in (INF_SYMPTOMATIC, INF_MILD, INF_SEVERE) and \
+                         random.random() <= prob_detect
 
             # if agent is not detected, skip
             if i_detected == 0:
@@ -503,12 +509,16 @@ class Moria(Camp):
         # return updated agents array
         return agents
 
-    def save_progress(self):
+    def save_progress(self, new_infections: list) -> None:
         # Function to save the progress of the simulation at any time step into dataframe
+
+        # count of infectious and alive agents (age-wise)
+        infected_agents = OptimizedOps.is_infected(self.agents[:, A_DISEASE])
 
         # Add latest day progress in the data set
         row = [
             self.t,
+
             np.count_nonzero(self.agents[:, A_DISEASE] == INF_SUSCEPTIBLE),
             np.count_nonzero(self.agents[:, A_DISEASE] == INF_EXPOSED),
             np.count_nonzero(self.agents[:, A_DISEASE] == INF_PRESYMPTOMATIC),
@@ -519,24 +529,23 @@ class Moria(Camp):
             np.count_nonzero(self.agents[:, A_DISEASE] == INF_ASYMPTOMATIC2),
             np.count_nonzero(self.agents[:, A_DISEASE] == INF_RECOVERED),
             np.count_nonzero(self.agents[:, A_DISEASE] == INF_DECEASED),
-            np.count_nonzero(self.agents[:, A_ACTIVITY] == ACTIVITY_HOSPITALIZED)
-        ]
-        self.data_collector_tot.loc[self.data_collector_tot.shape[0]] = row
+            np.count_nonzero(self.agents[:, A_ACTIVITY] == ACTIVITY_HOSPITALIZED),
 
-        # count of infectious and alive agents (age-wise)
-        infected_agents = OptimizedOps.is_infected(self.agents[:, A_DISEASE])
-        row = [
-            self.t,
-            np.count_nonzero(infected_agents & ( self.agents[:, A_AGE] < 10 )),
-            np.count_nonzero(infected_agents & ( (self.agents[:, A_AGE] >= 10) & (self.agents[:, A_AGE] < 20) )),
-            np.count_nonzero(infected_agents & ( (self.agents[:, A_AGE] >= 20) & (self.agents[:, A_AGE] < 30) )),
-            np.count_nonzero(infected_agents & ( (self.agents[:, A_AGE] >= 30) & (self.agents[:, A_AGE] < 40) )),
-            np.count_nonzero(infected_agents & ( (self.agents[:, A_AGE] >= 40) & (self.agents[:, A_AGE] < 50) )),
-            np.count_nonzero(infected_agents & ( (self.agents[:, A_AGE] >= 50) & (self.agents[:, A_AGE] < 60) )),
-            np.count_nonzero(infected_agents & ( (self.agents[:, A_AGE] >= 60) & (self.agents[:, A_AGE] < 70) )),
-            np.count_nonzero(infected_agents & ( self.agents[:, A_AGE] >= 70 ))
+            np.count_nonzero(infected_agents & (self.agents[:, A_AGE] < 10)),
+            np.count_nonzero(infected_agents & ((self.agents[:, A_AGE] >= 10) & (self.agents[:, A_AGE] < 20))),
+            np.count_nonzero(infected_agents & ((self.agents[:, A_AGE] >= 20) & (self.agents[:, A_AGE] < 30))),
+            np.count_nonzero(infected_agents & ((self.agents[:, A_AGE] >= 30) & (self.agents[:, A_AGE] < 40))),
+            np.count_nonzero(infected_agents & ((self.agents[:, A_AGE] >= 40) & (self.agents[:, A_AGE] < 50))),
+            np.count_nonzero(infected_agents & ((self.agents[:, A_AGE] >= 50) & (self.agents[:, A_AGE] < 60))),
+            np.count_nonzero(infected_agents & ((self.agents[:, A_AGE] >= 60) & (self.agents[:, A_AGE] < 70))),
+            np.count_nonzero(infected_agents & (self.agents[:, A_AGE] >= 70)),
+
+            new_infections[ACTIVITY_HOUSEHOLD],
+            new_infections[ACTIVITY_WANDERING],
+            new_infections[ACTIVITY_TOILET],
+            new_infections[ACTIVITY_FOOD_LINE]
         ]
-        self.data_collector_age.loc[self.data_collector_age.shape[0]] = row
+        self.data_collector.loc[self.data_collector.shape[0]] = row
 
     def _assign_households_to_agents(self, households: np.array, agents_ethnic_groups: np.array) -> np.array:
         # assign households to agents based on capacity
