@@ -280,25 +280,25 @@ def high_level_message_5():
 #     'rgba(245, 186, 186, 0.5)', 'rgba(255, 255, 255,0)', 'rgb(255, 0, 0)']
 
 
-# def plot_iqr(df: pd.DataFrame, y_col: str,
-#              x_col='Time', estimator=np.median, estimator_name='median', ci_name_prefix='',
-#              iqr_low=0.25, iqr_high=0.75,
-#              color_scheme=color_scheme_main):
-#     grouped = df.groupby(x_col)[y_col]
-#     est = grouped.agg(estimator)
-#     cis = pd.DataFrame(np.c_[grouped.quantile(iqr_low), grouped.quantile(iqr_high)], index=est.index,
-#                        columns=["low", "high"]).stack().reset_index()
+def plot_iqr(df: pd.DataFrame, y_col: str,
+             x_col='Time', estimator=np.median, estimator_name='median', ci_name_prefix='',
+             iqr_low=0.25, iqr_high=0.75,
+             color_scheme=color_scheme_main):
+    grouped = df.groupby(x_col)[y_col]
+    est = grouped.agg(estimator)
+    cis = pd.DataFrame(np.c_[grouped.quantile(iqr_low), grouped.quantile(iqr_high)], index=est.index,
+                       columns=["low", "high"]).stack().reset_index()
 
-#     x = est.index.values.tolist()
-#     x_rev = x[::-1]
+    x = est.index.values.tolist()
+    x_rev = x[::-1]
 
-#     y_upper = cis[cis['level_1'] == 'high'][0].values.tolist()
-#     y_lower = cis[cis['level_1'] == 'low'][0].values.tolist()
-#     y_lower = y_lower[::-1]
+    y_upper = cis[cis['level_1'] == 'high'][0].values.tolist()
+    y_lower = cis[cis['level_1'] == 'low'][0].values.tolist()
+    y_lower = y_lower[::-1]
 
-#     p1 = go.Scatter(
-#         x=x + x_rev, y=y_upper + y_lower, fill='toself', fillcolor=color_scheme[0],
-#         line_color=color_scheme[1], name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval')
-#     p2 = go.Scatter(
-#         x=x, y=est, line_color=color_scheme[2], name=f'{y_col} {estimator_name}')
-#     return p1, p2
+    p1 = go.Scatter(
+        x=x + x_rev, y=y_upper + y_lower, fill='toself', fillcolor=color_scheme[0],
+        line_color=color_scheme[1], name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval')
+    p2 = go.Scatter(
+        x=x, y=est, line_color=color_scheme[2], name=f'{y_col} {estimator_name}')
+    return p1, p2

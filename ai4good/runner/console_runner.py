@@ -38,8 +38,6 @@ def run_model(_model: str, _profile: str, camp: str, country: str, load_from_cac
         #     save_plots(mr, res_id, is_save_plots, is_show_plots)
     if is_save_report:
         save_report(mr, res_id)
-    if is_save_csvs:
-        save_csv(mr, params.csv_name())
     return mr
 
 
@@ -103,12 +101,6 @@ def save_report(mr, res_id):
     df.to_csv(pu.reports_path(f"all_R0_{res_id}.csv"))
 
 
-def save_csv(mr, csv_name):
-    logging.info("Saving csv")
-    # here model ModelResult.result_data['report'] stores the raw output from cm model 
-    df = mr.get('report')
-    df.to_csv(pu.raw_csvs_path(f"{csv_name}.csv"))
-
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     parser = argparse.ArgumentParser(description='AI4Good model runner')
@@ -132,7 +124,6 @@ if __name__ == '__main__':
     parser.add_argument('--save_plots', dest='save_plots', action='store_true', help='Save plots', default=False)
     parser.add_argument('--show_plots', dest='show_plots', action='store_true', help='Show plots', default=False)
     parser.add_argument('--save_report', dest='save_report', action='store_true', help='Save model report', default=False)
-    parser.add_argument('--save_raw_csvs', dest='save_raw_csvs', action='store_true', help='Save raw csvs', default=False)
     parser.add_argument('--profile_overrides', type=str, help='Model specific profile overrides as JSON', default=None)
     args = parser.parse_args()
 
