@@ -25,7 +25,7 @@ layout = html.Div(
                             dbc.Input(id='login-password', placeholder='Password', type='password', style={'margin-bottom':'25px'}),
                             dbc.CardFooter(
                                 html.Div([
-                                    dbc.Button('Log-in', id='login-button', color='dark', href='/sim/input_page_1'), 
+                                    dbc.Button('Login', id='login-button', color='dark', href='/sim/input_page_1'), 
                                     html.P(''), 
                                     dbc.Nav([
                                         dbc.NavLink('Forgot password?', id='forgot-password', href='#')
