@@ -25,6 +25,11 @@ id_accommodation_area = ['id-accommodation-area' + x.lower() for x in accommodat
 id_accommodation_no_person = ['id-accommodation-no-person' + x.lower() for x in accommodation_info]
 id_accommodation_no_unit = ['id-accommodation-no-unit' + x.lower() for x in accommodation_info]
 
+id_gender_perc = ['gender-perc-female', 'gender-perc-male', 'gender-perc-other']
+id_ethnic_no_top = ['ethnic-no-1', 'ethnic-no-2', 'ethnic-no-3']
+id_ethnic_no_mid = ['ethnic-no-4', 'ethnic-no-5', 'ethnic-no-6']
+id_ethnic_no_dwn = ['ethnic-no-7', 'ethnic-no-8', 'ethnic-no-9']
+
 def int_perc_1dp(nom, dem):
     perc = nom/dem*100 if dem !=0 else 0
     perc_1dp = "{:.1f}".format(perc)
@@ -46,7 +51,17 @@ def generate_html_age_group(age, id_age_popu, age_perc, total_popu):
                dbc.Label(str(age_perc)+'%', id={
                    'type':'age-perc-label', 
                    'index':id_age_popu}), 
-    ], id=id_age_popu, style={'display':'grid', 'grid-template-columns':'5% 20% 20% 45% 10%', 'margin-below':'25px'})
+    ], id=id_age_popu, style={'display':'grid', 'grid-template-columns':'5% 20% 20% 45% 10%', 'margin-bottom':'10px'})
+
+def generate_three_column_input(id_three_column, max_no, margin_bottom='25px'):
+    children = html.Div([
+        dbc.Input(id=id_three_column[0], placeholder='Optional', type='number', min=0, max=max_no, step=1, n_submit=0, bs_size='sm'),
+        html.Header(''),
+        dbc.Input(id=id_three_column[1], placeholder='Optional', type='number', min=0, max=max_no, step=1, n_submit=0, bs_size='sm'),
+        html.Header(''),
+        dbc.Input(id=id_three_column[2], placeholder='Optional', type='number', min=0, max=max_no, step=1, n_submit=0, bs_size='sm'), 
+    ], style={'display':'grid', 'grid-template-columns':'28% 8% 28% 8% 28%', 'margin-bottom':margin_bottom})
+    return children
 
 def generate_accommodation_info_children(id_index):
     children = [html.Div([
@@ -73,11 +88,11 @@ layout = html.Div(
                             html.H4('COVID-19 Simulator', className='card-title'),
                             html.Center(html.Img(src='/static/input_step2.png', title='Step 2 of 4', style={'width':'50%'})), 
                             html.P('Fill in the following about the age structure of the settlement',className='card-text'),
-                            html.H5('Age Group Distribution', className='card-text'),
+                            html.H5('Population', className='card-text'),
                             html.Header('Total Population', className='card-text'),
                             dbc.Input(id='total-population', placeholder='Required', value=20000, type='number', min=0, max=100000, step=10, n_submit=0, bs_size='sm', style={'margin-bottom':'25px'}),
-                            html.Header('Age Structure', className='card-text'),
-                            html.Header('Enter the percentage or actual population that each range represents',className='card-text', style={'color':'darkgray'}),
+                            html.Header('Age Group Structure', className='card-text'),
+                            html.Header('Enter the percentage or actual population that each age range represents',className='card-text', style={'color':'darkgray'}),
                             html.Div([
                                 html.Header(''),
                                 html.Header('Age Group (years)'), 
@@ -100,10 +115,22 @@ layout = html.Div(
                                 html.B('', id='age_population_total'), 
                                 html.B('Percentage Total:'), 
                                 html.B('', id='age_percentage_total')], 
-                                style={'display':'grid', 'grid-template-columns':'5% 25% 26% 32% 12%', 'margin-below':'25px'}),
+                                style={'display':'grid', 'grid-template-columns':'5% 25% 26% 32% 12%', 'margin-bottom':'25px'}),
                             html.Div(
                                 html.P(html.Center('Must equal to total population or 100%', className='card-text', style={'color':'darkgray'}))),
                             html.P(''),
+                            html.Header('Gender Diversity', className='card-text'),
+                            html.Div([
+                                html.B('Female (%)'), 
+                                html.B('Male (%)'), 
+                                html.B('Other (%)')], 
+                                style={'display':'grid', 'grid-template-columns':'36% 36% 28%', 'color':'darkgray'}),
+                            generate_three_column_input(id_gender_perc, 100), 
+                            html.Header('Ethnic Group Distribution', className='card-text'),
+                            html.Header('Enter the percentage population that each ethnic group represents',className='card-text', style={'color':'darkgray'}),
+                            generate_three_column_input(id_ethnic_no_top, 10000,'10px'), 
+                            generate_three_column_input(id_ethnic_no_mid, 10000,'10px'), 
+                            generate_three_column_input(id_ethnic_no_dwn, 10000), 
                             html.H5('Accommodation Information', className='card-text'),
                             html.Header('Population Accommodation', className='card-text'),
                             html.Header('Accommodation details provide population density estimate and suggest mobility pattern', className='card-text', style={'color':'darkgray'}), 
