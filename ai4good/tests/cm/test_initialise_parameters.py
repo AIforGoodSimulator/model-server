@@ -13,7 +13,7 @@ class InitialiseParameters(unittest.TestCase):
         self.profile_df = self.facade.ps.get_params(CompartmentalModel.ID, 'baseline')
 
     def test_cm_category(self):
-        params = Parameters(self.facade.ps, 'Moria', '',
+        params = Parameters(self.facade.ps, 'Moria',
                             self.profile_df, {})
 
         self.assertCountEqual(params.change_in_categories, ['C' + x for x in params.calculated_categories])
@@ -23,7 +23,7 @@ class InitialiseParameters(unittest.TestCase):
 
     def test_cm_custom_profile(self):
         custom_profile_df = pd.read_csv(os.path.join(os.path.dirname(__file__), 'resources/profile.csv'))
-        params = Parameters(self.facade.ps, 'Moria', '',
+        params = Parameters(self.facade.ps, 'Moria',
                             custom_profile_df, {})
         self.assertEqual(params.control_dict['ICU_capacity']['value'],
                          int(custom_profile_df[custom_profile_df['Parameter'] == 'ICU_capacity']['Value'])/params.population)
@@ -37,15 +37,6 @@ class InitialiseParameters(unittest.TestCase):
 
         self.assertEqual(params.control_dict['numberOfIterations'], 2)
         self.assertEqual(params.control_dict['t_sim'], 200)
-        expected = pd.read_csv('cm/resources/Albania_contact_matrix.csv', index_col=0)
+        expected = pd.read_csv('./resources/Greece_contact_matrix.csv', index_col=0)
         actual = pd.DataFrame(params.infection_matrix)
-        np.array_equal(expected.values, actual.values)
-        np.array_equal(params.camp_params.to_numpy(), self.facade.ps.get_camp_params('Moria').to_numpy())
-
-    def test_specific_country_contact_matrix(self):
-        params = Parameters(self.facade.ps, 'Moria', 'Albania',
-                            self.profile_df, {})
-        expected = pd.read_csv('cm/resources/Albania_contact_matrix.csv', index_col=0)
-        actual = pd.DataFrame(params.infection_matrix)
-        np.array_equal(expected.values, actual.values)
-        np.array_equal(params.camp_params.to_numpy(), self.facade.ps.get_camp_params('Moria').to_numpy())
+        self.assertTrue(np.allclose(expected.values, actual.values))
