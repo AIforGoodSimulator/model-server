@@ -1,9 +1,9 @@
-import logging
 from flask import redirect
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 from urllib.parse import urlparse, parse_qs
+from ai4good.utils.logger_util import get_logger
 import ai4good.webapp.landing_page as landing_page
 import ai4good.webapp.login_page as login_page
 import ai4good.webapp.input_page_1 as input_page_1
@@ -22,10 +22,8 @@ import ai4good.webapp.nm_admin_page as nm_admin_page
 from ai4good.webapp.apps import flask_app, dash_app
 
 
-logging.basicConfig(level=logging.DEBUG)
+logger = get_logger(__file__, 'DEBUG')
 
-numba_logger = logging.getLogger('numba')
-numba_logger.setLevel(logging.WARNING)
 
 @flask_app.route("/")
 def index():
@@ -41,7 +39,7 @@ dash_app.layout = html.Div([
 @dash_app.callback(Output('page-content', 'children'),
                    [Input('url', 'pathname'), Input('url', 'search')])
 def display_page(pathname, query=None):
-    logging.info("Displaying page %s with query %s", pathname, query)
+    logger.info("Displaying page %s with query %s", pathname, query)
     if pathname == '/sim/landing' or pathname == '/sim/':
         return landing_page.layout
     elif pathname == '/sim/login_page':
@@ -86,6 +84,6 @@ def display_page(pathname, query=None):
     else:
         return '404'
 
+
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
     dash_app.run_server(debug=True)

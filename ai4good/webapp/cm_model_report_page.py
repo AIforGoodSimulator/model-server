@@ -1,5 +1,4 @@
 from functools import reduce
-import logging
 import textwrap
 
 import plotly.graph_objs as go
@@ -14,6 +13,10 @@ from ai4good.models.cm.initialise_parameters import Parameters
 from ai4good.webapp.apps import dash_app, facade, model_runner, cache, local_cache, cache_timeout
 from ai4good.webapp.cm_model_report_utils import *
 from ai4good.webapp.metadata_report import GenerateMetadataDict, GenerateMetadataHTML
+from ai4good.utils.logger_util import get_logger
+
+
+logger = get_logger(__name__)
 
 
 @cache.memoize(timeout=cache_timeout)
@@ -104,7 +107,7 @@ def overview_population(params: Parameters):
 
 @local_cache.memoize(timeout=cache_timeout)
 def get_model_result(camp: str, profile: str):
-    logging.info("Reading data for: " + camp + ", " + profile)
+    logger.info("Reading data for: " + camp + ", " + profile)
     mr = model_runner.get_result(CompartmentalModel.ID, profile, camp)
     assert mr is not None
     profile_df = facade.ps.get_params(CompartmentalModel.ID, profile).drop(columns=['Profile'])
@@ -321,7 +324,7 @@ def base_profile_chart_section():
 )
 def render_main_section_charts(camp, profile, age_to_plot):
     mr, profile_df, params, report = get_model_result(camp, profile)
-    logging.info(f"Plotting {age_to_plot}")
+    logger.info(f"Plotting {age_to_plot}")
 
     columns_to_plot = ['Infected (symptomatic)', 'Hospitalised', 'Critical', 'Deaths']
     fig = make_subplots(rows=2, cols=2, shared_xaxes=True,

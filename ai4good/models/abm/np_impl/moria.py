@@ -6,7 +6,9 @@ from scipy.cluster.vq import kmeans
 from ai4good.models.abm.np_impl.model import *
 from ai4good.models.abm.np_impl.parameters import Parameters
 from ai4good.models.abm.np_impl.utils import get_incubation_period
+from ai4good.utils.logger_util import get_logger
 
+logger = get_logger(__name__)
 CAMP_SIZE = 100.0
 
 
@@ -104,13 +106,13 @@ class Moria(Camp):
         self._init_queue("toilet", self.params.toilets_blocks[0])
         self._init_queue("food_line", self.params.foodline_blocks[0])
 
-        logging.info("Shape of agents array: {}".format(agents.shape))
+        logger.info("Shape of agents array: {}".format(agents.shape))
 
         # Name of the file to store progress
         self.progress_file_name = "abm_moria_{}.csv".format(
             datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")
         )
-        logging.info("Results will be saved in {}".format(self.progress_file_name))
+        logger.info("Results will be saved in {}".format(self.progress_file_name))
         # Initialize progress dataset
         data_collector = pd.DataFrame({
             'DAY': [],
@@ -210,7 +212,7 @@ class Moria(Camp):
             self.agents = Moria.check_and_deisolate(self.agents, self.P_n)
 
         # logs: number of agents in each disease state
-        logging.debug("{}. SUS={}, EXP={}, PRE={}, SYM={}, MIL={}, SEV={}, AS1={}, AS2={}, REC={}".format(
+        logger.debug("{}. SUS={}, EXP={}, PRE={}, SYM={}, MIL={}, SEV={}, AS1={}, AS2={}, REC={}".format(
             self.t,
             np.count_nonzero(self.agents[:, A_DISEASE] == INF_SUSCEPTIBLE),
             np.count_nonzero(self.agents[:, A_DISEASE] == INF_EXPOSED),
@@ -224,7 +226,7 @@ class Moria(Camp):
         ))
 
         # logs: number of agents in each activity zone
-        logging.debug("{}. HSH={}, TLT={}, FDL={}, WDR={}, QRT={}, HSP={}".format(
+        logger.debug("{}. HSH={}, TLT={}, FDL={}, WDR={}, QRT={}, HSP={}".format(
             self.t,
             np.count_nonzero(self.agents[:, A_ACTIVITY] == ACTIVITY_HOUSEHOLD),
             np.count_nonzero(self.agents[:, A_ACTIVITY] == ACTIVITY_TOILET),
@@ -301,7 +303,7 @@ class Moria(Camp):
         # scale transmission probability
         self.prob_spread = self.prob_spread * vt
 
-        logging.info("INTERVENTION: After applying transmission reduction methods, new Pa={}".format(self.prob_spread))
+        logger.info("INTERVENTION: After applying transmission reduction methods, new Pa={}".format(self.prob_spread))
 
     def intervention_sectoring(self, sector_size):
         # The camp in our baseline model has a single food line, where transmission can potentially occur between two
@@ -317,7 +319,7 @@ class Moria(Camp):
         # initialize food lines based on `sector` parameter
         self._init_queue("food_line", sector_size)
 
-        logging.info("INTERVENTION: Creating sectors in the camp of size ({}x{})".format(sector_size, sector_size))
+        logger.info("INTERVENTION: Creating sectors in the camp of size ({}x{})".format(sector_size, sector_size))
 
     def intervention_lockdown(self, rl=None, vl=None):
         # Some countries have attempted to limit the spread of COVID-19 by requiring people to stay in or close to
@@ -341,7 +343,7 @@ class Moria(Camp):
         self.agents[will_violate, A_HOME_RANGE] = 0.1 * CAMP_SIZE
         self.agents[~will_violate, A_HOME_RANGE] = rl * CAMP_SIZE
 
-        logging.info("INTERVENTION: In lockdown, {} agents are violating home ranges".
+        logger.info("INTERVENTION: In lockdown, {} agents are violating home ranges".
                      format(np.count_nonzero(will_violate)))
 
     def intervention_isolation(self, b=None, n=None):
@@ -366,7 +368,7 @@ class Moria(Camp):
         self.P_detect = b
         self.P_n = n
 
-        logging.info("INTERVENTION: Camp managers can detect agents with symptoms with probability of {}".format(b))
+        logger.info("INTERVENTION: Camp managers can detect agents with symptoms with probability of {}".format(b))
 
     def intervention_social_distancing(self, degree):
         # DONE: Apply a repel force between each agent outside the household to simulate social distancing

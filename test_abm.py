@@ -5,12 +5,10 @@ from matplotlib.animation import FuncAnimation
 from ai4good.runner.facade import Facade
 from ai4good.models.abm.np_impl.moria import *
 from ai4good.models.model_registry import create_params
-
+from ai4good.utils.logger_util import get_logger
 
 # Don't add info/debug logs from numba
-logging.basicConfig(level=logging.INFO)
-numba_logger = logging.getLogger('numba')
-numba_logger.setLevel(logging.WARNING)
+logger = get_logger(__name__)
 
 
 def get_params():
@@ -30,7 +28,7 @@ class TestRun(object):
         params = get_params()
         self.camp = Moria(params=params)
 
-        logging.info("Starting simulation of x{} agents for x{} days".format(self.camp.num_people,
+        logger.info("Starting simulation of x{} agents for x{} days".format(self.camp.num_people,
                                                                              self.camp.params.number_of_steps))
 
     def run(self):

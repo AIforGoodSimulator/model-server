@@ -1,10 +1,11 @@
 import random
-import logging
 import numpy as np
 import numba as nb
 
 from ai4good.models.abm.initialise_parameters import Parameters
+from ai4good.utils.logger_util import get_logger
 
+logger = get_logger(__name__)
 
 # very small float number to account for floating precision loss
 SMALL_ERROR = 0.0000001
@@ -235,7 +236,7 @@ class Camp:
         agents[newly_exposed_ids, A_DISEASE] = INF_EXPOSED
         agents[newly_exposed_ids, A_DAY_COUNTER] = 0
 
-        logging.debug("{} new agents were exposed through household interactions".
+        logger.debug("{} new agents were exposed through household interactions".
                       format(np.count_nonzero(newly_exposed_ids)))
 
         self.agents[ids, :] = agents
@@ -309,7 +310,7 @@ class Camp:
         agents[newly_exposed_ids, A_DISEASE] = INF_EXPOSED
         agents[newly_exposed_ids, A_DAY_COUNTER] = 0
 
-        logging.debug("{} new agents were exposed through wandering".format(newly_exposed_ids.shape[0]))
+        logger.debug("{} new agents were exposed through wandering".format(newly_exposed_ids.shape[0]))
 
         self.agents[ids, :] = agents
 
@@ -367,7 +368,7 @@ class Camp:
         self.agents[newly_exposed_ids, A_DISEASE] = INF_EXPOSED
         self.agents[newly_exposed_ids, A_DAY_COUNTER] = 0
 
-        logging.debug("{} new agents were exposed through {}".format(np.count_nonzero(newly_exposed_ids), queue_name))
+        logger.debug("{} new agents were exposed through {}".format(np.count_nonzero(newly_exposed_ids), queue_name))
 
     def update_queues(self, pct_dequeue: float) -> None:
         # remove agents from the front of the queues

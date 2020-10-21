@@ -3,11 +3,9 @@ from ai4good.models.model import Model, ModelResult
 from ai4good.params.param_store import ParamStore
 from ai4good.models.abm.initialise_parameters import Parameters
 # from ai4good.webapp.cm_model_report_utils import *
-import logging
 from . import abm
 import numpy as np
 import pandas as pd
-import math
 
 
 @typechecked

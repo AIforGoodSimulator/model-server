@@ -1,6 +1,5 @@
 import time
 import numba
-import logging
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -9,10 +8,9 @@ from ai4good.runner.facade import Facade
 import ai4good.models.abm.mesa_impl.model as mm
 from ai4good.models.abm.mesa_impl.common import *
 from ai4good.models.model_registry import create_params
+from ai4good.utils.logger_util import get_logger
 
-logging.basicConfig(level=logging.INFO)
-numba_logger = logging.getLogger('numba')
-numba_logger.setLevel(logging.WARNING)
+logger = get_logger(__name__, )
 
 
 def get_params():
@@ -43,12 +41,12 @@ class Plotter(object):
 
         self.highlight_central_sq()
 
-        logging.info("Starting simulation of x{} agents for x{} days".format(self.camp.people_count,
+        logger.info("Starting simulation of x{} agents for x{} days".format(self.camp.people_count,
                                                                              self.camp.params.number_of_steps))
-        logging.info("Number of tents: {}".format(self.camp.params.number_of_tents))
-        logging.info("Number of iso-boxes: {}".format(self.camp.params.number_of_isoboxes))
-        logging.info("Area covered by iso-boxes: {}".format(self.camp.params.area_covered_by_isoboxes))
-        logging.info("Probability of infection in household: {}".format(self.camp.params.probability_infecting_person_in_household_per_day))
+        logger.info("Number of tents: {}".format(self.camp.params.number_of_tents))
+        logger.info("Number of iso-boxes: {}".format(self.camp.params.number_of_isoboxes))
+        logger.info("Area covered by iso-boxes: {}".format(self.camp.params.area_covered_by_isoboxes))
+        logger.info("Probability of infection in household: {}".format(self.camp.params.probability_infecting_person_in_household_per_day))
 
     def plot(self):
         self.anim = FuncAnimation(self.fig, self.animate, interval=500, frames=self.camp.params.number_of_steps - 1)
@@ -58,7 +56,7 @@ class Plotter(object):
     def animate(self, t):
         self.camp.step()
 
-        logging.info("{}. SUS={}, EXP={}, PRE={}, SYM={}, MIL={}, SEV={}, AS1={}, AS2={}, REC={}".format(
+        logger.info("{}. SUS={}, EXP={}, PRE={}, SYM={}, MIL={}, SEV={}, AS1={}, AS2={}, REC={}".format(
             t,
             np.count_nonzero(self.camp.agents_disease_states == SUSCEPTIBLE),
             np.count_nonzero(self.camp.agents_disease_states == EXPOSED),
@@ -71,7 +69,7 @@ class Plotter(object):
             np.count_nonzero(self.camp.agents_disease_states == RECOVERED)
         ))
 
-        logging.info("{}. HSH={}, TLT={}, FDL={}, WDR={}, QRT={}, HSP={}".format(
+        logger.info("{}. HSH={}, TLT={}, FDL={}, WDR={}, QRT={}, HSP={}".format(
             t,
             np.count_nonzero(self.camp.agents_route == HOUSEHOLD),
             np.count_nonzero(self.camp.agents_route == TOILET),
@@ -91,7 +89,7 @@ class Plotter(object):
         p_min = (CAMP_SIZE - center_sq_side) / 2.0
         p_max = (CAMP_SIZE + center_sq_side) / 2.0
 
-        logging.info("Central square : {}->{}".format(p_min, p_max))
+        logger.info("Central square : {}->{}".format(p_min, p_max))
 
         # self.ax.plot([p_min, p_max, p_max, p_min, p_min], [p_min, p_min, p_max, p_max, p_min], c='gray')
 
@@ -118,7 +116,7 @@ if __name__ == "__main__":
         t1 = time.time()
         plotter.animate(i)
         t2 = time.time()
-        logging.info("Completed step {} in {} seconds".format(i, t2-t1))
+        logger.info("Completed step {} in {} seconds".format(i, t2-t1))
 
 # Baseline model profiling
 # INFO:root:Completed camp initialization in 0.9704179763793945 seconds

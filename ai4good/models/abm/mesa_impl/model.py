@@ -1,4 +1,3 @@
-import logging
 import numpy as np
 from tqdm import tqdm
 from mesa import Model
@@ -13,6 +12,9 @@ from ai4good.models.abm.mesa_impl.agent import Person
 from ai4good.models.abm.initialise_parameters import Parameters
 from ai4good.models.abm.mesa_impl.helper import CampHelper, PersonHelper
 from ai4good.models.abm.mesa_impl.utils import read_age_gender, get_incubation_period, log
+from ai4good.utils.logger_util import get_logger
+
+logger = get_logger(__name__)
 
 
 class Camp(Model, CampHelper):
@@ -140,14 +142,14 @@ class Camp(Model, CampHelper):
     def simulate(self) -> None:
         # simulate for number of days
 
-        logging.info("Starting simulation of x{} agents for x{} days".format(self.people_count,
+        logger.info("Starting simulation of x{} agents for x{} days".format(self.people_count,
                                                                              self.params.number_of_steps))
         for t in tqdm(range(self.params.number_of_steps)):
             # check if simulation can stop
             if self.stop_simulation(self.agents_disease_states):
-                logging.info("Stopping simulation at step {} as infection spread has ended.".format(t))
+                logger.info("Stopping simulation at step {} as infection spread has ended.".format(t))
 
-                logging.info("SUS={}, EXP={}, PRE={}, SYM={}, MIL={}, SEV={}, AS1={}, AS2={}, REC={}".format(
+                logger.info("SUS={}, EXP={}, PRE={}, SYM={}, MIL={}, SEV={}, AS1={}, AS2={}, REC={}".format(
                     np.count_nonzero(self.agents_disease_states == SUSCEPTIBLE),
                     np.count_nonzero(self.agents_disease_states == EXPOSED),
                     np.count_nonzero(self.agents_disease_states == PRESYMPTOMATIC),
@@ -159,7 +161,7 @@ class Camp(Model, CampHelper):
                     np.count_nonzero(self.agents_disease_states == RECOVERED)
                 ))
 
-                logging.info("HSH={}, TLT={}, FDL={}, WDR={}, QRT={}, HSP={}".format(
+                logger.info("HSH={}, TLT={}, FDL={}, WDR={}, QRT={}, HSP={}".format(
                     np.count_nonzero(self.agents_route == HOUSEHOLD),
                     np.count_nonzero(self.agents_route == TOILET),
                     np.count_nonzero(self.agents_route == FOOD_LINE),
