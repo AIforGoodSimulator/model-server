@@ -22,9 +22,9 @@ activity_gathering_full = ['Administrative Activities such as Cash Aid and Immig
 activity_gathering_required = ['Optional', 'Optional', 'Optional', 'Optional', 'Optional']
 activity_gaterhing_detail = ['No. of Places', 'No. of Individuals Participating', 'No. of Visits per Individual (average per week)']
 tab_id_activity_gathering = ['tab-activity-' + x.lower() for x in activity_gathering]
-id_activity_no_place = ['id-activity-no-place' + x.lower() for x in activity_gathering]
-id_activity_no_person = ['id-activity-no-person' + x.lower() for x in activity_gathering]
-id_activity_no_visit = ['id-activity-no-visit' + x.lower() for x in activity_gathering]
+id_activity_no_place = ['activity-no-place' + x.lower() for x in activity_gathering]
+id_activity_no_person = ['activity-no-person' + x.lower() for x in activity_gathering]
+id_activity_no_visit = ['activity-no-visit' + x.lower() for x in activity_gathering]
 
 def generate_health_intervent_children(id_index):
     children = [html.Div([
