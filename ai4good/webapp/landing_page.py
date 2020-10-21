@@ -18,21 +18,19 @@ layout = html.Div(
     [
         run_model_page.nav_bar(),
         
-        html.Div(dbc.Nav([
-            dbc.NavLink('In partnership with Deutsche Bank and Microsoft', id='partnership-information', href='#', target="_blank")
-        ])), 
-        dbc.Tooltip(tooltip_partnership, target='partnership-information'), 
-        
         html.Div([
             dbc.Container([
                 dbc.Row(
                     dbc.Col(
                         dbc.Card([
                             html.H4('AI for Good Simulator', className='card-title', style={'margin-bottom':'25px'}),
+                            dcc.Link('In partnership with Deutsche Bank and Microsoft', id='partnership-information', href='#', target='_blank'),
+                            html.P(''),
+                            dbc.Tooltip(tooltip_partnership, target='partnership-information'), 
                             html.P(text_introduction, className='card-text', style={'margin-bottom':'35px'}),
                             dbc.CardFooter(
                                 html.Div([
-                                    dbc.Button('Get Started', id='landing-button', color='secondary', href='/sim/login_page'), 
+                                    dbc.Button('Get Started', id='landing-button', color='secondary', href='/sim/login_page', style={'float':'right'}), 
                                 ]), 
                             ), 
                             html.Div(id='landing-alert')

@@ -15,6 +15,7 @@ age = ['0 - 5', '6 - 9', '10 - 19', '20 - 29', '30 - 39', '40 - 49', '50 - 59', 
 id_age_popu =['age-population-' + x.replace(' ','') for x in age]
 age_perc = [10, 10, 10, 10, 10, 10, 10, 10, 20] # starting age group population percentage
 total_popu = 20000 # starting total population
+err_group_total_not_equal_popu = 'Group total must equal to total population or 100%'
 
 accommodation_info = ['Type 1', 'Type 2', 'Type 3']
 accommodation_info_full = ['Accommodation Type 1', 'Accommodation Type 2', 'Accommodation Type 3']
@@ -116,8 +117,8 @@ layout = html.Div(
                                 html.B('Percentage Total:'), 
                                 html.B('', id='age_percentage_total')], 
                                 style={'display':'grid', 'grid-template-columns':'5% 25% 26% 32% 12%'}),
-                            html.Div(
-                                html.P(html.Center('Must equal to total population or 100%', className='card-text', style={'color':'darkgray'}))),
+                            html.Div([
+                                html.Center(dbc.Label('Must equal to total population or 100%', id='age-group-continue-warning', color='secondary'), className='card-text')]),
                             html.P(''),
                             html.Header('Gender Diversity', className='card-text'),
                             html.Div([
@@ -143,8 +144,8 @@ layout = html.Div(
                                 ], id='tabs-accommodation-info', active_tab=tab_id_accommodation_info[0],  style={'margin-top':'10px'}), 
                             ], style={'border':'1px lightgray solid'}),
                             html.P(''),
-
-                            dbc.CardFooter(dbc.Button('Next', id='page-2-button', color='secondary', disabled=False, href='/sim/input_page_3')),
+                            dbc.CardFooter(dbc.Button('Next', id='page-2-button', color='secondary', disabled=False, href='/sim/input_page_3', style={'float':'right'})), 
+                            dbc.Label('',id='page-2-continue-warning', color='danger', style={'text-align':'right'}), 
                             html.Div(id='input-page-2-alert')
                             ], body=True
                         ), width=6
@@ -170,7 +171,7 @@ def update_age_group_input(input_value):
     return [input_value]
 
 @dash_app.callback(
-    [Output('age_population_total', 'children'), Output('age_percentage_total', 'children'), Output('page-2-button', 'disabled')], 
+    [Output('age_population_total', 'children'), Output('age_percentage_total', 'children'), Output('page-2-button', 'disabled'), Output('page-2-continue-warning', 'children'), Output('age-group-continue-warning', 'color')], 
     [Input({'type':'age-popu-input', 'index':ALL}, 'value'), Input({'type':'age-popu-slider', 'index':ALL}, 'value')], 
     [State('total-population', 'value')])
 def update_age_group_total(input_values, slider_values, total_value):
@@ -178,9 +179,9 @@ def update_age_group_total(input_values, slider_values, total_value):
     sum_slider = sum(slider_values)
     sum_perc_str = int_perc_1dp(sum_input, total_value)
     if (sum_input==total_value):
-        return str(sum_input), sum_perc_str, False
+        return str(sum_input), sum_perc_str, False, '', 'secondary'
     else:
-        return str(sum_input), sum_perc_str, True
+        return str(sum_input), sum_perc_str, True, err_group_total_not_equal_popu, 'danger'
 
 @dash_app.callback(
     [Output({'type':'age-popu-input', 'index':ALL}, 'max'), Output({'type':'age-popu-slider', 'index':ALL}, 'max'), Output({'type':'age-popu-slider', 'index':ALL}, 'value')], 

@@ -25,13 +25,13 @@ layout = html.Div(
                             dbc.Input(id='login-password', placeholder='Password', type='password', style={'margin-bottom':'25px'}),
                             dbc.CardFooter(
                                 html.Div([
-                                    dbc.Button('Login', id='login-button', color='dark', href='/sim/input_page_1'), 
-                                    html.P(''), 
                                     dbc.Nav([
                                         dbc.NavLink('Forgot password?', id='forgot-password', href='#')
                                     ]), 
-                                    dbc.Tooltip('Please contact AI for Good if your password is lost', target='forgot-password')
-                                ], style={'display':'grid', 'grid-template-columns':'30% 20% 50%'}), 
+                                    dbc.Tooltip('Please contact AI for Good if your password is lost', target='forgot-password'), 
+                                    html.P(''), 
+                                    dbc.Button('Login', id='login-button', color='dark', href='/sim/input_page_1', style={'float':'right'}), 
+                                ], style={'display':'grid', 'grid-template-columns':'50% 20% 30%'}), 
                             ), 
                             html.Div(id='login-alert')
                             ], body=True
