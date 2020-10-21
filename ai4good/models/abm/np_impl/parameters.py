@@ -4,12 +4,14 @@ This file sets up the parameters for ABM models used in the cov_functions_AI.py
 
 import json
 import hashlib
-import logging
 import numpy as np
 import pandas as pd
 
 from ai4good.params.param_store import ParamStore
 from ai4good.utils.path_utils import get_am_aug_pop
+from ai4good.utils.logger_util import get_logger
+
+logger = get_logger(__name__)
 
 VALUE = "Value"  # Name of the column in parameter file containing parameter value
 
@@ -123,7 +125,7 @@ class Parameters(object):
         age_and_gender = age_and_gender.values
 
         if age_and_gender.shape[0] < num_ppl:
-            logging.warning("Number of agents ({}) are more than data provided in age_and_gender.csv ({})".
+            logger.warning("Number of agents ({}) are more than data provided in age_and_gender.csv ({})".
                             format(num_ppl, age_and_gender.shape[0]))
 
         age_and_gender = age_and_gender[np.random.randint(age_and_gender.shape[0], size=num_ppl)]

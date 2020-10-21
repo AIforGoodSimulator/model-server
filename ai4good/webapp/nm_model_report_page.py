@@ -1,4 +1,3 @@
-import logging
 import textwrap
 import dash_html_components as html
 import dash_core_components as dcc
@@ -7,6 +6,9 @@ from ai4good.models.nm.nm_model import NetworkModel
 from ai4good.models.nm.initialise_parameters import Parameters
 from ai4good.webapp.apps import facade, model_runner, cache, local_cache, cache_timeout
 from ai4good.webapp.metadata_report import GenerateMetadataDict, GenerateMetadataHTML
+from ai4good.utils.logger_util import get_logger
+
+logger = get_logger(__name__)
 
 
 @cache.memoize(timeout=cache_timeout)
@@ -163,7 +165,7 @@ def summary_fqinterventions(camp: str, params: Parameters):
 
 @local_cache.memoize(timeout=cache_timeout)
 def get_model_result(camp: str, profile: str):
-    logging.info("Reading data for: " + camp + ", " + profile)
+    logger.info("Reading data for: " + camp + ", " + profile)
     mr = model_runner.get_result(NetworkModel.ID, profile, camp)
     assert mr is not None
     profile_df = facade.ps.get_params(

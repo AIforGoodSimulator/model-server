@@ -1,19 +1,16 @@
-from functools import reduce
-import logging
 import textwrap
 
-import plotly.graph_objs as go
-from plotly.subplots import make_subplots
-from dash.dependencies import Input, Output
 import dash_html_components as html
 import dash_core_components as dcc
-import dash_bootstrap_components as dbc
 
 from ai4good.models.abm.abm_model import ABM
 from ai4good.models.abm.initialise_parameters import Parameters
 from ai4good.webapp.apps import dash_app, facade, model_runner, cache, local_cache, cache_timeout
 # from ai4good.webapp.abm_model_report_utils import *
 from ai4good.webapp.metadata_report import GenerateMetadataDict, GenerateMetadataHTML
+from ai4good.utils.logger_util import get_logger
+
+logger = get_logger(__name__)
 
 
 @cache.memoize(timeout=cache_timeout)
@@ -117,7 +114,7 @@ def overview_results(camp: str, params: Parameters):
 
 @local_cache.memoize(timeout=cache_timeout)
 def get_model_result(camp: str, profile: str):
-    logging.info("Reading data for: " + camp + ", " + profile)
+    logger.info("Reading data for: " + camp + ", " + profile)
     mr = model_runner.get_result(ABM.ID, profile, camp)
     assert mr is not None
     profile_df = facade.ps.get_params(ABM.ID, profile).drop(columns=['Profile'])

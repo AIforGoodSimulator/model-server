@@ -8,7 +8,6 @@ numpy==1.18.5
 dash_core_components==1.12.1
 dash_table==4.10.1
 pandas==1.0.5
-dask==2.20.0
 typeguard==2.8.0
 dash_html_components==1.1.1
 matplotlib==3.2.2
@@ -21,3 +20,4 @@ plotly==4.11.0
 dash_bootstrap_components==0.10.7
 PyGithub==1.53
 selenium==3.141.0
+dask[complete]

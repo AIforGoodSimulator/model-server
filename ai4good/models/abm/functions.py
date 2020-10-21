@@ -6,10 +6,12 @@ import numpy as np
 from scipy.integrate import ode
 import pandas as pd
 import statistics
-import logging
 from tqdm import tqdm
 import dask
 from dask.diagnostics import ProgressBar
+from ai4good.utils.logger_util import get_logger
+
+logger = get_logger()
 
 
 def timing_function(t,time_vector):
@@ -352,7 +354,7 @@ class Simulator:
 
 
     def simulate_over_parameter_range_parallel(self, numberOfIterations, t_stop, n_processes):
-        logging.info(f"Running parallel simulation with {n_processes} processes")
+        logger.info(f"Running parallel simulation with {n_processes} processes")
         lazy_sols = []
         config_dict = []
         sols_raw = {}
