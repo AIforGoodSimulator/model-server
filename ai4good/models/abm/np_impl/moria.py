@@ -117,8 +117,35 @@ class Moria(Camp):
             'SUSCEPTIBLE': [], 'EXPOSED': [], 'PRESYMPTOMATIC': [], 'SYMPTOMATIC': [], 'MILD': [], 'SEVERE': [],
             'ASYMPTOMATIC1': [], 'ASYMPTOMATIC2': [], 'RECOVERED': [], 'DECEASED': [],
             'HOSPITALIZED': [],
-            'INF_AGE0-9': [], 'INF_AGE10-19': [], 'INF_AGE20-29': [], 'INF_AGE30-39': [], 'INF_AGE40-49': [],
-            'INF_AGE50-59': [], 'INF_AGE60-69': [], 'INF_AGE70+': [],
+            'SUSCEPTIBLE_AGE0-9': [], 'SUSCEPTIBLE_AGE10-19': [], 'SUSCEPTIBLE_AGE20-29': [],
+            'SUSCEPTIBLE_AGE30-39': [], 'SUSCEPTIBLE_AGE40-49': [],
+            'SUSCEPTIBLE_AGE50-59': [], 'SUSCEPTIBLE_AGE60-69': [], 'SUSCEPTIBLE_AGE70+': [],
+            'EXPOSED_AGE0-9': [], 'EXPOSED_AGE10-19': [], 'EXPOSED_AGE20-29': [], 'EXPOSED_AGE30-39': [],
+            'EXPOSED_AGE40-49': [],
+            'EXPOSED_AGE50-59': [], 'EXPOSED_AGE60-69': [], 'EXPOSED_AGE70+': [],
+            'PRESYMPTOMATIC_AGE0-9': [], 'PRESYMPTOMATIC_AGE10-19': [], 'PRESYMPTOMATIC_AGE20-29': [],
+            'PRESYMPTOMATIC_AGE30-39': [], 'PRESYMPTOMATIC_AGE40-49': [],
+            'PRESYMPTOMATIC_AGE50-59': [], 'PRESYMPTOMATIC_AGE60-69': [], 'PRESYMPTOMATIC_AGE70+': [],
+            'SYMPTOMATIC_AGE0-9': [], 'SYMPTOMATIC_AGE10-19': [], 'SYMPTOMATIC_AGE20-29': [],
+            'SYMPTOMATIC_AGE30-39': [], 'SYMPTOMATIC_AGE40-49': [],
+            'SYMPTOMATIC_AGE50-59': [], 'SYMPTOMATIC_AGE60-69': [], 'SYMPTOMATIC_AGE70+': [],
+            'MILD_AGE0-9': [], 'MILD_AGE10-19': [], 'MILD_AGE20-29': [], 'MILD_AGE30-39': [], 'MILD_AGE40-49': [],
+            'MILD_AGE50-59': [], 'MILD_AGE60-69': [], 'MILD_AGE70+': [],
+            'SEVERE_AGE0-9': [], 'SEVERE_AGE10-19': [], 'SEVERE_AGE20-29': [], 'SEVERE_AGE30-39': [],
+            'SEVERE_AGE40-49': [],
+            'SEVERE_AGE50-59': [], 'SEVERE_AGE60-69': [], 'SEVERE_AGE70+': [],
+            'ASYMPTOMATIC1_AGE0-9': [], 'ASYMPTOMATIC1_AGE10-19': [], 'ASYMPTOMATIC1_AGE20-29': [],
+            'ASYMPTOMATIC1_AGE30-39': [], 'ASYMPTOMATIC1_AGE40-49': [],
+            'ASYMPTOMATIC1_AGE50-59': [], 'ASYMPTOMATIC1_AGE60-69': [], 'ASYMPTOMATIC1_AGE70+': [],
+            'ASYMPTOMATIC2_AGE0-9': [], 'ASYMPTOMATIC2_AGE10-19': [], 'ASYMPTOMATIC2_AGE20-29': [],
+            'ASYMPTOMATIC2_AGE30-39': [], 'ASYMPTOMATIC2_AGE40-49': [],
+            'ASYMPTOMATIC2_AGE50-59': [], 'ASYMPTOMATIC2_AGE60-69': [], 'ASYMPTOMATIC2_AGE70+': [],
+            'RECOVERED_AGE0-9': [], 'RECOVERED_AGE10-19': [], 'RECOVERED_AGE20-29': [], 'RECOVERED_AGE30-39': [],
+            'RECOVERED_AGE40-49': [],
+            'RECOVERED_AGE50-59': [], 'RECOVERED_AGE60-69': [], 'RECOVERED_AGE70+': [],
+            'DECEASED_AGE0-9': [], 'DECEASED_AGE10-19': [], 'DECEASED_AGE20-29': [], 'DECEASED_AGE30-39': [],
+            'DECEASED_AGE40-49': [],
+            'DECEASED_AGE50-59': [], 'DECEASED_AGE60-69': [], 'DECEASED_AGE70+': [],
             'NEW_INF_HOUSEHOLD': [], 'NEW_INF_WANDERING': [], 'NEW_INF_TOILET': [], 'NEW_INF_FOOD_LINE': []
         })
 
@@ -233,7 +260,7 @@ class Moria(Camp):
         self.agents[:, A_DAY_COUNTER] += 1
 
         # Disease progress at the end of the day
-        self.agents = Camp.disease_progression(self.agents)
+        self.agents = Camp.disease_progression(self.agents, self.params.prob_symp2mild, self.params.prob_symp2sevr)
 
         # If P_detect value is present, then isolate/de-isolate agents
         if self.P_detect > SMALL_ERROR:
@@ -290,10 +317,9 @@ class Moria(Camp):
             elif force_activity != -1:
                 out[i] = force_activity
 
-            # If agent is not showing symptoms, go to toilet with some probability
+            # Go to toilet with some probability
             # An agent already in the toilet will remain there till the `update_queues` method dequeues it
-            elif agents[i, A_ACTIVITY] == ACTIVITY_TOILET or \
-                    (not showing_symptoms and random.random() <= prob_toilet):
+            elif agents[i, A_ACTIVITY] == ACTIVITY_TOILET or random.random() <= prob_toilet:
                 out[i] = ACTIVITY_TOILET
             # Same logic in food line
             elif agents[i, A_ACTIVITY] == ACTIVITY_FOOD_LINE or \
@@ -512,40 +538,126 @@ class Moria(Camp):
     def save_progress(self, new_infections: list) -> None:
         # Function to save the progress of the simulation at any time step into dataframe
 
-        # count of infectious and alive agents (age-wise)
-        infected_agents = OptimizedOps.is_infected(self.agents[:, A_DISEASE])
-
-        # Add latest day progress in the data set
-        row = [
-            self.t,
-
-            np.count_nonzero(self.agents[:, A_DISEASE] == INF_SUSCEPTIBLE),
-            np.count_nonzero(self.agents[:, A_DISEASE] == INF_EXPOSED),
-            np.count_nonzero(self.agents[:, A_DISEASE] == INF_PRESYMPTOMATIC),
-            np.count_nonzero(self.agents[:, A_DISEASE] == INF_SYMPTOMATIC),
-            np.count_nonzero(self.agents[:, A_DISEASE] == INF_MILD),
-            np.count_nonzero(self.agents[:, A_DISEASE] == INF_SEVERE),
-            np.count_nonzero(self.agents[:, A_DISEASE] == INF_ASYMPTOMATIC1),
-            np.count_nonzero(self.agents[:, A_DISEASE] == INF_ASYMPTOMATIC2),
-            np.count_nonzero(self.agents[:, A_DISEASE] == INF_RECOVERED),
-            np.count_nonzero(self.agents[:, A_DISEASE] == INF_DECEASED),
-            np.count_nonzero(self.agents[:, A_ACTIVITY] == ACTIVITY_HOSPITALIZED),
-
-            np.count_nonzero(infected_agents & (self.agents[:, A_AGE] < 10)),
-            np.count_nonzero(infected_agents & ((self.agents[:, A_AGE] >= 10) & (self.agents[:, A_AGE] < 20))),
-            np.count_nonzero(infected_agents & ((self.agents[:, A_AGE] >= 20) & (self.agents[:, A_AGE] < 30))),
-            np.count_nonzero(infected_agents & ((self.agents[:, A_AGE] >= 30) & (self.agents[:, A_AGE] < 40))),
-            np.count_nonzero(infected_agents & ((self.agents[:, A_AGE] >= 40) & (self.agents[:, A_AGE] < 50))),
-            np.count_nonzero(infected_agents & ((self.agents[:, A_AGE] >= 50) & (self.agents[:, A_AGE] < 60))),
-            np.count_nonzero(infected_agents & ((self.agents[:, A_AGE] >= 60) & (self.agents[:, A_AGE] < 70))),
-            np.count_nonzero(infected_agents & (self.agents[:, A_AGE] >= 70)),
-
-            new_infections[ACTIVITY_HOUSEHOLD],
-            new_infections[ACTIVITY_WANDERING],
-            new_infections[ACTIVITY_TOILET],
-            new_infections[ACTIVITY_FOOD_LINE]
-        ]
+        row = Moria._get_progress_data(self.agents)
+        row = [self.t] + row
+        row.extend([new_infections[ACTIVITY_HOUSEHOLD], new_infections[ACTIVITY_WANDERING],
+                    new_infections[ACTIVITY_TOILET], new_infections[ACTIVITY_FOOD_LINE]])
         self.data_collector.loc[self.data_collector.shape[0]] = row
+
+    @staticmethod
+    @nb.njit(parallel=True)
+    def _get_progress_data(agents: np.array) -> list:
+
+        n = agents.shape[0]  # number of agents
+        out = [0] * 91
+
+        for i in nb.prange(n):
+            o = 0
+
+            out[o] += (agents[i, A_DISEASE] == INF_SUSCEPTIBLE); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_EXPOSED); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_PRESYMPTOMATIC); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SYMPTOMATIC); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_MILD); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SEVERE); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC1); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC2); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_RECOVERED); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_DECEASED); o += 1
+
+            out[o] += (agents[i, A_ACTIVITY] == ACTIVITY_HOSPITALIZED); o += 1
+
+            out[o] += (agents[i, A_DISEASE] == INF_SUSCEPTIBLE and agents[i, A_AGE] < 10); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SUSCEPTIBLE and 10 <= agents[i, A_AGE] < 20); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SUSCEPTIBLE and 20 <= agents[i, A_AGE] < 30); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SUSCEPTIBLE and 30 <= agents[i, A_AGE] < 40); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SUSCEPTIBLE and 40 <= agents[i, A_AGE] < 50); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SUSCEPTIBLE and 50 <= agents[i, A_AGE] < 60); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SUSCEPTIBLE and 60 <= agents[i, A_AGE] < 70); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SUSCEPTIBLE and 70 <= agents[i, A_AGE]); o += 1
+
+            out[o] += (agents[i, A_DISEASE] == INF_EXPOSED and agents[i, A_AGE] < 10); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_EXPOSED and 10 <= agents[i, A_AGE] < 20); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_EXPOSED and 20 <= agents[i, A_AGE] < 30); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_EXPOSED and 30 <= agents[i, A_AGE] < 40); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_EXPOSED and 40 <= agents[i, A_AGE] < 50); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_EXPOSED and 50 <= agents[i, A_AGE] < 60); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_EXPOSED and 60 <= agents[i, A_AGE] < 70); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_EXPOSED and 70 <= agents[i, A_AGE]); o += 1
+
+            out[o] += (agents[i, A_DISEASE] == INF_PRESYMPTOMATIC and agents[i, A_AGE] < 10); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_PRESYMPTOMATIC and 10 <= agents[i, A_AGE] < 20); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_PRESYMPTOMATIC and 20 <= agents[i, A_AGE] < 30); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_PRESYMPTOMATIC and 30 <= agents[i, A_AGE] < 40); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_PRESYMPTOMATIC and 40 <= agents[i, A_AGE] < 50); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_PRESYMPTOMATIC and 50 <= agents[i, A_AGE] < 60); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_PRESYMPTOMATIC and 60 <= agents[i, A_AGE] < 70); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_PRESYMPTOMATIC and 70 <= agents[i, A_AGE]); o += 1
+
+            out[o] += (agents[i, A_DISEASE] == INF_SYMPTOMATIC and agents[i, A_AGE] < 10); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SYMPTOMATIC and 10 <= agents[i, A_AGE] < 20); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SYMPTOMATIC and 20 <= agents[i, A_AGE] < 30); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SYMPTOMATIC and 30 <= agents[i, A_AGE] < 40); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SYMPTOMATIC and 40 <= agents[i, A_AGE] < 50); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SYMPTOMATIC and 50 <= agents[i, A_AGE] < 60); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SYMPTOMATIC and 60 <= agents[i, A_AGE] < 70); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SYMPTOMATIC and 70 <= agents[i, A_AGE]); o += 1
+
+            out[o] += (agents[i, A_DISEASE] == INF_MILD and agents[i, A_AGE] < 10); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_MILD and 10 <= agents[i, A_AGE] < 20); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_MILD and 20 <= agents[i, A_AGE] < 30); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_MILD and 30 <= agents[i, A_AGE] < 40); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_MILD and 40 <= agents[i, A_AGE] < 50); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_MILD and 50 <= agents[i, A_AGE] < 60); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_MILD and 60 <= agents[i, A_AGE] < 70); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_MILD and 70 <= agents[i, A_AGE]); o += 1
+
+            out[o] += (agents[i, A_DISEASE] == INF_SEVERE and agents[i, A_AGE] < 10); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SEVERE and 10 <= agents[i, A_AGE] < 20); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SEVERE and 20 <= agents[i, A_AGE] < 30); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SEVERE and 30 <= agents[i, A_AGE] < 40); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SEVERE and 40 <= agents[i, A_AGE] < 50); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SEVERE and 50 <= agents[i, A_AGE] < 60); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SEVERE and 60 <= agents[i, A_AGE] < 70); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_SEVERE and 70 <= agents[i, A_AGE]); o += 1
+
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC1 and agents[i, A_AGE] < 10); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC1 and 10 <= agents[i, A_AGE] < 20); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC1 and 20 <= agents[i, A_AGE] < 30); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC1 and 30 <= agents[i, A_AGE] < 40); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC1 and 40 <= agents[i, A_AGE] < 50); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC1 and 50 <= agents[i, A_AGE] < 60); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC1 and 60 <= agents[i, A_AGE] < 70); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC1 and 70 <= agents[i, A_AGE]); o += 1
+
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC2 and agents[i, A_AGE] < 10); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC2 and 10 <= agents[i, A_AGE] < 20); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC2 and 20 <= agents[i, A_AGE] < 30); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC2 and 30 <= agents[i, A_AGE] < 40); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC2 and 40 <= agents[i, A_AGE] < 50); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC2 and 50 <= agents[i, A_AGE] < 60); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC2 and 60 <= agents[i, A_AGE] < 70); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_ASYMPTOMATIC2 and 70 <= agents[i, A_AGE]); o += 1
+
+            out[o] += (agents[i, A_DISEASE] == INF_RECOVERED and agents[i, A_AGE] < 10); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_RECOVERED and 10 <= agents[i, A_AGE] < 20); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_RECOVERED and 20 <= agents[i, A_AGE] < 30); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_RECOVERED and 30 <= agents[i, A_AGE] < 40); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_RECOVERED and 40 <= agents[i, A_AGE] < 50); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_RECOVERED and 50 <= agents[i, A_AGE] < 60); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_RECOVERED and 60 <= agents[i, A_AGE] < 70); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_RECOVERED and 70 <= agents[i, A_AGE]); o += 1
+
+            out[o] += (agents[i, A_DISEASE] == INF_DECEASED and agents[i, A_AGE] < 10); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_DECEASED and 10 <= agents[i, A_AGE] < 20); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_DECEASED and 20 <= agents[i, A_AGE] < 30); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_DECEASED and 30 <= agents[i, A_AGE] < 40); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_DECEASED and 40 <= agents[i, A_AGE] < 50); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_DECEASED and 50 <= agents[i, A_AGE] < 60); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_DECEASED and 60 <= agents[i, A_AGE] < 70); o += 1
+            out[o] += (agents[i, A_DISEASE] == INF_DECEASED and 70 <= agents[i, A_AGE]); o += 1
+
+        return out
 
     def _assign_households_to_agents(self, households: np.array, agents_ethnic_groups: np.array) -> np.array:
         # assign households to agents based on capacity

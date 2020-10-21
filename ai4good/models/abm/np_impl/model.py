@@ -204,7 +204,7 @@ class Camp:
         self.agents = agents
 
     @staticmethod
-    @nb.njit
+    @nb.njit(parallel=True)
     def simulate_households(agents: np.array, prob_spread: float) -> (np.array, int):
         """
         Function to send people to household and simulate infection dynamics in those households.
@@ -272,7 +272,7 @@ class Camp:
         return agents, num_new_infections
 
     @staticmethod
-    @nb.njit
+    @nb.njit(parallel=True)
     def simulate_wander(agents: np.array, camp_size: float, relative_strength_of_interaction: float,
                         infection_radius: float, prob_spread: float) -> (np.array, int):
         """
@@ -458,13 +458,15 @@ class Camp:
 
     @staticmethod
     @nb.njit
-    def disease_progression(agents: np.array) -> np.array:
+    def disease_progression(agents: np.array, p_symp2mild: np.array, p_symp2sevr: np.array) -> np.array:
         """
         Update the disease state of the agent defined by `agents` numpy array. This is inspired partly by tucker model.
         This method is called at the end of each day.
         Parameters
         ----------
         agents: The numpy array containing the agents information
+        p_symp2mild: Probability value (age-wise) if agent of specific age bucket will transition symptomatic->mild
+        p_symp2sevr: Probability value (age-wise) if agent of specific age bucket will transition symptomatic->severe
 
         Returns
         -------
@@ -477,14 +479,6 @@ class Camp:
         # After 5 days showing symptoms, individuals pass from the symptomatic to the “mild” or “severe” states, with
         # age- and condition-dependent probabilities following Verity and colleagues (2020) and Tuite and colleagues
         # (preprint).
-
-        # Verity (low-risk) : probability values for each age slot [0-10, 10-20, ...90+]
-        # Symptomatic agent (with low risk) in age slot `a` will have `P_symp2mild[a]` probability of turning mild
-        p_symp2mild = [0, .000408, .0104, .0343, .0425, .0816, .118, .166, .184]
-
-        # Tuite (high-risk) : probability values for each age slot [0-10, 10-20, ...90+]
-        # Symptomatic agent (with high risk) in age slot `a` will have `P_symp2sevr[a]` probability of turning severe
-        p_symp2sevr = [.0101, .0209, .0410, .0642, .0721, .2173, .2483, .6921, .6987]
 
         # Probability that a severely infected agent in a given age slot will be hospitalized
         # These probability values are taken from "Estimates of the severity of coronavirus disease 2019: a model-based

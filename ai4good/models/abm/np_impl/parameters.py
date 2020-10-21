@@ -75,7 +75,7 @@ class Parameters(object):
             # TODO: add to parameters after confirming with Gaia and Vera
             self.infection_radius = float(profile.loc['infection_radius', VALUE])
         except KeyError:
-            self.infection_radius = 0.0001  # for 1x1 km sq. camp, this is 1 meter.
+            self.infection_radius = 0.01  # for 1x1 km sq. camp, this is 1 meter.
 
         ###############################################################################################################
         # Parameters about the agents
@@ -106,6 +106,35 @@ class Parameters(object):
         self.percentage_of_toilet_queue_cleared_at_each_step = 0.8
         # TODO: add to the new list of parameters
         # float(profile.loc['percentage_of_toilet_queue_cleared_at_each_step', VALUE])
+
+        ###############################################################################################################
+        # Camp params
+
+        self.prob_symp2sevr = [
+            camp_params.loc[  # 0-9
+                camp_params.Age == '0-9', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 10-19
+                camp_params.Age == '10-19', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 20-29
+                camp_params.Age == '20-29', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 30-39
+                camp_params.Age == '30-39', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 40-49
+                camp_params.Age == '40-49', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 50-59
+                camp_params.Age == '50-59', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 60-69
+                camp_params.Age == '60-69', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 70-79
+                camp_params.Age == '70+', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 80-89
+                camp_params.Age == '70+', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 90+
+                camp_params.Age == '70+', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+        ]
+        self.prob_symp2sevr = np.array([float(p) for p in self.prob_symp2sevr])
+        logging.info(self.prob_symp2sevr)
+        self.prob_symp2mild = np.array([(1.0 - p) for p in self.prob_symp2sevr])
 
         self.validate()
 
@@ -164,3 +193,8 @@ class Parameters(object):
         assert 0.0 <= self.probability_spotting_symptoms_per_day <= 1.0, "Probability value must be between [0,1]"
         assert self.clear_day > 0, "Parameter must be a positive integer"
         assert 0.0 <= self.prop_violating_lockdown <= 1.0, "Probability value must be between [0,1]"
+
+        for p in self.prob_symp2sevr:
+            assert 0 <= p <= 1, "Probability value must be between [0,1]"
+        for p in self.prob_symp2mild:
+            assert 0 <= p <= 1, "Probability value must be between [0,1]"

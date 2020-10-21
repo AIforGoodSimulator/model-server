@@ -50,29 +50,29 @@ class SampleRun:
         df = pd.read_csv(f_name)
 
         # Plot total count of infectious people in the camp on each day
-        pad = 1
-        fig, ax = plt.subplots(1, figsize=(10, 6))
-
-        a0 = df.loc[:, 'INF_AGE0-9']
-        a1 = df.loc[:, 'INF_AGE10-19']
-        a2 = df.loc[:, 'INF_AGE20-29']
-        a3 = df.loc[:, 'INF_AGE30-39']
-        a4 = df.loc[:, 'INF_AGE40-49']
-        a5 = df.loc[:, 'INF_AGE50-59']
-        a6 = df.loc[:, 'INF_AGE60-69']
-        a7 = df.loc[:, 'INF_AGE70+']
-
-        ax.bar(range(0, pad*df.shape[0], pad), a0, 1, label='Age 0-9')
-        ax.bar(range(0, pad*df.shape[0], pad), a1, 1, bottom=a0, label='Age 10-19')
-        ax.bar(range(0, pad*df.shape[0], pad), a2, 1, bottom=a0+a1, label='Age 20-29')
-        ax.bar(range(0, pad*df.shape[0], pad), a3, 1, bottom=a0+a1+a2, label='Age 30-39')
-        ax.bar(range(0, pad*df.shape[0], pad), a4, 1, bottom=a0+a1+a2+a3, label='Age 40-49')
-        ax.bar(range(0, pad*df.shape[0], pad), a5, 1, bottom=a0+a1+a2+a3+a4, label='Age 50-59')
-        ax.bar(range(0, pad*df.shape[0], pad), a6, 1, bottom=a0+a1+a2+a3+a4+a5, label='Age 60-69')
-        ax.bar(range(0, pad*df.shape[0], pad), a7, 1, bottom=a0+a1+a2+a3+a4+a5+a6, label='Age 70+')
-        ax.title.set_text("Count of infectious people in the camp")
-        plt.legend()
-        plt.show()
+        # pad = 1
+        # fig, ax = plt.subplots(1, figsize=(10, 6))
+        #
+        # a0 = df.loc[:, 'INF_AGE0-9']
+        # a1 = df.loc[:, 'INF_AGE10-19']
+        # a2 = df.loc[:, 'INF_AGE20-29']
+        # a3 = df.loc[:, 'INF_AGE30-39']
+        # a4 = df.loc[:, 'INF_AGE40-49']
+        # a5 = df.loc[:, 'INF_AGE50-59']
+        # a6 = df.loc[:, 'INF_AGE60-69']
+        # a7 = df.loc[:, 'INF_AGE70+']
+        #
+        # ax.bar(range(0, pad*df.shape[0], pad), a0, 1, label='Age 0-9')
+        # ax.bar(range(0, pad*df.shape[0], pad), a1, 1, bottom=a0, label='Age 10-19')
+        # ax.bar(range(0, pad*df.shape[0], pad), a2, 1, bottom=a0+a1, label='Age 20-29')
+        # ax.bar(range(0, pad*df.shape[0], pad), a3, 1, bottom=a0+a1+a2, label='Age 30-39')
+        # ax.bar(range(0, pad*df.shape[0], pad), a4, 1, bottom=a0+a1+a2+a3, label='Age 40-49')
+        # ax.bar(range(0, pad*df.shape[0], pad), a5, 1, bottom=a0+a1+a2+a3+a4, label='Age 50-59')
+        # ax.bar(range(0, pad*df.shape[0], pad), a6, 1, bottom=a0+a1+a2+a3+a4+a5, label='Age 60-69')
+        # ax.bar(range(0, pad*df.shape[0], pad), a7, 1, bottom=a0+a1+a2+a3+a4+a5+a6, label='Age 70+')
+        # ax.title.set_text("Count of infectious people (including asymptomatic) in the camp")
+        # plt.legend()
+        # plt.show()
 
         # Plot total count of agents per disease state on each day
         fig, ax = plt.subplots(1, figsize=(10, 6))
@@ -89,6 +89,19 @@ class SampleRun:
         ax.plot(t, df.loc[:, 'RECOVERED'], label='Recovered')
         ax.plot(t, df.loc[:, 'HOSPITALIZED'], label='Hospitalized')
         ax.title.set_text("Total count in each disease state")
+
+        plt.legend()
+        plt.show()
+
+        # Plot total count of agents per disease state on each day
+        fig, ax = plt.subplots(1, figsize=(10, 6))
+
+        t = df.loc[:, 'DAY']
+        ax.plot(t, df.loc[:, 'SUSCEPTIBLE'], label='Susceptible')
+        ax.plot(t, df.loc[:, ['EXPOSED', 'PRESYMPTOMATIC', 'SYMPTOMATIC', 'MILD', 'SEVERE', 'ASYMPTOMATIC1',
+                              'ASYMPTOMATIC2']].sum(axis=1), label='Infected')
+        ax.plot(t, df.loc[:, 'RECOVERED'], label='Recovered')
+        ax.title.set_text("SIR")
 
         plt.legend()
         plt.show()
@@ -114,7 +127,7 @@ class SampleRun:
 
         prf = self.profiles[0]
         param = get_params(prf)
-        camp = Moria(params=param, profile=prf)
+        camp = Moria(params=param)
         camp.day()
 
         markers = ['*', 'v', 'o']
@@ -139,12 +152,12 @@ class SampleRun:
 
 if __name__ == "__main__":
 
-    # Just pass the profiles in order here
-    sampleRun = SampleRun([
-        "BaselineLTHI"
-    ])
-
     if "--plot" in sys.argv:
         SampleRun.plot_df(sys.argv[2])
+
     else:
+        # Just pass the profiles in order here
+        sampleRun = SampleRun([
+            "BaselineHTHI"
+        ])
         sampleRun.run()
