@@ -50,10 +50,10 @@ def disclaimer():
 # def overview(camp: str, params: Parameters):
 #     return textwrap.dedent(f'''
 #     ## 1. Overview
-#     This report provides simulation-based estimates for COVID-19 epidemic scenarios for the {camp} camp. 
-#     There are an estimated {int(params.population)} people currently living in the camp. Through epidemiology simulations, 
-#     we estimated peak counts, the timing of peak counts as well as cumulative counts for new symptomatic cases, hospitalisation demand person-days, 
-#     critical care demand person-days and deaths for an unmitigated epidemic.  Then we compare the results with different combinations 
+#     This report provides simulation-based estimates for COVID-19 epidemic scenarios for the {camp} camp.
+#     There are an estimated {int(params.population)} people currently living in the camp. Through epidemiology simulations,
+#     we estimated peak counts, the timing of peak counts as well as cumulative counts for new symptomatic cases, hospitalisation demand person-days,
+#     critical care demand person-days and deaths for an unmitigated epidemic.  Then we compare the results with different combinations
 #     of intervention strategies in place to:
 #     * Compare the potential efficacies of different interventions and prioritise the ones that are going to help contain the virus.
 #     * Have a realistic estimate of the clinic capacity, PPE, ICU transfer and other supplies and logistical measures needed.
@@ -95,7 +95,7 @@ def high_level_message_5():
     return textwrap.dedent(f'''
     ## 5. Characteristics of non-pharmaceutical interventions that apply to your camp
     Each non-pharmaceutical intervention has its different characteristics. It is important to implement a combinatorial approach, 
-    where using several less-effective policies laid over each other prove to be more effective than using any single intervention on its own. he three main interventions have different merits, when applied. Implementing removing high-risk individuals will lead to fewer deaths overall, as the people who are likely to die due to the virus, will be shielded. Implementing removing the symptomatic individuals will lead to less infected people overall, as they are unable to mix with the general population of the camps and spread the virus around. Implementing better hygiene, such as using masks and frequent hand washing, will reduce both the deaths and the spread of the virus. These measures are all effective individually, but will have a more powerful overall effect if they are used in conjunction with each other.
+    where using several less-effective policies laid over each other prove to be more effective than using any single intervention on its own. The three main interventions have different merits, when applied. Implementing removing high-risk individuals will lead to fewer deaths overall, as the people who are likely to die due to the virus, will be shielded. Implementing removing the symptomatic individuals will lead to less infected people overall, as they are unable to mix with the general population of the camps and spread the virus around. Implementing better hygiene, such as using masks and frequent hand washing, will reduce both the deaths and the spread of the virus. These measures are all effective individually, but will have a more powerful overall effect if they are used in conjunction with each other.
     ''')
 
 
@@ -217,7 +217,7 @@ def high_level_message_5():
 #         dcc.Markdown(textwrap.dedent(f'''
 #         ## 2. Intervention scenarios
 
-#         We compare each intervention scenario to baseline. Baseline charts are in blue as before, intervention charts 
+#         We compare each intervention scenario to baseline. Baseline charts are in blue as before, intervention charts
 #         are in red.
 #          ''')),
 #         html.Div(intervention_content)
