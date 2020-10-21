@@ -2,7 +2,12 @@ import logging
 
 
 def get_logger(name: str, level: str = 'INFO'):
-
+    """
+    Args:
+        name: Name of the logger instance
+        level: Base level of logger. Choices: DEBUG, INFO, WARNING, ERROR
+               Default level is INFO
+    """
     logger = logging.getLogger(name)
 
     if level == 'DEBUG':
@@ -23,11 +28,3 @@ def get_logger(name: str, level: str = 'INFO'):
     logger.addHandler(ch)
 
     return logger
-
-
-if __name__ == "__main__":
-    log = get_logger('hello', 'ERROR')
-    log.debug('debug')
-    log.info('info')
-    log.warning('warn')
-    log.error('error')
