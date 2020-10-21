@@ -67,7 +67,7 @@ layout = html.Div(
                                     {'label':'No', 'value':0},
                                     {'label':'Not Sure', 'value':-1},
                                 ], value=-1, id='community-surveillance-program', inline=True, style={'margin-bottom':'25px'}),
-                            dbc.CardFooter(dbc.Button('Next', id='page-3-button', color='secondary', href='/sim/input_page_4')),
+                            dbc.CardFooter(dbc.Button('Next', id='page-3-button', color='secondary', href='/sim/input_page_4', style={'float':'right'})),
                             html.Div(id='input-page-3-alert')
                             ], body=True
                         ), width=6
