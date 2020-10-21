@@ -11,11 +11,10 @@ from ai4good.utils import path_utils as pu
 
 
 class Parameters:
-    def __init__(self, ps: ParamStore, camp: str, country: str, profile: pd.DataFrame, profile_override_dict={}):
+    def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
         self.ps = ps
         self.camp = camp
         self.age_limits = np.array([0, 10, 20, 30, 40, 50, 60, 70, 80], dtype=int)
-        self.country = country
         disease_params = ps.get_disease_params()
         self.camp_params = ps.get_camp_params(camp)
         # ------------------------------------------------------------
@@ -234,12 +233,12 @@ class Parameters:
 
     def generate_contact_matrix(self, age_limits: np.array):
         supported_countries = self.ps.get_supported_countries()
+        self.country = self.camp_params['Country'].tolist()[0]
         if self.country not in supported_countries:
             return self.ps.get_contact_matrix_params(self.camp).to_numpy()[:, 2:].astype(np.double)
-
         contact_matrix_path = pu.cm_params_path(f'contact_matrices/{self.country}.csv')
         contact_matrix = pd.read_csv(contact_matrix_path).to_numpy()
-        population_array = self.camp_params[self.camp_params['Camp'] == self.camp]['Population_structure'].to_numpy()
+        population_array = self.camp_params['Population_structure'].to_numpy()
 
         n_categories = len(age_limits) - 1
         ind_limits = np.array(age_limits / 5, dtype=int)
