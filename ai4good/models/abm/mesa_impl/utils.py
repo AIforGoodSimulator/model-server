@@ -1,13 +1,15 @@
 import time
 import math
 import random
-import logging
 import numpy as np
 import pandas as pd
 from numba import njit
 
 from ai4good.utils.path_utils import get_am_aug_pop
 from ai4good.models.abm.mesa_impl.common import CAMP_SIZE
+from ai4good.utils.logger_util import get_logger
+
+logger = get_logger(__name__)
 
 
 def read_age_gender(num_ppl):
@@ -29,7 +31,7 @@ def read_age_gender(num_ppl):
     age_and_gender = age_and_gender.values
 
     if age_and_gender.shape[0] < num_ppl:
-        logging.warning("Number of agents are more than data provided in age_and_gender.csv by {}".
+        logger.warning("Number of agents are more than data provided in age_and_gender.csv by {}".
                         format(num_ppl - age_and_gender.shape[0]))
 
     age_and_gender = age_and_gender[np.random.randint(age_and_gender.shape[0], size=num_ppl)]
@@ -53,7 +55,7 @@ def log(name="function"):
             t1 = time.time()
             func(self, *args, **kwargs)
             t2 = time.time()
-            logging.info("Completed {} in {} seconds".format(name, t2-t1))
+            logger.info("Completed {} in {} seconds".format(name, t2-t1))
         return wrapped2
     return wrapped1
 
