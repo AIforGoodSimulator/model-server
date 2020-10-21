@@ -13,7 +13,7 @@ import ai4good.utils.path_utils as pu
 
 age = ['0 - 5', '6 - 9', '10 - 19', '20 - 29', '30 - 39', '40 - 49', '50 - 59', '60 - 69', '70+']
 id_age_popu =['age-population-' + x.replace(' ','') for x in age]
-age_perc = [10, 10, 10, 10, 10, 10, 10, 10, 20] # starting age group population percentage
+age_perc_start = [10, 10, 10, 10, 10, 10, 10, 10, 20] # starting age group population percentage
 total_popu = 20000 # starting total population
 err_group_total_not_equal_popu = 'Group total must equal to total population or 100%'
 
@@ -52,7 +52,7 @@ def generate_html_age_group(age, id_age_popu, age_perc, total_popu):
                dbc.Label(str(age_perc)+'%', id={
                    'type':'age-perc-label', 
                    'index':id_age_popu}), 
-    ], id=id_age_popu, style={'display':'grid', 'grid-template-columns':'5% 20% 20% 45% 10%', 'margin-bottom':'5px'})
+    ], id=id_age_popu, style={'display':'grid', 'grid-template-columns':'5% 20% 20% 43% 12%', 'margin-bottom':'5px'})
 
 def generate_three_column_input(id_three_column, max_no, margin_bottom='25px'):
     children = html.Div([
@@ -100,25 +100,27 @@ layout = html.Div(
                                 html.Header('Population'), 
                                 html.Header('Distribution'), 
                                 html.Header('(%)')], 
-                                style={'display':'grid', 'grid-template-columns':'5% 20% 35% 35% 5%'}),
-                            generate_html_age_group(age[0], id_age_popu[0], age_perc[0], total_popu),
-                            generate_html_age_group(age[1], id_age_popu[1], age_perc[1], total_popu),
-                            generate_html_age_group(age[2], id_age_popu[2], age_perc[2], total_popu),
-                            generate_html_age_group(age[3], id_age_popu[3], age_perc[3], total_popu),
-                            generate_html_age_group(age[4], id_age_popu[4], age_perc[4], total_popu),
-                            generate_html_age_group(age[5], id_age_popu[5], age_perc[5], total_popu),
-                            generate_html_age_group(age[6], id_age_popu[6], age_perc[6], total_popu),
-                            generate_html_age_group(age[7], id_age_popu[7], age_perc[7], total_popu),
-                            generate_html_age_group(age[8], id_age_popu[8], age_perc[8], total_popu),
+                                style={'display':'grid', 'grid-template-columns':'5% 20% 35% 33% 7%'}),
+                            generate_html_age_group(age[0], id_age_popu[0], age_perc_start[0], total_popu),
+                            generate_html_age_group(age[1], id_age_popu[1], age_perc_start[1], total_popu),
+                            generate_html_age_group(age[2], id_age_popu[2], age_perc_start[2], total_popu),
+                            generate_html_age_group(age[3], id_age_popu[3], age_perc_start[3], total_popu),
+                            generate_html_age_group(age[4], id_age_popu[4], age_perc_start[4], total_popu),
+                            generate_html_age_group(age[5], id_age_popu[5], age_perc_start[5], total_popu),
+                            generate_html_age_group(age[6], id_age_popu[6], age_perc_start[6], total_popu),
+                            generate_html_age_group(age[7], id_age_popu[7], age_perc_start[7], total_popu),
+                            generate_html_age_group(age[8], id_age_popu[8], age_perc_start[8], total_popu),
                             html.Div([
                                 html.B(''), 
                                 html.B('Group Total:'), 
                                 html.B('', id='age_population_total'), 
                                 html.B('Percentage Total:'), 
-                                html.B('', id='age_percentage_total')], 
+                                html.B('', id='age_percentage_total')], className='card-text', 
                                 style={'display':'grid', 'grid-template-columns':'5% 25% 26% 32% 12%'}),
                             html.Div([
-                                html.Center(dbc.Label('Must equal to total population or 100%', id='age-group-continue-warning', color='secondary'), className='card-text')]),
+                                html.B(''), 
+                                dbc.Label('Must equal to total population or 100%', id='age-group-continue-warning', color='secondary'), 
+                                dbc.Button('Default %', size='sm', color='secondary', id='age-default-perc', style={'float':'right'})], className='card-text', style={'display':'grid', 'grid-template-columns':'5% 77% 18%'}),
                             html.P(''),
                             html.Header('Gender Diversity', className='card-text'),
                             html.Div([
@@ -185,15 +187,26 @@ def update_age_group_total(input_values, slider_values, total_value):
 
 @dash_app.callback(
     [Output({'type':'age-popu-input', 'index':ALL}, 'max'), Output({'type':'age-popu-slider', 'index':ALL}, 'max'), Output({'type':'age-popu-slider', 'index':ALL}, 'value')], 
-    [Input('total-population', 'value')],
+    [Input('total-population', 'value'), Input('age-default-perc','n_clicks')],
     [State({'type':'age-popu-input', 'index':ALL}, 'value'), State('total-population', 'min'), State('total-population', 'max')])
-def update_age_popu_max(total_value, input_values, total_min, total_max):
-    updated_maxs = [total_value]*len(input_values)
-    if total_value is None:
-        raise PreventUpdate
-    elif total_value <= total_min:
-        raise PreventUpdate
-    elif total_value > total_max:
+def update_age_popu_max(total_value, n_clicks, input_values, total_min, total_max):
+    context = dash.callback_context
+    if not context.triggered:
         raise PreventUpdate
     else:
-        return updated_maxs, updated_maxs, input_values
+        if total_value is None:
+            raise PreventUpdate
+        elif total_value <= total_min:
+            raise PreventUpdate
+        elif total_value > total_max:
+            raise PreventUpdate
+        else:
+            id_trig = context.triggered[0]['prop_id'].split('.')[0]
+            updated_maxs = [total_value]*len(input_values)
+            if id_trig == 'total-population':
+                return updated_maxs, updated_maxs, input_values
+            elif id_trig == 'age-default-perc':
+                slider_reset_values = [total_value*x/100 for x in age_perc_start]
+                return updated_maxs, updated_maxs, slider_reset_values
+            else: # should not happen
+                raise PreventUpdate
