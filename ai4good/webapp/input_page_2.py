@@ -37,18 +37,17 @@ def int_perc_1dp(nom, dem):
     return str(perc_1dp)+'%'
 
 def generate_html_age_group(age, id_age_popu, age_perc, total_popu):
-    age_group_popu = total_popu*age_perc/100
     return html.Div([
                html.Header(''),
                html.Header([str(age)], className='card-text'), 
                dbc.Input(id={
                    'type':'age-popu-input',
                    'index':id_age_popu
-               }, placeholder='Required', type='number', value=age_group_popu, min=0, max=total_popu, step=1, bs_size='sm', style={'justify':'right', 'margin-bottom':'5px'}), 
+               }, placeholder='Required', type='number', value=[], min=0, max=total_popu, step=1, bs_size='sm', style={'justify':'right', 'margin-bottom':'5px'}), 
                dcc.Slider(id={
                    'type':'age-popu-slider', 
                    'index':id_age_popu
-               }, value=age_group_popu, min=0, max=total_popu, step=1, updatemode='drag'),
+               }, value=[], min=0, max=total_popu, step=1, updatemode='drag'),
                dbc.Label(str(age_perc)+'%', id={
                    'type':'age-perc-label', 
                    'index':id_age_popu}), 
@@ -191,22 +190,22 @@ def update_age_group_total(input_values, slider_values, total_value):
     [State({'type':'age-popu-input', 'index':ALL}, 'value'), State('total-population', 'min'), State('total-population', 'max')])
 def update_age_popu_max(total_value, n_clicks, input_values, total_min, total_max):
     context = dash.callback_context
-    if not context.triggered:
+    if total_value is None:
+        raise PreventUpdate
+    elif total_value <= total_min:
+        raise PreventUpdate
+    elif total_value > total_max:
         raise PreventUpdate
     else:
-        if total_value is None:
-            raise PreventUpdate
-        elif total_value <= total_min:
-            raise PreventUpdate
-        elif total_value > total_max:
-            raise PreventUpdate
+        slider_reset_values = [round(total_value*x/100) for x in age_perc_start]
+        updated_maxs = [total_value]*len(input_values)
+        if not context.triggered:
+            return updated_maxs, updated_maxs, slider_reset_values
         else:
             id_trig = context.triggered[0]['prop_id'].split('.')[0]
-            updated_maxs = [total_value]*len(input_values)
             if id_trig == 'total-population':
                 return updated_maxs, updated_maxs, input_values
             elif id_trig == 'age-default-perc':
-                slider_reset_values = [total_value*x/100 for x in age_perc_start]
                 return updated_maxs, updated_maxs, slider_reset_values
             else: # should not happen
                 raise PreventUpdate
