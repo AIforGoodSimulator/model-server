@@ -64,7 +64,7 @@ def high_level_message_1():
     return textwrap.dedent(f'''
     ## 1. The case for a longer, more sustainable program
     As shown by comparing implementing different interventions for 1 month, 3 month and 6 month during the period of epidemic,
-    it is important to prioritize long-term non-pharmaceutical intervention over short-term interventions.
+    it is important to prioritize long-term non-pharmaceutical intervention over short-term interventions. These can include removing symptomatic patients, removing high risk individuals and implementing better hygiene measures such as using a mask whenever residents move around within the camps, and increased hand-washing facility provision all around the camp. If people follow these interventions for a longer period of time (i.e. 6 months as opposed to just 1 month), then the pandemic will die down.
     ''')
 
 
@@ -72,7 +72,7 @@ def high_level_message_2():
     return textwrap.dedent(f'''
     ## 2. Switch on invervention like lockdown at the right time
     It is also important to switch on interventions at the correct time, rather than having them on all the time.
-    This is shown by comparing implementing different interventions starting at different points during the epidemic.
+    This is shown by comparing implementing different interventions starting at different points during the epidemic. As an example, removing the symptomatic people is more effective nearer the start of the epidemic, as this better controls the spread of the virus. By also removing the high-risk individuals at the early stages of the epidemic, the death rate can be lowered, as those who are vulnerable will be shielded. Stricter measures like locking down the camp can be harmful to the residents’ physical and psychological well-being so It is better to implement the measure at different intervals when needed.
     ''')
 
 
@@ -80,14 +80,14 @@ def high_level_message_3():
     return textwrap.dedent(f'''
     ## 3. Reducing activities happening within the camp might not be that effective
     Reducing activities for the residents might not be an effective intervention. A camp lockdown is comparatively more effective 
-    but must not be implemented the whole time as people will start becoming more relaxed.
+    but must not be implemented the whole time as people will start becoming more relaxed. It is easier to control the spread of the disease if no one is interacting with each other - as it is easier to trace the disease and track symptomatic/unwell individuals. From the second point, it is visible that the lockdown needs to be implemented very strictly, but for only a short period of time. If implemented for too long, people will start becoming more relaxed and will break lockdown rules - thus leading to the virus becoming out of control. It is important to have a strict lockdown, wherein people are not allowed to leave their homes, otherwise this could also lead to people breaking the rules early on.
     ''')
 
 
 def high_level_message_4():
     return textwrap.dedent(f'''
     ## 4. Isolating the symptomatic might not be that effective
-    Isolating the symptomatically infected residents can be effective, but it is resource intensive and there is uncertainty about the final outcome.
+    Isolating the symptomatically infected residents can be effective, but it is resource intensive and there is uncertainty about the final outcome. There are extra measures, time and money which will need to be spent to do this, and it could lead to a loss of resources, for very little gain. It is also possible that by isolating the symptomatically infected residents in one area, and separating them from their families, it could cause unrest within the community.
     ''')
 
 
@@ -95,7 +95,7 @@ def high_level_message_5():
     return textwrap.dedent(f'''
     ## 5. Characteristics of non-pharmaceutical interventions that apply to your camp
     Each non-pharmaceutical intervention has its different characteristics. It is important to implement a combinatorial approach, 
-    where using several less-effective policies laid over each other prove to be more effective than using any single intervention on its own. 
+    where using several less-effective policies laid over each other prove to be more effective than using any single intervention on its own. he three main interventions have different merits, when applied. Implementing removing high-risk individuals will lead to fewer deaths overall, as the people who are likely to die due to the virus, will be shielded. Implementing removing the symptomatic individuals will lead to less infected people overall, as they are unable to mix with the general population of the camps and spread the virus around. Implementing better hygiene, such as using masks and frequent hand washing, will reduce both the deaths and the spread of the virus. These measures are all effective individually, but will have a more powerful overall effect if they are used in conjunction with each other.
     ''')
 
 
@@ -217,7 +217,7 @@ def high_level_message_5():
 #         dcc.Markdown(textwrap.dedent(f'''
 #         ## 2. Intervention scenarios
 
-#         We compare each intervention scenario to baseline. Baseline charts are in blue as before, intervention charts 
+#         We compare each intervention scenario to baseline. Baseline charts are in blue as before, intervention charts
 #         are in red.
 #          ''')),
 #         html.Div(intervention_content)

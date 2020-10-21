@@ -26,7 +26,7 @@ better_hygiene_three_month,remove_high_risk_categories,<no_edit>,<no_edit>,2
 better_hygiene_three_month,t_sim,<no_edit>,<no_edit>,200
 better_hygiene_three_month,numberOfIterations,<no_edit>,<no_edit>,1000
 better_hygiene_three_month,nProcesses,<no_edit>,<no_edit>,4
-better_hygiene_six_month,better_hygiene,0,30,<default>
+better_hygiene_six_month,better_hygiene,0,180,<default>
 better_hygiene_six_month,ICU_capacity,<no_edit>,<no_edit>,6
 better_hygiene_six_month,remove_symptomatic,0,0,10
 better_hygiene_six_month,shielding,<no_edit>,<no_edit>,False
