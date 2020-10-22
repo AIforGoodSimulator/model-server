@@ -20,12 +20,12 @@ def get_params(_profile='BaselineHTHI'):
 
 
 def simulate(i, prf):
-    logging.info("{}. Starting profile {} at {}"
+    logger.info("{}. Starting profile {} at {}"
                  .format(i + 1, prf, datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")))
     param = get_params(prf)
     camp = Moria(params=param, profile=prf + "_{}".format(i+1))
     camp.simulate()
-    logging.info("{}. Completed profile {} at {}"
+    logger.info("{}. Completed profile {} at {}"
                  .format(i + 1, prf, datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")))
 
 

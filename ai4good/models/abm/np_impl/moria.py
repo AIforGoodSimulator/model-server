@@ -1,4 +1,3 @@
-import logging
 import datetime
 import pandas as pd
 from tqdm import tqdm
@@ -240,11 +239,6 @@ class Moria(Camp):
             new_infections[ACTIVITY_TOILET] += new_inf_t
             new_infections[ACTIVITY_FOOD_LINE] += new_inf_f
 
-            # logging.debug("{} new agents were exposed through interactions during wandering".format(new_wd_inf))
-            # logging.debug("{} new agents were exposed through interactions in toilet queues".format(new_inf_t))
-            # logging.debug("{} new agents were exposed through interactions in food line queues".format(new_inf_f))
-            # logging.debug("{} new agents were exposed through household interactions".format(new_hh_inf))
-
         # Once for loop ends, all activities of the day have ended. At the end of the day, agents should go back to
         # their households. This includes agents in toilet/food line queue as well.
         # Dequeue all agents in the toilet/food line queues. Passing value of 1.0 will dequeue everyone from all queues.
@@ -367,8 +361,8 @@ class Moria(Camp):
         self.params.prob_spread_toilet = self.params.prob_spread_toilet * vt
         self.params.prob_spread_foodline = self.params.prob_spread_foodline * vt
 
-        logging.info("INTERVENTION: After applying transmission reduction methods, new probabilities: "
-                     "Pw={}, Pf={},Pt={}".format(self.params.prob_spread_wander,
+        logger.info("INTERVENTION: After applying transmission reduction methods, new probabilities: "
+                     "Pw={}, Pf={}, Pt={}".format(self.params.prob_spread_wander,
                                                  self.params.prob_spread_foodline,
                                                  self.params.prob_spread_toilet))
 
