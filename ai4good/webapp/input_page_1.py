@@ -53,7 +53,7 @@ layout = html.Div(
                             html.Header('Country', className='card-text'),
                             html.Small(dcc.Dropdown(
                                 options=[{'label': k, 'value': k} for k in country_clean], 
-                                id='countries-dropdown', placeholder='Required', style={'margin-bottom':'25px'})),
+                                id='country-dropdown', placeholder='Required', style={'margin-bottom':'25px'})),
                             html.Header('Total Area (sq. m)', className='card-text'),
                             dbc.Input(id='total-area', placeholder='Optional', type='number', min=0, max=10000000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-1-button', color='secondary', href='/sim/input_page_2', style={'float':'right'})),
