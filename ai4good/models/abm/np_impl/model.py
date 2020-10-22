@@ -192,8 +192,6 @@ class Camp:
         self.camp_size = camp_size
         self.params = params
         self.num_people = params.num_people
-        # If a susceptible and an infectious individual interact, then the infection is transmitted with probability pa
-        self.prob_spread = self.params.prob_spread
 
         self.agents: np.array = None
         self.toilet_queue = {}
@@ -212,7 +210,7 @@ class Camp:
         Parameters
         ----------
         agents: A Numpy array containing data of agents who will go inside their households at current simulation step
-        prob_spread: The probability if infection transmission if a susceptible and infectious agent interact
+        prob_spread: The probability of infection transmission if a susceptible and infectious agent interact in house
 
         Returns
         -------
@@ -285,6 +283,7 @@ class Camp:
         relative_strength_of_interaction: Relative encounter rate between agents of same ethnicity (gij in tucker model)
         infection_radius: Distance around each agent where infection spread can happen
         prob_spread: Probability that infection will spread from infectious to susceptible person when they interact
+            during wandering
 
         Returns
         -------
@@ -393,10 +392,12 @@ class Camp:
 
         # Array to store the number of infected people interaction for each person
         interactions = np.zeros((self.agents.shape[0],), dtype=np.int32)
+        # Probability values of infection spread
+        prob = None
 
         if queue_name == "toilet":
-            for t in self.toilet_queue:
-                t_ids = self.toilet_queue[t]
+            for t in self.toilet_queue:  # for each toilet queue in the camp
+                t_ids = self.toilet_queue[t]  # get the list of agents in that queue
                 for i in range(len(t_ids)):
                     # For each agent `t_ids[i]` in the queue, check if agent in front `i-1` and back `i+1` are
                     # infectious. If they are, then add to the `interactions` array
@@ -406,9 +407,12 @@ class Camp:
                     if i+1 <= len(t_ids)-1:
                         interactions[t_ids[i]] += (self.agents[t_ids[i+1], A_DISEASE]
                                                    not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED))
+            # find probability of infection spread per agent via queue interaction
+            prob = 1.0 - (1.0 - self.params.prob_spread_toilet) ** interactions
+
         elif queue_name == "food_line":
-            for f in self.food_line_queue:
-                f_ids = self.food_line_queue[f]
+            for f in self.food_line_queue:  # for each food line queue in the camp
+                f_ids = self.food_line_queue[f]  # get the list of agents in that queue
                 for i in range(len(f_ids)):
                     # For each agent `f_ids[i]` in the queue, check if agent in front `i-1` and back `i+1` are
                     # infectious. If they are, then add to the `interactions` array
@@ -418,9 +422,9 @@ class Camp:
                     if i+1 <= len(f_ids)-1:
                         interactions[f_ids[i]] += (self.agents[f_ids[i+1], A_DISEASE]
                                                    not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED))
+            # find probability of infection spread per agent via queue interaction
+            prob = 1.0 - (1.0 - self.params.prob_spread_foodline) ** interactions
 
-        # find probability of infection spread per agent via queue interaction
-        prob = 1.0 - (1.0 - self.prob_spread) ** interactions
         newly_exposed_ids = (self.agents[:, A_DISEASE] == INF_SUSCEPTIBLE) * \
                             (np.random.random((self.agents.shape[0],)) <= prob)
         self.agents[newly_exposed_ids, A_DISEASE] = INF_EXPOSED

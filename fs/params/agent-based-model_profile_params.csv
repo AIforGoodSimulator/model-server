@@ -21,7 +21,10 @@ BaselineHTHI,clearday,Number of days needed to be cleared of isolation,Camp Para
 BaselineHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 BaselineHTHI,foodline_blocks,Number of foodlines in the camp,Baseline High Transmission High Interaction,"1,1"
 BaselineHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Baseline High Transmission High Interaction,0.1
-BaselineHTHI,prob_spread,Probability of transmission during interaction,Baseline High Transmission High Interaction,0.1
+BaselineHTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Baseline High Transmission High Interaction,0.017
+BaselineHTHI,prob_spread_house,Probability of transmission during interaction in house,Baseline High Transmission High Interaction,0.33
+BaselineHTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Baseline High Transmission High Interaction,0.099
+BaselineHTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Baseline High Transmission High Interaction,0.407
 BaselineHTLI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
 BaselineHTLI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
 BaselineHTLI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
@@ -44,7 +47,10 @@ BaselineHTLI,clearday,Number of days needed to be cleared of isolation,Camp Para
 BaselineHTLI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 BaselineHTLI,foodline_blocks,Number of foodlines in the camp,Baseline High Transmission Low Interaction,"1,1"
 BaselineHTLI,prop_violating_lockdown,Proportion of population that violates the lockdown,Baseline High Transmission Low Interaction,0.1
-BaselineHTLI,prob_spread,Probability of transmission during interaction,Baseline High Transmission Low Interaction,0.1
+BaselineHTLI,prob_spread_wander,Probability of transmission during interaction during wandering,Baseline High Transmission Low Interaction,0.017
+BaselineHTLI,prob_spread_house,Probability of transmission during interaction in house,Baseline High Transmission Low Interaction,0.33
+BaselineHTLI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Baseline High Transmission Low Interaction,0.099
+BaselineHTLI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Baseline High Transmission Low Interaction,0.407
 BaselineLTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
 BaselineLTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
 BaselineLTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
@@ -67,7 +73,10 @@ BaselineLTHI,clearday,Number of days needed to be cleared of isolation,Camp Para
 BaselineLTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 BaselineLTHI,foodline_blocks,Number of foodlines in the camp,Baseline Low Transmission High Interaction,"1,1"
 BaselineLTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Baseline Low Transmission High Interaction,0.1
-BaselineLTHI,prob_spread,Probability of transmission during interaction,Baseline Low Transmission High Interaction,0.1
+BaselineLTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Baseline Low Transmission High Interaction,0.006
+BaselineLTHI,prob_spread_house,Probability of transmission during interaction in house,Baseline Low Transmission High Interaction,0.0397
+BaselineLTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Baseline Low Transmission High Interaction,0.0067
+BaselineLTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Baseline Low Transmission High Interaction,0.0397
 BaselineLTLI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
 BaselineLTLI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
 BaselineLTLI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
@@ -90,7 +99,10 @@ BaselineLTLI,clearday,Number of days needed to be cleared of isolation,Camp Para
 BaselineLTLI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 BaselineLTLI,foodline_blocks,Number of foodlines in the camp,Baseline Low Transmission Low Interaction,"1,1"
 BaselineLTLI,prop_violating_lockdown,Proportion of population that violates the lockdown,Baseline Low Transmission Low Interaction,0.1
-BaselineLTLI,prob_spread,Probability of transmission during interaction,Baseline Low Transmission Low Interaction,0.1
+BaselineLTLI,prob_spread_wander,Probability of transmission during interaction during wandering,Baseline Low Transmission Low Interaction,0.006
+BaselineLTLI,prob_spread_house,Probability of transmission during interaction in house,Baseline Low Transmission Low Interaction,0.0397
+BaselineLTLI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Baseline Low Transmission Low Interaction,0.0067
+BaselineLTLI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Baseline Low Transmission Low Interaction,0.0397
 SectoringHTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
 SectoringHTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
 SectoringHTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
@@ -113,7 +125,10 @@ SectoringHTHI,clearday,Number of days needed to be cleared of isolation,Camp Par
 SectoringHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 SectoringHTHI,foodline_blocks,Number of foodlines in the camp,Sectoring High Transmission High Interaction,"16,16"
 SectoringHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Sectoring High Transmission High Interaction,0.1
-SectoringHTHI,prob_spread,Probability of transmission during interaction,Sectoring High Transmission High Interaction,0.1
+SectoringHTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Sectoring High Transmission High Interaction,0.017
+SectoringHTHI,prob_spread_house,Probability of transmission during interaction in house,Sectoring High Transmission High Interaction,0.33
+SectoringHTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Sectoring High Transmission High Interaction,0.099
+SectoringHTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Sectoring High Transmission High Interaction,0.407
 FaceMasksHTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
 FaceMasksHTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
 FaceMasksHTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
@@ -136,7 +151,10 @@ FaceMasksHTHI,clearday,Number of days needed to be cleared of isolation,Camp Par
 FaceMasksHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 FaceMasksHTHI,foodline_blocks,Number of foodlines in the camp,FaceMasks Transmission High Interaction,"1,1"
 FaceMasksHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,FaceMasks Transmission High Interaction,0.1
-FaceMasksHTHI,prob_spread,Probability of transmission during interaction,FaceMasks Transmission High Interaction,0.1
+FaceMasksHTHI,prob_spread_wander,Probability of transmission during interaction during wandering,FaceMasks High Transmission High Interaction,0.017
+FaceMasksHTHI,prob_spread_house,Probability of transmission during interaction in house,FaceMasks High Transmission High Interaction,0.33
+FaceMasksHTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,FaceMasks High Transmission High Interaction,0.099
+FaceMasksHTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,FaceMasks High Transmission High Interaction,0.407
 QuarantineHTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
 QuarantineHTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
 QuarantineHTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
@@ -159,7 +177,10 @@ QuarantineHTHI,clearday,Number of days needed to be cleared of isolation,Camp Pa
 QuarantineHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 QuarantineHTHI,foodline_blocks,Number of foodlines in the camp,Quarantine High Transmission High Interaction,"1,1"
 QuarantineHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Quarantine High Transmission High Interaction,0.1
-QuarantineHTHI,prob_spread,Probability of transmission during interaction,Quarantine High Transmission High Interaction,0.1
+QuarantineHTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Quarantine High Transmission High Interaction,0.017
+QuarantineHTHI,prob_spread_house,Probability of transmission during interaction in house,Quarantine High Transmission High Interaction,0.33
+QuarantineHTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Quarantine High Transmission High Interaction,0.099
+QuarantineHTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Quarantine High Transmission High Interaction,0.407
 LockdownHTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
 LockdownHTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
 LockdownHTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
@@ -182,7 +203,10 @@ LockdownHTHI,clearday,Number of days needed to be cleared of isolation,Camp Para
 LockdownHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 LockdownHTHI,foodline_blocks,Number of foodlines in the camp,Lockdown High Transmission High Interaction,"1,1"
 LockdownHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Lockdown High Transmission High Interaction,0.05
-LockdownHTHI,prob_spread,Probability of transmission during interaction,Lockdown High Transmission High Interaction,0.1
+LockdownHTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Lockdown High Transmission High Interaction,0.017
+LockdownHTHI,prob_spread_house,Probability of transmission during interaction in house,Lockdown High Transmission High Interaction,0.33
+LockdownHTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Lockdown High Transmission High Interaction,0.099
+LockdownHTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Lockdown High Transmission High Interaction,0.407
 AllInterventionsHTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
 AllInterventionsHTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
 AllInterventionsHTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
@@ -205,4 +229,7 @@ AllInterventionsHTHI,clearday,Number of days needed to be cleared of isolation,C
 AllInterventionsHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 AllInterventionsHTHI,foodline_blocks,Number of foodlines in the camp,AllInterventionsHTHI,"16,16"
 AllInterventionsHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,AllInterventionsHTHI,0.05
-AllInterventionsHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,AllInterventionsHTHI,0.1
+AllInterventionsHTHI,prob_spread_wander,Probability of transmission during interaction during wandering,All Interventions High Transmission High Interaction,0.017
+AllInterventionsHTHI,prob_spread_house,Probability of transmission during interaction in house,All Interventions High Transmission High Interaction,0.33
+AllInterventionsHTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,All Interventions High Transmission High Interaction,0.099
+AllInterventionsHTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,All Interventions High Transmission High Interaction,0.407

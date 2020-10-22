@@ -34,9 +34,15 @@ class Parameters(object):
 
         # Number of days of simulation
         self.number_of_steps = int(profile.loc['number_of_steps', VALUE])
-        # If a susceptible and an infectious individual interact, then the infection is transmitted with probability
-        # This param can be updated by using the `transmission_reduction` parameter
-        self.prob_spread = float(profile.loc['prob_spread', VALUE])
+        # If a susceptible and an infectious individual interact during wandering, then the infection is transmitted
+        # with some probability. This param can be updated by using the `transmission_reduction` parameter
+        self.prob_spread_wander = float(profile.loc['prob_spread_wander', VALUE])
+        # Probability of infection spread when two agents interact in household
+        self.prob_spread_house = float(profile.loc['prob_spread_house', VALUE])
+        # Probability of infection spread when two agents interact while waiting in toilet queue
+        self.prob_spread_toilet = float(profile.loc['prob_spread_toilet', VALUE])
+        # Probability of infection spread when two agents interact while waiting in food line queue
+        self.prob_spread_foodline = float(profile.loc['prob_spread_foodline', VALUE])
 
         ###############################################################################################################
         # Parameters about the camp
@@ -167,6 +173,11 @@ class Parameters(object):
         # Validate parameter values so that only valid simulations are run
 
         assert self.number_of_steps > 0, "Parameter must be positive integer"
+        assert 0.0 < self.prob_spread_wander < 1.0, "Probability value must be between (0,1)"
+        assert 0.0 < self.prob_spread_toilet < 1.0, "Probability value must be between (0,1)"
+        assert 0.0 < self.prob_spread_foodline < 1.0, "Probability value must be between (0,1)"
+        assert 0.0 < self.prob_spread_house < 1.0, "Probability value must be between (0,1)"
+
 
         assert self.num_people == (self.number_of_people_in_isoboxes + self.number_of_people_in_tents), \
             "Invalid distribution of agents in tents/iso-boxes"

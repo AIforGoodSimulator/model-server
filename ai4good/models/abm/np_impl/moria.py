@@ -215,7 +215,7 @@ class Moria(Camp):
             self.agents[wanderer_ids, :], new_wd_inf = Camp.simulate_wander(self.agents[wanderer_ids, :], CAMP_SIZE,
                                                                             self.params.relative_strength_of_interaction,
                                                                             self.params.infection_radius * CAMP_SIZE,
-                                                                            self.prob_spread)
+                                                                            self.params.prob_spread_wander)
 
             # 2. Simulate agent's visit to toilet
             new_inf_t = self.simulate_queues(np.argwhere((activities == ACTIVITY_TOILET) & ~in_queue).reshape((-1,)),
@@ -227,7 +227,8 @@ class Moria(Camp):
 
             # 4. Simulate visit to respective household
             hh_ids = activities == ACTIVITY_HOUSEHOLD
-            self.agents[hh_ids, :], new_hh_inf = Camp.simulate_households(self.agents[hh_ids, :], self.prob_spread)
+            self.agents[hh_ids, :], new_hh_inf = Camp.simulate_households(self.agents[hh_ids, :],
+                                                                          self.params.prob_spread_house)
 
             # 5. Update toilet and food line queues
             self.update_queues(self.params.percentage_of_toilet_queue_cleared_at_each_step)
@@ -250,7 +251,8 @@ class Moria(Camp):
         # households at the end of the day. TODO: uncomment after confirmation from Gaia and Vera
         activities = Moria.get_activities(self.agents, 0.0, 0.0, force_activity=ACTIVITY_HOUSEHOLD)
         hh_ids = activities == ACTIVITY_HOUSEHOLD
-        self.agents[hh_ids, :], new_hh_inf = Camp.simulate_households(self.agents[hh_ids, :], self.prob_spread)
+        self.agents[hh_ids, :], new_hh_inf = Camp.simulate_households(self.agents[hh_ids, :],
+                                                                      self.params.prob_spread_house)
 
         new_infections[ACTIVITY_HOUSEHOLD] += new_hh_inf
 
@@ -358,10 +360,15 @@ class Moria(Camp):
         # However, people in Moria have been provided with face masks. We simulated a population in which all
         # individuals wear face masks outside their homes by setting vt = 0.32 (Jefferson et al. 2009)
 
-        # scale transmission probability
-        self.prob_spread = self.prob_spread * vt
+        # scale transmission probability (outside houses only)
+        self.params.prob_spread_wander = self.params.prob_spread_wander * vt
+        self.params.prob_spread_toilet = self.params.prob_spread_toilet * vt
+        self.params.prob_spread_foodline = self.params.prob_spread_foodline * vt
 
-        logging.info("INTERVENTION: After applying transmission reduction methods, new Pa={}".format(self.prob_spread))
+        logging.info("INTERVENTION: After applying transmission reduction methods, new probabilities: "
+                     "Pw={}, Pf={},Pt={}".format(self.params.prob_spread_wander,
+                                                 self.params.prob_spread_foodline,
+                                                 self.params.prob_spread_toilet))
 
     def intervention_sectoring(self, sector_size):
         # The camp in our baseline model has a single food line, where transmission can potentially occur between two
