@@ -30,7 +30,7 @@ class Moria(Camp):
                                 : Not implemented yet! This will apply social distancing between agents
     10. detect_and_isolate()    : To simulate isolation intervention on each day (camp->isolation). Also referred as
                                   quarantine.
-    11. check_and_deisolate()   : To simulate deisolation (isolation->camp)
+    11. check_and_de_isolate()   : To simulate deisolation (isolation->camp)
     12. save_progress()         : To save the progress of the simulation in a .csv file
     13. _assign_households_to_agents()
                                 : Assign households to each agent by clustering agents with same ethnicity
@@ -266,7 +266,7 @@ class Moria(Camp):
             # Camp managers can detect agents with symptoms with some probability and isolate them
             self.agents = Moria.detect_and_isolate(self.agents, self.P_detect)
             # If all agents of isolated household are not showing symptoms for some days, then send them back to camp
-            self.agents = Moria.check_and_deisolate(self.agents, self.P_n)
+            self.agents = Moria.check_and_de_isolate(self.agents, self.P_n)
 
         return new_infections
 
@@ -482,7 +482,7 @@ class Moria(Camp):
 
     @staticmethod
     @nb.njit
-    def check_and_deisolate(agents: np.array, n: int) -> np.array:
+    def check_and_de_isolate(agents: np.array, p_n: int) -> np.array:
         """
         Check agents who are in isolation and return them back to the camp if no agent in their household is showing
         any symptoms for the past n days.
@@ -522,7 +522,7 @@ class Moria(Camp):
 
                 # Check if agent j (housemate of agent i) is not showing symptoms for the past `P_n` days
                 if agents[j, A_DISEASE] not in (INF_SYMPTOMATIC, INF_MILD, INF_SEVERE) \
-                        and agents[j, A_DAY_COUNTER] >= n:
+                        and agents[j, A_DAY_COUNTER] >= p_n:
                     num_not_showing_sym += 1
 
             # Skip if all any housemate is not Ok to be back in the camp. All of them should be not showing symptoms
