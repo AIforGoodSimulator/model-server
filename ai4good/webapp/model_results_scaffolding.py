@@ -1,18 +1,22 @@
-# from functools import reduce
-# import logging
+import logging
 import textwrap
-# import plotly.graph_objs as go
-# from plotly.subplots import make_subplots
-# from dash.dependencies import Input, Output
 import dash_html_components as html
 import dash_core_components as dcc
-# import dash_bootstrap_components as dbc
+from ai4good.webapp.apps import dash_app, facade, model_runner, cache, local_cache, cache_timeout
+from plotly.subplots import make_subplots
+from ai4good.webapp.model_results_config import model_profile_config
+from collections import defaultdict
+from ai4good.webapp.model_results_utils import load_report
+from dash.dependencies import Input, Output
+import numpy as np
+import pandas as pd
+from ai4good.models.cm.initialise_parameters import Parameters # this needs to be changed later
+import plotly.graph_objs as go
 
-# from ai4good.models.cm.cm_model import CompartmentalModel
-# from ai4good.models.cm.initialise_parameters import Parameters
-# from ai4good.webapp.apps import dash_app, facade, model_runner, cache, local_cache, cache_timeout
-# from ai4good.webapp.cm_model_report_utils import *
 
+CAMP = 'Moria'
+# this logic needs to be changed later where the user input params will be stored
+# can read in the camp parameters here directly from the user input thus avoiding retrieving data from the system elsewhere
 
 # @cache.memoize(timeout=cache_timeout)
 def layout():
@@ -25,6 +29,7 @@ def layout():
                     'margin': 30}),
             # dcc.Markdown(overview(camp, params), style={'margin': 30}),
             dcc.Markdown(high_level_message_1(), style={'margin': 30}),
+            html.Div(render_message_1_plots(), style={'margin': 30}),
             dcc.Markdown(high_level_message_2(), style={'margin': 30}),
             dcc.Markdown(high_level_message_3(), style={'margin': 30}),
             dcc.Markdown(high_level_message_4(), style={'margin': 30}),
@@ -45,19 +50,6 @@ def disclaimer():
     return textwrap.dedent('''
     ##### Disclaimer: The model results are produced based on the parameters being inputted and contain abstractions of the reality. The exact values from the model predictions are not validated by real data from your refugee camp but the rough values and ranges of reduction with relevent intervention methods are explored to provide value in planning efforts.
     ''').replace('\n', ' ')
-
-
-# def overview(camp: str, params: Parameters):
-#     return textwrap.dedent(f'''
-#     ## 1. Overview
-#     This report provides simulation-based estimates for COVID-19 epidemic scenarios for the {camp} camp.
-#     There are an estimated {int(params.population)} people currently living in the camp. Through epidemiology simulations,
-#     we estimated peak counts, the timing of peak counts as well as cumulative counts for new symptomatic cases, hospitalisation demand person-days,
-#     critical care demand person-days and deaths for an unmitigated epidemic.  Then we compare the results with different combinations
-#     of intervention strategies in place to:
-#     * Compare the potential efficacies of different interventions and prioritise the ones that are going to help contain the virus.
-#     * Have a realistic estimate of the clinic capacity, PPE, ICU transfer and other supplies and logistical measures needed.
-#     ''')
 
 
 def high_level_message_1():
@@ -95,12 +87,24 @@ def high_level_message_5():
     return textwrap.dedent(f'''
     ## 5. Characteristics of non-pharmaceutical interventions that apply to your camp
     Each non-pharmaceutical intervention has its different characteristics. It is important to implement a combinatorial approach, 
-<<<<<<< HEAD
     where using several less-effective policies laid over each other prove to be more effective than using any single intervention on its own. he three main interventions have different merits, when applied. Implementing removing high-risk individuals will lead to fewer deaths overall, as the people who are likely to die due to the virus, will be shielded. Implementing removing the symptomatic individuals will lead to less infected people overall, as they are unable to mix with the general population of the camps and spread the virus around. Implementing better hygiene, such as using masks and frequent hand washing, will reduce both the deaths and the spread of the virus. These measures are all effective individually, but will have a more powerful overall effect if they are used in conjunction with each other.
-=======
-    where using several less-effective policies laid over each other prove to be more effective than using any single intervention on its own. The three main interventions have different merits, when applied. Implementing removing high-risk individuals will lead to fewer deaths overall, as the people who are likely to die due to the virus, will be shielded. Implementing removing the symptomatic individuals will lead to less infected people overall, as they are unable to mix with the general population of the camps and spread the virus around. Implementing better hygiene, such as using masks and frequent hand washing, will reduce both the deaths and the spread of the virus. These measures are all effective individually, but will have a more powerful overall effect if they are used in conjunction with each other.
->>>>>>> b0f563635bb55981aa7d2c9ebe648117088d6b0f
     ''')
+
+
+@local_cache.memoize(timeout=cache_timeout)
+def get_model_result_message(message_key):
+    logging.info(f"Reading data for high level message: {message_key}")
+    model_profile_report_dict = defaultdict(dict)
+    for model in model_profile_config[message_key].keys():
+        if len(model_profile_config[message_key][model])>0:
+            for profile in model_profile_config[message_key][model]:
+                mr = model_runner.get_result(model, profile, CAMP)
+                profile_df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
+                params = Parameters(facade.ps, CAMP, profile_df, {})
+                report = load_report(mr, params)
+                assert mr is not None
+                model_profile_report_dict[model][profile] = report
+    return model_profile_report_dict
 
 
 # @local_cache.memoize(timeout=cache_timeout)
@@ -115,94 +119,68 @@ def high_level_message_5():
 #     return mr, profile_df, params, report
 
 
-# def base_profile_chart_section():
-#     options = [
-#         {'label': 'All ages', 'value': 'ALL'},
-#         {'label': '<9 years', 'value': '0-9'},
-#         {'label': '10-19 years', 'value': '10-19'},
-#         {'label': '20-29 years', 'value': '20-29'},
-#         {'label': '30-39 years', 'value': '30-39'},
-#         {'label': '40-49 years', 'value': '40-49'},
-#         {'label': '50-59 years', 'value': '50-59'},
-#         {'label': '60-69 years', 'value': '60-69'},
-#         {'label': '70+ years', 'value': '70+'}
-#     ]
+def render_message_1_plots():
+    model_profile_report_dict = get_model_result_message("message_1")
+    columns_to_plot = ['Infected (symptomatic)']
+    fig = make_subplots(rows=4, cols=1, shared_xaxes=True)
+    col = columns_to_plot[0]
+    row_idx = 1
+    for profile in model_profile_report_dict["compartmental-model"].keys():
+        p1, p2 = plot_iqr(model_profile_report_dict["compartmental-model"][profile], col)
+        logging.info(f'plot on {row_idx}')
+        fig.add_trace(p1, row=row_idx, col=1)
+        fig.add_trace(p2, row=row_idx, col=1)
+        fig.update_yaxes(title_text=col, row=row_idx, col=1)
+        row_idx += 1
+    x_title = 'Time, days'
+    fig.update_xaxes(title_text=x_title, row=1, col=1)
+    fig.update_xaxes(title_text=x_title, row=2, col=1)
+    fig.update_xaxes(title_text=x_title, row=3, col=1)
+    fig.update_xaxes(title_text=x_title, row=4, col=1)
+    fig.update_traces(mode='lines')
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=30, b=0),
+        height=800,
+        showlegend=False
+    )
 
-#     return html.Div([
-#         dbc.Row([
-#             dbc.Col([
-#                 html.B('Plots of changes in symptomatically infected cases, hopitalisation cases, critical care cases '
-#                        'and death incidents over the course of simulation days'),
-#                 dcc.Dropdown(
-#                     id='charts_age_dropdown',
-#                     options=options,
-#                     value='ALL',
-#                     clearable=False,
-#                     style={'margin-top': 5}
-#                 ),
-#             ], width=6)
-#         ]),
-#         dbc.Row([
-#             dbc.Col([
-#                 dcc.Loading(html.Div([], id='chart_section_plot_container')),
-#             ], width=12)
-#         ])
-#     ], style={'margin': 30})
+    return [
+        dcc.Graph(
+            id='plot_all_fig',
+            figure=fig,
+            style={'width': '100%'}
+        )
+    ]
+
+color_scheme_main = ['rgba(0, 176, 246, 0.2)', 'rgba(255, 255, 255,0)', 'rgb(0, 176, 246)']
+color_scheme_secondary = ['rgba(245, 186, 186, 0.5)', 'rgba(255, 255, 255,0)', 'rgb(255, 0, 0)']
 
 
-# @dash_app.callback(
-#     Output('chart_section_plot_container', 'children'),
-#     [Input('_camp_param', 'children'), Input('_profile_param',
-#                                              'children'), Input('charts_age_dropdown', 'value')],
-# )
-# def render_main_section_charts(camp, profile, age_to_plot):
-#     mr, profile_df, params, report = get_model_result(camp, profile)
-#     logging.info(f"Plotting {age_to_plot}")
+def plot_iqr(df: pd.DataFrame, y_col: str,
+             x_col='Time', estimator=np.median, estimator_name='median', ci_name_prefix='',
+             iqr_low=0.25, iqr_high=0.75,
+             color_scheme=color_scheme_main):
+    grouped = df.groupby(x_col)[y_col]
+    est = grouped.agg(estimator)
+    cis = pd.DataFrame(np.c_[grouped.quantile(iqr_low), grouped.quantile(iqr_high)], index=est.index,
+                       columns=["low", "high"]).stack().reset_index()
 
-#     columns_to_plot = ['Infected (symptomatic)',
-#                        'Hospitalised', 'Critical', 'Deaths']
-#     fig = make_subplots(rows=2, cols=2, shared_xaxes=True,
-#                         vertical_spacing=0.05,
-#                         horizontal_spacing=0.05,
-#                         subplot_titles=columns_to_plot)
+    x = est.index.values.tolist()
+    x_rev = x[::-1]
 
-#     for i, col in enumerate(columns_to_plot):
-#         row_idx = int(i % 2 + 1)
-#         col_idx = int(i / 2 + 1)
-#         if age_to_plot != 'ALL':
-#             age_cols = [c for c in report.columns if (
-#                 age_to_plot in c) and (c.startswith(col))]
-#             assert len(age_cols) == 1
-#             col = age_cols[0]
-#         p1, p2 = plot_iqr(report, col)
-#         fig.add_trace(p1, row=row_idx, col=col_idx)
-#         fig.add_trace(p2, row=row_idx, col=col_idx)
-#         fig.update_yaxes(title_text=col, row=row_idx, col=col_idx)
+    y_upper = cis[cis['level_1'] == 'high'][0].values.tolist()
+    y_lower = cis[cis['level_1'] == 'low'][0].values.tolist()
+    y_lower = y_lower[::-1]
 
-#     x_title = 'Time, days'
-#     fig.update_xaxes(title_text=x_title, row=2, col=1)
-#     fig.update_xaxes(title_text=x_title, row=2, col=2)
-
-#     fig.update_traces(mode='lines')
-#     fig.update_layout(
-#         margin=dict(l=0, r=0, t=30, b=0),
-#         height=800,
-#         showlegend=False
-#     )
-
-#     return [
-#         dcc.Graph(
-#             id='plot_all_fig',
-#             figure=fig,
-#             style={'width': '100%'}
-#         )
-#     ]
-
+    p1 = go.Scatter(
+        x=x + x_rev, y=y_upper + y_lower, fill='toself', fillcolor=color_scheme[0],
+        line_color=color_scheme[1], name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval')
+    p2 = go.Scatter(x=x, y=est, line_color=color_scheme[2], name=f'{y_col} {estimator_name}')
+    return p1, p2
 
 # @dash_app.callback(
 #     Output('cmp_section', 'children'),
-#     [Input('_camp_param', 'children'), Input('_profile_param',
-#                                              'children'), Input('_cmp_profiles', 'children')],
+#     [Input('_camp_param', 'children'), Input('_profile_param', 'children'), Input('_cmp_profiles', 'children')],
 # )
 # @cache.memoize(timeout=cache_timeout)
 # def interventions(camp, profile, cmp_profiles):
@@ -213,15 +191,14 @@ def high_level_message_5():
 #     if len(profiles) == 0 or (len(profiles) == 1 and len(profiles[0].strip()) == 0):
 #         return []
 
-#     intervention_content = [intervention(
-#         camp, p, i+1, base_df, base_params, base_profile, profile) for i, p in enumerate(profiles)]
+#     intervention_content = [intervention(camp, p, i+1, base_df, base_params, base_profile, profile) for i, p in enumerate(profiles)]
 #     intervention_content = reduce(list.__add__, intervention_content)
 
 #     return [
 #         dcc.Markdown(textwrap.dedent(f'''
 #         ## 2. Intervention scenarios
 
-#         We compare each intervention scenario to baseline. Baseline charts are in blue as before, intervention charts
+#         We compare each intervention scenario to baseline. Baseline charts are in blue as before, intervention charts 
 #         are in red.
 #          ''')),
 #         html.Div(intervention_content)
@@ -229,15 +206,38 @@ def high_level_message_5():
 
 
 # def intervention(camp, cmp_profile_name, idx, base_df, base_params, base_profile, base_profile_name):
-#     _, cmp_profile, cmp_params, cmp_df = get_model_result(
-#         camp, cmp_profile_name)
+#     _, cmp_profile, cmp_params, cmp_df = get_model_result(camp, cmp_profile_name)
 
-#     return intervention_plots(base_df, cmp_df, base_profile_name, cmp_profile_name)
+#     tbl = diff_table(base_df, cmp_df, cmp_params.population)
+#     profile_diff = profile_diff_tbl(base_profile, base_params, cmp_profile, cmp_params)
+
+#     return [
+#         dcc.Markdown(textwrap.dedent(f'''
+#         ## 2.{idx} {cmp_profile_name} intervention comparison
+        
+#         Here we compare {cmp_profile_name} model profile with base {base_profile_name} profile explored in the main 
+#         section. Compared to base profile {cmp_profile_name} has following changes:
+#         ''')),
+#         dbc.Row([
+#             dbc.Col([
+#                 html.B(f'{cmp_profile_name} parameter changes compared to {base_profile_name}'),
+#                 dbc.Table.from_dataframe(profile_diff, bordered=True, hover=True,  striped=True),
+#             ], width=4)
+#         ]),
+#         dcc.Markdown(textwrap.dedent(f'''
+#         #### Comparison results
+#         ''')),
+#         dbc.Row([
+#             dbc.Col([
+#                 html.B(f'{cmp_profile_name} to {base_profile_name} comparison table'),
+#                 dbc.Table.from_dataframe(tbl, bordered=True, hover=True)
+#             ], width=4)
+#         ])
+#     ] + intervention_plots(base_df, cmp_df, base_profile_name, cmp_profile_name)
 
 
 # def intervention_plots(base_df, cmp_df, base_profile_name, cmp_profile_name):
-#     columns_to_plot = ['Infected (symptomatic)',
-#                        'Hospitalised', 'Critical', 'Deaths']
+#     columns_to_plot = ['Infected (symptomatic)', 'Hospitalised', 'Critical', 'Deaths']
 #     fig = make_subplots(rows=2, cols=2, shared_xaxes=True,
 #                         vertical_spacing=0.05,
 #                         horizontal_spacing=0.05,
@@ -277,32 +277,3 @@ def high_level_message_5():
 #         )
 #     ]
 
-
-# color_scheme_main = ['rgba(0, 176, 246, 0.2)',
-#                      'rgba(255, 255, 255,0)', 'rgb(0, 176, 246)']
-# color_scheme_secondary = [
-#     'rgba(245, 186, 186, 0.5)', 'rgba(255, 255, 255,0)', 'rgb(255, 0, 0)']
-
-
-# def plot_iqr(df: pd.DataFrame, y_col: str,
-#              x_col='Time', estimator=np.median, estimator_name='median', ci_name_prefix='',
-#              iqr_low=0.25, iqr_high=0.75,
-#              color_scheme=color_scheme_main):
-#     grouped = df.groupby(x_col)[y_col]
-#     est = grouped.agg(estimator)
-#     cis = pd.DataFrame(np.c_[grouped.quantile(iqr_low), grouped.quantile(iqr_high)], index=est.index,
-#                        columns=["low", "high"]).stack().reset_index()
-
-#     x = est.index.values.tolist()
-#     x_rev = x[::-1]
-
-#     y_upper = cis[cis['level_1'] == 'high'][0].values.tolist()
-#     y_lower = cis[cis['level_1'] == 'low'][0].values.tolist()
-#     y_lower = y_lower[::-1]
-
-#     p1 = go.Scatter(
-#         x=x + x_rev, y=y_upper + y_lower, fill='toself', fillcolor=color_scheme[0],
-#         line_color=color_scheme[1], name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval')
-#     p2 = go.Scatter(
-#         x=x, y=est, line_color=color_scheme[2], name=f'{y_col} {estimator_name}')
-#     return p1, p2
