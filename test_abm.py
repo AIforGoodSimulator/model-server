@@ -1,5 +1,4 @@
 import sys
-import multiprocessing
 import matplotlib.pyplot as plt
 
 from ai4good.runner.facade import Facade
@@ -26,7 +25,7 @@ def simulate(i, prf):
     logging.info("{}. Starting profile {} at {}"
                  .format(i + 1, prf, datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")))
     param = get_params(prf)
-    camp = Moria(params=param, profile=prf)
+    camp = Moria(params=param, profile=prf + "_{}".format(i+1))
     camp.simulate()
     logging.info("{}. Completed profile {} at {}"
                  .format(i + 1, prf, datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")))
@@ -35,15 +34,8 @@ def simulate(i, prf):
 class SampleRun:
 
     def __init__(self, profiles: list):
-        self.profiles = profiles
-        self.jobs = []
-        for i, prf in enumerate(self.profiles):
-            process = multiprocessing.Process(target=simulate, args=(i, prf))
-            self.jobs.append(process)
-
-    def run(self):
-        for job in self.jobs:
-            job.start()
+        for i, prf in enumerate(profiles):
+            simulate(i, prf)
 
     @staticmethod
     def plot_df(f_name):
@@ -156,8 +148,9 @@ if __name__ == "__main__":
         SampleRun.plot_df(sys.argv[2])
 
     else:
-        # Just pass the profiles in order here
-        sampleRun = SampleRun([
-            "BaselineHTHI"
-        ])
-        sampleRun.run()
+
+        profile = "BaselineLTHI"
+        num_simulations = 1  # number of simulations to run
+
+        # run simulations
+        sampleRun = SampleRun([profile] * num_simulations)
