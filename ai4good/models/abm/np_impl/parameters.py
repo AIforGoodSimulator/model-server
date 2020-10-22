@@ -41,6 +41,8 @@ class Parameters(object):
         ###############################################################################################################
         # Parameters about the camp
 
+        # Number of agents for simulation
+        self.num_people = int(camp_params.loc[camp_params.Age == '0-9', 'Total_population'].item())
         # Total number of people in the iso-boxes
         self.number_of_people_in_isoboxes = int(profile.loc['number_of_people_in_isoboxes', VALUE])
         # Iso-box capacity
@@ -167,6 +169,8 @@ class Parameters(object):
 
         assert self.number_of_steps > 0, "Parameter must be positive integer"
 
+        assert self.num_people == (self.number_of_people_in_isoboxes + self.number_of_people_in_tents), \
+            "Invalid distribution of agents in tents/iso-boxes"
         assert self.number_of_people_in_isoboxes > 0, "Parameter must be a positive integer"
         assert self.number_of_people_in_one_isobox > 0, "Parameter must be a positive integer"
         assert self.number_of_people_in_tents > 0, "Parameter must be a positive integer"

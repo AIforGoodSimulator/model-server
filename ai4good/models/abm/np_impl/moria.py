@@ -1,3 +1,4 @@
+import logging
 import datetime
 import pandas as pd
 from tqdm import tqdm
@@ -538,14 +539,14 @@ class Moria(Camp):
     def save_progress(self, new_infections: list) -> None:
         # Function to save the progress of the simulation at any time step into dataframe
 
-        row = Moria._get_progress_data(self.agents)
+        row = list(Moria._get_progress_data(self.agents))
         row = [self.t] + row
         row.extend([new_infections[ACTIVITY_HOUSEHOLD], new_infections[ACTIVITY_WANDERING],
                     new_infections[ACTIVITY_TOILET], new_infections[ACTIVITY_FOOD_LINE]])
         self.data_collector.loc[self.data_collector.shape[0]] = row
 
     @staticmethod
-    @nb.njit(parallel=True)
+    @nb.njit  # Not using parallel=True here due to https://github.com/numba/numba/issues/3681
     def _get_progress_data(agents: np.array) -> list:
 
         n = agents.shape[0]  # number of agents

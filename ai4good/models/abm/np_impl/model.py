@@ -1,5 +1,4 @@
 import random
-import logging
 import numpy as np
 import numba as nb
 
@@ -192,7 +191,7 @@ class Camp:
     def __init__(self, params: Parameters, camp_size: float):
         self.camp_size = camp_size
         self.params = params
-        self.num_people = self.params.number_of_people_in_isoboxes + self.params.number_of_people_in_tents
+        self.num_people = params.num_people
         # If a susceptible and an infectious individual interact, then the infection is transmitted with probability pa
         self.prob_spread = self.params.prob_spread
 
