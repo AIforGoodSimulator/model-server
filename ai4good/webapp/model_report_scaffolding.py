@@ -98,6 +98,23 @@ def high_level_message_5():
     where using several less-effective policies laid over each other prove to be more effective than using any single intervention on its own. The three main interventions have different merits, when applied. Implementing removing high-risk individuals will lead to fewer deaths overall, as the people who are likely to die due to the virus, will be shielded. Implementing removing the symptomatic individuals will lead to less infected people overall, as they are unable to mix with the general population of the camps and spread the virus around. Implementing better hygiene, such as using masks and frequent hand washing, will reduce both the deaths and the spread of the virus. These measures are all effective individually, but will have a more powerful overall effect if they are used in conjunction with each other.
     ''')
 
+def model_limitation_title(): 
+    return textwrap.dedent(f'''
+    # Model Limitations
+    ''')
+
+def model_limitation_1(): 
+    return textwrap.dedent(f'''
+    ## 1. Mathematical Model Limitaitons 
+    Mathematical models are not supposed to be oracles that predict the future but rather they are trying to redlect particlar aspects of realities. Results may not always be correct and the numbers can only give you a rough idea on what the situation will be, to enable you to plan for different scenarios accordingly.  
+    ''')
+
+def model_limitation_2(): 
+    return textwrap.dedent(f'''
+    ## 2. Availability of Data 
+    The availability of data is a constraint for the modelling and in some cases, the modellers are coding in specific parameters based on their judgement, however this could lead to bias.   
+    ''')
+
 
 # @local_cache.memoize(timeout=cache_timeout)
 # def get_model_result(camp: str, profile: str):
