@@ -135,7 +135,6 @@ class Parameters(object):
                 camp_params.Age == '70+', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
         ]
         self.prob_symp2sevr = np.array([float(p) for p in self.prob_symp2sevr])
-        logging.info(self.prob_symp2sevr)
         self.prob_symp2mild = np.array([(1.0 - p) for p in self.prob_symp2sevr])
 
         self.validate()
