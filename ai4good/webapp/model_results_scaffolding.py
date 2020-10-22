@@ -152,7 +152,7 @@ def render_message_1_plots():
         )
     ]
 
-color_scheme_main = ['rgba(0, 176, 246, 0.2)', 'rgba(0, 30, 10, 0)', 'rgb(0, 176, 246)']
+color_scheme_main = ['rgba(0, 176, 246, 0.2)', 'rgba(107, 156, 190, 1)', 'rgb(0, 176, 246)']
 color_scheme_secondary = ['rgba(245, 240, 240, 0.5)']
 
 
