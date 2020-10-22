@@ -24,7 +24,7 @@ from ai4good.models.cm.initialise_parameters import Parameters
 from ai4good.webapp.apps import dash_app, facade, model_runner, cache, local_cache, cache_timeout
 from ai4good.webapp.cm_model_report_page import get_model_result
 from ai4good.webapp.cm_model_report_utils import *
-#==============< Ruchita changes >==================================
+#==============< POC changes >==================================
 def layout():
     return html.Div(
         [
@@ -52,7 +52,7 @@ def report_poc():
         fig.add_trace(p2, row=row_idx, col=col_idx)
         fig.update_yaxes(title_text=col, row=row_idx, col=col_idx)
 
-    x_title = 'Time, days'
+    x_title = 'better_hygiene_one_month'
     fig.update_xaxes(title_text=x_title, row=2, col=1)
     fig.update_xaxes(title_text=x_title, row=2, col=2)
 

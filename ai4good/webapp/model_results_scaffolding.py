@@ -122,26 +122,26 @@ def get_model_result_message(message_key):
 def render_message_1_plots():
     model_profile_report_dict = get_model_result_message("message_1")
     columns_to_plot = ['Infected (symptomatic)']
-    fig = make_subplots(rows=4, cols=1, shared_xaxes=True)
+    fig = make_subplots()
     col = columns_to_plot[0]
     row_idx = 1
     for profile in model_profile_report_dict["compartmental-model"].keys():
-        p1, p2 = plot_iqr(model_profile_report_dict["compartmental-model"][profile], col)
+        p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col)
         logging.info(f'plot on {row_idx}')
-        fig.add_trace(p1, row=row_idx, col=1)
-        fig.add_trace(p2, row=row_idx, col=1)
+        fig.add_trace(p1, row=1, col=1)
+        fig.add_trace(p2, row=1, col=1)
         fig.update_yaxes(title_text=col, row=row_idx, col=1)
         row_idx += 1
     x_title = 'Time, days'
     fig.update_xaxes(title_text=x_title, row=1, col=1)
-    fig.update_xaxes(title_text=x_title, row=2, col=1)
-    fig.update_xaxes(title_text=x_title, row=3, col=1)
-    fig.update_xaxes(title_text=x_title, row=4, col=1)
+    # fig.update_xaxes(title_text=x_title, row=2, col=1)
+    # fig.update_xaxes(title_text=x_title, row=3, col=1)
+    # fig.update_xaxes(title_text=x_title, row=4, col=1)
     fig.update_traces(mode='lines')
     fig.update_layout(
         margin=dict(l=0, r=0, t=30, b=0),
-        height=800,
-        showlegend=False
+        height=400,
+        showlegend=True
     )
 
     return [
@@ -152,8 +152,8 @@ def render_message_1_plots():
         )
     ]
 
-color_scheme_main = ['rgba(0, 176, 246, 0.2)', 'rgba(255, 255, 255,0)', 'rgb(0, 176, 246)']
-color_scheme_secondary = ['rgba(245, 186, 186, 0.5)', 'rgba(255, 255, 255,0)', 'rgb(255, 0, 0)']
+color_scheme_main = ['rgba(0, 176, 246, 0.2)', 'rgba(0, 30, 10, 0)', 'rgb(0, 176, 246)']
+color_scheme_secondary = ['rgba(245, 240, 240, 0.5)']
 
 
 def plot_iqr(df: pd.DataFrame, y_col: str,
@@ -173,10 +173,10 @@ def plot_iqr(df: pd.DataFrame, y_col: str,
     y_lower = y_lower[::-1]
 
     p1 = go.Scatter(
-        x=x + x_rev, y=y_upper + y_lower, fill='toself', fillcolor=color_scheme[0],
-        line_color=color_scheme[1], name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval')
-    p2 = go.Scatter(x=x, y=est, line_color=color_scheme[2], name=f'{y_col} {estimator_name}')
-    return p1, p2
+        x=x + x_rev, y=y_upper + y_lower, fill='toself',  line_color=color_scheme[1],
+         name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval')
+    p2 = go.Scatter(x=x, y=est,  name=f'{y_col} {estimator_name}', line=dict(width=6))
+    return p1,p2
 
 # @dash_app.callback(
 #     Output('cmp_section', 'children'),
