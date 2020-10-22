@@ -4,12 +4,14 @@ This file sets up the parameters for ABM models used in the cov_functions_AI.py
 
 import json
 import hashlib
-import logging
 import numpy as np
 import pandas as pd
 
 from ai4good.params.param_store import ParamStore
 from ai4good.utils.path_utils import get_am_aug_pop
+from ai4good.utils.logger_util import get_logger
+
+logger = get_logger(__name__)
 
 VALUE = "Value"  # Name of the column in parameter file containing parameter value
 
@@ -34,10 +36,21 @@ class Parameters(object):
 
         # Number of days of simulation
         self.number_of_steps = int(profile.loc['number_of_steps', VALUE])
+        # If a susceptible and an infectious individual interact during wandering, then the infection is transmitted
+        # with some probability. This param can be updated by using the `transmission_reduction` parameter
+        self.prob_spread_wander = float(profile.loc['prob_spread_wander', VALUE])
+        # Probability of infection spread when two agents interact in household
+        self.prob_spread_house = float(profile.loc['prob_spread_house', VALUE])
+        # Probability of infection spread when two agents interact while waiting in toilet queue
+        self.prob_spread_toilet = float(profile.loc['prob_spread_toilet', VALUE])
+        # Probability of infection spread when two agents interact while waiting in food line queue
+        self.prob_spread_foodline = float(profile.loc['prob_spread_foodline', VALUE])
 
         ###############################################################################################################
         # Parameters about the camp
 
+        # Number of agents for simulation
+        self.num_people = int(camp_params.loc[camp_params.Age == '0-9', 'Total_population'].item())
         # Total number of people in the iso-boxes
         self.number_of_people_in_isoboxes = int(profile.loc['number_of_people_in_isoboxes', VALUE])
         # Iso-box capacity
@@ -52,7 +65,8 @@ class Parameters(object):
         self.num_toilet_visit = int(profile.loc['num_toilet_visit', VALUE])
         # Average number of food line visits per day
         self.num_food_visit = int(profile.loc['num_food_visit', VALUE])
-        # TODO
+        # Probability that agent will attend food line on any given day. For Moria, person attends once every 4 days, so
+        # probability value would be 0.75
         self.pct_food_visit = float(profile.loc['pct_food_visit', VALUE])
         # Grid size for toilet placement
         tb = profile.loc['toilets_blocks', VALUE].split(',')
@@ -71,7 +85,7 @@ class Parameters(object):
             # TODO: add to parameters after confirming with Gaia and Vera
             self.infection_radius = float(profile.loc['infection_radius', VALUE])
         except KeyError:
-            self.infection_radius = 0.0001
+            self.infection_radius = 0.01  # for 1x1 km sq. camp, this is 1 meter.
 
         ###############################################################################################################
         # Parameters about the agents
@@ -103,6 +117,34 @@ class Parameters(object):
         # TODO: add to the new list of parameters
         # float(profile.loc['percentage_of_toilet_queue_cleared_at_each_step', VALUE])
 
+        ###############################################################################################################
+        # Camp params
+
+        self.prob_symp2sevr = [
+            camp_params.loc[  # 0-9
+                camp_params.Age == '0-9', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 10-19
+                camp_params.Age == '10-19', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 20-29
+                camp_params.Age == '20-29', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 30-39
+                camp_params.Age == '30-39', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 40-49
+                camp_params.Age == '40-49', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 50-59
+                camp_params.Age == '50-59', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 60-69
+                camp_params.Age == '60-69', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 70-79
+                camp_params.Age == '70+', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 80-89
+                camp_params.Age == '70+', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+            camp_params.loc[  # 90+
+                camp_params.Age == '70+', 'Rough prob symptomatic case becomes critical (just multiplying)'].item(),
+        ]
+        self.prob_symp2sevr = np.array([float(p) for p in self.prob_symp2sevr])
+        self.prob_symp2mild = np.array([(1.0 - p) for p in self.prob_symp2sevr])
+
         self.validate()
 
     def sha1_hash(self) -> str:
@@ -123,7 +165,7 @@ class Parameters(object):
         age_and_gender = age_and_gender.values
 
         if age_and_gender.shape[0] < num_ppl:
-            logging.warning("Number of agents ({}) are more than data provided in age_and_gender.csv ({})".
+            logger.warning("Number of agents ({}) are more than data provided in age_and_gender.csv ({})".
                             format(num_ppl, age_and_gender.shape[0]))
 
         age_and_gender = age_and_gender[np.random.randint(age_and_gender.shape[0], size=num_ppl)]
@@ -133,7 +175,14 @@ class Parameters(object):
         # Validate parameter values so that only valid simulations are run
 
         assert self.number_of_steps > 0, "Parameter must be positive integer"
+        assert 0.0 < self.prob_spread_wander < 1.0, "Probability value must be between (0,1)"
+        assert 0.0 < self.prob_spread_toilet < 1.0, "Probability value must be between (0,1)"
+        assert 0.0 < self.prob_spread_foodline < 1.0, "Probability value must be between (0,1)"
+        assert 0.0 < self.prob_spread_house < 1.0, "Probability value must be between (0,1)"
 
+
+        assert self.num_people == (self.number_of_people_in_isoboxes + self.number_of_people_in_tents), \
+            "Invalid distribution of agents in tents/iso-boxes"
         assert self.number_of_people_in_isoboxes > 0, "Parameter must be a positive integer"
         assert self.number_of_people_in_one_isobox > 0, "Parameter must be a positive integer"
         assert self.number_of_people_in_tents > 0, "Parameter must be a positive integer"
@@ -160,3 +209,8 @@ class Parameters(object):
         assert 0.0 <= self.probability_spotting_symptoms_per_day <= 1.0, "Probability value must be between [0,1]"
         assert self.clear_day > 0, "Parameter must be a positive integer"
         assert 0.0 <= self.prop_violating_lockdown <= 1.0, "Probability value must be between [0,1]"
+
+        for p in self.prob_symp2sevr:
+            assert 0 <= p <= 1, "Probability value must be between [0,1]"
+        for p in self.prob_symp2mild:
+            assert 0 <= p <= 1, "Probability value must be between [0,1]"

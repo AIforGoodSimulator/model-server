@@ -1,22 +1,17 @@
+import sys
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.animation import FuncAnimation
 
 from ai4good.runner.facade import Facade
 from ai4good.models.abm.np_impl.moria import *
 from ai4good.models.model_registry import create_params
-
+from ai4good.utils.logger_util import get_logger
 
 # Don't add info/debug logs from numba
-logging.basicConfig(level=logging.INFO)
-numba_logger = logging.getLogger('numba')
-numba_logger.setLevel(logging.WARNING)
+logger = get_logger(__name__)
 
 
-def get_params():
+def get_params(_profile='BaselineHTHI'):
     _model = 'agent-based-model'
-    # Possible values: "baseline", "small", ...
-    _profile = 'BaselineHTHI'
     camp = 'Moria'
     overrides = '{"numberOfIterations": 1, "nProcesses": 1}'
     facade = Facade.simple()
@@ -24,110 +19,136 @@ def get_params():
     return params
 
 
-class TestRun(object):
+def simulate(i, prf):
+    logger.info("{}. Starting profile {} at {}"
+                 .format(i + 1, prf, datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")))
+    param = get_params(prf)
+    camp = Moria(params=param, profile=prf + "_{}".format(i+1))
+    camp.simulate()
+    logger.info("{}. Completed profile {} at {}"
+                 .format(i + 1, prf, datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")))
 
-    def __init__(self):
-        params = get_params()
-        self.camp = Moria(params=params)
 
-        logging.info("Starting simulation of x{} agents for x{} days".format(self.camp.num_people,
-                                                                             self.camp.params.number_of_steps))
+class SampleRun:
 
-    def run(self):
-        self.camp.simulate()
+    def __init__(self, profiles: list):
+        for i, prf in enumerate(profiles):
+            simulate(i, prf)
+
+    @staticmethod
+    def plot_df(f_name):
+        df = pd.read_csv(f_name)
+
+        # Plot total count of infectious people in the camp on each day
+        # pad = 1
+        # fig, ax = plt.subplots(1, figsize=(10, 6))
+        #
+        # a0 = df.loc[:, 'INF_AGE0-9']
+        # a1 = df.loc[:, 'INF_AGE10-19']
+        # a2 = df.loc[:, 'INF_AGE20-29']
+        # a3 = df.loc[:, 'INF_AGE30-39']
+        # a4 = df.loc[:, 'INF_AGE40-49']
+        # a5 = df.loc[:, 'INF_AGE50-59']
+        # a6 = df.loc[:, 'INF_AGE60-69']
+        # a7 = df.loc[:, 'INF_AGE70+']
+        #
+        # ax.bar(range(0, pad*df.shape[0], pad), a0, 1, label='Age 0-9')
+        # ax.bar(range(0, pad*df.shape[0], pad), a1, 1, bottom=a0, label='Age 10-19')
+        # ax.bar(range(0, pad*df.shape[0], pad), a2, 1, bottom=a0+a1, label='Age 20-29')
+        # ax.bar(range(0, pad*df.shape[0], pad), a3, 1, bottom=a0+a1+a2, label='Age 30-39')
+        # ax.bar(range(0, pad*df.shape[0], pad), a4, 1, bottom=a0+a1+a2+a3, label='Age 40-49')
+        # ax.bar(range(0, pad*df.shape[0], pad), a5, 1, bottom=a0+a1+a2+a3+a4, label='Age 50-59')
+        # ax.bar(range(0, pad*df.shape[0], pad), a6, 1, bottom=a0+a1+a2+a3+a4+a5, label='Age 60-69')
+        # ax.bar(range(0, pad*df.shape[0], pad), a7, 1, bottom=a0+a1+a2+a3+a4+a5+a6, label='Age 70+')
+        # ax.title.set_text("Count of infectious people (including asymptomatic) in the camp")
+        # plt.legend()
+        # plt.show()
+
+        # Plot total count of agents per disease state on each day
+        fig, ax = plt.subplots(1, figsize=(10, 6))
+
+        t = df.loc[:, 'DAY']
+        ax.plot(t, df.loc[:, 'SUSCEPTIBLE'], label='Susceptible')
+        ax.plot(t, df.loc[:, 'EXPOSED'], label='Exposed')
+        ax.plot(t, df.loc[:, 'PRESYMPTOMATIC'], label='Presymptomatic')
+        ax.plot(t, df.loc[:, 'SYMPTOMATIC'], label='Symptomatic')
+        ax.plot(t, df.loc[:, 'MILD'], label='Mild')
+        ax.plot(t, df.loc[:, 'SEVERE'], label='Severe')
+        ax.plot(t, df.loc[:, 'ASYMPTOMATIC1'], label='Asymptomatic1')
+        ax.plot(t, df.loc[:, 'ASYMPTOMATIC2'], label='Asymptomatic2')
+        ax.plot(t, df.loc[:, 'RECOVERED'], label='Recovered')
+        ax.plot(t, df.loc[:, 'HOSPITALIZED'], label='Hospitalized')
+        ax.title.set_text("Total count in each disease state")
+
+        plt.legend()
+        plt.show()
+
+        # Plot total count of agents per disease state on each day
+        fig, ax = plt.subplots(1, figsize=(10, 6))
+
+        t = df.loc[:, 'DAY']
+        ax.plot(t, df.loc[:, 'SUSCEPTIBLE'], label='Susceptible')
+        ax.plot(t, df.loc[:, ['EXPOSED', 'PRESYMPTOMATIC', 'SYMPTOMATIC', 'MILD', 'SEVERE', 'ASYMPTOMATIC1',
+                              'ASYMPTOMATIC2']].sum(axis=1), label='Infected')
+        ax.plot(t, df.loc[:, 'RECOVERED'], label='Recovered')
+        ax.title.set_text("SIR")
+
+        plt.legend()
+        plt.show()
+
+        # Plot count of new infections for each activity on each day
+        fig, ax = plt.subplots(1, figsize=(10, 6))
+
+        h = df.loc[:, 'NEW_INF_HOUSEHOLD']
+        w = df.loc[:, 'NEW_INF_WANDERING']
+        t = df.loc[:, 'NEW_INF_TOILET']
+        f = df.loc[:, 'NEW_INF_FOOD_LINE']
+
+        pad = 1
+        ax.bar(range(0, pad * df.shape[0], pad), h, 1, label='In household')
+        ax.bar(range(0, pad * df.shape[0], pad), w, 1, bottom=h, label='Wandering')
+        ax.bar(range(0, pad * df.shape[0], pad), t, 1, bottom=h+w, label='In toilet queue')
+        ax.bar(range(0, pad * df.shape[0], pad), f, 1, bottom=h+w+t, label='In food line queue')
+        ax.title.set_text("Count of new infections (location wise)")
+        plt.legend()
+        plt.show()
 
     def plot(self):
 
-        self.fig, self.ax = plt.subplots(figsize=(10, 8))
-        self.ax.set_xlim([0, self.camp.camp_size])
-        self.ax.set_ylim([0, self.camp.camp_size])
-        # self.ax.axis('equal')
-        self.scat = self.ax.scatter(self.camp.agents[:, A_X], self.camp.agents[:, A_Y], c='blue', s=2)
-        self.anim = None
+        prf = self.profiles[0]
+        param = get_params(prf)
+        camp = Moria(params=param)
+        camp.day()
 
-        # highlight households
-        self.ax.scatter(self.camp.households[:, 2], self.camp.households[:, 3], c='black', s=5)
+        markers = ['*', 'v', 'o']
 
-        self.highlight_central_sq()
+        fig, ax1 = plt.subplots(1, figsize=(10, 6))
+        ax1.axis('equal')
 
-        self.anim = FuncAnimation(self.fig, self.animate, interval=500, frames=self.camp.params.number_of_steps - 1)
-        plt.draw()
-        plt.show()
+        capacities = camp.households[:, 1].tolist()
+        unq_capacities = list(np.unique(capacities))
+        for i in range(len(unq_capacities)):
+            c = unq_capacities[i]
+            hh_xy = camp.households[capacities == c, 2:]
+            ax1.scatter(hh_xy[:, 0], hh_xy[:, 1], marker=markers[i], s=4)
+        for a in range(camp.agents.shape[0]):
+            ax1.add_patch(plt.Circle(camp.agents[a, [A_X, A_Y]], radius=camp.agents[a, A_HOME_RANGE], color='yellow',
+                                     fill=False, linewidth=1))
 
-    def animate(self, t):
-        self.camp.day()
-
-        self.scat.set_offsets(self.camp.agents[:, [A_X, A_Y]])
-        self.scat.set_color(TestRun.get_colors(self.camp.agents[:, A_DISEASE]))
-
-    def highlight_central_sq(self):
-        center_sq_side = CAMP_SIZE * self.camp.params.area_covered_by_isoboxes ** 0.5
-
-        # minimum and maximum co-ordinates for central square
-        p_min = (CAMP_SIZE - center_sq_side) / 2.0
-        p_max = (CAMP_SIZE + center_sq_side) / 2.0
-
-        self.ax.plot([p_min, p_max, p_max, p_min, p_min], [p_min, p_min, p_max, p_max, p_min], c='gray')
-
-    @staticmethod
-    @nb.jit(nopython=True)
-    def get_colors(disease_state):
-        colors = np.empty((disease_state.shape[0], 3))
-
-        for i in range(colors.shape[0]):
-            if disease_state[i] in [INF_SUSCEPTIBLE, INF_RECOVERED]:
-                colors[i] = [0.0, 0.0, 1.0]
-            elif disease_state[i] in [INF_EXPOSED, INF_PRESYMPTOMATIC, INF_ASYMPTOMATIC1, INF_ASYMPTOMATIC2]:
-                colors[i] = [1.0, 1.0, 0.0]
-            elif disease_state[i] in [INF_SYMPTOMATIC, INF_MILD, INF_SEVERE]:
-                colors[i] = [1.0, 0.0, 0.0]
-
-        return colors
-
-    def plot_households(self):
-        fig = plt.figure(figsize=(8, 6))
-        ax1 = fig.add_subplot(121, projection='3d')
-        ax2 = fig.add_subplot(122)
-
-        household_pos = self.camp.households[:, 2:]
-        x = household_pos[:, 0]
-        y = household_pos[:, 1]
-
-        # calculate distance between each household and agent
-        dx2 = (x.reshape((-1, 1)) - self.camp.agents[:, A_X].reshape((1, -1))) ** 2
-        dy2 = (y.reshape((-1, 1)) - self.camp.agents[:, A_Y].reshape((1, -1))) ** 2
-        d = ((dx2 + dy2) ** 0.5) < SMALL_ERROR  # get agents who belong to the household
-
-        top = d.sum(axis=1)  # number of agents per household
-
-        bottom = np.zeros_like(top)
-        width = depth = 1
-
-        ax1.bar3d(x, y, bottom, width, depth, top, shade=True)
-        ax1.set_title("Number of agents per household")
-
-        ax2.scatter(self.camp.agents[:, A_X], self.camp.agents[:, A_Y], c=self.camp.agents[:, A_ETHNICITY])
-        ax2.set_title("Agents ethnicities")
+        ax1.scatter(camp.agents[:, A_X], camp.agents[:, A_Y], marker='.', s=1)
 
         plt.show()
 
 
 if __name__ == "__main__":
-    test = TestRun()
 
-    # Uncomment following code blocks to execute diff things
+    if "--plot" in sys.argv:
+        SampleRun.plot_df(sys.argv[2])
 
-    ################################
-    # for plotting households in 3d
-    # test.plot_households()
+    else:
 
-    ################################
-    # for running on console
-    test.run()
+        profile = "BaselineLTHI"
+        num_simulations = 1  # number of simulations to run
 
-    ################################
-    # for real time plotting. This can be very slow for large data
-    # test.plot()
-    #
-    # for t in range(test.camp.params.number_of_steps):
-    #     test.animate(t)
+        # run simulations
+        sampleRun = SampleRun([profile] * num_simulations)

@@ -1,10 +1,11 @@
 import random
-import logging
 import numpy as np
 import numba as nb
 
-from ai4good.models.abm.initialise_parameters import Parameters
+from ai4good.models.abm.np_impl.parameters import Parameters
+from ai4good.utils.logger_util import get_logger
 
+logger = get_logger(__name__)
 
 # very small float number to account for floating precision loss
 SMALL_ERROR = 0.0000001
@@ -169,8 +170,7 @@ class OptimizedOps(object):
         n = disease_state.shape[0]
         out = np.zeros_like(disease_state, dtype=np.int32)
         for i in range(n):
-            out[i] = (disease_state[i] == INF_SYMPTOMATIC or disease_state[i] == INF_MILD or
-                      disease_state[i] == INF_SEVERE)
+            out[i] = disease_state[i] in (INF_SYMPTOMATIC, INF_MILD, INF_SEVERE)
         return out
 
     @staticmethod
@@ -180,8 +180,7 @@ class OptimizedOps(object):
         n = disease_states.shape[0]
         out = np.zeros_like(disease_states, dtype=np.int32)
         for i in range(n):
-            out[i] = not (disease_states[i] == INF_SUSCEPTIBLE or disease_states[i] == INF_EXPOSED or
-                          disease_states[i] == INF_RECOVERED)
+            out[i] = disease_states[i] not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED)
         return out
 
 
@@ -194,128 +193,185 @@ class Camp:
     def __init__(self, params: Parameters, camp_size: float):
         self.camp_size = camp_size
         self.params = params
-        self.num_people = self.params.number_of_people_in_isoboxes + self.params.number_of_people_in_tents
-        self.infection_radius = self.params.infection_radius * self.camp_size
-        self.prob_spread = 0.1
+        self.num_people = params.num_people
 
         self.agents: np.array = None
         self.toilet_queue = {}
         self.food_line_queue = {}
 
-    def set_agents(self, agents: np.array):
+    def set_agents(self, agents: np.array) -> None:
         self.agents = agents
 
-    def simulate_households(self, ids):
-        # Function to send people to household
-        # `ids` is a boolean array with `True` value for agents which will be in household
-        agents = self.agents[ids, :]
-        agents[:, A_ACTIVITY] = ACTIVITY_HOUSEHOLD
+    @staticmethod
+    @nb.njit(parallel=True)
+    def simulate_households(agents: np.array, prob_spread: float) -> (np.array, int):
+        """
+        Function to send people to household and simulate infection dynamics in those households.
+        This function is optimized using numba.
 
-        # send people to households
-        agents[:, A_X] = agents[:, A_HOUSEHOLD_X]
-        agents[:, A_Y] = agents[:, A_HOUSEHOLD_Y]
+        Parameters
+        ----------
+        agents: A Numpy array containing data of agents who will go inside their households at current simulation step
+        prob_spread: The probability of infection transmission if a susceptible and infectious agent interact in house
 
-        # Simulate infection spread inside households
-        # find agents sharing households -> distance between them will be ~0
-        dij = OptimizedOps.distance_matrix(agents[:, [A_X, A_Y]]) <= SMALL_ERROR
-        # get agents who are currently susceptible (across rows)
-        sus = (agents[:, A_DISEASE] == INF_SUSCEPTIBLE).reshape((-1, 1))
-        # get agents who are currently infected (across columns)
-        inf = OptimizedOps.is_infected(agents[:, A_DISEASE]).reshape((1, -1))
+        Returns
+        -------
+        out: Updated agents array and the number of new infections
 
-        # get interactions where column agent was infected and row agent was susceptible
-        inf_interactions = (dij * sus) * inf
+        """
 
-        # find number of agents who are sharing household with each agent
-        h = np.sum(inf_interactions, axis=1)
-        # probability of infection spread inside household for each agent
-        p = 1.0 - (1.0 - self.prob_spread) ** h
-        # update agents who got exposed
-        newly_exposed_ids = np.random.random((agents.shape[0],)) <= p
-        agents[newly_exposed_ids, A_DISEASE] = INF_EXPOSED
-        agents[newly_exposed_ids, A_DAY_COUNTER] = 0
+        n = agents.shape[0]  # number of agents inside their households
+        num_new_infections = 0  # number of new infections caused by household interactions
 
-        logging.debug("{} new agents were exposed through household interactions".
-                      format(np.count_nonzero(newly_exposed_ids)))
+        # Loop through each pair (i,j) of agents who are inside their households.
+        # If agent i and agent j shares household AND agent i is susceptible AND agent j is infectious
+        # Then, infection can spread from agent j to agent i with some probability
+        for i in nb.prange(n):
 
-        self.agents[ids, :] = agents
+            # Update current activity route
+            agents[i, A_ACTIVITY] = ACTIVITY_HOUSEHOLD
+            # Update current location of agent to household location
+            agents[i, A_X] = agents[i, A_HOUSEHOLD_X]
+            agents[i, A_Y] = agents[i, A_HOUSEHOLD_Y]
 
-    def simulate_wander(self, ids: np.array) -> None:
+            # Agent i will be infected iff he/she is currently susceptible
+            if agents[i, A_DISEASE] != INF_SUSCEPTIBLE:
+                # Skip if agent i is not susceptible
+                continue
+
+            num_infectious_hh = 0  # number of infectious households of agent i
+
+            for j in nb.prange(n):
+
+                # Agent j will infect agent i if agent j is infectious
+                if agents[j, A_DISEASE] in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED):
+                    # Skip if agent j is not infectious
+                    continue
+
+                # Distance between households of i and j
+                dij = (agents[i, A_HOUSEHOLD_X] - agents[j, A_HOUSEHOLD_X]) ** 2 + \
+                      (agents[i, A_HOUSEHOLD_Y] - agents[j, A_HOUSEHOLD_Y]) ** 2
+                dij = dij ** 0.5
+
+                if dij > SMALL_ERROR:
+                    # If agents i and j don't share household, then skip
+                    continue
+
+                num_infectious_hh += 1  # agent j shares household with agent i and is also infectious
+
+            # Probability of infection spread inside household for agent i
+            # From tucker model: 𝑝𝑖𝑑ℎ = 1 − (1 − 𝑝ℎ)^ℎ𝑐𝑖𝑑.
+            p = 1.0 - (1.0 - prob_spread) ** num_infectious_hh
+
+            if random.random() <= p:  # infect agent i based on calculated probability
+                agents[i, A_DISEASE] = INF_EXPOSED
+                agents[i, A_DAY_COUNTER] = 0
+                num_new_infections += 1
+
+        return agents, num_new_infections
+
+    @staticmethod
+    @nb.njit(parallel=True)
+    def simulate_wander(agents: np.array, camp_size: float, relative_strength_of_interaction: float,
+                        infection_radius: float, prob_spread: float) -> (np.array, int):
         """
         Simulate wandering of the agents in the camp. During wandering, agents will also infect others or get infected
         by others.
+
         Parameters
         ----------
-        ids: A boolean array containing True/False if agent i will wander or not
+        agents: A numpy array containing information of agents who are wandering at current simulation time step
+        camp_size: Size of the square sized camp
+        relative_strength_of_interaction: Relative encounter rate between agents of same ethnicity (gij in tucker model)
+        infection_radius: Distance around each agent where infection spread can happen
+        prob_spread: Probability that infection will spread from infectious to susceptible person when they interact
+            during wandering
+
+        Returns
+        -------
+        out: Updated agents array
 
         """
+        n = agents.shape[0]  # number of agents in the camp who are wandering
+        num_new_infections = 0  # number of new infections caused by household interactions
 
-        # Get the agents who will wander around in the camp
-        agents = self.agents[ids, :]
-        # Change the activity route of the agents
-        agents[:, A_ACTIVITY] = ACTIVITY_WANDERING
+        # Wander people around their household based on home range
+        for i in nb.prange(n):  # using nb.prange helps it run in parallel
+            # Change the activity route of the agent
+            agents[i, A_ACTIVITY] = ACTIVITY_WANDERING
 
-        # Find r and θ for finding random point in circle centered at agent's household.
-        # This r and θ values are then used to calculate the new position of the agents around their households.
-        r = A_HOME_RANGE * np.random.random((agents.shape[0],))
-        theta = 2.0 * np.pi * np.random.random((agents.shape[0],))
+            # Find r and θ for finding random point in circle centered at agent's household.
+            # This r and θ values are then used to calculate the new position of the agents around their households.
+            r = agents[i, A_HOME_RANGE] * random.random()
+            theta = 2.0 * np.pi * random.random()
 
-        # Calculate new co-ordinates from r and θ.
-        agents[:, A_X] = agents[:, A_HOUSEHOLD_X] + r * np.cos(theta)
-        agents[:, A_Y] = agents[:, A_HOUSEHOLD_Y] + r * np.sin(theta)
+            # Calculate new co-ordinates from r and θ.
+            agents[i, A_X] = agents[i, A_HOUSEHOLD_X] + r * np.cos(theta)
+            agents[i, A_Y] = agents[i, A_HOUSEHOLD_Y] + r * np.sin(theta)
 
-        # Clip co-ordinate values so that agents don't go outside the camp during simulation
-        agents[:, A_X] = np.clip(agents[:, A_X], 0.0, self.camp_size)
-        agents[:, A_Y] = np.clip(agents[:, A_Y], 0.0, self.camp_size)
+            # Clip co-ordinate values so that agents don't go outside the camp during simulation
+            agents[i, A_X] = 0.0 if agents[i, A_X] < 0.0 else (camp_size if agents[i, A_X] > camp_size else
+                                                               agents[i, A_X])
+            agents[i, A_Y] = 0.0 if agents[i, A_Y] < 0.0 else (camp_size if agents[i, A_Y] > camp_size else
+                                                               agents[i, A_Y])
 
-        # Simulate infection spread while wandering
-        # First, check which agents will interact with each other
-        pos = agents[:, [A_X, A_Y]]
-        # distance between each agent
-        dij = OptimizedOps.distance_matrix(pos)
+        # Simulate infection dynamics for the wanderers.
+        # Susceptible agent i contract infection from an infectious agent j.
+        for i in nb.prange(n):
+            # Agent i will be infected iff he/she is susceptible
+            if agents[i, A_DISEASE] != INF_SUSCEPTIBLE:
+                # Skip if agent i is not susceptible
+                continue
 
-        # ethnicities of the agents
-        eth = agents[:, A_ETHNICITY]
-        # find which agents share ethnicities
-        # `shared_eth[i, j]` = 1 when agents i and j share same ethnicity, else 0
-        shared_eth = eth.reshape((-1, 1)) == eth.reshape((1, -1))
-        # Account for relative encounter rate between agents of same ethnicity
-        # i.e. (`gij` or `relative_strength_of_interaction`) with value [0, 1]
-        # `shared_eth_rel[i, j]` = 1 when agents i and j share same ethnicity, else `gij`
-        shared_eth_rel = self.params.relative_strength_of_interaction + \
-                         (1.0 - self.params.relative_strength_of_interaction) * shared_eth
+            num_inf_interactions = 0  # Number of infectious interactions agent i has with other wanderers
 
-        # Get agents who interact with each other (close proximity during wandering).
-        # This also accounts in the ethnicity of the agents i.e. for agents with different ethnicities the distance dij
-        # will be scaled up by factor of `1/gij`
-        interactions = (dij/shared_eth_rel) <= self.infection_radius
-        # get agents who are currently susceptible (across rows)
-        sus = (agents[:, A_DISEASE] == INF_SUSCEPTIBLE).reshape((-1, 1))
-        # get agents who are currently infected (across columns)
-        inf = OptimizedOps.is_infected(agents[:, A_DISEASE]).reshape((1, -1))
+            for j in nb.prange(n):
+                # Agent j will infect agent i if agent j is infectious
+                if agents[j, A_DISEASE] in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED):
+                    # Skip if agent j is not infectious
+                    continue
 
-        # get interactions where column agent was infected and row agent was susceptible
-        inf_interactions = (interactions * sus) * inf
+                # Account for relative encounter rate between agents of same ethnicity
+                # gij = 1 if individuals i and j have the same background, and gij = 0.2 otherwise.
+                gij = 1.0 if agents[i, A_ETHNICITY] == agents[j, A_ETHNICITY] else relative_strength_of_interaction
 
-        # find number of agents who are sharing household with each agent
-        h = np.sum(inf_interactions, axis=1)
-        # probability of infection spread inside household for each agent
-        p = 1.0 - (1.0 - self.prob_spread) ** h
-        # update agents who got exposed
-        newly_exposed_ids = np.random.random((agents.shape[0],)) <= p
+                # Distance between agents i and j
+                dij = (agents[i, A_X] - agents[j, A_X]) ** 2 + (agents[i, A_Y] - agents[j, A_Y]) ** 2
+                dij = dij ** 0.5
 
-        # set disease state of newly exposed agents as `INF_EXPOSED`
-        # newly_exposed_ids = np.argwhere(inf_interactions.sum(axis=1) >= SMALL_ERROR)[:, 0]
-        agents[newly_exposed_ids, A_DISEASE] = INF_EXPOSED
-        agents[newly_exposed_ids, A_DAY_COUNTER] = 0
+                # Check if agents i and j will interact. This is primarily based on distance.
+                # This also accounts in the ethnicity of the agents i.e. for agents with different ethnicities the
+                # distance dij will be scaled up by factor of `1/gij`
+                num_inf_interactions += ((dij / gij) <= infection_radius)
 
-        logging.debug("{} new agents were exposed through wandering".format(newly_exposed_ids.shape[0]))
+            # probability of infection spread inside household for agent i
+            p = 1.0 - (1.0 - prob_spread) ** num_inf_interactions
 
-        self.agents[ids, :] = agents
+            if random.random() <= p:  # check if agent i contracts infection based on calculated probability
+                # set disease state of newly exposed agent i as `INF_EXPOSED`
+                agents[i, A_DISEASE] = INF_EXPOSED
+                agents[i, A_DAY_COUNTER] = 0
+                num_new_infections += 1
+
+        # return updated agents array
+        return agents, num_new_infections
 
     def simulate_queues(self, ids, queue_name):
-        # Function to send agents to the queues (toilet and food line)
-        # `ids` is a list of agent indices
+        """
+        Simulate agent visits to toilet and food line queues. The queue is assumed to be a single line (per toilet and
+        food line), hence one agent will either interact with the agent on his front and/or the agent on his back.
+        Depending on whether agents around one agent are infectious or not, the middle agent will contract infection.
+
+        Parameters
+        ----------
+        ids: Boolean array containing `True` at indices where agent will go to queue else `False`
+        queue_name: Name of the queue. Possible values ["toilet", "food_line"]
+
+        Returns
+        -------
+        out: Number of new infections caused by interactions in queues
+
+        """
 
         agents = self.agents[ids, :].reshape((-1, A_FEATURES))
 
@@ -336,41 +392,50 @@ class Camp:
 
         # Simulate infection spread
 
-        # find number of infected people interaction
+        # Array to store the number of infected people interaction for each person
         interactions = np.zeros((self.agents.shape[0],), dtype=np.int32)
+        # Probability values of infection spread
+        prob = None
 
         if queue_name == "toilet":
-            for t in self.toilet_queue:
-                t_ids = self.toilet_queue[t]
+            for t in self.toilet_queue:  # for each toilet queue in the camp
+                t_ids = self.toilet_queue[t]  # get the list of agents in that queue
                 for i in range(len(t_ids)):
+                    # For each agent `t_ids[i]` in the queue, check if agent in front `i-1` and back `i+1` are
+                    # infectious. If they are, then add to the `interactions` array
                     if i-1 >= 0:
                         interactions[t_ids[i]] += (self.agents[t_ids[i-1], A_DISEASE]
-                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED))
+                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED))
                     if i+1 <= len(t_ids)-1:
                         interactions[t_ids[i]] += (self.agents[t_ids[i+1], A_DISEASE]
-                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED))
+                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED))
+            # find probability of infection spread per agent via queue interaction
+            prob = 1.0 - (1.0 - self.params.prob_spread_toilet) ** interactions
+
         elif queue_name == "food_line":
-            for f in self.food_line_queue:
-                f_ids = self.food_line_queue[f]
+            for f in self.food_line_queue:  # for each food line queue in the camp
+                f_ids = self.food_line_queue[f]  # get the list of agents in that queue
                 for i in range(len(f_ids)):
+                    # For each agent `f_ids[i]` in the queue, check if agent in front `i-1` and back `i+1` are
+                    # infectious. If they are, then add to the `interactions` array
                     if i-1 >= 0:
                         interactions[f_ids[i]] += (self.agents[f_ids[i-1], A_DISEASE]
-                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED))
+                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED))
                     if i+1 <= len(f_ids)-1:
                         interactions[f_ids[i]] += (self.agents[f_ids[i+1], A_DISEASE]
-                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED))
+                                                   not in (INF_SUSCEPTIBLE, INF_EXPOSED, INF_RECOVERED, INF_DECEASED))
+            # find probability of infection spread per agent via queue interaction
+            prob = 1.0 - (1.0 - self.params.prob_spread_foodline) ** interactions
 
-        # find probability of infection spread per agent via queue interaction
-        prob = 1.0 - (1.0 - self.prob_spread) ** interactions
         newly_exposed_ids = (self.agents[:, A_DISEASE] == INF_SUSCEPTIBLE) * \
                             (np.random.random((self.agents.shape[0],)) <= prob)
         self.agents[newly_exposed_ids, A_DISEASE] = INF_EXPOSED
         self.agents[newly_exposed_ids, A_DAY_COUNTER] = 0
 
-        logging.debug("{} new agents were exposed through {}".format(np.count_nonzero(newly_exposed_ids), queue_name))
+        return np.count_nonzero(newly_exposed_ids)
 
-    def update_queues(self, pct_dequeue: float) -> None:
-        # remove agents from the front of the queues
+    def update_queues(self, pct_dequeue: float, dequeue_activity: int = ACTIVITY_WANDERING) -> None:
+        # remove agents from the front of the queues and send them to location defined by `dequeue_activity`
         for t in self.toilet_queue:
             # at each step during the day, we clear 80% of all agents in the queue
             dequeue_count = int(np.ceil(pct_dequeue * len(self.toilet_queue[t])))
@@ -380,7 +445,7 @@ class Camp:
                 # remove them from the queue
                 self.toilet_queue[t] = self.toilet_queue[t][dequeue_count:]
                 # change activity status to wandering for people who left toilet
-                self.agents[front, A_ACTIVITY] = ACTIVITY_WANDERING
+                self.agents[front, A_ACTIVITY] = dequeue_activity
             except IndexError:
                 pass
         for f in self.food_line_queue:
@@ -392,19 +457,21 @@ class Camp:
                 # remove them from the queue
                 self.food_line_queue[f] = self.food_line_queue[f][dequeue_count:]
                 # change activity status to wandering for people who left food line
-                self.agents[front, A_ACTIVITY] = ACTIVITY_WANDERING
+                self.agents[front, A_ACTIVITY] = dequeue_activity
             except IndexError:
                 pass
 
     @staticmethod
     @nb.njit
-    def disease_progression(agents: np.array) -> np.array:
+    def disease_progression(agents: np.array, p_symp2mild: np.array, p_symp2sevr: np.array) -> np.array:
         """
         Update the disease state of the agent defined by `agents` numpy array. This is inspired partly by tucker model.
         This method is called at the end of each day.
         Parameters
         ----------
         agents: The numpy array containing the agents information
+        p_symp2mild: Probability value (age-wise) if agent of specific age bucket will transition symptomatic->mild
+        p_symp2sevr: Probability value (age-wise) if agent of specific age bucket will transition symptomatic->severe
 
         Returns
         -------
@@ -418,30 +485,19 @@ class Camp:
         # age- and condition-dependent probabilities following Verity and colleagues (2020) and Tuite and colleagues
         # (preprint).
 
-        # Verity (low-risk) : probability values for each age slot [0-10, 10-20, ...90+]
-        # Symptomatic agent (with low risk) in age slot `a` will have `P_symp2mild[a]` probability of turning mild
-        # TODO: check if this is correct or not, since according to Verity, this is severe->hospitalized probability
-        P_symp2mild = [0, .000408, .0104, .0343, .0425, .0816, .118, .166, .184]
-
-        # Tuite (high-risk) : probability values for each age slot [0-10, 10-20, ...90+]
-        # Symptomatic agent (with high risk) in age slot `a` will have `P_symp2sevr[a]` probability of turning severe
-        P_symp2sevr = [.0101, .0209, .0410, .0642, .0721, .2173, .2483, .6921, .6987]
-
         # Probability that a severely infected agent in a given age slot will be hospitalized
         # These probability values are taken from "Estimates of the severity of coronavirus disease 2019: a model-based
         # analysis" paper by Robert Verity et al. (DOI https://doi.org/10.1016/S1473-3099(20)30243-7)
-        P_sevr2hosp = [0.0, 0.000408, 0.0104, 0.0343, 0.0425, 0.0816, 0.118, 0.166, 0.184]
+        p_sevr2hosp = [0.0, 0.000408, 0.0104, 0.0343, 0.0425, 0.0816, 0.118, 0.166, 0.184]
 
         # Probability that a hospitalized agent in a given age slot will die
-        P_hosp2dead = [0.0000161, 0.0000695, 0.000309, 0.000844, 0.00161, 0.00595, 0.0193, 0.0428, 0.0780]
+        p_hosp2dead = [0.0000161, 0.0000695, 0.000309, 0.000844, 0.00161, 0.00595, 0.0193, 0.0428, 0.0780]
 
         # Iterate all agents one by one and update the disease state
         for i in range(n):
 
             # read current attributes of the agent
 
-            # TODO: previous abm.py file had `create_chronic_column` function. Should we use it instead during agent
-            # TODO: initialization?
             is_high_risk = int(agents[i, A_AGE] > 80)  # define which agents are considered as high risk
 
             disease_state = int(agents[i, A_DISEASE])  # current disease state
@@ -474,13 +530,13 @@ class Camp:
             # condition-dependent probabilities following Verity and colleagues (2020) and Tuite and colleagues
             # (preprint). All individuals in the 1st asymptomatic state pass to the “2nd asymptomatic” state
             elif disease_state == INF_SYMPTOMATIC and day_count >= SYMP_PERIOD and \
-                    is_high_risk == 0 and random.random() <= P_symp2mild[age_slot]:
+                    is_high_risk == 0 and random.random() <= p_symp2mild[age_slot]:
                 # A low-risk agent under symptomatic condition for more than `SYMP_PERIOD` days will go into mild state
                 disease_state = INF_MILD
                 day_count = 0
 
             elif disease_state == INF_SYMPTOMATIC and day_count >= SYMP_PERIOD and \
-                    is_high_risk == 1 and random.random() <= P_symp2sevr[age_slot]:
+                    is_high_risk == 1 and random.random() <= p_symp2sevr[age_slot]:
                 # A high-risk agent under symptomatic condition for more than SYMP_PERIOD days will go into severe state
                 disease_state = INF_SEVERE
                 day_count = 0
@@ -499,7 +555,7 @@ class Camp:
 
             elif disease_state == INF_SEVERE:
                 p = random.random()
-                if day_count > 10 or (activity == ACTIVITY_HOSPITALIZED and p <= P_hosp2dead[age_slot]):
+                if day_count > 10 or (activity == ACTIVITY_HOSPITALIZED and p <= p_hosp2dead[age_slot]):
                     # Agents in severe state for more than 10 days die AND
                     # Agents in severe state and in hospital die with some probability
                     disease_state = INF_DECEASED
@@ -511,7 +567,7 @@ class Camp:
                     # Severe case recovered
                     disease_state = INF_RECOVERED
                     day_count = 0
-                elif activity != ACTIVITY_HOSPITALIZED and p <= P_sevr2hosp[age_slot]:
+                elif activity != ACTIVITY_HOSPITALIZED and p <= p_sevr2hosp[age_slot]:
                     # Severe case hospitalized
                     activity = ACTIVITY_HOSPITALIZED
 

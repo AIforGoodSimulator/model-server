@@ -1,5 +1,4 @@
 import argparse
-import logging
 import plotly.graph_objects as go
 from typeguard import typechecked
 from ai4good.models.model import Model, ModelResult
@@ -7,6 +6,7 @@ from ai4good.models.model_registry import get_models, create_params
 from ai4good.models.cm.cm_model import CompartmentalModel
 from ai4good.runner.facade import Facade
 from ai4good.models.cm.plotter import figure_generator, age_structure_plot, stacked_bar_plot, uncertainty_plot
+from ai4good.utils.logger_util import get_logger
 import ai4good.utils.path_utils as pu
 from functools import reduce
 import logging
@@ -26,24 +26,25 @@ from ai4good.webapp.cm_model_report_page import get_model_result
 from ai4good.webapp.cm_model_report_utils import *
 from ai4good.webapp.metadata_report import GenerateMetadataDict, GenerateMetadataHTML
 facade = Facade.simple()
+logger = get_logger(__name__)
 
 
 @typechecked
 def run_model(_model: str, _profile: str, camp: str, load_from_cache: bool,
               save_to_cache: bool, is_save_plots: bool, is_show_plots: bool,
               is_save_report: bool, overrides) -> ModelResult:
-    logging.info('Running %s model with %s profile', _model, _profile)
+    logger.info('Running %s model with %s profile', _model, _profile)
     _mdl: Model = get_models()[_model](facade.ps)
     params = create_params(facade.ps, _model, _profile, camp, overrides)
     res_id = _mdl.result_id(params)
     if load_from_cache and facade.rs.exists(_mdl.id(), res_id):
-        logging.info("Loading from model result cache")
+        logger.info("Loading from model result cache")
         mr: ModelResult = facade.rs.load(_mdl.id(), res_id)
     else:
-        logging.info("Running model for camp %s", camp)
+        logger.info("Running model for camp %s", camp)
         mr: ModelResult = _mdl.run(params)
         if save_to_cache:
-            logging.info("Saving model result to cache")
+            logger.info("Saving model result to cache")
             facade.rs.store(_mdl.id(), res_id, mr)
     if is_save_plots:
         # if _mdl.id() == 'agent-based-model':
@@ -154,13 +155,12 @@ def plot_iqr(df: pd.DataFrame, y_col: str,
 
 
 def save_report(mr, res_id):
-    logging.info("Saving report")
+    logger.info("Saving report")
     df = mr.get('report')
     df.to_csv(pu.reports_path(f"all_R0_{res_id}.csv"))
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
     parser = argparse.ArgumentParser(description='AI4Good model runner')
     parser.add_argument('--model', type=str, choices=get_models().keys(), help='Model to run',
                         default=CompartmentalModel.ID)
@@ -207,4 +207,4 @@ if __name__ == '__main__':
             run_model(model, profile, args.camp, args.load_from_cache, args.save_to_cache,
                       args.save_plots, args.show_plots, args.save_report, args.profile_overrides)
 
-    logging.info('Model Runner finished normally')
+    logger.info('Model Runner finished normally')

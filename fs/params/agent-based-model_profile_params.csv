@@ -21,30 +21,10 @@ BaselineHTHI,clearday,Number of days needed to be cleared of isolation,Camp Para
 BaselineHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 BaselineHTHI,foodline_blocks,Number of foodlines in the camp,Baseline High Transmission High Interaction,"1,1"
 BaselineHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Baseline High Transmission High Interaction,0.1
-BaselineHTHI,prob_spread,Probability of transmission during interaction,Baseline High Transmission High Interaction,0.1
-BaselineHTLI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
-BaselineHTLI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
-BaselineHTLI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
-BaselineHTLI,number_of_people_in_one_tent,Number of people living in each tent,Camp Parameter,4
-BaselineHTLI,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,Camp Parameter,0.179
-BaselineHTLI,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,Camp Parameter,0.5
-BaselineHTLI,relative_strength_of_interaction,Interaction rate between individuals,Camp Parameter,0.2
-BaselineHTLI,smaller_movement_radius,Individual's  home range centred on its household,Baseline High Transmission Low Interaction,0.0101
-BaselineHTLI,larger_movement_radius,Individual's  home range centred on its household,Baseline High Transmission Low Interaction,0.0113
-BaselineHTLI,overlapping_rages_radius,Range of household overlap where 2 individuals interact,Camp Parameter,0.02
-BaselineHTLI,number_of_steps,Time dimension of the simulation in days,Simulation Parameter,200
-BaselineHTLI,num_toilet_visit,Number of daily visit to the toilet,Camp Parameter,3
-BaselineHTLI,num_toilet_contact,Number of contacts in the toilets area,Camp Parameter,2
-BaselineHTLI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
-BaselineHTLI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
-BaselineHTLI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
-BaselineHTLI,transmission_reduction,Reduction in transmission due to intervention,Baseline High Transmission Low Interaction,1
-BaselineHTLI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Baseline High Transmission Low Interaction,0.05
-BaselineHTLI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
-BaselineHTLI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
-BaselineHTLI,foodline_blocks,Number of foodlines in the camp,Baseline High Transmission Low Interaction,"1,1"
-BaselineHTLI,prop_violating_lockdown,Proportion of population that violates the lockdown,Baseline High Transmission Low Interaction,0.1
-BaselineHTLI,prob_spread,Probability of transmission during interaction,Baseline High Transmission Low Interaction,0.1
+BaselineHTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Baseline High Transmission High Interaction,0.017
+BaselineHTHI,prob_spread_house,Probability of transmission during interaction in house,Baseline High Transmission High Interaction,0.33
+BaselineHTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Baseline High Transmission High Interaction,0.099
+BaselineHTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Baseline High Transmission High Interaction,0.407
 BaselineLTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
 BaselineLTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
 BaselineLTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
@@ -67,30 +47,10 @@ BaselineLTHI,clearday,Number of days needed to be cleared of isolation,Camp Para
 BaselineLTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 BaselineLTHI,foodline_blocks,Number of foodlines in the camp,Baseline Low Transmission High Interaction,"1,1"
 BaselineLTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Baseline Low Transmission High Interaction,0.1
-BaselineLTHI,prob_spread,Probability of transmission during interaction,Baseline Low Transmission High Interaction,0.1
-BaselineLTLI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
-BaselineLTLI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
-BaselineLTLI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
-BaselineLTLI,number_of_people_in_one_tent,Number of people living in each tent,Camp Parameter,4
-BaselineLTLI,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,Camp Parameter,0.179
-BaselineLTLI,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,Camp Parameter,0.5
-BaselineLTLI,relative_strength_of_interaction,Interaction rate between individuals,Camp Parameter,0.2
-BaselineLTLI,smaller_movement_radius,Individual's  home range centred on its household,Baseline Low Transmission Low Interaction,0.0101
-BaselineLTLI,larger_movement_radius,Individual's  home range centred on its household,Baseline Low Transmission Low Interaction,0.0113
-BaselineLTLI,overlapping_rages_radius,Range of household overlap where 2 individuals interact,Camp Parameter,0.02
-BaselineLTLI,number_of_steps,Time dimension of the simulation in days,Simulation Parameter,200
-BaselineLTLI,num_toilet_visit,Number of daily visit to the toilet,Camp Parameter,3
-BaselineLTLI,num_toilet_contact,Number of contacts in the toilets area,Camp Parameter,2
-BaselineLTLI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
-BaselineLTLI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
-BaselineLTLI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
-BaselineLTLI,transmission_reduction,Reduction in transmission due to intervention,Baseline Low Transmission Low Interaction,1
-BaselineLTLI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Baseline Low Transmission Low Interaction,0.05
-BaselineLTLI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
-BaselineLTLI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
-BaselineLTLI,foodline_blocks,Number of foodlines in the camp,Baseline Low Transmission Low Interaction,"1,1"
-BaselineLTLI,prop_violating_lockdown,Proportion of population that violates the lockdown,Baseline Low Transmission Low Interaction,0.1
-BaselineLTLI,prob_spread,Probability of transmission during interaction,Baseline Low Transmission Low Interaction,0.1
+BaselineLTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Baseline Low Transmission High Interaction,0.006
+BaselineLTHI,prob_spread_house,Probability of transmission during interaction in house,Baseline Low Transmission High Interaction,0.0397
+BaselineLTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Baseline Low Transmission High Interaction,0.0067
+BaselineLTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Baseline Low Transmission High Interaction,0.0397
 SectoringHTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
 SectoringHTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
 SectoringHTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
@@ -113,30 +73,10 @@ SectoringHTHI,clearday,Number of days needed to be cleared of isolation,Camp Par
 SectoringHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 SectoringHTHI,foodline_blocks,Number of foodlines in the camp,Sectoring High Transmission High Interaction,"16,16"
 SectoringHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Sectoring High Transmission High Interaction,0.1
-SectoringHTHI,prob_spread,Probability of transmission during interaction,Sectoring High Transmission High Interaction,0.1
-FaceMasksHTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
-FaceMasksHTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
-FaceMasksHTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
-FaceMasksHTHI,number_of_people_in_one_tent,Number of people living in each tent,Camp Parameter,4
-FaceMasksHTHI,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,Camp Parameter,0.179
-FaceMasksHTHI,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,Camp Parameter,0.5
-FaceMasksHTHI,relative_strength_of_interaction,Interaction rate between individuals,Camp Parameter,0.2
-FaceMasksHTHI,smaller_movement_radius,Individual's  home range centred on its household,FaceMasks Transmission High Interaction,0.0202
-FaceMasksHTHI,larger_movement_radius,Individual's  home range centred on its household,FaceMasks Transmission High Interaction,0.0226
-FaceMasksHTHI,overlapping_rages_radius,Range of household overlap where 2 individuals interact,Camp Parameter,0.02
-FaceMasksHTHI,number_of_steps,Time dimension of the simulation in days,Simulation Parameter,200
-FaceMasksHTHI,num_toilet_visit,Number of daily visit to the toilet,Camp Parameter,3
-FaceMasksHTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Parameter,2
-FaceMasksHTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
-FaceMasksHTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
-FaceMasksHTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
-FaceMasksHTHI,transmission_reduction,Reduction in transmission due to intervention,FaceMasks Transmission High Interaction,0.32
-FaceMasksHTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,FaceMasks Transmission High Interaction,0.05
-FaceMasksHTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
-FaceMasksHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
-FaceMasksHTHI,foodline_blocks,Number of foodlines in the camp,FaceMasks Transmission High Interaction,"1,1"
-FaceMasksHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,FaceMasks Transmission High Interaction,0.1
-FaceMasksHTHI,prob_spread,Probability of transmission during interaction,FaceMasks Transmission High Interaction,0.1
+SectoringHTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Sectoring High Transmission High Interaction,0.017
+SectoringHTHI,prob_spread_house,Probability of transmission during interaction in house,Sectoring High Transmission High Interaction,0.33
+SectoringHTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Sectoring High Transmission High Interaction,0.099
+SectoringHTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Sectoring High Transmission High Interaction,0.407
 QuarantineHTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
 QuarantineHTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
 QuarantineHTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
@@ -159,7 +99,10 @@ QuarantineHTHI,clearday,Number of days needed to be cleared of isolation,Camp Pa
 QuarantineHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 QuarantineHTHI,foodline_blocks,Number of foodlines in the camp,Quarantine High Transmission High Interaction,"1,1"
 QuarantineHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Quarantine High Transmission High Interaction,0.1
-QuarantineHTHI,prob_spread,Probability of transmission during interaction,Quarantine High Transmission High Interaction,0.1
+QuarantineHTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Quarantine High Transmission High Interaction,0.017
+QuarantineHTHI,prob_spread_house,Probability of transmission during interaction in house,Quarantine High Transmission High Interaction,0.33
+QuarantineHTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Quarantine High Transmission High Interaction,0.099
+QuarantineHTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Quarantine High Transmission High Interaction,0.407
 LockdownHTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
 LockdownHTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
 LockdownHTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
@@ -182,27 +125,241 @@ LockdownHTHI,clearday,Number of days needed to be cleared of isolation,Camp Para
 LockdownHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
 LockdownHTHI,foodline_blocks,Number of foodlines in the camp,Lockdown High Transmission High Interaction,"1,1"
 LockdownHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Lockdown High Transmission High Interaction,0.05
-LockdownHTHI,prob_spread,Probability of transmission during interaction,Lockdown High Transmission High Interaction,0.1
-AllInterventionsHTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
-AllInterventionsHTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
-AllInterventionsHTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
-AllInterventionsHTHI,number_of_people_in_one_tent,Number of people living in each tent,Camp Parameter,4
-AllInterventionsHTHI,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,Camp Parameter,0.179
-AllInterventionsHTHI,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,Camp Parameter,0.5
-AllInterventionsHTHI,relative_strength_of_interaction,Interaction rate between individuals,Camp Parameter,0.2
-AllInterventionsHTHI,smaller_movement_radius,Individual's  home range centred on its household,AllInterventionsHTHI,0.005
-AllInterventionsHTHI,larger_movement_radius,Individual's  home range centred on its household,AllInterventionsHTHI,0.005
-AllInterventionsHTHI,overlapping_rages_radius,Range of household overlap where 2 individuals interact,Camp Parameter,0.02
-AllInterventionsHTHI,number_of_steps,Time dimension of the simulation in days,Simulation Parameter,200
-AllInterventionsHTHI,num_toilet_visit,Number of daily visit to the toilet,Camp Parameter,3
-AllInterventionsHTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Parameter,2
-AllInterventionsHTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
-AllInterventionsHTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
-AllInterventionsHTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
-AllInterventionsHTHI,transmission_reduction,Reduction in transmission due to intervention,AllInterventionsHTHI,0.32
-AllInterventionsHTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,AllInterventionsHTHI,0.5
-AllInterventionsHTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
-AllInterventionsHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
-AllInterventionsHTHI,foodline_blocks,Number of foodlines in the camp,AllInterventionsHTHI,"16,16"
-AllInterventionsHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,AllInterventionsHTHI,0.05
-AllInterventionsHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,AllInterventionsHTHI,0.1
+LockdownHTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Lockdown High Transmission High Interaction,0.017
+LockdownHTHI,prob_spread_house,Probability of transmission during interaction in house,Lockdown High Transmission High Interaction,0.33
+LockdownHTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Lockdown High Transmission High Interaction,0.099
+LockdownHTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Lockdown High Transmission High Interaction,0.407
+SectoringLTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
+SectoringLTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
+SectoringLTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
+SectoringLTHI,number_of_people_in_one_tent,Number of people living in each tent,Camp Parameter,4
+SectoringLTHI,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,Camp Parameter,0.179
+SectoringLTHI,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,Camp Parameter,0.5
+SectoringLTHI,relative_strength_of_interaction,Interaction rate between individuals,Camp Parameter,0.2
+SectoringLTHI,smaller_movement_radius,Individual's  home range centred on its household,Sectoring Low Transmission High Interaction,0.0202
+SectoringLTHI,larger_movement_radius,Individual's  home range centred on its household,Sectoring Low Transmission High Interaction,0.0226
+SectoringLTHI,overlapping_rages_radius,Range of household overlap where 2 individuals interact,Camp Parameter,0.02
+SectoringLTHI,number_of_steps,Time dimension of the simulation in days,Simulation Parameter,200
+SectoringLTHI,num_toilet_visit,Number of daily visit to the toilet,Camp Parameter,3
+SectoringLTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Parameter,2
+SectoringLTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
+SectoringLTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
+SectoringLTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
+SectoringLTHI,transmission_reduction,Reduction in transmission due to intervention,Sectoring Low Transmission High Interaction,1
+SectoringLTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Sectoring Low Transmission High Interaction,0.05
+SectoringLTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
+SectoringLTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
+SectoringLTHI,foodline_blocks,Number of foodlines in the camp,Sectoring Low Transmission High Interaction,"16,16"
+SectoringLTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Sectoring Low Transmission High Interaction,0.1
+SectoringLTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Sectoring Low Transmission High Interaction,0.006
+SectoringLTHI,prob_spread_house,Probability of transmission during interaction in house,Sectoring Low Transmission High Interaction,0.0397
+SectoringLTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Sectoring Low Transmission High Interaction,0.0067
+SectoringLTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Sectoring Low Transmission High Interaction,0.0397
+LockdownLTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
+LockdownLTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
+LockdownLTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
+LockdownLTHI,number_of_people_in_one_tent,Number of people living in each tent,Camp Parameter,4
+LockdownLTHI,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,Camp Parameter,0.179
+LockdownLTHI,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,Camp Parameter,0.5
+LockdownLTHI,relative_strength_of_interaction,Interaction rate between individuals,Camp Parameter,0.2
+LockdownLTHI,smaller_movement_radius,Individual's  home range centred on its household,Lockdown Low Transmission High Interaction,0.005
+LockdownLTHI,larger_movement_radius,Individual's  home range centred on its household,Lockdown Low Transmission High Interaction,0.005
+LockdownLTHI,overlapping_rages_radius,Range of household overlap where 2 individuals interact,Camp Parameter,0.02
+LockdownLTHI,number_of_steps,Time dimension of the simulation in days,Simulation Parameter,200
+LockdownLTHI,num_toilet_visit,Number of daily visit to the toilet,Camp Parameter,3
+LockdownLTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Parameter,2
+LockdownLTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
+LockdownLTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
+LockdownLTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
+LockdownLTHI,transmission_reduction,Reduction in transmission due to intervention,Lockdown Low Transmission High Interaction,1
+LockdownLTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Lockdown Low Transmission High Interaction,0.05
+LockdownLTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
+LockdownLTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
+LockdownLTHI,foodline_blocks,Number of foodlines in the camp,Lockdown Low Transmission High Interaction,"1,1"
+LockdownLTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Lockdown Low Transmission High Interaction,0.05
+LockdownLTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Lockdown Low Transmission High Interaction,0.006
+LockdownLTHI,prob_spread_house,Probability of transmission during interaction in house,Lockdown Low Transmission High Interaction,0.0397
+LockdownLTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Lockdown Low Transmission High Interaction,0.0067
+LockdownLTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Lockdown Low Transmission High Interaction,0.0397
+QuarantineLTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
+QuarantineLTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
+QuarantineLTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
+QuarantineLTHI,number_of_people_in_one_tent,Number of people living in each tent,Camp Parameter,4
+QuarantineLTHI,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,Camp Parameter,0.179
+QuarantineLTHI,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,Camp Parameter,0.5
+QuarantineLTHI,relative_strength_of_interaction,Interaction rate between individuals,Camp Parameter,0.2
+QuarantineLTHI,smaller_movement_radius,Individual's  home range centred on its household,Quarantine Low Transmission High Interaction,0.0202
+QuarantineLTHI,larger_movement_radius,Individual's  home range centred on its household,Quarantine Low Transmission High Interaction,0.0226
+QuarantineLTHI,overlapping_rages_radius,Range of household overlap where 2 individuals interact,Camp Parameter,0.02
+QuarantineLTHI,number_of_steps,Time dimension of the simulation in days,Simulation Parameter,200
+QuarantineLTHI,num_toilet_visit,Number of daily visit to the toilet,Camp Parameter,3
+QuarantineLTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Parameter,2
+QuarantineLTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
+QuarantineLTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
+QuarantineLTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
+QuarantineLTHI,transmission_reduction,Reduction in transmission due to intervention,Quarantine Low Transmission High Interaction,1
+QuarantineLTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Quarantine Low Transmission High Interaction,0.5
+QuarantineLTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
+QuarantineLTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
+QuarantineLTHI,foodline_blocks,Number of foodlines in the camp,Quarantine Low Transmission High Interaction,"1,1"
+QuarantineLTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Quarantine Low Transmission High Interaction,0.1
+QuarantineLTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Quarantine Low Transmission High Interaction,0.006
+QuarantineLTHI,prob_spread_house,Probability of transmission during interaction in house,Quarantine Low Transmission High Interaction,0.0397
+QuarantineLTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Quarantine Low Transmission High Interaction,0.0067
+QuarantineLTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Quarantine Low Transmission High Interaction,0.0397
+SectoringFMLTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
+SectoringFMLTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
+SectoringFMLTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
+SectoringFMLTHI,number_of_people_in_one_tent,Number of people living in each tent,Camp Parameter,4
+SectoringFMLTHI,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,Camp Parameter,0.179
+SectoringFMLTHI,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,Camp Parameter,0.5
+SectoringFMLTHI,relative_strength_of_interaction,Interaction rate between individuals,Camp Parameter,0.2
+SectoringFMLTHI,smaller_movement_radius,Individual's  home range centred on its household,Sectoring with Face Masks Low Transmission High Interaction,0.0202
+SectoringFMLTHI,larger_movement_radius,Individual's  home range centred on its household,Sectoring with Face Masks Low Transmission High Interaction,0.0226
+SectoringFMLTHI,overlapping_rages_radius,Range of household overlap where 2 individuals interact,Camp Parameter,0.02
+SectoringFMLTHI,number_of_steps,Time dimension of the simulation in days,Simulation Parameter,200
+SectoringFMLTHI,num_toilet_visit,Number of daily visit to the toilet,Camp Parameter,3
+SectoringFMLTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Parameter,2
+SectoringFMLTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
+SectoringFMLTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
+SectoringFMLTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
+SectoringFMLTHI,transmission_reduction,Reduction in transmission due to intervention,Sectoring with Face Masks Low Transmission High Interaction,0.32
+SectoringFMLTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Sectoring with Face Masks Low Transmission High Interaction,0.05
+SectoringFMLTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
+SectoringFMLTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
+SectoringFMLTHI,foodline_blocks,Number of foodlines in the camp,Sectoring with Face Masks Low Transmission High Interaction,"16,16"
+SectoringFMLTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Sectoring with Face Masks Low Transmission High Interaction,0.1
+SectoringFMLTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Sectoring with Face Masks Low Transmission High Interaction,0.006
+SectoringFMLTHI,prob_spread_house,Probability of transmission during interaction in house,Sectoring with Face Masks Low Transmission High Interaction,0.0397
+SectoringFMLTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Sectoring with Face Masks Low Transmission High Interaction,0.0067
+SectoringFMLTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Sectoring with Face Masks Low Transmission High Interaction,0.0397
+LockdownFMLTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
+LockdownFMLTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
+LockdownFMLTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
+LockdownFMLTHI,number_of_people_in_one_tent,Number of people living in each tent,Camp Parameter,4
+LockdownFMLTHI,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,Camp Parameter,0.179
+LockdownFMLTHI,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,Camp Parameter,0.5
+LockdownFMLTHI,relative_strength_of_interaction,Interaction rate between individuals,Camp Parameter,0.2
+LockdownFMLTHI,smaller_movement_radius,Individual's  home range centred on its household,Lockdown with Face Masks Low Transmission High Interaction,0.005
+LockdownFMLTHI,larger_movement_radius,Individual's  home range centred on its household,Lockdown with Face Masks Low Transmission High Interaction,0.005
+LockdownFMLTHI,overlapping_rages_radius,Range of household overlap where 2 individuals interact,Camp Parameter,0.02
+LockdownFMLTHI,number_of_steps,Time dimension of the simulation in days,Simulation Parameter,200
+LockdownFMLTHI,num_toilet_visit,Number of daily visit to the toilet,Camp Parameter,3
+LockdownFMLTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Parameter,2
+LockdownFMLTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
+LockdownFMLTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
+LockdownFMLTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
+LockdownFMLTHI,transmission_reduction,Reduction in transmission due to intervention,Lockdown with Face Masks Low Transmission High Interaction,0.32
+LockdownFMLTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Lockdown with Face Masks Low Transmission High Interaction,0.05
+LockdownFMLTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
+LockdownFMLTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
+LockdownFMLTHI,foodline_blocks,Number of foodlines in the camp,Lockdown with Face Masks Low Transmission High Interaction,"1,1"
+LockdownFMLTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Lockdown with Face Masks Low Transmission High Interaction,0.05
+LockdownFMLTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Lockdown with Face Masks Low Transmission High Interaction,0.006
+LockdownFMLTHI,prob_spread_house,Probability of transmission during interaction in house,Lockdown with Face Masks Low Transmission High Interaction,0.0397
+LockdownFMLTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Lockdown with Face Masks Low Transmission High Interaction,0.0067
+LockdownFMLTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Lockdown with Face Masks Low Transmission High Interaction,0.0397
+QuarantineFMLTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
+QuarantineFMLTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
+QuarantineFMLTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
+QuarantineFMLTHI,number_of_people_in_one_tent,Number of people living in each tent,Camp Parameter,4
+QuarantineFMLTHI,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,Camp Parameter,0.179
+QuarantineFMLTHI,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,Camp Parameter,0.5
+QuarantineFMLTHI,relative_strength_of_interaction,Interaction rate between individuals,Camp Parameter,0.2
+QuarantineFMLTHI,smaller_movement_radius,Individual's  home range centred on its household,Quarantine with Face Masks Low Transmission High Interaction,0.0202
+QuarantineFMLTHI,larger_movement_radius,Individual's  home range centred on its household,Quarantine with Face Masks Low Transmission High Interaction,0.0226
+QuarantineFMLTHI,overlapping_rages_radius,Range of household overlap where 2 individuals interact,Camp Parameter,0.02
+QuarantineFMLTHI,number_of_steps,Time dimension of the simulation in days,Simulation Parameter,200
+QuarantineFMLTHI,num_toilet_visit,Number of daily visit to the toilet,Camp Parameter,3
+QuarantineFMLTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Parameter,2
+QuarantineFMLTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
+QuarantineFMLTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
+QuarantineFMLTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
+QuarantineFMLTHI,transmission_reduction,Reduction in transmission due to intervention,Quarantine with Face Masks Low Transmission High Interaction,0.32
+QuarantineFMLTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Quarantine with Face Masks Low Transmission High Interaction,0.5
+QuarantineFMLTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
+QuarantineFMLTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
+QuarantineFMLTHI,foodline_blocks,Number of foodlines in the camp,Quarantine with Face Masks Low Transmission High Interaction,"1,1"
+QuarantineFMLTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Quarantine with Face Masks Low Transmission High Interaction,0.1
+QuarantineFMLTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Quarantine with Face Masks Low Transmission High Interaction,0.006
+QuarantineFMLTHI,prob_spread_house,Probability of transmission during interaction in house,Quarantine with Face Masks Low Transmission High Interaction,0.0397
+QuarantineFMLTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Quarantine with Face Masks Low Transmission High Interaction,0.0067
+QuarantineFMLTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Quarantine with Face Masks Low Transmission High Interaction,0.0397
+SectoringFMHTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
+SectoringFMHTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
+SectoringFMHTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
+SectoringFMHTHI,number_of_people_in_one_tent,Number of people living in each tent,Camp Parameter,4
+SectoringFMHTHI,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,Camp Parameter,0.179
+SectoringFMHTHI,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,Camp Parameter,0.5
+SectoringFMHTHI,relative_strength_of_interaction,Interaction rate between individuals,Camp Parameter,0.2
+SectoringFMHTHI,smaller_movement_radius,Individual's  home range centred on its household,Sectoring with Face Masks High Transmission High Interaction,0.0202
+SectoringFMHTHI,larger_movement_radius,Individual's  home range centred on its household,Sectoring with Face Masks High Transmission High Interaction,0.0226
+SectoringFMHTHI,overlapping_rages_radius,Range of household overlap where 2 individuals interact,Camp Parameter,0.02
+SectoringFMHTHI,number_of_steps,Time dimension of the simulation in days,Simulation Parameter,200
+SectoringFMHTHI,num_toilet_visit,Number of daily visit to the toilet,Camp Parameter,3
+SectoringFMHTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Parameter,2
+SectoringFMHTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
+SectoringFMHTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
+SectoringFMHTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
+SectoringFMHTHI,transmission_reduction,Reduction in transmission due to intervention,Sectoring with Face Masks High Transmission High Interaction,0.32
+SectoringFMHTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Sectoring with Face Masks High Transmission High Interaction,0.05
+SectoringFMHTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
+SectoringFMHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
+SectoringFMHTHI,foodline_blocks,Number of foodlines in the camp,Sectoring with Face Masks High Transmission High Interaction,"16,16"
+SectoringFMHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Sectoring with Face Masks High Transmission High Interaction,0.1
+SectoringFMHTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Sectoring with Face Masks High Transmission High Interaction,0.017
+SectoringFMHTHI,prob_spread_house,Probability of transmission during interaction in house,Sectoring with Face Masks High Transmission High Interaction,0.33
+SectoringFMHTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Sectoring with Face Masks High Transmission High Interaction,0.099
+SectoringFMHTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Sectoring with Face Masks High Transmission High Interaction,0.407
+QuarantineFMHTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
+QuarantineFMHTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
+QuarantineFMHTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
+QuarantineFMHTHI,number_of_people_in_one_tent,Number of people living in each tent,Camp Parameter,4
+QuarantineFMHTHI,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,Camp Parameter,0.179
+QuarantineFMHTHI,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,Camp Parameter,0.5
+QuarantineFMHTHI,relative_strength_of_interaction,Interaction rate between individuals,Camp Parameter,0.2
+QuarantineFMHTHI,smaller_movement_radius,Individual's  home range centred on its household,Quarantine with Face Masks High Transmission High Interaction,0.0202
+QuarantineFMHTHI,larger_movement_radius,Individual's  home range centred on its household,Quarantine with Face Masks High Transmission High Interaction,0.0226
+QuarantineFMHTHI,overlapping_rages_radius,Range of household overlap where 2 individuals interact,Camp Parameter,0.02
+QuarantineFMHTHI,number_of_steps,Time dimension of the simulation in days,Simulation Parameter,200
+QuarantineFMHTHI,num_toilet_visit,Number of daily visit to the toilet,Camp Parameter,3
+QuarantineFMHTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Parameter,2
+QuarantineFMHTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
+QuarantineFMHTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
+QuarantineFMHTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
+QuarantineFMHTHI,transmission_reduction,Reduction in transmission due to intervention,Quarantine with Face Masks High Transmission High Interaction,0.32
+QuarantineFMHTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Quarantine with Face Masks High Transmission High Interaction,0.5
+QuarantineFMHTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
+QuarantineFMHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
+QuarantineFMHTHI,foodline_blocks,Number of foodlines in the camp,Quarantine with Face Masks High Transmission High Interaction,"1,1"
+QuarantineFMHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Quarantine with Face Masks High Transmission High Interaction,0.1
+QuarantineFMHTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Quarantine with Face Masks High Transmission High Interaction,0.017
+QuarantineFMHTHI,prob_spread_house,Probability of transmission during interaction in house,Quarantine with Face Masks High Transmission High Interaction,0.33
+QuarantineFMHTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Quarantine with Face Masks High Transmission High Interaction,0.099
+QuarantineFMHTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Quarantine with Face Masks High Transmission High Interaction,0.407
+LockdownFMHTHI,number_of_people_in_isoboxes,Total number of people living in Isoboxes,Camp Parameter,8100
+LockdownFMHTHI,number_of_people_in_one_isobox,Number of people living in each isobox,Camp Parameter,10
+LockdownFMHTHI,number_of_people_in_tents,Total number of people living in Tents,Camp Parameter,10600
+LockdownFMHTHI,number_of_people_in_one_tent,Number of people living in each tent,Camp Parameter,4
+LockdownFMHTHI,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,Camp Parameter,0.179
+LockdownFMHTHI,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,Camp Parameter,0.5
+LockdownFMHTHI,relative_strength_of_interaction,Interaction rate between individuals,Camp Parameter,0.2
+LockdownFMHTHI,smaller_movement_radius,Individual's  home range centred on its household,Lockdown with Face Masks High Transmission High Interaction,0.005
+LockdownFMHTHI,larger_movement_radius,Individual's  home range centred on its household,Lockdown with Face Masks High Transmission High Interaction,0.005
+LockdownFMHTHI,overlapping_rages_radius,Range of household overlap where 2 individuals interact,Camp Parameter,0.02
+LockdownFMHTHI,number_of_steps,Time dimension of the simulation in days,Simulation Parameter,200
+LockdownFMHTHI,num_toilet_visit,Number of daily visit to the toilet,Camp Parameter,3
+LockdownFMHTHI,num_toilet_contact,Number of contacts in the toilets area,Camp Parameter,2
+LockdownFMHTHI,num_food_visit,Number of visits to the food lane per day,Camp Parameter,1
+LockdownFMHTHI,num_food_contact,Number of people with which an individual interact while in the food line,Camp Parameter,2
+LockdownFMHTHI,pct_food_visit,Percentage of time an individual visit the food line,Camp Parameter,0.75
+LockdownFMHTHI,transmission_reduction,Reduction in transmission due to intervention,Lockdown with Face Masks High Transmission High Interaction,0.32
+LockdownFMHTHI,probability_spotting_symptoms_per_day,probability of spotting that an individual is symptomatic per day,Lockdown with Face Masks High Transmission High Interaction,0.05
+LockdownFMHTHI,clearday,Number of days needed to be cleared of isolation,Camp Parameter,14
+LockdownFMHTHI,toilets_blocks,Number of toilets in the camp,Camp Parameter,"12,12"
+LockdownFMHTHI,foodline_blocks,Number of foodlines in the camp,Lockdown with Face Masks High Transmission High Interaction,"1,1"
+LockdownFMHTHI,prop_violating_lockdown,Proportion of population that violates the lockdown,Lockdown with Face Masks High Transmission High Interaction,0.05
+LockdownFMHTHI,prob_spread_wander,Probability of transmission during interaction during wandering,Lockdown with Face Masks High Transmission High Interaction,0.017
+LockdownFMHTHI,prob_spread_house,Probability of transmission during interaction in house,Lockdown with Face Masks High Transmission High Interaction,0.33
+LockdownFMHTHI,prob_spread_toilet,Probability of transmission during interaction in toilet queue,Lockdown with Face Masks High Transmission High Interaction,0.099
+LockdownFMHTHI,prob_spread_foodline,Probability of transmission during interaction in food line queue,Lockdown with Face Masks High Transmission High Interaction,0.407
