@@ -126,7 +126,22 @@ def render_message_1_plots():
     col = columns_to_plot[0]
     row_idx = 1
     for profile in model_profile_report_dict["compartmental-model"].keys():
-        p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col)
+        if profile == 'baseline':
+            label_name = 'No interventions'
+        elif profile == 'better_hygiene_one_month':
+            label_name = 'Wearing facemask for 1 month'
+        elif profile == 'better_hygiene_three_month':
+            label_name = 'Wearing facemask for 3 month '
+        elif profile == 'better_hygiene_six_month':
+            label_name = 'Using Hand Sanitizers & facemask for 6 month'
+
+        else:
+            label_name = 'default'
+
+        label_to_plot = [label_name]
+
+
+        p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_to_plot)
         logging.info(f'plot on {row_idx}')
         fig.add_trace(p1, row=1, col=1)
         fig.add_trace(p2, row=1, col=1)
@@ -142,6 +157,7 @@ def render_message_1_plots():
         margin=dict(l=0, r=0, t=30, b=0),
         height=400,
         showlegend=True
+
     )
 
     return [
@@ -152,11 +168,11 @@ def render_message_1_plots():
         )
     ]
 
-color_scheme_main = ['rgba(0, 176, 246, 0.2)', 'rgba(107, 156, 190, 1)', 'rgb(0, 176, 246)']
+color_scheme_main = ['rgba(0, 176, 246, 0.2)', 'rgba(130, 190, 240, 1)', 'rgb(0, 176, 246)']
 color_scheme_secondary = ['rgba(245, 240, 240, 0.5)']
 
 
-def plot_iqr(df: pd.DataFrame, y_col: str,
+def plot_iqr(df: pd.DataFrame, y_col: str,graph_label:str,
              x_col='Time', estimator=np.median, estimator_name='median', ci_name_prefix='',
              iqr_low=0.25, iqr_high=0.75,
              color_scheme=color_scheme_main):
@@ -175,7 +191,7 @@ def plot_iqr(df: pd.DataFrame, y_col: str,
     p1 = go.Scatter(
         x=x + x_rev, y=y_upper + y_lower, fill='toself',  line_color=color_scheme[1],
          name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval')
-    p2 = go.Scatter(x=x, y=est,  name=f'{y_col} {estimator_name}', line=dict(width=6))
+    p2 = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6))
     return p1,p2
 
 # @dash_app.callback(
