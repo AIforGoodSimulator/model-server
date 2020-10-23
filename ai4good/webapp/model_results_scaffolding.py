@@ -1,4 +1,3 @@
-import logging
 import textwrap
 import dash_html_components as html
 import dash_core_components as dcc
@@ -95,9 +94,9 @@ def high_level_message_5():
     ''')
 
 
-#@local_cache.memoize(timeout=cache_timeout)
+@local_cache.memoize(timeout=cache_timeout)
 def get_model_result_message(message_key):
-    logging.info(f"Reading data for high level message: {message_key}")
+    logger.info(f"Reading data for high level message: {message_key}")
     model_profile_report_dict = defaultdict(dict)
     for model in model_profile_config[message_key].keys():
         if len(model_profile_config[message_key][model])>0:
@@ -149,7 +148,7 @@ def render_message_1_plots():
 
 
         p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_to_plot)
-        logging.info(f'plot on {row_idx}')
+        logger.info(f'plot on {row_idx}')
         fig.add_trace(p1, row=1, col=1)
         fig.add_trace(p2, row=1, col=1)
         fig.update_yaxes(title_text=col, row=row_idx, col=1)
