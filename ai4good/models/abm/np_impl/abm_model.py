@@ -1,5 +1,3 @@
-import numpy as np
-import pandas as pd
 from typeguard import typechecked
 
 from ai4good.models.abm.np_impl.moria import *
@@ -30,7 +28,9 @@ class ABM(Model):
         model = Moria(params=params, profile="")
         model.simulate()
 
-        modelResult = ModelResult(self.result_id(params), {})
+        model_result = ModelResult(self.result_id(params), {
+            "output_df": model.data_collector
+        })
 
         # at end of simulation, return model result
-        return modelResult
+        return model_result
