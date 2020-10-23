@@ -62,7 +62,7 @@ layout = html.Div(
                             html.Center(html.Img(src='/static/input_step4.png', title='Step 4 of 4', style={'width':'50%'}, className="step_counter")), 
                             html.P('Provide your best estimate if data is not available',className='card-text'),
                             html.H5('Health Interventions (Part II)', className='card-text'),
-                            html.Header('Measures Effectiveness', className='card-text'),
+                            html.Header('Effectiveness of Interventions', className='card-text'),
                             html.Header('How effective are the following measures at the camp?', className='card-text', style={'color':'darkgray'}), 
                             html.Div([
                                 dbc.Tabs([

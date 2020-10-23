@@ -40,7 +40,7 @@ layout = html.Div(
                             html.Header('What is the age range of people that are moved off-site at the settlement?', className='card-text', style={'color':'darkgray'}), 
                             html.Div([
                                 dbc.Label('60', id='age-min-moved-off-site'), 
-                                dcc.RangeSlider(id='age-range-moved-off-site', min=0, max=100, step=5, value=[10, 50], updatemode='drag', allowCross=False), 
+                                dcc.RangeSlider(id='age-range-moved-off-site', min=0, max=100, step=1, value=[60, 100], updatemode='drag', allowCross=False), 
                                 dbc.Label('100', id='age-max-moved-off-site')], 
                                 style={'display':'grid', 'grid-template-columns':'10% 80% 10%', 'margin-bottom':'25px'}),
                             html.Header('Residents with Comorbidity', className='card-text'),

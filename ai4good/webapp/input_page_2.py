@@ -26,7 +26,7 @@ id_accommodation_area = ['accommodation-area-' + x.replace(' ','').lower() for x
 id_accommodation_no_person = ['accommodation-no-person-' + x.replace(' ','').lower() for x in accommodation_info]
 id_accommodation_no_unit = ['accommodation-no-unit-' + x.replace(' ','').lower() for x in accommodation_info]
 
-id_gender_perc = ['gender-perc-female', 'gender-perc-male', 'gender-perc-other']
+id_gender_perc = ['gender-perc-female', 'gender-perc-male']
 id_ethnic_no_top = ['ethnic-no-1', 'ethnic-no-2', 'ethnic-no-3']
 id_ethnic_no_mid = ['ethnic-no-4', 'ethnic-no-5', 'ethnic-no-6']
 id_ethnic_no_dwn = ['ethnic-no-7', 'ethnic-no-8', 'ethnic-no-9']
@@ -121,20 +121,16 @@ layout = html.Div(
                                 dbc.Label('Must equal to total population or 100%', id='age-group-continue-warning', color='secondary'), 
                                 dbc.Button('Default %', size='sm', color='secondary', id='age-default-perc', style={'float':'right'})], className='card-text', style={'display':'grid', 'grid-template-columns':'5% 77% 18%'}),
                             html.P(''),
-                            html.Header('Gender Diversity', className='card-text'),
+                            html.Header('Male and Female Population', className='card-text'),
                             html.Div([
-                                html.B('Female (%)'), 
-                                html.B('Male (%)'), 
-                                html.B('Other (%)')], 
-                                style={'display':'grid', 'grid-template-columns':'36% 36% 28%', 'color':'darkgray'}),
+                                html.B('Female: '), 
+                                html.B('Male:')], 
+                                style={'display':'grid', 'grid-template-columns':'90% 10%', 'color':'darkgray'}), 
                             html.Div([
-                                html.B('', id='gender-perc-female'), 
-                                html.B('', id='gender-perc-male'), 
-                                html.B('', id='gender-perc-other')], 
-                                style={'display':'grid', 'grid-template-columns':'36% 36% 28%', 'color':'darkgray'}), 
-                            dcc.RangeSlider(id='slider-gender-diversity', min=0, max=100, step=1, value=[49, 98], included=False, updatemode='drag', allowCross=False, 
-                                marks={0: {'label':'0%'}, 
-                                      100: {'label':'100%'}}), 
+                                html.Label('', id='gender-perc-female'), 
+                            dcc.Slider(id='slider-gender-perc', min=0, max=100, step=1, value=50, included=False, updatemode='drag', marks={50: {'label':'50'}}), 
+                                html.Label('', id='gender-perc-male')], 
+                                style={'display':'grid', 'grid-template-columns':'10% 80% 10%', 'margin-bottom':'25px'}),                            
                             html.P(''),
                             html.Header('Population by Ethnicity', className='card-text'),
                             html.Header('Enter the population represented by each ethnic group',className='card-text', style={'color':'darkgray'}),
@@ -166,13 +162,12 @@ layout = html.Div(
 )
 
 @dash_app.callback(
-    [Output('gender-perc-female','children'), Output('gender-perc-male','children'), Output('gender-perc-other','children')], 
-    [Input('slider-gender-diversity','value')])
+    [Output('gender-perc-female','children'), Output('gender-perc-male','children')], 
+    [Input('slider-gender-perc','value')])
 def update_gender_perc_label(slider_value):
-    perc_female = slider_value[0]
-    perc_male = slider_value[1] - slider_value[0]
-    perc_other = 100 - slider_value[1]
-    return str(perc_female) + '%', str(perc_male)+ '%', str(perc_other) + '%'
+    perc_female = slider_value
+    perc_male = 100 - slider_value
+    return str(perc_female) + '%', str(perc_male)+ '%'
 
 @dash_app.callback(
     [Output({'type':'age-perc-label', 'index':MATCH}, 'children')], 
