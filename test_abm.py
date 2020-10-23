@@ -27,13 +27,52 @@ def simulate(i, prf):
     camp.simulate()
     logger.info("{}. Completed profile {} at {}"
                  .format(i + 1, prf, datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")))
+    return camp.progress_file_name
 
 
 class SampleRun:
 
     def __init__(self, profiles: list):
+        f_names = []
         for i, prf in enumerate(profiles):
-            simulate(i, prf)
+            f_names.append(simulate(i, prf))
+
+        # For multiple sims, average the results in one file
+        if len(profiles) > 1:
+
+            # read all files as dataframe
+            dfs = [pd.read_csv(f) for f in f_names]
+
+            # validations
+            cols = dfs[0].shape[1]
+            for df in dfs:
+                assert df.shape[1] == cols
+
+            # max simulated days among all files
+            max_days = max([df.shape[0] for df in dfs])
+
+            # for sims with less than `max_days` of simulation, fill all remaining rows with same as last row
+            for df in dfs:
+                num_rows = df.shape[0]
+                missing_days = max_days - num_rows
+                if missing_days == 0:
+                    continue
+
+                last_row = df.loc[num_rows-1, :].tolist()
+
+                for i in range(missing_days):
+                    row = [num_rows+i+1] + last_row[1:]
+                    df.loc[df.shape[0], :] = row
+
+            out = dfs[0]
+            for i in range(1, len(dfs)):
+                out = out + dfs[i]
+            out = out / len(dfs)
+
+            out.to_csv("final_abm_moria_{}_{}.csv".format(
+                profile,
+                datetime.datetime.strftime(datetime.datetime.now(), "%d%m%Y_%H%M")
+            ), index=False)
 
     @staticmethod
     def plot_df(f_name):
@@ -147,8 +186,8 @@ if __name__ == "__main__":
 
     else:
 
-        profile = "BaselineLTHI"
-        num_simulations = 1  # number of simulations to run
+        profile = "SectoringLTHI"
+        num_simulations = 2  # number of simulations to run
 
         # run simulations
         sampleRun = SampleRun([profile] * num_simulations)
