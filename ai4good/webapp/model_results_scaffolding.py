@@ -154,7 +154,7 @@ def render_message_1_plots():
         fig.add_trace(p1, row=1, col=1)
         fig.add_trace(p2, row=1, col=1)
         fig.update_yaxes(title_text=col, row=row_idx, col=1)
-        if row_idx < len(DEFAULT_PLOTLY_COLORS):
+        if row_idx < len(color_scheme_updated):
             fig["data"][2 * (row_idx - 1)]["line"]["color"] = color_scheme_updated[row_idx - 1] #Curve Color
             fig["data"][(2 * row_idx) - 1]["line"]["color"] = color_scheme_updated[row_idx - 1] #IQR Colour
             fig["data"][2 * (row_idx - 1)]["opacity"] = 0.2 #IQR Opacity
