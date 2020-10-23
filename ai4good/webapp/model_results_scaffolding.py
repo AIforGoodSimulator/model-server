@@ -12,6 +12,9 @@ import numpy as np
 import pandas as pd
 from ai4good.models.cm.initialise_parameters import Parameters # this needs to be changed later
 import plotly.graph_objs as go
+from ai4good.utils.logger_util import get_logger
+
+logger = get_logger(__name__)
 
 
 CAMP = 'Moria'
@@ -24,6 +27,7 @@ def layout():
     # _, profile_df, params, _ = get_model_result(camp, profile)
     return html.Div(
         [
+            html.A(html.Button('Print', className="btn btn-light"), href='javascript:window.print()', className='d-print-none', style={"float": 'right'}),
             dcc.Markdown(disclaimer(), style={'margin': 30}),
             html.H1(f'AI for Good Simulator: Model Results Dashboard for the Refugee Camp', style={
                     'margin': 30}),
@@ -91,19 +95,22 @@ def high_level_message_5():
     ''')
 
 
-@local_cache.memoize(timeout=cache_timeout)
+#@local_cache.memoize(timeout=cache_timeout)
 def get_model_result_message(message_key):
     logging.info(f"Reading data for high level message: {message_key}")
     model_profile_report_dict = defaultdict(dict)
     for model in model_profile_config[message_key].keys():
         if len(model_profile_config[message_key][model])>0:
             for profile in model_profile_config[message_key][model]:
-                mr = model_runner.get_result(model, profile, CAMP)
-                profile_df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
-                params = Parameters(facade.ps, CAMP, profile_df, {})
-                report = load_report(mr, params)
-                assert mr is not None
-                model_profile_report_dict[model][profile] = report
+                try:
+                    mr = model_runner.get_result(model, profile, CAMP)
+                    profile_df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
+                    params = Parameters(facade.ps, CAMP, profile_df, {})
+                    report = load_report(mr, params)
+                    assert mr is not None
+                    model_profile_report_dict[model][profile] = report
+                except:
+                    logger.info(f"Unable to load result for model: ({model}, {profile}, {CAMP}).")
     return model_profile_report_dict
 
 
@@ -190,7 +197,7 @@ def plot_iqr(df: pd.DataFrame, y_col: str,graph_label:str,
 
     p1 = go.Scatter(
         x=x + x_rev, y=y_upper + y_lower, fill='toself',  line_color=color_scheme[1],
-         name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval')
+         name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval', visible = "legendonly")
     p2 = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6))
     return p1,p2
 
