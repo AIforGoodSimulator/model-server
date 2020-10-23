@@ -147,7 +147,7 @@ def render_message_1_plots():
         label_to_plot = [label_name]
 
 
-        p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_to_plot)
+        p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_to_plot, ci_name_prefix=label_name + ' ')
         logger.info(f'plot on {row_idx}')
         fig.add_trace(p1, row=1, col=1)
         fig.add_trace(p2, row=1, col=1)
@@ -193,10 +193,10 @@ def plot_iqr(df: pd.DataFrame, y_col: str,graph_label:str,
     y_upper = cis[cis['level_1'] == 'high'][0].values.tolist()
     y_lower = cis[cis['level_1'] == 'low'][0].values.tolist()
     y_lower = y_lower[::-1]
-
+    
     p1 = go.Scatter(
         x=x + x_rev, y=y_upper + y_lower, fill='toself',  line_color=color_scheme[1],
-         name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval', visible = "legendonly")
+         name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval', visible="legendonly")
     p2 = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6))
     return p1,p2
 
