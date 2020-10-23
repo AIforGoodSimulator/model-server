@@ -466,6 +466,7 @@ def update_history(n):
 @dash_app.callback(
     [
         Output('run_model_button', 'disabled'),
+        Output('validate_model_button', 'disabled'),
         Output('model_results_button', 'disabled'),
         Output('model_results_button', 'href'),
         Output('model_report_button', 'disabled'),
@@ -482,6 +483,7 @@ def on_see_results_click_and_state_update(n, camp, model, profile):
 
     if camp is None or model is None or profile is None:
         return True, \
+               True, \
                True, '', \
                True, \
                dbc.Tooltip('Select camp, model and profile to see results', id='_mr_tt', target="run_buttons_div")
