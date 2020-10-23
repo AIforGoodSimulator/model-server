@@ -12,6 +12,7 @@ import pandas as pd
 from ai4good.models.cm.initialise_parameters import Parameters # this needs to be changed later
 import plotly.graph_objs as go
 from ai4good.utils.logger_util import get_logger
+from plotly.colors import DEFAULT_PLOTLY_COLORS
 
 logger = get_logger(__name__)
 
@@ -124,6 +125,7 @@ def get_model_result_message(message_key):
 #     report = load_report(mr, params)
 #     return mr, profile_df, params, report
 
+color_scheme_updated = DEFAULT_PLOTLY_COLORS
 
 def render_message_1_plots():
     model_profile_report_dict = get_model_result_message("message_1")
@@ -152,7 +154,13 @@ def render_message_1_plots():
         fig.add_trace(p1, row=1, col=1)
         fig.add_trace(p2, row=1, col=1)
         fig.update_yaxes(title_text=col, row=row_idx, col=1)
+        if row_idx < len(DEFAULT_PLOTLY_COLORS):
+            fig["data"][2 * (row_idx - 1)]["line"]["color"] = color_scheme_updated[row_idx - 1] #Curve Color
+            fig["data"][(2 * row_idx) - 1]["line"]["color"] = color_scheme_updated[row_idx - 1] #IQR Colour
+            fig["data"][2 * (row_idx - 1)]["opacity"] = 0.2 #IQR Opacity
+            logger.info(DEFAULT_PLOTLY_COLORS)
         row_idx += 1
+        
     x_title = 'Time, days'
     fig.update_xaxes(title_text=x_title, row=1, col=1)
     # fig.update_xaxes(title_text=x_title, row=2, col=1)
@@ -196,7 +204,7 @@ def plot_iqr(df: pd.DataFrame, y_col: str,graph_label:str,
     
     p1 = go.Scatter(
         x=x + x_rev, y=y_upper + y_lower, fill='toself',  line_color=color_scheme[1],
-         name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval', visible="legendonly")
+         name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval', hoverinfo="skip")
     p2 = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6))
     return p1,p2
 
