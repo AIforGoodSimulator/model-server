@@ -83,10 +83,10 @@ layout = html.Div(
         html.Div([
             dbc.Container([
                 dbc.Row(
-                    dbc.Col(
+                    dbc.Col([
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
-                            html.Center(html.Img(src='/static/input_step2.png', title='Step 2 of 4', style={'width':'50%'})), 
+                            html.Center(html.Img(src='/static/input_step2.png', title='Step 2 of 4', style={'width':'50%'}, className="step_counter")), 
                             html.P('Fill in the following about the age structure accommodation type of the settlement',className='card-text'),
                             html.H5('Population', className='card-text'),
                             html.Header('Total Population', className='card-text'),
@@ -148,8 +148,8 @@ layout = html.Div(
                             dbc.CardFooter(dbc.Button('Next', id='page-2-button', color='secondary', disabled=False, href='/sim/input_page_3', style={'float':'right'})), 
                             dbc.Label('',id='page-2-continue-warning', color='danger', style={'text-align':'right'}), 
                             html.Div(id='input-page-2-alert')
-                            ], body=True
-                        ), width=6
+                            ], body=True), 
+                        html.Br()], width=6
                     ), justify='center', style={'margin-top':'50px'}
                 )
             ])

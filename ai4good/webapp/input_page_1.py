@@ -40,10 +40,10 @@ layout = html.Div(
         html.Div([
             dbc.Container([
                 dbc.Row(
-                    dbc.Col(
+                    dbc.Col([
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
-                            html.Center(html.Img(src='/static/input_step1.png', title='Step 1 of 4', style={'width':'50%'})), 
+                            html.Center(html.Img(src='/static/input_step1.png', title='Step 1 of 4', style={'width':'50%'}, className="step_counter")), 
                             html.P('Fill in the following fields to provide data in order to run the simulation',className='card-text'),
                             html.H5('Camp information', className='card-text'),
                             html.Header('Name of Camp', className='card-text'),
@@ -57,9 +57,9 @@ layout = html.Div(
                             html.Header('Total Area (sq. m)', className='card-text'),
                             dbc.Input(id='total-area', placeholder='Optional', type='number', min=0, max=10000000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-1-button', color='secondary', href='/sim/input_page_2', style={'float':'right'})),
-                            html.Div(id='input-page-1-alert')
-                            ], body=True
-                        ), width=6
+                            html.Div(id='input-page-1-alert'), 
+                            ], body=True), 
+                        html.Br()], width=6
                     ), justify='center', style={'margin-top':'50px'}
                 )
             ])

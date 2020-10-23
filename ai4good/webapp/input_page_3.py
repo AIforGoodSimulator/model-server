@@ -17,10 +17,10 @@ layout = html.Div(
         html.Div([
             dbc.Container([
                 dbc.Row(
-                    dbc.Col(
+                    dbc.Col([
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
-                            html.Center(html.Img(src='/static/input_step3.png', title='Step 3 of 4', style={'width':'50%'})), 
+                            html.Center(html.Img(src='/static/input_step3.png', title='Step 3 of 4', style={'width':'50%'}, className="step_counter")), 
                             html.P('Provide your best estimate if data is not available',className='card-text'),
                             html.H5('Health Interventions', className='card-text'),
                             html.Header('Available ICU Beds', className='card-text'),
@@ -69,8 +69,8 @@ layout = html.Div(
                                 ], value=-1, id='community-surveillance-program', inline=True, style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-3-button', color='secondary', href='/sim/input_page_4', style={'float':'right'})),
                             html.Div(id='input-page-3-alert')
-                            ], body=True
-                        ), width=6
+                            ], body=True), 
+                        html.Br()], width=6
                     ), justify='center', style={'margin-top':'50px'}
                 )
             ])
