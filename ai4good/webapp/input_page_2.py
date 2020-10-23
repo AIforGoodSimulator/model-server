@@ -20,7 +20,7 @@ err_group_total_not_equal_popu = 'Group total must equal to total population or 
 accommodation_info = ['Type 1', 'Type 2', 'Type 3']
 accommodation_info_full = ['Accommodation Type 1', 'Accommodation Type 2', 'Accommodation Type 3']
 accommodation_info_required = ['Optional', 'Optional', 'Optional']
-accommodation_info_detail = ['Area covered (sq. m)', 'No. of Individuals in Residences', 'No. of Living Units (e.g. Building, Isoboxes, Tents)']
+accommodation_info_detail = ['Area covered (m²)', 'No. of total camp residents in this type of accommodation', 'No. of existing units of accommodation']
 tab_id_accommodation_info = ['tab-accommodation-info-' + x.replace(' ','').lower() for x in accommodation_info]
 id_accommodation_area = ['accommodation-area-' + x.replace(' ','').lower() for x in accommodation_info]
 id_accommodation_no_person = ['accommodation-no-person-' + x.replace(' ','').lower() for x in accommodation_info]
@@ -115,7 +115,7 @@ layout = html.Div(
                                 html.B('', id='age_population_total'), 
                                 html.B('Percentage Total:'), 
                                 html.B('', id='age_percentage_total')], className='card-text', 
-                                style={'display':'grid', 'grid-template-columns':'5% 25% 26% 32% 12%'}),
+                                style={'display':'grid', 'grid-template-columns':'5% 25% 26% 30% 14%'}),
                             html.Div([
                                 html.B(''), 
                                 dbc.Label('Must equal to total population or 100%', id='age-group-continue-warning', color='secondary'), 
@@ -127,7 +127,15 @@ layout = html.Div(
                                 html.B('Male (%)'), 
                                 html.B('Other (%)')], 
                                 style={'display':'grid', 'grid-template-columns':'36% 36% 28%', 'color':'darkgray'}),
-                            generate_three_column_input(id_gender_perc, 100), 
+                            html.Div([
+                                html.B('', id='gender-perc-female'), 
+                                html.B('', id='gender-perc-male'), 
+                                html.B('', id='gender-perc-other')], 
+                                style={'display':'grid', 'grid-template-columns':'36% 36% 28%', 'color':'darkgray'}), 
+                            dcc.RangeSlider(id='slider-gender-diversity', min=0, max=100, step=1, value=[49, 98], included=False, updatemode='drag', allowCross=False, 
+                                marks={0: {'label':'0%'}, 
+                                      100: {'label':'100%'}}), 
+                            html.P(''),
                             html.Header('Population by Ethnicity', className='card-text'),
                             html.Header('Enter the population represented by each ethnic group',className='card-text', style={'color':'darkgray'}),
                             generate_three_column_input(id_ethnic_no_top, 10000,'10px'), 
@@ -156,6 +164,15 @@ layout = html.Div(
         ])
     ]
 )
+
+@dash_app.callback(
+    [Output('gender-perc-female','children'), Output('gender-perc-male','children'), Output('gender-perc-other','children')], 
+    [Input('slider-gender-diversity','value')])
+def update_gender_perc_label(slider_value):
+    perc_female = slider_value[0]
+    perc_male = slider_value[1] - slider_value[0]
+    perc_other = 100 - slider_value[1]
+    return str(perc_female) + '%', str(perc_male)+ '%', str(perc_other) + '%'
 
 @dash_app.callback(
     [Output({'type':'age-perc-label', 'index':MATCH}, 'children')], 
