@@ -13,7 +13,7 @@ import ai4good.utils.path_utils as pu
 
 age = ['0 - 5', '6 - 9', '10 - 19', '20 - 29', '30 - 39', '40 - 49', '50 - 59', '60 - 69', '70+']
 id_age_popu =['age-population-' + x.replace(' ','') for x in age]
-age_perc_start = [6.25, 6.25, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5, 12.5] # starting age group population percentage
+age_perc_start = [15, 15, 10, 10, 10, 10, 10, 10, 10] # starting age group population percentage
 total_popu = 20000 # starting total population
 err_group_total_not_equal_popu = 'Group total must equal to total population or 100%'
 
@@ -31,10 +31,10 @@ id_ethnic_no_top = ['ethnic-no-1', 'ethnic-no-2', 'ethnic-no-3']
 id_ethnic_no_mid = ['ethnic-no-4', 'ethnic-no-5', 'ethnic-no-6']
 id_ethnic_no_dwn = ['ethnic-no-7', 'ethnic-no-8', 'ethnic-no-9']
 
-def int_perc_2dp(nom, dem):
+def int_perc_1dp(nom, dem):
     perc = nom/dem*100 if dem !=0 else 0
-    perc_2dp = "{:.2f}".format(perc)
-    return str(perc_2dp)+'%'
+    perc_1dp = "{:.1f}".format(perc)
+    return str(perc_1dp)+'%'
 
 def generate_html_age_group(age, id_age_popu, age_perc, total_popu):
     return html.Div([
@@ -90,6 +90,7 @@ layout = html.Div(
                             html.P('Fill in the following about the age structure accommodation type of the settlement',className='card-text'),
                             html.H5('Population', className='card-text'),
                             html.Header('Total Population', className='card-text'),
+                            html.Header('What is the total population in the camp, rounding off to the nearest 10?',className='card-text', style={'color':'darkgray'}),
                             dbc.Input(id='total-population', placeholder='Required', value=20000, type='number', min=0, max=100000, step=10, n_submit=0, bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Age Group Structure', className='card-text'),
                             html.Header('Enter the percentage or actual population that each age range represents',className='card-text', style={'color':'darkgray'}),
@@ -174,7 +175,7 @@ def update_gender_perc_label(slider_value):
     [Input({'type':'age-popu-input', 'index':MATCH}, 'value')], 
     [State('total-population', 'value')])
 def update_age_group_label(input_value, total_value):
-    updated_perc_str = int_perc_2dp(input_value, total_value)
+    updated_perc_str = int_perc_1dp(input_value, total_value)
     return [updated_perc_str]
 
 @dash_app.callback(
@@ -190,7 +191,7 @@ def update_age_group_input(input_value):
 def update_age_group_total(input_values, slider_values, total_value):
     sum_input = sum(input_values)
     sum_slider = sum(slider_values)
-    sum_perc_str = int_perc_2dp(sum_input, total_value)
+    sum_perc_str = int_perc_1dp(sum_input, total_value)
     if (sum_input==total_value):
         return str(sum_input), sum_perc_str, False, '', 'secondary'
     else:
