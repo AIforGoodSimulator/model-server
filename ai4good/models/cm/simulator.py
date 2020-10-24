@@ -242,85 +242,67 @@ class Simulator:
         return {'y': y_out,'t': tim, 'y_plot': y_plot}
 
 #--------------------------------------------------------------------
+    # Generating percentile is currently not in use
+    # def generate_percentiles(self, sols):
+    #     n_time_points = len(sols[0]['t'])
 
-    def generate_percentiles(self, sols):
-        n_time_points = len(sols[0]['t'])
+    #     y_plot = np.zeros((len(self.params.categories.keys()), len(sols) , n_time_points ))
 
-        y_plot = np.zeros((len(self.params.categories.keys()), len(sols) , n_time_points ))
+    #     for k, sol in enumerate(sols):
+    #         sol['y'] = np.asarray(sol['y'])
+    #         for name in self.params.categories.keys():
+    #             y_plot[self.params.categories[name]['index'],k,:] = sol['y_plot'][self.params.categories[name]['index']]
 
-        for k, sol in enumerate(sols):
-            sol['y'] = np.asarray(sol['y'])
-            for name in self.params.categories.keys():
-                y_plot[self.params.categories[name]['index'],k,:] = sol['y_plot'][self.params.categories[name]['index']]
+    #     y_L95, y_U95, y_LQ, y_UQ, y_median = [np.zeros((len(self.params.categories.keys()),n_time_points)) for i in range(5)]
 
-        y_L95, y_U95, y_LQ, y_UQ, y_median = [np.zeros((len(self.params.categories.keys()),n_time_points)) for i in range(5)]
+    #     for name in self.params.categories.keys():
+    #         y_L95[self.params.categories[name]['index'],:] = np.asarray([ np.percentile(y_plot[self.params.categories[name]['index'],:,i],2.5) for i in range(n_time_points) ])
+    #         y_LQ[self.params.categories[name]['index'],:] = np.asarray([ np.percentile(y_plot[self.params.categories[name]['index'],:,i],25) for i in range(n_time_points) ])
+    #         y_UQ[self.params.categories[name]['index'],:] = np.asarray([ np.percentile(y_plot[self.params.categories[name]['index'],:,i],75) for i in range(n_time_points) ])
+    #         y_U95[self.params.categories[name]['index'],:] = np.asarray([ np.percentile(y_plot[self.params.categories[name]['index'],:,i],97.5) for i in range(n_time_points) ])
 
-        for name in self.params.categories.keys():
-            y_L95[self.params.categories[name]['index'],:] = np.asarray([ np.percentile(y_plot[self.params.categories[name]['index'],:,i],2.5) for i in range(n_time_points) ])
-            y_LQ[self.params.categories[name]['index'],:] = np.asarray([ np.percentile(y_plot[self.params.categories[name]['index'],:,i],25) for i in range(n_time_points) ])
-            y_UQ[self.params.categories[name]['index'],:] = np.asarray([ np.percentile(y_plot[self.params.categories[name]['index'],:,i],75) for i in range(n_time_points) ])
-            y_U95[self.params.categories[name]['index'],:] = np.asarray([ np.percentile(y_plot[self.params.categories[name]['index'],:,i],97.5) for i in range(n_time_points) ])
+    #         y_median[self.params.categories[name]['index'],:] = np.asarray([statistics.median(y_plot[self.params.categories[name]['index'],:,i]) for i in range(n_time_points) ])
+    #     return [y_U95, y_UQ, y_LQ, y_L95, y_median]
 
-            y_median[self.params.categories[name]['index'],:] = np.asarray([statistics.median(y_plot[self.params.categories[name]['index'],:,i]) for i in range(n_time_points) ])
-        return [y_U95, y_UQ, y_LQ, y_L95, y_median]
+    # This function has been parallelized
+    # def simulate_over_parameter_range(self, numberOfIterations, t_stop=200):
 
-    def simulate_range_of_R0s(self, t_stop=200): # gives solution for middle R0, as well as solutions for a range of R0s between an upper and lower bound
-        beta_list = self.params.im_beta_list
-        largest_eigenvalue = self.params.largest_eigenvalue
+    #     sols = []
+    #     config_dict = []
+    #     sols_raw = {}
+    #     for ii in tqdm(range(min(numberOfIterations,len(self.params.generated_disease_vectors)))):
+    #         latentRate  = 1/self.params.generated_disease_vectors.LatentPeriod[ii]
+    #         removalRate = 1/self.params.generated_disease_vectors.RemovalPeriod[ii]
 
-        sols = []
-        sols_raw = {}
-        for beta in beta_list:
-            result = self.run_model(T_stop=t_stop, beta=beta)
-            sols.append(result)
-            sols_raw[beta*largest_eigenvalue/self.params.removal_rate]=result
+    #         beta        = removalRate*self.params.generated_disease_vectors.R0[ii]/self.params.largest_eigenvalue
 
-        [y_U95, y_UQ, y_LQ, y_L95, y_median] = self.generate_percentiles(sols)
+    #         hospRate       = 1/self.params.generated_disease_vectors.HospPeriod[ii]
+    #         deathRateICU   = 1/self.params.generated_disease_vectors.DeathICUPeriod[ii]
+    #         deathRateNoIcu = 1/self.params.generated_disease_vectors.DeathNoICUPeriod[ii]
 
-        standard_sol = [self.run_model(T_stop=t_stop, beta=self.params.beta_list[1])]
+    #         result = self.run_model(T_stop=t_stop, beta=beta,
+    #                                 latent_rate=latentRate,
+    #                                 removal_rate=removalRate,
+    #                                 hosp_rate=hospRate,
+    #                                 death_rate_ICU=deathRateICU,
+    #                                 death_rate_no_ICU=deathRateNoIcu
+    #                                 )
+    #         sols.append(result)
+    #         Dict = dict(beta       = beta,
+    #                 latentRate     = latentRate,
+    #                 removalRate    = removalRate,
+    #                 hospRate       = hospRate,
+    #                 deathRateICU   = deathRateICU,
+    #                 deathRateNoIcu = deathRateNoIcu
+    #                 )
+    #         config_dict.append(Dict)
+    #         sols_raw[(self.params.generated_disease_vectors.R0[ii],latentRate,removalRate,hospRate,deathRateICU,deathRateNoIcu)]=result
 
-        return sols_raw, standard_sol, [y_U95, y_UQ, y_LQ, y_L95, y_median]
+    #     [y_U95, y_UQ, y_LQ, y_L95, y_median] = self.generate_percentiles(sols)
 
-
-    def simulate_over_parameter_range(self, numberOfIterations, t_stop=200):
-
-        sols = []
-        config_dict = []
-        sols_raw = {}
-        for ii in tqdm(range(min(numberOfIterations,len(self.params.generated_disease_vectors)))):
-            latentRate  = 1/self.params.generated_disease_vectors.LatentPeriod[ii]
-            removalRate = 1/self.params.generated_disease_vectors.RemovalPeriod[ii]
-
-            beta        = removalRate*self.params.generated_disease_vectors.R0[ii]/self.params.largest_eigenvalue
-
-            hospRate       = 1/self.params.generated_disease_vectors.HospPeriod[ii]
-            deathRateICU   = 1/self.params.generated_disease_vectors.DeathICUPeriod[ii]
-            deathRateNoIcu = 1/self.params.generated_disease_vectors.DeathNoICUPeriod[ii]
-
-            result = self.run_model(T_stop=t_stop, beta=beta,
-                                    latent_rate=latentRate,
-                                    removal_rate=removalRate,
-                                    hosp_rate=hospRate,
-                                    death_rate_ICU=deathRateICU,
-                                    death_rate_no_ICU=deathRateNoIcu
-                                    )
-            sols.append(result)
-            Dict = dict(beta       = beta,
-                    latentRate     = latentRate,
-                    removalRate    = removalRate,
-                    hospRate       = hospRate,
-                    deathRateICU   = deathRateICU,
-                    deathRateNoIcu = deathRateNoIcu
-                    )
-            config_dict.append(Dict)
-            sols_raw[(self.params.generated_disease_vectors.R0[ii],latentRate,removalRate,hospRate,deathRateICU,deathRateNoIcu)]=result
-
-        [y_U95, y_UQ, y_LQ, y_L95, y_median] = self.generate_percentiles(sols)
-
-        # standard run
-        StandardSol = [self.run_model(T_stop=t_stop, beta=self.params.beta_list[1])]
-
-        return sols_raw, StandardSol, [y_U95, y_UQ, y_LQ, y_L95, y_median], config_dict
+    #     standard run
+    #     StandardSol = [self.run_model(T_stop=t_stop, beta=self.params.beta_list[1])]
+    #     return sols_raw, [y_U95, y_UQ, y_LQ, y_L95, y_median], config_dict
 
 
     def simulate_over_parameter_range_parallel(self, numberOfIterations, t_stop, n_processes):
@@ -368,12 +350,10 @@ class Simulator:
             sols_raw[(self.params.generated_disease_vectors.R0[ii], dct['latentRate'], dct['removalRate'],
                       dct['hospRate'], dct['deathRateICU'], dct['deathRateNoIcu'])] = sols[ii]
 
-        [y_U95, y_UQ, y_LQ, y_L95, y_median] = self.generate_percentiles(sols)
-
+        # [y_U95, y_UQ, y_LQ, y_L95, y_median] = self.generate_percentiles(sols)
         # standard run
-        StandardSol = [self.run_model(T_stop=t_stop, beta=self.params.beta_list[1])]
-
-        return sols_raw, StandardSol, [y_U95, y_UQ, y_LQ, y_L95, y_median], config_dict
+        # StandardSol = [self.run_model(T_stop=t_stop, beta=self.params.beta_list[1])]
+        return sols_raw, config_dict
 
 
 def generate_csv(data_to_save, params: Parameters,  input_type=None, time_vec=None) -> pd.DataFrame:

@@ -26,15 +26,13 @@ class CompartmentalModel(Model):
 
     def run(self, p: Parameters) -> ModelResult:
         sim = Simulator(p)
-        sols_raw, standard_sol, percentiles, config_dict = sim.simulate_over_parameter_range_parallel(
+        sols_raw, config_dict = sim.simulate_over_parameter_range_parallel(
             p.control_dict['numberOfIterations'], p.control_dict['t_sim'],  p.control_dict['nProcesses'])
 
         # Precompute some reports
         logger.info("Generating main report")
         report_raw = generate_csv(sols_raw, p, input_type='raw')
-
         report = normalize_report(report_raw, p)
-
         logger.info("Computing prevalence_age_table")
         prevalence_age = prevalence_age_table(report)
         logger.info("Computing prevalence_all_table")
@@ -46,9 +44,7 @@ class CompartmentalModel(Model):
 
         logger.info("Model result ready")
         return ModelResult(self.result_id(p), {
-            #'sols_raw': sols_raw,
-            'standard_sol': standard_sol,
-            'percentiles': percentiles,
+            # 'percentiles': percentiles,
             'config_dict': config_dict,
             'params': p,
             'report': report_raw,
