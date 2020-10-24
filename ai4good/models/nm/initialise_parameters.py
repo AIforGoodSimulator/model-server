@@ -205,6 +205,7 @@ class Parameters:
 
     def update_parameters(self, graph):
         new_pop_size = len(graph.nodes)
+        self.total_population = new_pop_size
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Distribution based parameters
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

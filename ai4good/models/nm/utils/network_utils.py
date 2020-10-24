@@ -376,8 +376,8 @@ def downsample_graph(graph, new_graph_size, technique):
         sampled_nodes = random.sample(graph.nodes, new_graph_size)
         sampled_graph = graph.subgraph(sampled_nodes)
         relabel_map = dict(zip(list(sampled_graph.nodes), range(len(sampled_graph.nodes))))
-        sampled_graph = nx.relabel_nodes(sampled_graph, relabel_map, False)
-        return sampled_graph
+        final_graph = nx.relabel_nodes(sampled_graph, relabel_map)
+        return final_graph
     else:
         return None
 

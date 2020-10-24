@@ -20,12 +20,10 @@ class NetworkModel(Model):
         return p.sha1_hash()
 
     def run(self, p: Parameters) -> ModelResult:
-        logging.info("Generating network graph...")
+        logging.info("Generating network graph with neighbors...")
         graph, nodes_per_struct = create_new_graph(p)
 
-        logging.info("Running network model...")
-        p.initialise_age_parameters(graph)
-
+        logging.info("Adding food queues...")
         if '4_food_queues' in p.profile_name:  # Multiple food queues model: 4
             graph = create_multiple_food_queues(graph, 2, p.food_weight, nodes_per_struct,
                                                 [p.grid_isoboxes, p.grid_block1, p.grid_block2, p.grid_block3])
@@ -39,7 +37,17 @@ class NetworkModel(Model):
                 graph, nodes_per_struct, percentage_per_struct=0.5, proximity_radius=5,
                 edge_weight=p.food_weight, activity_name="food")
 
-        result = process_graph_interventions(p, graph) if "interventions" in p.profile_name else process_graph(p, graph)
+        logging.info("Sampling from original graph...")
+        new_graph_size = len(graph.nodes) // 3
+        sampled_graph = downsample_graph(graph, new_graph_size, "uniform")
+        p.update_parameters(sampled_graph)
+        p.initialise_age_parameters(sampled_graph)
+
+        logging.info("Running network model...")
+        if "interventions" in p.profile_name:
+            result = process_graph_interventions(p, sampled_graph)
+        else:
+            result = process_graph(p, sampled_graph)
 
         return ModelResult(self.result_id(p), {
             'params': p,
