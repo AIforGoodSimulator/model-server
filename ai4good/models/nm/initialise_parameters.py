@@ -78,7 +78,6 @@ class Parameters:
         self.n_isoboxes = self.dims_isoboxes[0] * self.dims_isoboxes[1]
 
         # Define the maximum population per structures (tents and isoboxes) drawn from a poisson distribution
-
         max_pop_per_struct_isoboxes = list(
             poisson.rvs(mu=self.number_of_people_in_one_isobox, size=self.n_isoboxes))
         max_pop_per_struct_block1 = list(poisson.rvs(
@@ -142,14 +141,11 @@ class Parameters:
         self.R0_mean = np.float(model_params[model_params['Name'] == 'R0_mean'].Value)
         self.R0_coeffvar = np.float(model_params[model_params['Name'] == 'R0_standard_deviation'].Value)
 
-        self.sigma = 1 / \
-                     gamma_dist(self.latentPeriod_mean, self.latentPeriod_coeffvar, self.total_population)
-        self.lamda = 1 / \
-                     gamma_dist(self.presymptomaticPeriod_mean,
-                                self.presymptomaticPeriod_coeffvar, self.total_population)
-        self.gamma = 1 / \
-                     gamma_dist(self.symptomaticPeriod_mean,
-                                self.symptomaticPeriod_coeffvar, self.total_population)
+        self.sigma = 1 / gamma_dist(self.latentPeriod_mean, self.latentPeriod_coeffvar, self.total_population)
+        self.lamda = 1 / gamma_dist(self.presymptomaticPeriod_mean,
+                                    self.presymptomaticPeriod_coeffvar, self.total_population)
+        self.gamma = 1 / gamma_dist(self.symptomaticPeriod_mean,
+                                    self.symptomaticPeriod_coeffvar, self.total_population)
         self.eta = 1 / gamma_dist(self.onsetToHospitalizationPeriod_mean,
                                   self.onsetToHospitalizationPeriod_coeffvar, self.total_population)
         self.gamma_H = 1 / gamma_dist(self.hospitalizationToDischargePeriod_mean,
@@ -206,6 +202,47 @@ class Parameters:
         self.pct_hospitalized = get_values_per_node(ageGroup_pctHospitalized, graph)
         self.pct_fatality = get_values_per_node(ageGroup_hospitalFatalityRate, graph)
         self.alpha = get_values_per_node(ageGroup_susceptibility, graph)
+
+    def update_parameters(self, graph):
+        new_pop_size = len(graph.nodes)
+        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        # Distribution based parameters
+        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        self.sigma = 1 / gamma_dist(self.latentPeriod_mean, self.latentPeriod_coeffvar, new_pop_size)
+        self.lamda = 1 / gamma_dist(self.presymptomaticPeriod_mean,
+                                    self.presymptomaticPeriod_coeffvar, new_pop_size)
+        self.gamma = 1 / gamma_dist(self.symptomaticPeriod_mean,
+                                    self.symptomaticPeriod_coeffvar, new_pop_size)
+        self.eta = 1 / gamma_dist(self.onsetToHospitalizationPeriod_mean,
+                                  self.onsetToHospitalizationPeriod_coeffvar, new_pop_size)
+        self.gamma_H = 1 / gamma_dist(self.hospitalizationToDischargePeriod_mean,
+                                      self.hospitalizationToDischargePeriod_coeffvar,
+                                      self.total_population)
+        self.mu_H = 1 / gamma_dist(self.hospitalizationToDeathPeriod_mean,
+                                   self.hospitalizationToDeathPeriod_coeffvar, new_pop_size)
+        self.R0 = gamma_dist(self.R0_mean, self.R0_coeffvar, new_pop_size)
+
+        self.infectiousPeriod = 1 / self.lamda + 1 / self.gamma
+        self.beta = 1 / self.infectiousPeriod * self.R0
+        self.beta_pairwise_mode = 'infected'
+        self.delta_pairwise_mode = 'mean'
+
+        # Constant parameters
+        self.p_global_interaction = 0.2
+        self.init_exposed = int(new_pop_size / 100)
+        self.init_infected = int(new_pop_size / 100)
+
+        self.transmission_mean = self.beta.mean()
+        self.progressionToInfectious_mean = self.sigma.mean()
+        self.progressionToSymptomatic_mean = self.lamda.mean()
+        self.recovery_mean = self.gamma.mean()
+        self.hospitalization_mean = self.eta.mean()
+
+        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        # Reduced interaction parameters
+        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        self.beta_q = self.beta * (self.reduction_rate / self.R0_mean)
 
     def sha1_hash(self) -> str:
         hash_params = [
