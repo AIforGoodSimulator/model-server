@@ -9,7 +9,8 @@ from ai4good.webapp.model_results_utils import load_report
 from dash.dependencies import Input, Output
 import numpy as np
 import pandas as pd
-from ai4good.models.cm.initialise_parameters import Parameters # this needs to be changed later
+# this needs to be changed later
+from ai4good.models.cm.initialise_parameters import Parameters
 import plotly.graph_objs as go
 from ai4good.utils.logger_util import get_logger
 from plotly.colors import DEFAULT_PLOTLY_COLORS
@@ -22,6 +23,8 @@ CAMP = 'Moria'
 # can read in the camp parameters here directly from the user input thus avoiding retrieving data from the system elsewhere
 
 # @cache.memoize(timeout=cache_timeout)
+
+
 def layout():
     # camp, profile, cmp_profiles
     # _, profile_df, params, _ = get_model_result(camp, profile)
@@ -38,6 +41,7 @@ def layout():
             dcc.Markdown(high_level_message_3(), style={'margin': 30}),
             dcc.Markdown(high_level_message_4(), style={'margin': 30}),
             dcc.Markdown(high_level_message_5(), style={'margin': 30}),
+            html.Div(render_message_5_plots(), style={'margin': 30}),
             dcc.Loading(
                 html.Div([], id='main_section_part2', style={'margin': 30})),
             # base_profile_chart_section(),
@@ -100,7 +104,7 @@ def get_model_result_message(message_key):
     logger.info(f"Reading data for high level message: {message_key}")
     model_profile_report_dict = defaultdict(dict)
     for model in model_profile_config[message_key].keys():
-        if len(model_profile_config[message_key][model])>0:
+        if len(model_profile_config[message_key][model]) > 0:
             for profile in model_profile_config[message_key][model]:
                 try:
                     mr = model_runner.get_result(model, profile, CAMP)
@@ -148,9 +152,56 @@ def render_message_1_plots():
 
         label_to_plot = [label_name]
 
+        p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_to_plot, ci_name_prefix=label_name + ' ')
+        logging.info(f'plot on {row_idx}')
+        fig.add_trace(p1, row=1, col=1)
+        fig.add_trace(p2, row=1, col=1)
+        fig.update_yaxes(title_text=col, row=row_idx, col=1)
+        row_idx += 1
+    x_title = 'Time, days'
+    fig.update_xaxes(title_text=x_title, row=1, col=1)
+    # fig.update_xaxes(title_text=x_title, row=2, col=1)
+    # fig.update_xaxes(title_text=x_title, row=3, col=1)
+    # fig.update_xaxes(title_text=x_title, row=4, col=1)
+    fig.update_traces(mode='lines')
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=30, b=0),
+        height=400,
+        showlegend=True
 
+    )
+
+    return [
+        dcc.Graph(
+            id='plot_all_fig',
+            figure=fig,
+            style={'width': '100%'}
+        )
+    ]
+
+
+def render_message_5_plots():
+    model_profile_report_dict = get_model_result_message("message_5")
+    columns_to_plot = ['Deaths']
+    fig = make_subplots()
+    col = columns_to_plot[0]
+    row_idx = 1
+    for profile in model_profile_report_dict["compartmental-model"].keys():
+        if profile == 'only_better_hygiene':
+            label_name = 'Only Implementing Better Hygiene'
+        elif profile == 'only_remove_symptomatic':
+            label_name = 'Only Removing Symptomatic Individuals'
+        elif profile == 'only_remove_high_risk':
+            label_name = 'Only Removing High-Risk Individuals'
+        elif profile == 'combined_hygiene_symptomatic_high_risk':
+            label_name = 'Combining Better Hygiene and Removal of Symptomatic and High-Risk Individuals'
+        else:
+            label_name = 'default'
+
+        label_to_plot = [label_name]
         p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_to_plot, ci_name_prefix=label_name + ' ')
         logger.info(f'plot on {row_idx}')
+        
         fig.add_trace(p1, row=1, col=1)
         fig.add_trace(p2, row=1, col=1)
         fig.update_yaxes(title_text=col, row=row_idx, col=1)
@@ -181,11 +232,13 @@ def render_message_1_plots():
         )
     ]
 
-color_scheme_main = ['rgba(0, 176, 246, 0.2)', 'rgba(130, 190, 240, 1)', 'rgb(0, 176, 246)']
+
+color_scheme_main = ['rgba(0, 176, 246, 0.2)',
+                     'rgba(130, 190, 240, 1)', 'rgb(0, 176, 246)']
 color_scheme_secondary = ['rgba(245, 240, 240, 0.5)']
 
 
-def plot_iqr(df: pd.DataFrame, y_col: str,graph_label:str,
+def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str,
              x_col='Time', estimator=np.median, estimator_name='median', ci_name_prefix='',
              iqr_low=0.25, iqr_high=0.75,
              color_scheme=color_scheme_main):
@@ -205,7 +258,7 @@ def plot_iqr(df: pd.DataFrame, y_col: str,graph_label:str,
         x=x + x_rev, y=y_upper + y_lower, fill='toself',  line_color=color_scheme[1],
          name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval', hoverinfo="skip")
     p2 = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6))
-    return p1,p2
+    return p1, p2
 
 # @dash_app.callback(
 #     Output('cmp_section', 'children'),
@@ -227,7 +280,7 @@ def plot_iqr(df: pd.DataFrame, y_col: str,graph_label:str,
 #         dcc.Markdown(textwrap.dedent(f'''
 #         ## 2. Intervention scenarios
 
-#         We compare each intervention scenario to baseline. Baseline charts are in blue as before, intervention charts 
+#         We compare each intervention scenario to baseline. Baseline charts are in blue as before, intervention charts
 #         are in red.
 #          ''')),
 #         html.Div(intervention_content)
@@ -243,8 +296,8 @@ def plot_iqr(df: pd.DataFrame, y_col: str,graph_label:str,
 #     return [
 #         dcc.Markdown(textwrap.dedent(f'''
 #         ## 2.{idx} {cmp_profile_name} intervention comparison
-        
-#         Here we compare {cmp_profile_name} model profile with base {base_profile_name} profile explored in the main 
+
+#         Here we compare {cmp_profile_name} model profile with base {base_profile_name} profile explored in the main
 #         section. Compared to base profile {cmp_profile_name} has following changes:
 #         ''')),
 #         dbc.Row([
@@ -305,4 +358,3 @@ def plot_iqr(df: pd.DataFrame, y_col: str,graph_label:str,
 #             style={'width': '100%'}
 #         )
 #     ]
-
