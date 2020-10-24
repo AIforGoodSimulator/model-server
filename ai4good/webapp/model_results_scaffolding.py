@@ -1,4 +1,3 @@
-import logging
 import textwrap
 import dash_html_components as html
 import dash_core_components as dcc
@@ -13,6 +12,10 @@ import pandas as pd
 # this needs to be changed later
 from ai4good.models.cm.initialise_parameters import Parameters
 import plotly.graph_objs as go
+from ai4good.utils.logger_util import get_logger
+from plotly.colors import DEFAULT_PLOTLY_COLORS
+
+logger = get_logger(__name__)
 
 
 CAMP = 'Moria'
@@ -27,6 +30,7 @@ def layout():
     # _, profile_df, params, _ = get_model_result(camp, profile)
     return html.Div(
         [
+            html.A(html.Button('Print', className="btn btn-light"), href='javascript:window.print()', className='d-print-none', style={"float": 'right'}),
             dcc.Markdown(disclaimer(), style={'margin': 30}),
             html.H1(f'AI for Good Simulator: Model Results Dashboard for the Refugee Camp', style={
                     'margin': 30}),
@@ -97,18 +101,20 @@ def high_level_message_5():
 
 @local_cache.memoize(timeout=cache_timeout)
 def get_model_result_message(message_key):
-    logging.info(f"Reading data for high level message: {message_key}")
+    logger.info(f"Reading data for high level message: {message_key}")
     model_profile_report_dict = defaultdict(dict)
     for model in model_profile_config[message_key].keys():
         if len(model_profile_config[message_key][model]) > 0:
             for profile in model_profile_config[message_key][model]:
-                mr = model_runner.get_result(model, profile, CAMP)
-                profile_df = facade.ps.get_params(
-                    model, profile).drop(columns=['Profile'])
-                params = Parameters(facade.ps, CAMP, profile_df, {})
-                report = load_report(mr, params)
-                assert mr is not None
-                model_profile_report_dict[model][profile] = report
+                try:
+                    mr = model_runner.get_result(model, profile, CAMP)
+                    profile_df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
+                    params = Parameters(facade.ps, CAMP, profile_df, {})
+                    report = load_report(mr, params)
+                    assert mr is not None
+                    model_profile_report_dict[model][profile] = report
+                except:
+                    logger.info(f"Unable to load result for model: ({model}, {profile}, {CAMP}).")
     return model_profile_report_dict
 
 
@@ -123,6 +129,7 @@ def get_model_result_message(message_key):
 #     report = load_report(mr, params)
 #     return mr, profile_df, params, report
 
+color_scheme_updated = DEFAULT_PLOTLY_COLORS
 
 def render_message_1_plots():
     model_profile_report_dict = get_model_result_message("message_1")
@@ -145,8 +152,7 @@ def render_message_1_plots():
 
         label_to_plot = [label_name]
 
-        p1, p2 = plot_iqr(
-            model_profile_report_dict["compartmental-model"][profile], col, label_to_plot)
+        p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_to_plot, ci_name_prefix=label_name + ' ')
         logging.info(f'plot on {row_idx}')
         fig.add_trace(p1, row=1, col=1)
         fig.add_trace(p2, row=1, col=1)
@@ -193,14 +199,18 @@ def render_message_5_plots():
             label_name = 'default'
 
         label_to_plot = [label_name]
-
-        p1, p2 = plot_iqr(
-            model_profile_report_dict["compartmental-model"][profile], col, label_to_plot)
-        logging.info(f'plot on {row_idx}')
+        p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_to_plot, ci_name_prefix=label_name + ' ')
+        logger.info(f'plot on {row_idx}')
+        
         fig.add_trace(p1, row=1, col=1)
         fig.add_trace(p2, row=1, col=1)
         fig.update_yaxes(title_text=col, row=row_idx, col=1)
+        if row_idx < len(color_scheme_updated):
+            fig["data"][2 * (row_idx - 1)]["line"]["color"] = color_scheme_updated[row_idx - 1] #Curve Color
+            fig["data"][(2 * row_idx) - 1]["line"]["color"] = color_scheme_updated[row_idx - 1] #IQR Colour
+            fig["data"][2 * (row_idx - 1)]["opacity"] = 0.2 #IQR Opacity
         row_idx += 1
+        
     x_title = 'Time, days'
     fig.update_xaxes(title_text=x_title, row=1, col=1)
     # fig.update_xaxes(title_text=x_title, row=2, col=1)
@@ -243,10 +253,10 @@ def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str,
     y_upper = cis[cis['level_1'] == 'high'][0].values.tolist()
     y_lower = cis[cis['level_1'] == 'low'][0].values.tolist()
     y_lower = y_lower[::-1]
-
+    
     p1 = go.Scatter(
         x=x + x_rev, y=y_upper + y_lower, fill='toself',  line_color=color_scheme[1],
-        name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval')
+         name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval', hoverinfo="skip")
     p2 = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6))
     return p1, p2
 
