@@ -50,10 +50,6 @@ class ParamStore(ABC):
         pass
 
     @abstractmethod
-    def get_contact_matrix_params(self, camp: str) -> pd.DataFrame:
-        pass
-
-    @abstractmethod
     def get_disease_params(self) -> pd.DataFrame:
         pass
 
@@ -100,10 +96,6 @@ class SimpleParamStore(ParamStore):
         df = self._read_csv("network-model_camp_params.csv")
         return df[df.Camp == camp].copy()
 
-    def get_contact_matrix_params(self, camp: str) -> pd.DataFrame:
-        df = self._read_csv("contact_matrix_params.csv")
-        return df[df.Camp == camp].copy()
-
     def get_disease_params(self) -> pd.DataFrame:
         return self._read_csv("disease_params.csv")
 
@@ -114,7 +106,7 @@ class SimpleParamStore(ParamStore):
         return self._read_csv("generated_params.csv")
 
     def get_supported_countries(self):
-        countries = [f.split('.')[0] for f in os.listdir(pu.cm_params_path('contact_matrices')) if f.endswith('.csv')]
+        countries = [f.split('.')[0] for f in os.listdir(pu.params_path('contact_matrices')) if f.endswith('.csv')]
         return countries
 
     @staticmethod

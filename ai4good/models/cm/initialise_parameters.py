@@ -8,6 +8,7 @@ import json
 import hashlib
 from ai4good.params.param_store import ParamStore
 from ai4good.utils import path_utils as pu
+from ai4good.models.cm import longname, shortname, colour, index, fill_colour
 
 
 class Parameters:
@@ -65,21 +66,11 @@ class Parameters:
         self.death_rate_with_ICU = death_rate_with_ICU
         self.death_prob_with_ICU = death_prob_with_ICU
 
-        categs = pd.read_csv(pu.cm_params_path('categories.csv'), delimiter=';', skipinitialspace=True)
-        self.calculated_categories = categs['category'].to_list()
-        categs['index'] = np.arange(self.number_compartments)
-
-        change_categs = pd.read_csv(pu.cm_params_path('change_categories.csv'), delimiter=';', skipinitialspace=True)
-        self.change_in_categories = change_categs['category'].to_list()
-        change_categs['index'] = np.arange(len(categs), 2 * self.number_compartments)
-
-        new_infected_category = {'category': 'Ninf', 'shortname': 'New Infected',
-                                 'longname': 'Change in total active infections', 'colour': 'rgb(255,125,100)',
-                                 'colour_name': '', 'index': 2*self.number_compartments}
-
-        all_categs = pd.concat([categs, change_categs, pd.DataFrame([new_infected_category])])
-        all_categs['fill_colour'] = all_categs.apply(lambda row: 'rgba' + row['colour'][3:-1] + ',0.1)', axis=1)
-        self.categories: dict = all_categs.set_index(all_categs['category']).transpose().to_dict()
+        self.calculated_categories = ['S','E','I','A','R','H','C','D','O','Q','U']
+        self.change_in_categories = ['C'+category for category in self.calculated_categories]
+        categories_dicts = [longname,shortname,colour,index,fill_colour]
+        categories_df = pd.DataFrame(categories_dicts, index =['longname', 'shortname','colour','index','fill_colour'])
+        self.categories: dict = categories_df.to_dict()
 
         self.population_frame, self.population = self.prepare_population_frame(self.camp_params)
 
@@ -205,21 +196,15 @@ class Parameters:
     def generate_contact_matrix(self, age_limits: np.array):
         supported_countries = self.ps.get_supported_countries()
         self.country = self.camp_params['Country'].tolist()[0]
-        if self.country not in supported_countries:
-            return self.ps.get_contact_matrix_params(self.camp).to_numpy()[:, 2:].astype(np.double)
-        contact_matrix_path = pu.cm_params_path(f'contact_matrices/{self.country}.csv')
+        contact_matrix_path = pu.params_path(f'contact_matrices/{self.country}.csv')
         contact_matrix = pd.read_csv(contact_matrix_path).to_numpy()
         population_array = self.camp_params['Population_structure'].to_numpy()
-
         n_categories = len(age_limits) - 1
         ind_limits = np.array(age_limits / 5, dtype=int)
-
         p = np.zeros(16)
         for i in range(n_categories):
             p[ind_limits[i]: ind_limits[i + 1]] = population_array[i] / (ind_limits[i + 1] - ind_limits[i])
-
         transformed_matrix = np.zeros((n_categories, n_categories))
-
         for i in range(n_categories):
             for j in range(n_categories):
                 sump = sum(p[ind_limits[i]: ind_limits[i + 1]])
@@ -227,5 +212,4 @@ class Parameters:
                     p[ind_limits[i]: ind_limits[i + 1]]).transpose()
                 v1 = b.sum() / sump
                 transformed_matrix[i, j] = v1
-
         return transformed_matrix
