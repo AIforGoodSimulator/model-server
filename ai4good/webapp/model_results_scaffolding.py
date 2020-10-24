@@ -22,9 +22,12 @@ CAMP = 'Moria'
 # this logic needs to be changed later where the user input params will be stored
 # can read in the camp parameters here directly from the user input thus avoiding retrieving data from the system elsewhere
 
+color_scheme_main = ['rgba(0, 176, 246, 0.2)',
+                     'rgba(130, 190, 240, 1)', 'rgb(0, 176, 246)']
+color_scheme_secondary = ['rgba(245, 240, 240, 0.5)']
+
+
 # @cache.memoize(timeout=cache_timeout)
-
-
 def layout():
     # camp, profile, cmp_profiles
     # _, profile_df, params, _ = get_model_result(camp, profile)
@@ -134,9 +137,9 @@ color_scheme_updated = DEFAULT_PLOTLY_COLORS
 def render_message_1_plots():
     model_profile_report_dict = get_model_result_message("message_1")
     columns_to_plot = ['Infected (symptomatic)']
-    fig = make_subplots()
+    fig = go.Figure()
     col = columns_to_plot[0]
-    row_idx = 1
+    plot_num = 0
     for profile in model_profile_report_dict["compartmental-model"].keys():
         if profile == 'baseline':
             label_name = 'No interventions'
@@ -150,20 +153,18 @@ def render_message_1_plots():
         else:
             label_name = 'default'
 
-        label_to_plot = [label_name]
-
-        p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_to_plot, ci_name_prefix=label_name + ' ')
-        logging.info(f'plot on {row_idx}')
-        fig.add_trace(p1, row=1, col=1)
-        fig.add_trace(p2, row=1, col=1)
-        fig.update_yaxes(title_text=col, row=row_idx, col=1)
-        row_idx += 1
-    x_title = 'Time, days'
-    fig.update_xaxes(title_text=x_title, row=1, col=1)
-    # fig.update_xaxes(title_text=x_title, row=2, col=1)
-    # fig.update_xaxes(title_text=x_title, row=3, col=1)
-    # fig.update_xaxes(title_text=x_title, row=4, col=1)
-    fig.update_traces(mode='lines')
+        ci,line= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_name)
+        fig.add_trace(ci)
+        fig.add_trace(line)
+        fig.update_yaxes(title_text=col)
+        if plot_num < len(color_scheme_updated):
+            fig["data"][2 * plot_num]["line"]["color"] = color_scheme_updated[plot_num] #IQR Color
+            fig["data"][2 * plot_num]["opacity"] = 0.2 #IQR Opacity
+            fig["data"][2 * plot_num + 1]["line"]["color"] = color_scheme_updated[plot_num] #Curve Colour
+        plot_num += 1
+    x_title = 'Number of days since the virus was introduced to the camp'
+    fig.update_xaxes(title_text=x_title)
+    fig.update_traces(line=dict(width=2))
     fig.update_layout(
         margin=dict(l=0, r=0, t=30, b=0),
         height=400,
@@ -173,7 +174,7 @@ def render_message_1_plots():
 
     return [
         dcc.Graph(
-            id='plot_all_fig',
+            id='plot_message1_fig',
             figure=fig,
             style={'width': '100%'}
         )
@@ -185,7 +186,7 @@ def render_message_5_plots():
     columns_to_plot = ['Deaths']
     fig = make_subplots()
     col = columns_to_plot[0]
-    row_idx = 1
+    plot_num = 0
     for profile in model_profile_report_dict["compartmental-model"].keys():
         if profile == 'only_better_hygiene':
             label_name = 'Only Implementing Better Hygiene'
@@ -198,50 +199,43 @@ def render_message_5_plots():
         else:
             label_name = 'default'
 
-        label_to_plot = [label_name]
-        p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_to_plot, ci_name_prefix=label_name + ' ')
-        logger.info(f'plot on {row_idx}')
+        p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_name)
         
         fig.add_trace(p1, row=1, col=1)
         fig.add_trace(p2, row=1, col=1)
-        fig.update_yaxes(title_text=col, row=row_idx, col=1)
-        if row_idx < len(color_scheme_updated):
-            fig["data"][2 * (row_idx - 1)]["line"]["color"] = color_scheme_updated[row_idx - 1] #Curve Color
-            fig["data"][(2 * row_idx) - 1]["line"]["color"] = color_scheme_updated[row_idx - 1] #IQR Colour
-            fig["data"][2 * (row_idx - 1)]["opacity"] = 0.2 #IQR Opacity
-        row_idx += 1
+        fig.update_yaxes(title_text=col, row=1, col=1)
+        if plot_num < len(color_scheme_updated):
+            fig["data"][2 * plot_num]["line"]["color"] = color_scheme_updated[plot_num] #IQR Color
+            fig["data"][2 * plot_num]["opacity"] = 0.2 #IQR Opacity
+            fig["data"][2 * plot_num + 1]["line"]["color"] = color_scheme_updated[plot_num] #Curve Colour
+        plot_num += 1
         
-    x_title = 'Time, days'
+    x_title = 'Number of days since the virus was introduced to the camp'
     fig.update_xaxes(title_text=x_title, row=1, col=1)
     # fig.update_xaxes(title_text=x_title, row=2, col=1)
     # fig.update_xaxes(title_text=x_title, row=3, col=1)
     # fig.update_xaxes(title_text=x_title, row=4, col=1)
-    fig.update_traces(mode='lines')
+    fig.update_traces(line=dict(width=2))
     fig.update_layout(
         margin=dict(l=0, r=0, t=30, b=0),
         height=400,
-        showlegend=True
+        showlegend=True,
+        legend_title_text='Scenarios'
 
     )
 
     return [
         dcc.Graph(
-            id='plot_all_fig',
+            id='plot_message5_fig',
             figure=fig,
             style={'width': '100%'}
         )
     ]
 
 
-color_scheme_main = ['rgba(0, 176, 246, 0.2)',
-                     'rgba(130, 190, 240, 1)', 'rgb(0, 176, 246)']
-color_scheme_secondary = ['rgba(245, 240, 240, 0.5)']
-
-
 def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str,
-             x_col='Time', estimator=np.median, estimator_name='median', ci_name_prefix='',
-             iqr_low=0.25, iqr_high=0.75,
-             color_scheme=color_scheme_main):
+             x_col='Time', estimator=np.median, estimator_name='median',
+             iqr_low=0.25, iqr_high=0.75):
     grouped = df.groupby(x_col)[y_col]
     est = grouped.agg(estimator)
     cis = pd.DataFrame(np.c_[grouped.quantile(iqr_low), grouped.quantile(iqr_high)], index=est.index,
@@ -254,11 +248,10 @@ def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str,
     y_lower = cis[cis['level_1'] == 'low'][0].values.tolist()
     y_lower = y_lower[::-1]
     
-    p1 = go.Scatter(
-        x=x + x_rev, y=y_upper + y_lower, fill='toself',  line_color=color_scheme[1],
-         name=f'{ci_name_prefix}{iqr_low*100}% to {iqr_high*100}% interval', hoverinfo="skip")
-    p2 = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6))
-    return p1, p2
+    ci = go.Scatter(
+        x=x + x_rev, y=y_upper + y_lower, fill='toself', showlegend=False, hoverinfo="skip")
+    line = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6))
+    return ci, line
 
 # @dash_app.callback(
 #     Output('cmp_section', 'children'),
