@@ -147,7 +147,7 @@ layout = html.Div(
                                     dbc.Tab(label=accommodation_info[0], tab_id=tab_id_accommodation_info[0], children=generate_accommodation_info_children(0)), 
                                     dbc.Tab(label=accommodation_info[1], tab_id=tab_id_accommodation_info[1], children=generate_accommodation_info_children(1)), 
                                     dbc.Tab(label=accommodation_info[2], tab_id=tab_id_accommodation_info[2], children=generate_accommodation_info_children(2)), 
-                                ], id='tabs-accommodation-info', active_tab=tab_id_accommodation_info[0],  style={'margin-top':'10px'}), 
+                                ], id='tabs-accommodation-info', active_tab=tab_id_accommodation_info[0]), 
                             ], style={'border':'1px lightgray solid'}),
                             html.P(''),
                             dbc.CardFooter(dbc.Button('Next', id='page-2-button', color='secondary', disabled=False, href='/sim/input_page_3', style={'float':'right'})), 

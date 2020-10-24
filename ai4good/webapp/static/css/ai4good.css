@@ -46,12 +46,10 @@ body
 .light_navBar
 {
   background-color: white!important;
-  /* background-color: #ecf0f1!important; */
   color: black!important;
   -webkit-box-shadow: 0px 3px 33px -8px rgba(0,0,0,0.5);
   -moz-box-shadow: 0px 3px 33px -8px rgba(0,0,0,0.5);
-  box-shadow: 0px 3px 33px -8px rgba
-  (0,0,0,0.5);
+  box-shadow: 0px 3px 33px -8px rgba(0,0,0,0.5);
 }
 
 .light_navBar a
@@ -83,7 +81,7 @@ background-color: transparent!important;
 
 .nav-tabs
 {
-  background-color: #FFFF;
+  background-color: #eeeeee;
 }
 
 .nav-tabs a
@@ -92,9 +90,8 @@ background-color: transparent!important;
   border-top-right-radius: 0px!important;
 }
 
-.nav-link.active 
+.nav-link.active
 {
-  border-color: #dee2e6 #dee2e6 TRANSPARENT!important;
-  background-color: #eeeeee!important;
-  color: black!important;//
+  border-color: TRANSPARENT #dee2e6 TRANSPARENT #dee2e6!important;
+  color: black!important;
 }
