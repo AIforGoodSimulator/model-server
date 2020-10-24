@@ -91,7 +91,7 @@ layout = html.Div(
                             html.H5('Population', className='card-text'),
                             html.Header('Total Population', className='card-text'),
                             html.Header('What is the total population in the camp, rounding off to the nearest 10?',className='card-text', style={'color':'darkgray'}),
-                            dbc.Input(id='total-population', placeholder='Required', value=20000, type='number', min=0, max=100000, step=10, n_submit=0, bs_size='sm', style={'margin-bottom':'25px'}),
+                            dbc.Input(id='total-population', placeholder='Required', value=20000, type='number', min=0, max=100000, step=10, n_submit=0, bs_size='sm', debounce=True, style={'margin-bottom':'25px'}),
                             html.Header('Age Group Structure', className='card-text'),
                             html.Header('Enter the percentage or actual population that each age range represents',className='card-text', style={'color':'darkgray'}),
                             html.Div([
@@ -210,13 +210,16 @@ def update_age_popu_max(total_value, n_clicks, input_values, total_min, total_ma
         raise PreventUpdate
     else:
         slider_reset_values = [round(total_value*x/100) for x in age_perc_start]
+        if sum(slider_reset_values) != total_value:
+            # reset last age group population due to rounding off
+            slider_reset_values[-1] = total_value - sum(slider_reset_values) + slider_reset_values[-1]
         updated_maxs = [total_value]*len(input_values)
         if not context.triggered:
             return updated_maxs, updated_maxs, slider_reset_values
         else:
             id_trig = context.triggered[0]['prop_id'].split('.')[0]
             if id_trig == 'total-population':
-                return updated_maxs, updated_maxs, input_values
+                return updated_maxs, updated_maxs, slider_reset_values
             elif id_trig == 'age-default-perc':
                 return updated_maxs, updated_maxs, slider_reset_values
             else: # should not happen
