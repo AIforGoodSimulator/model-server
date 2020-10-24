@@ -132,7 +132,6 @@ layout = html.Div(
                             dcc.Slider(id='slider-gender-perc', min=0, max=100, step=1, value=50, included=False, updatemode='drag', marks={50: {'label':'50'}}), 
                                 html.Label('', id='gender-perc-male')], 
                                 style={'display':'grid', 'grid-template-columns':'10% 80% 10%', 'margin-bottom':'25px'}),                            
-                            html.P(''),
                             html.Header('Population by Ethnicity', className='card-text'),
                             html.Header('Enter the population represented by each ethnic group',className='card-text', style={'color':'darkgray'}),
                             generate_three_column_input(id_ethnic_no_top, 10000,'10px'), 
