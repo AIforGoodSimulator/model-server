@@ -1,6 +1,9 @@
 from datetime import datetime
 import dash_html_components as html
-import logging
+from ai4good.utils.logger_util import get_logger
+
+logger = get_logger(__name__)
+
 
 def GenerateMetadataDict(model_id, camp, profile, model_runner, additional_metadata = None):
     current_time = datetime.now() #Get the current time (time the report is generated).
@@ -30,7 +33,7 @@ def GenerateMetadataDict(model_id, camp, profile, model_runner, additional_metad
 def GenerateMetadataHTML(metadata):
     html_elements = []
     if type(metadata) is not dict:
-        logging.error(f"Invalid dictionary. Cannot generate metadata HTML. metadata = {metadata}. Type: {type(metadata)}.") #Handle an invalid dictionary parameter.
+        logger.error(f"Invalid dictionary. Cannot generate metadata HTML. metadata = {metadata}. Type: {type(metadata)}.") #Handle an invalid dictionary parameter.
         return html.Div("Unable to load metadata.", style={"color": "gray", "font-size": 11, "font-style": "italic"})
     counter = 0
     for key, value in metadata.items(): #Generate the html and css.

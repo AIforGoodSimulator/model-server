@@ -14,6 +14,7 @@ class Parameters:
     def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
         self.ps = ps
         self.camp = camp
+        self.age_limits = np.array([0, 10, 20, 30, 40, 50, 60, 70, 80], dtype=int)
         disease_params = ps.get_disease_params()
         self.camp_params = ps.get_camp_params(camp)
         # ------------------------------------------------------------
@@ -97,6 +98,7 @@ class Parameters:
             self.population_frame.to_dict('records'),
             self.population,
             self.camp,
+            self.country,
             self.calculated_categories,
             self.model_params.to_dict('records')
         ]
@@ -182,8 +184,7 @@ class Parameters:
         return population_frame, population_size
 
     def generate_infection_matrix(self):
-        infection_matrix = np.asarray(self.ps.get_contact_matrix_params(self.camp))
-        infection_matrix = infection_matrix[:, 2:].astype(np.double)
+        infection_matrix = self.generate_contact_matrix(self.age_limits)
         assert infection_matrix.shape[0] == infection_matrix.shape[1]
         next_generation_matrix = np.matmul(0.01 * np.diag(self.population_frame.Population_structure), infection_matrix)
         largest_eigenvalue = max(np.linalg.eig(next_generation_matrix)[0])  # max eigenvalue
@@ -200,3 +201,31 @@ class Parameters:
             infection_matrix[divider:, divider] = self.shield_increase * infection_matrix[divider:, divider:]
 
         return infection_matrix, beta_list, largest_eigenvalue
+
+    def generate_contact_matrix(self, age_limits: np.array):
+        supported_countries = self.ps.get_supported_countries()
+        self.country = self.camp_params['Country'].tolist()[0]
+        if self.country not in supported_countries:
+            return self.ps.get_contact_matrix_params(self.camp).to_numpy()[:, 2:].astype(np.double)
+        contact_matrix_path = pu.cm_params_path(f'contact_matrices/{self.country}.csv')
+        contact_matrix = pd.read_csv(contact_matrix_path).to_numpy()
+        population_array = self.camp_params['Population_structure'].to_numpy()
+
+        n_categories = len(age_limits) - 1
+        ind_limits = np.array(age_limits / 5, dtype=int)
+
+        p = np.zeros(16)
+        for i in range(n_categories):
+            p[ind_limits[i]: ind_limits[i + 1]] = population_array[i] / (ind_limits[i + 1] - ind_limits[i])
+
+        transformed_matrix = np.zeros((n_categories, n_categories))
+
+        for i in range(n_categories):
+            for j in range(n_categories):
+                sump = sum(p[ind_limits[i]: ind_limits[i + 1]])
+                b = contact_matrix[ind_limits[i]: ind_limits[i + 1], ind_limits[j]: ind_limits[j + 1]] * np.array(
+                    p[ind_limits[i]: ind_limits[i + 1]]).transpose()
+                v1 = b.sum() / sump
+                transformed_matrix[i, j] = v1
+
+        return transformed_matrix

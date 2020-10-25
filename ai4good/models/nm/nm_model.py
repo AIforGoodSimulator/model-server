@@ -4,6 +4,9 @@ from ai4good.params.param_store import SimpleParamStore
 from ai4good.models.nm.models.nm_baseline import *
 from ai4good.models.nm.models.nm_interventions import *
 import logging
+from ai4good.utils.logger_util import get_logger
+
+logger = get_logger(__name__)
 
 
 @typechecked

@@ -1,4 +1,3 @@
-import logging
 import traceback
 import redis
 import pandas as pd
@@ -10,10 +9,12 @@ from ai4good.models.model_registry import get_models, create_params
 from datetime import datetime
 import pickle
 import socket
-from ai4good.webapp.commit_date import get_version_date 
+from ai4good.webapp.commit_date import get_version_date
+from ai4good.utils.logger_util import get_logger
 
 MAX_CONCURRENT_MODELS = 3
 HISTORY_SIZE = 10
+logger = get_logger(__name__)
 
 
 class ModelScheduleRunResult(Enum):
@@ -94,7 +95,7 @@ class ModelsRunningNow:
                         return ModelScheduleRunResult.SCHEDULED
                 except redis.WatchError:
                     error_count += 1
-                    logging.warning("ModelsRunningNow optimistic lock error #%d; retrying", error_count)
+                    logger.warning("ModelsRunningNow optimistic lock error #%d; retrying", error_count)
         raise RuntimeError("Failed to obtain lock")
 
 
@@ -111,15 +112,15 @@ class ModelRunner:
         def on_future_done(f: Future):
             self.models_running_now.pop(key)
             if f.status == 'finished':
-                logging.info("Model run %s success", str(key))
+                logger.info("Model run %s success", str(key))
                 self.history.record_finished(key, f.result())
             elif f.status == 'cancelled':
-                logging.info("Model run %s cancelled", str(key))
+                logger.info("Model run %s cancelled", str(key))
                 self.history.record_cancelled(key)
             else:
                 tb = f.traceback()
                 error_details = traceback.format_tb(tb)
-                logging.error("Model run %s failed: %s", str(key), error_details)
+                logger.error("Model run %s failed: %s", str(key), error_details)
                 self.history.record_error(key, error_details)
 
         def submit():
@@ -158,13 +159,13 @@ class ModelRunner:
 
     @staticmethod
     def _sync_run_model(facade, _model: str, _profile: str, camp: str) -> ModelResult:
-        logging.info('Running %s model with %s profile', _model, _profile)
+        logger.info('Running %s model with %s profile', _model, _profile)
         _mdl: Model = get_models()[_model](facade.ps)
         params = create_params(facade.ps, _model, _profile, camp)
         res_id = _mdl.result_id(params)
-        logging.info("Running model for camp %s", camp)
+        logger.info("Running model for camp %s", camp)
         mr = _mdl.run(params)
-        logging.info("Saving model result to cache")
+        logger.info("Saving model result to cache")
         facade.rs.store(_mdl.id(), res_id, mr)
         return mr
 

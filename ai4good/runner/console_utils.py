@@ -1,11 +1,11 @@
 import argparse
-import logging
 from enum import Enum
 from ai4good.models.model_registry import get_models, create_params
 from ai4good.runner.facade import Facade
 from ai4good.models.model import ModelResult
+from ai4good.utils.logger_util import get_logger
 
-
+logger = get_logger(__name__)
 facade = Facade.simple()
 
 
@@ -38,7 +38,6 @@ class Commands(Enum):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
     parser = argparse.ArgumentParser(description='AI4Good utils')
     command_group = parser.add_mutually_exclusive_group(required=True)
     command_group.add_argument('--cache-info', dest='command', action='store_const', const=Commands.CACHE_INFO,
