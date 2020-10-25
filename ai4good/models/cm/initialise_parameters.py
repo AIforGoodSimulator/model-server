@@ -9,6 +9,8 @@ import hashlib
 from ai4good.params.param_store import ParamStore
 from ai4good.utils import path_utils as pu
 from ai4good.models.cm import longname, shortname, colour, index, fill_colour
+from ai4good.params.disease_params import covid_specific_parameters
+from ai4good.params.model_control_params import covid_specific_parameters
 
 
 class Parameters:
@@ -16,55 +18,38 @@ class Parameters:
         self.ps = ps
         self.camp = camp
         self.age_limits = np.array([0, 10, 20, 30, 40, 50, 60, 70, 80], dtype=int)
-        disease_params = ps.get_disease_params()
+        # disease_params = ps.get_disease_params()
+        disease_params = covid_specific_parameters
         self.camp_params = ps.get_camp_params(camp)
         # ------------------------------------------------------------
         # disease params
-        parameter_csv = disease_params
-        model_params = parameter_csv[parameter_csv['Type'] == 'Model Parameter']
-        model_params = model_params.loc[:, ['Name', 'Value']]
-        control_data = parameter_csv[parameter_csv['Type'] == 'Control']
+        # parameter_csv = disease_params
+        # model_params = parameter_csv[parameter_csv['Type'] == 'Model Parameter']
+        # model_params = model_params.loc[:, ['Name', 'Value']]
+        # control_data = parameter_csv[parameter_csv['Type'] == 'Control']
         self.model_params = model_params
 
-        # print()
+        # TODO: get all the disease parameters injected to the right place
+        # TODO: seperate the profile default parameters into a model config or something
 
-        R_0_list = np.asarray(model_params[model_params['Name'] == 'R0'].Value)
+        self.R_0_list = np.asarray([disease_params["R0_low"],disease_params["R0_medium"],disease_params["R0_high"]])
+        self.latent_rate = 1 / (np.float(covid_specific_parameters["Latent_period"]))
+        self.removal_rate = 1 / (np.float(covid_specific_parameters["Infectious_period"]))
+        self.hosp_rate = 1 / (np.float(covid_specific_parameters["Hosp_period"]))
+        self.death_rate = 1 / (np.float(covid_specific_parameters["Death_period"]))
+        self.death_rate_with_ICU = 1 / (np.float(covid_specific_parameters["Death_period_withICU"]))
+        self.death_prob_with_ICU= np.float(covid_specific_parameters["Death_prob_withICU"])
+        self.number_compartments = 11 # S,E,I,A,R,H,C,D,O,Q,U refer to model write up for more details
+        self.beta_list = [R_0 * removal_rate for R_0 in self.R_0_list]  # R_0 mu/N, N=1
+        self.AsymptInfectiousFactor = np.float(covid_specific_parameters["Infectiousness_asymptomatic"])
 
-        latent_rate = 1 / (np.float(model_params[model_params['Name'] == 'latent period'].Value))
-        removal_rate = 1 / (np.float(model_params[model_params['Name'] == 'infectious period'].Value))
-        hosp_rate = 1 / (np.float(model_params[model_params['Name'] == 'hosp period'].Value))
-        death_rate = 1 / (np.float(model_params[model_params['Name'] == 'death period'].Value))
-        death_rate_with_ICU = 1 / (np.float(model_params[model_params['Name'] == 'death period with ICU'].Value))
+        # These are unique model control params
+        self.shield_decrease = np.float(control_data[control_data['Name'] == 'Reduction in contact between groups'].Value)
+        self.shield_increase = np.float(control_data[control_data['Name'] == 'Increase in contact within group'].Value)
+        self.better_hygiene = np.float(control_data.Value[control_data.Name == 'Better hygiene'])
 
-        quarant_rate = 1 / (np.float(model_params[model_params['Name'] == 'quarantine period'].Value))
-
-        death_prob_with_ICU = np.float(model_params[model_params['Name'] == 'death prob with ICU'].Value)
-
-        number_compartments = int(model_params[model_params['Name'] == 'number_compartments'].Value)
-
-        beta_list = [R_0 * removal_rate for R_0 in R_0_list]  # R_0 mu/N, N=1
-
-        shield_decrease = np.float(control_data[control_data['Name'] == 'Reduction in contact between groups'].Value)
-        shield_increase = np.float(control_data[control_data['Name'] == 'Increase in contact within group'].Value)
-
-        better_hygiene = np.float(control_data.Value[control_data.Name == 'Better hygiene'])
-
-        AsymptInfectiousFactor = np.float(model_params[model_params['Name'] == 'infectiousness of asymptomatic'].Value)
-
-        self.R_0_list = R_0_list
-        self.beta_list = beta_list
-        self.shield_increase = shield_increase
-        self.shield_decrease = shield_decrease
-        self.better_hygiene  = better_hygiene
-        self.number_compartments = number_compartments
-        self.AsymptInfectiousFactor = AsymptInfectiousFactor
-        self.latent_rate = latent_rate
-        self.removal_rate = removal_rate
-        self.hosp_rate = hosp_rate
-        self.quarant_rate = quarant_rate
-        self.death_rate = death_rate
-        self.death_rate_with_ICU = death_rate_with_ICU
-        self.death_prob_with_ICU = death_prob_with_ICU
+        #we will get this from the UI
+        self.quarant_rate = 1 / (np.float(model_params[model_params['Name'] == 'quarantine period'].Value))
 
         self.calculated_categories = ['S','E','I','A','R','H','C','D','O','Q','U']
         self.change_in_categories = ['C'+category for category in self.calculated_categories]
