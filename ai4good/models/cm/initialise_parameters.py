@@ -10,7 +10,7 @@ from ai4good.params.param_store import ParamStore
 from ai4good.utils import path_utils as pu
 from ai4good.models.cm import longname, shortname, colour, index, fill_colour
 from ai4good.params.disease_params import covid_specific_parameters
-from ai4good.params.model_control_params import covid_specific_parameters
+from ai4good.params.model_control_params import model_config_cm
 
 
 class Parameters:
@@ -27,7 +27,7 @@ class Parameters:
         # model_params = parameter_csv[parameter_csv['Type'] == 'Model Parameter']
         # model_params = model_params.loc[:, ['Name', 'Value']]
         # control_data = parameter_csv[parameter_csv['Type'] == 'Control']
-        self.model_params = model_params
+        # self.model_params = model_params
 
         # TODO: get all the disease parameters injected to the right place
         # TODO: seperate the profile default parameters into a model config or something
@@ -40,16 +40,16 @@ class Parameters:
         self.death_rate_with_ICU = 1 / (np.float(covid_specific_parameters["Death_period_withICU"]))
         self.death_prob_with_ICU= np.float(covid_specific_parameters["Death_prob_withICU"])
         self.number_compartments = 11 # S,E,I,A,R,H,C,D,O,Q,U refer to model write up for more details
-        self.beta_list = [R_0 * removal_rate for R_0 in self.R_0_list]  # R_0 mu/N, N=1
+        self.beta_list = [R_0 * self.removal_rate for R_0 in self.R_0_list]  # R_0 mu/N, N=1
         self.AsymptInfectiousFactor = np.float(covid_specific_parameters["Infectiousness_asymptomatic"])
 
         # These are unique model control params
-        self.shield_decrease = np.float(control_data[control_data['Name'] == 'Reduction in contact between groups'].Value)
-        self.shield_increase = np.float(control_data[control_data['Name'] == 'Increase in contact within group'].Value)
-        self.better_hygiene = np.float(control_data.Value[control_data.Name == 'Better hygiene'])
+        self.shield_decrease = np.float(model_config_cm["shiedling_reduction_between_groups"])
+        self.shield_increase = np.float(model_config_cm["shielding_increase_within_group"])
+        self.better_hygiene = np.float(model_config_cm["better_hygiene_infection_scale"])
 
-        #we will get this from the UI
-        self.quarant_rate = 1 / (np.float(model_params[model_params['Name'] == 'quarantine period'].Value))
+        #we will get this from the UI default to 14 for now
+        self.quarant_rate = 1 / (np.float(14))
 
         self.calculated_categories = ['S','E','I','A','R','H','C','D','O','Q','U']
         self.change_in_categories = ['C'+category for category in self.calculated_categories]
@@ -76,7 +76,6 @@ class Parameters:
             self.camp,
             self.country,
             self.calculated_categories,
-            self.model_params.to_dict('records')
         ]
         serialized_params = json.dumps(hash_params, sort_keys=True)
         hash_object = hashlib.sha1(serialized_params.encode('UTF-8'))
