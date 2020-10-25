@@ -38,7 +38,7 @@ class NetworkModel(Model):
                 edge_weight=p.food_weight, activity_name="food")
 
         logging.info("Sampling from original graph...")
-        new_graph_size = len(graph.nodes) // 3
+        new_graph_size = len(graph.nodes) // 4
         sampled_graph = downsample_graph(graph, new_graph_size, "uniform")
         p.update_parameters(sampled_graph)
         p.initialise_age_parameters(sampled_graph)
