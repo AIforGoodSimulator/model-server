@@ -56,13 +56,13 @@ layout = html.Div(
         html.Div([
             dbc.Container([
                 dbc.Row(
-                    dbc.Col(
+                    dbc.Col([
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
-                            html.Center(html.Img(src='/static/input_step4.png', title='Step 4 of 4', style={'width':'50%'})), 
+                            html.Center(html.Img(src='/static/input_step4.png', title='Step 4 of 4', style={'width':'50%'}, className="step_counter")), 
                             html.P('Provide your best estimate if data is not available',className='card-text'),
                             html.H5('Health Interventions (Part II)', className='card-text'),
-                            html.Header('Social Measures', className='card-text'),
+                            html.Header('Effectiveness of Interventions', className='card-text'),
                             html.Header('How effective are the following measures at the camp?', className='card-text', style={'color':'darkgray'}), 
                             html.Div([
                                 dbc.Tabs([
@@ -71,7 +71,7 @@ layout = html.Div(
                                     dbc.Tab(label=health_intervent[2], tab_id=tab_id_health_intervent[2], children=generate_health_intervent_children(2)), 
                                     dbc.Tab(label=health_intervent[3], tab_id=tab_id_health_intervent[3], children=generate_health_intervent_children(3)), 
                                     dbc.Tab(label=health_intervent[4], tab_id=tab_id_health_intervent[4], children=generate_health_intervent_children(4)), 
-                                ], id='tabs-health-intervention', active_tab=tab_id_health_intervent[0], style={'margin-top':'10px'}), 
+                                ], id='tabs-health-intervention', active_tab=tab_id_health_intervent[0]), 
                             ], style={'border':'1px lightgray solid'}),
                             html.P(''),
                             html.P(''),
@@ -85,13 +85,13 @@ layout = html.Div(
                                     dbc.Tab(label=activity_gathering[2], tab_id=tab_id_activity_gathering[2], children=generate_activity_gathering_children(2)), 
                                     dbc.Tab(label=activity_gathering[3], tab_id=tab_id_activity_gathering[3], children=generate_activity_gathering_children(3)), 
                                     dbc.Tab(label=activity_gathering[4], tab_id=tab_id_activity_gathering[4], children=generate_activity_gathering_children(4)), 
-                                ], id='tabs-activity-gathering', active_tab=tab_id_activity_gathering[0], style={'margin-top':'10px'}), 
+                                ], id='tabs-activity-gathering', active_tab=tab_id_activity_gathering[0]), 
                             ], style={'border':'1px lightgray solid'}),
                             html.P(''),
                             dbc.CardFooter(dbc.Button('Run Simulation', id='page-4-button', color='secondary', href='/sim/run_model', style={'float':'right'})),
                             html.Div(id='input-page-4-alert')
-                            ], body=True
-                        ), width=6
+                            ], body=True), 
+                        html.Br()], width=6
                     ), justify='center', style={'margin-top':'50px'}
                 )
             ])

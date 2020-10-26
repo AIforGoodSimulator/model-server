@@ -13,20 +13,20 @@ import ai4good.utils.path_utils as pu
 
 age = ['0 - 5', '6 - 9', '10 - 19', '20 - 29', '30 - 39', '40 - 49', '50 - 59', '60 - 69', '70+']
 id_age_popu =['age-population-' + x.replace(' ','') for x in age]
-age_perc_start = [10, 10, 10, 10, 10, 10, 10, 10, 20] # starting age group population percentage
+age_perc_start = [15, 15, 10, 10, 10, 10, 10, 10, 10] # starting age group population percentage
 total_popu = 20000 # starting total population
 err_group_total_not_equal_popu = 'Group total must equal to total population or 100%'
 
 accommodation_info = ['Type 1', 'Type 2', 'Type 3']
 accommodation_info_full = ['Accommodation Type 1', 'Accommodation Type 2', 'Accommodation Type 3']
 accommodation_info_required = ['Optional', 'Optional', 'Optional']
-accommodation_info_detail = ['Area covered (sq. m)', 'No. of Individuals in Residences', 'No. of Living Units (e.g. Building, Isoboxes, Tents)']
+accommodation_info_detail = ['Area covered (m²)', 'No. of total camp residents in this type of accommodation', 'No. of existing units of accommodation']
 tab_id_accommodation_info = ['tab-accommodation-info-' + x.replace(' ','').lower() for x in accommodation_info]
 id_accommodation_area = ['accommodation-area-' + x.replace(' ','').lower() for x in accommodation_info]
 id_accommodation_no_person = ['accommodation-no-person-' + x.replace(' ','').lower() for x in accommodation_info]
 id_accommodation_no_unit = ['accommodation-no-unit-' + x.replace(' ','').lower() for x in accommodation_info]
 
-id_gender_perc = ['gender-perc-female', 'gender-perc-male', 'gender-perc-other']
+id_gender_perc = ['gender-perc-female', 'gender-perc-male']
 id_ethnic_no_top = ['ethnic-no-1', 'ethnic-no-2', 'ethnic-no-3']
 id_ethnic_no_mid = ['ethnic-no-4', 'ethnic-no-5', 'ethnic-no-6']
 id_ethnic_no_dwn = ['ethnic-no-7', 'ethnic-no-8', 'ethnic-no-9']
@@ -83,14 +83,15 @@ layout = html.Div(
         html.Div([
             dbc.Container([
                 dbc.Row(
-                    dbc.Col(
+                    dbc.Col([
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
-                            html.Center(html.Img(src='/static/input_step2.png', title='Step 2 of 4', style={'width':'50%'})), 
+                            html.Center(html.Img(src='/static/input_step2.png', title='Step 2 of 4', style={'width':'50%'}, className="step_counter")), 
                             html.P('Fill in the following about the age structure accommodation type of the settlement',className='card-text'),
                             html.H5('Population', className='card-text'),
                             html.Header('Total Population', className='card-text'),
-                            dbc.Input(id='total-population', placeholder='Required', value=20000, type='number', min=0, max=100000, step=10, n_submit=0, bs_size='sm', style={'margin-bottom':'25px'}),
+                            html.Header('What is the total population in the camp, rounding off to the nearest 10?',className='card-text', style={'color':'darkgray'}),
+                            dbc.Input(id='total-population', placeholder='Required', value=20000, type='number', min=0, max=100000, step=10, n_submit=0, bs_size='sm', debounce=True, style={'margin-bottom':'25px'}),
                             html.Header('Age Group Structure', className='card-text'),
                             html.Header('Enter the percentage or actual population that each age range represents',className='card-text', style={'color':'darkgray'}),
                             html.Div([
@@ -115,21 +116,24 @@ layout = html.Div(
                                 html.B('', id='age_population_total'), 
                                 html.B('Percentage Total:'), 
                                 html.B('', id='age_percentage_total')], className='card-text', 
-                                style={'display':'grid', 'grid-template-columns':'5% 25% 26% 32% 12%'}),
+                                style={'display':'grid', 'grid-template-columns':'5% 25% 26% 30% 14%'}),
                             html.Div([
                                 html.B(''), 
                                 dbc.Label('Must equal to total population or 100%', id='age-group-continue-warning', color='secondary'), 
                                 dbc.Button('Default %', size='sm', color='secondary', id='age-default-perc', style={'float':'right'})], className='card-text', style={'display':'grid', 'grid-template-columns':'5% 77% 18%'}),
                             html.P(''),
-                            html.Header('Gender Diversity', className='card-text'),
+                            html.Header('Male and Female Population', className='card-text'),
                             html.Div([
-                                html.B('Female (%)'), 
-                                html.B('Male (%)'), 
-                                html.B('Other (%)')], 
-                                style={'display':'grid', 'grid-template-columns':'36% 36% 28%', 'color':'darkgray'}),
-                            generate_three_column_input(id_gender_perc, 100), 
-                            html.Header('Ethnic Group Distribution', className='card-text'),
-                            html.Header('Enter the population that each ethnic group represents',className='card-text', style={'color':'darkgray'}),
+                                html.B('Female: '), 
+                                html.B('Male:')], 
+                                style={'display':'grid', 'grid-template-columns':'90% 10%', 'color':'darkgray'}), 
+                            html.Div([
+                                html.Label('', id='gender-perc-female'), 
+                            dcc.Slider(id='slider-gender-perc', min=0, max=100, step=1, value=50, included=False, updatemode='drag', marks={50: {'label':'50'}}), 
+                                html.Label('', id='gender-perc-male')], 
+                                style={'display':'grid', 'grid-template-columns':'10% 80% 10%', 'margin-bottom':'25px'}),                            
+                            html.Header('Population by Ethnicity', className='card-text'),
+                            html.Header('Enter the population represented by each ethnic group',className='card-text', style={'color':'darkgray'}),
                             generate_three_column_input(id_ethnic_no_top, 10000,'10px'), 
                             generate_three_column_input(id_ethnic_no_mid, 10000,'10px'), 
                             generate_three_column_input(id_ethnic_no_dwn, 10000), 
@@ -142,20 +146,28 @@ layout = html.Div(
                                     dbc.Tab(label=accommodation_info[0], tab_id=tab_id_accommodation_info[0], children=generate_accommodation_info_children(0)), 
                                     dbc.Tab(label=accommodation_info[1], tab_id=tab_id_accommodation_info[1], children=generate_accommodation_info_children(1)), 
                                     dbc.Tab(label=accommodation_info[2], tab_id=tab_id_accommodation_info[2], children=generate_accommodation_info_children(2)), 
-                                ], id='tabs-accommodation-info', active_tab=tab_id_accommodation_info[0],  style={'margin-top':'10px'}), 
+                                ], id='tabs-accommodation-info', active_tab=tab_id_accommodation_info[0]), 
                             ], style={'border':'1px lightgray solid'}),
                             html.P(''),
                             dbc.CardFooter(dbc.Button('Next', id='page-2-button', color='secondary', disabled=False, href='/sim/input_page_3', style={'float':'right'})), 
                             dbc.Label('',id='page-2-continue-warning', color='danger', style={'text-align':'right'}), 
                             html.Div(id='input-page-2-alert')
-                            ], body=True
-                        ), width=6
+                            ], body=True), 
+                        html.Br()], width=6
                     ), justify='center', style={'margin-top':'50px'}
                 )
             ])
         ])
     ]
 )
+
+@dash_app.callback(
+    [Output('gender-perc-female','children'), Output('gender-perc-male','children')], 
+    [Input('slider-gender-perc','value')])
+def update_gender_perc_label(slider_value):
+    perc_female = slider_value
+    perc_male = 100 - slider_value
+    return str(perc_female) + '%', str(perc_male)+ '%'
 
 @dash_app.callback(
     [Output({'type':'age-perc-label', 'index':MATCH}, 'children')], 
@@ -198,13 +210,16 @@ def update_age_popu_max(total_value, n_clicks, input_values, total_min, total_ma
         raise PreventUpdate
     else:
         slider_reset_values = [round(total_value*x/100) for x in age_perc_start]
+        if sum(slider_reset_values) != total_value:
+            # reset last age group population due to rounding off
+            slider_reset_values[-1] = total_value - sum(slider_reset_values) + slider_reset_values[-1]
         updated_maxs = [total_value]*len(input_values)
         if not context.triggered:
             return updated_maxs, updated_maxs, slider_reset_values
         else:
             id_trig = context.triggered[0]['prop_id'].split('.')[0]
             if id_trig == 'total-population':
-                return updated_maxs, updated_maxs, input_values
+                return updated_maxs, updated_maxs, slider_reset_values
             elif id_trig == 'age-default-perc':
                 return updated_maxs, updated_maxs, slider_reset_values
             else: # should not happen
