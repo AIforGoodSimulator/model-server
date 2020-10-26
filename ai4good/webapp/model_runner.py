@@ -1,5 +1,6 @@
 import traceback
 import redis
+import numpy as np
 import pandas as pd
 from typing import List
 from enum import Enum, auto
@@ -15,6 +16,47 @@ from ai4good.utils.logger_util import get_logger
 MAX_CONCURRENT_MODELS = 3
 HISTORY_SIZE = 10
 logger = get_logger(__name__)
+
+_sid = np.random.randint(100000000, 1000000000)  # session id
+
+
+class InputParameterCache:
+    _CACHE_KEY = f'{socket.gethostname()}_{_sid}_input_parameter'
+
+    def __init__(self, _redis: redis.Redis):
+        self._redis = _redis
+
+    def cache_get(self, input_param):
+        value_byte = [self._redis.hget(self._CACHE_KEY, str(i)) for i in input_param.keys()]
+        value = [i.decode('utf-8') if i is not None else None for i in value_byte]
+        print(self._CACHE_KEY)
+        print(self._redis.hgetall(self._CACHE_KEY))
+        print(self._redis.ttl(self._CACHE_KEY))
+        print(self._redis.scan())
+        return value
+
+    def cache_set(self, input_param, page_number):
+        with self._redis.pipeline() as pipe:
+            error_count = 0
+            while error_count < 1000:
+                try:
+                    pipe.watch(self._CACHE_KEY)
+                    pipe.multi()
+                    for i,j in input_param.items():
+                        if j is None:
+                            j = ''
+                        pipe.hset(self._CACHE_KEY, str(i), str(j))
+                    pipe.execute()
+                    pipe.unwatch()
+                    self._redis.expire(self._CACHE_KEY, 10) # in seconds
+                    print(self._redis.hgetall(self._CACHE_KEY))
+                    print(self._redis.ttl(self._CACHE_KEY))
+                    print(self._redis.scan())
+                    return None
+                except redis.WatchError:
+                    error_count += 1
+                    logger.warning('Input page #%d optimistic lock error #%d; retrying', page_number, error_count)
+        raise RuntimeError('Failed to obtain lock - input parameters')
 
 
 class ModelScheduleRunResult(Enum):

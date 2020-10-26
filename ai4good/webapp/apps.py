@@ -7,7 +7,7 @@ from ai4good.runner.facade import Facade
 from ai4good.webapp.model_runner import ModelRunner
 import redis
 import socket
-
+import numpy as np
 
 flask_app = Flask(__name__)
 
@@ -27,7 +27,6 @@ cache = Cache(flask_app, config={
     'CACHE_REDIS_URL': REDIS_URL,
     'CACHE_KEY_PREFIX': socket.gethostname()
 })
-
 
 _redis = redis.Redis.from_url(REDIS_URL)
 
