@@ -28,8 +28,15 @@ class InputParameterCache:
         self._redis = _redis
 
     def cache_get(self, input_param):
-        value_byte = [self._redis.hget(self._CACHE_KEY, str(i)) for i in input_param.keys()]
-        value = [i.decode('utf-8') if i is not None else None for i in value_byte]
+        value = [self._redis.hget(self._CACHE_KEY, str(i)) for i in input_param.keys()]
+        value = [i.decode('utf-8') if i is not None else None for i in value]
+        value = [i if i is None else None if i.strip() == '' else i for i in value]
+        for i,j in enumerate(value):
+            if j is not None:
+                try:
+                    value[i] = int(j)
+                except:
+                    value[i] = j
         print(self._CACHE_KEY)
         return value
 
