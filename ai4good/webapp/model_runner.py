@@ -15,6 +15,7 @@ from ai4good.utils.logger_util import get_logger
 
 MAX_CONCURRENT_MODELS = 3
 HISTORY_SIZE = 10
+INPUT_PARAMETER_TIMEOUT = 10 # in seconds
 logger = get_logger(__name__)
 
 _sid = np.random.randint(100000000, 1000000000)  # session id
@@ -30,9 +31,6 @@ class InputParameterCache:
         value_byte = [self._redis.hget(self._CACHE_KEY, str(i)) for i in input_param.keys()]
         value = [i.decode('utf-8') if i is not None else None for i in value_byte]
         print(self._CACHE_KEY)
-        print(self._redis.hgetall(self._CACHE_KEY))
-        print(self._redis.ttl(self._CACHE_KEY))
-        print(self._redis.scan())
         return value
 
     def cache_set(self, input_param, page_number):
@@ -43,12 +41,12 @@ class InputParameterCache:
                     pipe.watch(self._CACHE_KEY)
                     pipe.multi()
                     for i,j in input_param.items():
-                        if j is None:
-                            j = ''
-                        pipe.hset(self._CACHE_KEY, str(i), str(j))
+                        j_conv = '' if j is None else str(j)  # prevent string conversion of None
+                        pipe.hset(self._CACHE_KEY, str(i), j_conv)
                     pipe.execute()
                     pipe.unwatch()
-                    self._redis.expire(self._CACHE_KEY, 10) # in seconds
+                    self._redis.expire(self._CACHE_KEY, INPUT_PARAMETER_TIMEOUT)
+                    print(self._CACHE_KEY)
                     print(self._redis.hgetall(self._CACHE_KEY))
                     print(self._redis.ttl(self._CACHE_KEY))
                     print(self._redis.scan())
