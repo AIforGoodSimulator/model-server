@@ -94,6 +94,7 @@ class Moria(Camp):
         is_asymptomatic = (agents[:, A_AGE] < 16.0) | \
                           (np.random.random((self.num_people,)) <= self.params.permanently_asymptomatic_cases)
         agents[:, A_IS_ASYMPTOMATIC] = is_asymptomatic
+        agents[:, A_WHERE_INFECTED] = 0
 
         # finally, randomly select one person (not asymptomatic) and mark as "Exposed"
         not_asymptomatic = np.argwhere(agents[:, A_IS_ASYMPTOMATIC] == 0).squeeze()

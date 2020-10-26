@@ -37,7 +37,7 @@ ACTIVITY_HOSPITALIZED = 5   # Agent is hospitalized
 
 
 # Number of features of each agent
-A_FEATURES = 15
+A_FEATURES = 16
 # Features of each agent
 A_X = 0  # x co-ordinate at any given point in time
 A_Y = 1  # y co-ordinate at any given point in time
@@ -59,6 +59,7 @@ A_DAY_COUNTER = 13
 # All children under the age of 16 become asymptomatic (ref), and others become asymptomatic with probability 0.178
 # (Mizumoto et al. 2020)
 A_IS_ASYMPTOMATIC = 14
+A_WHERE_INFECTED = 15
 
 
 class OptimizedOps(object):
@@ -264,6 +265,7 @@ class Camp:
             if random.random() <= p:  # infect agent i based on calculated probability
                 agents[i, A_DISEASE] = INF_EXPOSED
                 agents[i, A_DAY_COUNTER] = 0
+                agents[i, A_WHERE_INFECTED] = 4
                 num_new_infections += 1
 
         return agents, num_new_infections
@@ -349,6 +351,7 @@ class Camp:
                 # set disease state of newly exposed agent i as `INF_EXPOSED`
                 agents[i, A_DISEASE] = INF_EXPOSED
                 agents[i, A_DAY_COUNTER] = 0
+                agents[i, A_WHERE_INFECTED] = 3
                 num_new_infections += 1
 
         # return updated agents array
@@ -429,6 +432,7 @@ class Camp:
                             (np.random.random((self.agents.shape[0],)) <= prob)
         self.agents[newly_exposed_ids, A_DISEASE] = INF_EXPOSED
         self.agents[newly_exposed_ids, A_DAY_COUNTER] = 0
+        self.agents[newly_exposed_ids, A_WHERE_INFECTED] = 1 if queue_name == 'toilet' else 2
 
         return np.count_nonzero(newly_exposed_ids)
 
