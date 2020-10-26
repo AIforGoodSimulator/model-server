@@ -7,7 +7,6 @@ from ai4good.runner.facade import Facade
 from ai4good.webapp.model_runner import ModelRunner
 import redis
 import socket
-import numpy as np
 
 flask_app = Flask(__name__)
 
