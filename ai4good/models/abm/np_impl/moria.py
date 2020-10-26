@@ -23,7 +23,7 @@ class Moria(Camp):
     4. stop_simulation()        : Get flag to check if simulation can be stopped
     5. intervention_transmission_reduction()
                                 : To apply intervention to reduce transmission probability
-    6. intervention_sectoring() : To apply intervention to add sectors in camp where each sector has its own food line
+    6. intervention_sector() : To apply intervention to add sectors in camp where each sector has its own food line
     7. intervention_lockdown()  : To apply intervention to update home ranges of agents
     8. intervention_isolation() : To apply intervention to isolate agents with symptoms by camp managers
     9. intervention_social_distancing()
@@ -158,7 +158,7 @@ class Moria(Camp):
         self.intervention_isolation(self.params.probability_spotting_symptoms_per_day, self.params.clear_day)
         # 3. Apply sectoring
         # NOTE: This is already done since initial food line queue initialization is done with `foodline_blocks` param
-        # self.intervention_sectoring(self.params.foodline_blocks)
+        # self.intervention_sector(self.params.foodline_blocks)
         # 4. Apply lockdown
         # self.intervention_lockdown(rl=?, vl=self.params.prop_violating_lockdown)
 
@@ -220,11 +220,11 @@ class Moria(Camp):
 
             # 2. Simulate agent's visit to toilet
             new_inf_t = self.simulate_queues(np.argwhere((activities == ACTIVITY_TOILET) & ~in_queue).reshape((-1,)),
-                                             "toilet")
+                                             "toilet", self.toilets)
 
             # 3. Simulate agent's visit to food line
             new_inf_f = self.simulate_queues(np.argwhere((activities == ACTIVITY_FOOD_LINE) & ~in_queue).reshape((-1,)),
-                                             "food_line")
+                                             "food_line", self.food_lines)
 
             # 4. Simulate visit to respective household
             hh_ids = activities == ACTIVITY_HOUSEHOLD
@@ -244,7 +244,7 @@ class Moria(Camp):
         # Dequeue all agents in the toilet/food line queues. Passing value of 1.0 will dequeue everyone from all queues.
         self.update_queues(1.0, dequeue_activity=ACTIVITY_HOUSEHOLD)
         # Get activities for all agents at the end of the day. Current implementation sends all agents back to their
-        # households at the end of the day. TODO: uncomment after confirmation from Gaia and Vera
+        # households at the end of the day.
         activities = Moria.get_activities(self.agents, 0.0, 0.0, force_activity=ACTIVITY_HOUSEHOLD)
         hh_ids = activities == ACTIVITY_HOUSEHOLD
         self.agents[hh_ids, :], new_hh_inf = Camp.simulate_households(self.agents[hh_ids, :],
@@ -366,7 +366,7 @@ class Moria(Camp):
                                                  self.params.prob_spread_foodline,
                                                  self.params.prob_spread_toilet))
 
-    def intervention_sectoring(self, sector_size):
+    def intervention_sector(self, sector_size):
         # The camp in our baseline model has a single food line, where transmission can potentially occur between two
         # individuals from any parts of the camp. This facilitates the rapid spread of COVID-19 infection. A plausible
         # intervention would be to divide the camp into sectors with separate food lines, and require individuals to
@@ -555,7 +555,7 @@ class Moria(Camp):
         n = agents.shape[0]  # number of agents
         out = [0] * 91
 
-        for i in nb.prange(n):
+        for i in range(n):
             o = 0
 
             out[o] += (agents[i, A_DISEASE] == INF_SUSCEPTIBLE); o += 1
