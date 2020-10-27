@@ -27,6 +27,7 @@ class CampTester(unittest.TestCase):
     PROFILE = "BaselineHTHI"
 
     def setUp(self):
+        # This function is called before every test* function
         param = get_params()
         self.camp = Moria(params=param, profile=CampTester.PROFILE)
 
@@ -104,7 +105,7 @@ class CampTester(unittest.TestCase):
         pre_total_exps = np.count_nonzero(to_house[:, A_DISEASE] == INF_EXPOSED)
 
         # Perform simulation
-        to_house, num_new_inf = Moria.simulate_households(to_house, self.camp.params.prob_spread_house)
+        to_house, num_new_inf = Moria.simulate_households(to_house, self.camp.params.prob_spread_house, ACTIVITY_HOUSEHOLD)
 
         # Values after execution
         post_total_susc = np.count_nonzero(to_house[:, A_DISEASE] == INF_SUSCEPTIBLE)

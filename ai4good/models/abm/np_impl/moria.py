@@ -90,6 +90,7 @@ class Moria(Camp):
 
         # initially, everyone's inside their households
         agents[:, A_ACTIVITY] = ACTIVITY_HOUSEHOLD
+        agents[:, A_ACTIVITY_BEFORE_QUEUE] = -1
 
         # calculate which agents are asymptomatic
         is_asymptomatic = (agents[:, A_AGE] < 16.0) | \
@@ -231,11 +232,13 @@ class Moria(Camp):
             # similar simulation for them too
             hh_ids = activities == ACTIVITY_HOUSEHOLD
             self.agents[hh_ids, :], new_hh_inf = Camp.simulate_households(self.agents[hh_ids, :],
-                                                                          self.params.prob_spread_house)
+                                                                          self.params.prob_spread_house,
+                                                                          ACTIVITY_HOUSEHOLD)
 
             qt_ids = activities == ACTIVITY_QUARANTINED
             self.agents[qt_ids, :], new_qt_inf = Camp.simulate_households(self.agents[qt_ids, :],
-                                                                          self.params.prob_spread_house)
+                                                                          self.params.prob_spread_house,
+                                                                          ACTIVITY_QUARANTINED)
 
             # 5. Update toilet and food line queues
             self.update_queues(self.params.percentage_of_toilet_queue_cleared_at_each_step)
@@ -249,13 +252,14 @@ class Moria(Camp):
         # Once for loop ends, all activities of the day have ended. At the end of the day, agents should go back to
         # their households. This includes agents in toilet/food line queue as well.
         # Dequeue all agents in the toilet/food line queues. Passing value of 1.0 will dequeue everyone from all queues.
-        self.update_queues(1.0, dequeue_activity=ACTIVITY_HOUSEHOLD)
+        self.update_queues(1.0)
         # Get activities for all agents at the end of the day. Current implementation sends all agents back to their
         # households at the end of the day.
         activities = Moria.get_activities(self.agents, 0.0, 0.0, force_activity=ACTIVITY_HOUSEHOLD)
         hh_ids = activities == ACTIVITY_HOUSEHOLD
         self.agents[hh_ids, :], new_hh_inf = Camp.simulate_households(self.agents[hh_ids, :],
-                                                                      self.params.prob_spread_house)
+                                                                      self.params.prob_spread_house,
+                                                                      ACTIVITY_HOUSEHOLD)
         new_infections[ACTIVITY_HOUSEHOLD] += new_hh_inf
 
         # Increment day
