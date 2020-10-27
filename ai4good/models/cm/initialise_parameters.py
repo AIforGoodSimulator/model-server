@@ -1,7 +1,3 @@
-"""
-This file sets up the parameters for SEIR models used in the cov_functions_AI.py
-"""
-
 import numpy as np
 import pandas as pd
 import json
@@ -32,7 +28,7 @@ class Parameters:
         # TODO: get all the disease parameters injected to the right place
         # TODO: seperate the profile default parameters into a model config or something
 
-        self.R_0_list = np.asarray([disease_params["R0_low"],disease_params["R0_medium"],disease_params["R0_high"]])
+        self.R_0_list = np.asarray([covid_specific_parameters["R0_low"],covid_specific_parameters["R0_medium"],covid_specific_parameters["R0_high"]])
         self.latent_rate = 1 / (np.float(covid_specific_parameters["Latent_period"]))
         self.removal_rate = 1 / (np.float(covid_specific_parameters["Infectious_period"]))
         self.hosp_rate = 1 / (np.float(covid_specific_parameters["Hosp_period"]))
@@ -49,7 +45,7 @@ class Parameters:
         self.better_hygiene = np.float(model_config_cm["better_hygiene_infection_scale"])
 
         #we will get this from the UI default to 14 for now
-        self.quarant_rate = 1 / (np.float(14))
+        self.quarant_rate = 1 / (np.float(model_config_cm["default_quarantine_period"]))
 
         self.calculated_categories = ['S','E','I','A','R','H','C','D','O','Q','U']
         self.change_in_categories = ['C'+category for category in self.calculated_categories]
