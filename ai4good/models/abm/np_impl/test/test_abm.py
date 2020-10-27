@@ -7,6 +7,11 @@ from ai4good.utils.logger_util import get_logger
 
 logger = get_logger(__name__)
 
+"""
+   To run the unit tests, run following command from project root:
+   > python -m unittest discover -s ai4good\models\abm\np_impl\test
+"""
+
 
 def get_params(_profile='BaselineHTHI'):
     _model = 'agent-based-model'
@@ -17,12 +22,74 @@ def get_params(_profile='BaselineHTHI'):
     return params
 
 
-class CampTester(unittest.TestCase):
+class OpTester(unittest.TestCase):
 
-    """
-    To run the unit tests, run following command from project root:
-    > python -m unittest discover -s ai4good\models\abm\np_impl\test
-    """
+    def test_position_blocks(self):
+
+        camp_size = 100
+        euclidean = lambda p1, p2: ((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2) ** 0.5  # helper function for distance
+
+        # Base test when grid size is 1
+        out = OptimizedOps.position_blocks(1, camp_size)
+        self.assertTrue(out.shape[0] == 1)
+        self.assertTrue(out[0, :].tolist() == [camp_size/2, camp_size/2])
+
+        # Complex test when grid size is > 1
+        grid_size = 3
+        out = OptimizedOps.position_blocks(grid_size, camp_size)
+        self.assertTrue(out.shape[0] == (grid_size * grid_size))
+
+        out = out.reshape((grid_size, grid_size, 2))
+        d = euclidean(out[0, 0, :], out[0, 1, :])  # distance between two slots horizontally
+
+        # Assert that each consecutively horizontal or vertical slots are equidistant
+        for i in range(grid_size):
+            for j in range(1, grid_size):
+                d_ = euclidean(out[i, j-1, :], out[i, j, :])
+                self.assertAlmostEqual(d_, d)
+        for j in range(grid_size):
+            for i in range(1, grid_size):
+                d_ = euclidean(out[i-1, j, :], out[i, j, :])
+                self.assertAlmostEqual(d_, d)
+
+    def test_find_nearest(self):
+
+        # Test on custom data
+        pos = np.array([0, 0])
+        others = np.array([[0.5, 0], [0, 1], [-2, 0], [0, -3]])
+
+        # without any condn, (0.5,0) is closest to (0,0)
+        min_idx, min_val = OptimizedOps.find_nearest(pos, others)
+        self.assertTrue(min_idx == 0)
+        self.assertTrue(min_val == 0.5 ** 2)  # find_nearest returns min distance ^ 2 instead of min distance
+
+        # with condn = [False, True, True, True], nearest point would be (0,1) since for (0.5,0) condition is False
+        min_idx, min_val = OptimizedOps.find_nearest(pos, others, condn=np.array([0, 1, 1, 1]))
+        self.assertTrue(min_idx == 1)
+        self.assertTrue(min_val == 1.0 ** 2)
+
+    def test_showing_symptoms(self):
+
+        # Only symptomatic, mild and severe agents show symptoms
+        inp = np.array([INF_SUSCEPTIBLE, INF_EXPOSED, INF_PRESYMPTOMATIC, INF_SYMPTOMATIC, INF_MILD, INF_SEVERE,
+                        INF_ASYMPTOMATIC1, INF_ASYMPTOMATIC2, INF_RECOVERED, INF_DECEASED])
+        exp = np.array([0, 0, 0, 1, 1, 1,
+                        0, 0, 0, 0])
+        out = OptimizedOps.showing_symptoms(inp)
+        self.assertTrue(np.all(out == exp))
+
+    def test_is_infected(self):
+
+        # Presymptomatic, symptomatic, mild, severe, asymptomatic1, asymptomatic2 are infected
+        inp = np.array([INF_SUSCEPTIBLE, INF_EXPOSED, INF_PRESYMPTOMATIC, INF_SYMPTOMATIC, INF_MILD, INF_SEVERE,
+                        INF_ASYMPTOMATIC1, INF_ASYMPTOMATIC2, INF_RECOVERED, INF_DECEASED])
+        exp = np.array([0, 0, 1, 1, 1, 1,
+                        1, 1, 0, 0])
+        out = OptimizedOps.is_infected(inp)
+        self.assertTrue(np.all(out == exp))
+
+
+class CampTester(unittest.TestCase):
 
     PROFILE = "BaselineHTHI"
 
@@ -31,7 +98,7 @@ class CampTester(unittest.TestCase):
         param = get_params()
         self.camp = Moria(params=param, profile=CampTester.PROFILE)
 
-        n = random.randint(10, 20)
+        n = random.randint(5, 10)
         logger.info("===============================================")
         logger.info("Running {} simulation steps as setup".format(n))
 
