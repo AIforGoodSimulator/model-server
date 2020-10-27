@@ -439,27 +439,33 @@ class Camp:
     def update_queues(self, pct_dequeue: float, dequeue_activity: int = ACTIVITY_WANDERING) -> None:
         # remove agents from the front of the queues and send them to location defined by `dequeue_activity`
         for t in self.toilet_queue:
-            # at each step during the day, we clear 80% of all agents in the queue
+            # at each step during the day, we clear some percentage of all agents in the queue
             dequeue_count = int(np.ceil(pct_dequeue * len(self.toilet_queue[t])))
             try:
                 # get first `dequeue_count` agents at front of the queue
                 front = self.toilet_queue[t][:dequeue_count]
                 # remove them from the queue
                 self.toilet_queue[t] = self.toilet_queue[t][dequeue_count:]
-                # change activity status to wandering for people who left toilet
-                self.agents[front, A_ACTIVITY] = dequeue_activity
+                # change activity status for people who left toilet
+                qua = [f for f in front if self.agents[f, A_ACTIVITY] == ACTIVITY_QUARANTINED]
+                non_qua = [f for f in front if self.agents[f, A_ACTIVITY] != ACTIVITY_QUARANTINED]
+                self.agents[qua, A_ACTIVITY] = ACTIVITY_QUARANTINED
+                self.agents[non_qua, A_ACTIVITY] = dequeue_activity
             except IndexError:
                 pass
         for f in self.food_line_queue:
-            # at each step of the day, we clear 80% of all agents in the queue
+            # at each step of the day, we clear some percentage of all agents in the queue
             dequeue_count = int(np.ceil(pct_dequeue * len(self.food_line_queue[f])))
             try:
                 # get first `dequeue_count` agents at front of the queue
                 front = self.food_line_queue[f][:dequeue_count]
                 # remove them from the queue
                 self.food_line_queue[f] = self.food_line_queue[f][dequeue_count:]
-                # change activity status to wandering for people who left food line
-                self.agents[front, A_ACTIVITY] = dequeue_activity
+                # change activity status for people who left food line
+                qua = [f for f in front if self.agents[f, A_ACTIVITY] == ACTIVITY_QUARANTINED]
+                non_qua = [f for f in front if self.agents[f, A_ACTIVITY] != ACTIVITY_QUARANTINED]
+                self.agents[qua, A_ACTIVITY] = ACTIVITY_QUARANTINED
+                self.agents[non_qua, A_ACTIVITY] = dequeue_activity
             except IndexError:
                 pass
 
