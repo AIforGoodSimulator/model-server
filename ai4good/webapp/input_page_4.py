@@ -10,9 +10,11 @@ from ai4good.webapp.model_runner import ModelScheduleRunResult
 from dash.dependencies import Input, Output, State
 import dash_table
 
+not_sure_effectiveness = 0
+
 health_intervent = ['Social', 'Face', 'Handwashing', 'Testing', 'Lockdown']
 health_intervent_full = ['Social Distancing', 'Face Covering / Mask Wearing', 'Handwashing / Soap / Handwashing Facilities', 'Testing for Infectious Diseases', 'Lockdown / Movement Restrictions']
-health_intervent_option = ['0 Not Effective', '1 Somewhat Effective', '2 Effective', '3 Very Effective']
+health_intervent_option = ['0 Not sure', '1 Not Effective', '2 Somewhat Effective', '3 Effective', '4 Very Effective']
 health_intervent_required = ['Required', 'Required', 'Required', 'Optional', 'Optional']
 tab_id_health_intervent = ['tab-intervene-' + x.lower() for x in health_intervent]
 radio_id_health_intervent = ['radio-intervene-' + x.lower() for x in health_intervent]
@@ -32,7 +34,7 @@ def generate_health_intervent_children(id_index):
         dbc.Label(health_intervent_full[id_index], color='secondary'), 
         dbc.Container(dbc.Label(health_intervent_required[id_index], color='secondary', size='sm')), 
         dbc.RadioItems(
-            options = [{'label':x, 'value':id_index} for x in health_intervent_option], value=[], id=radio_id_health_intervent[id_index])
+            options = [{'label':y, 'value':x} for x,y in enumerate(health_intervent_option)], value=not_sure_effectiveness, id=radio_id_health_intervent[id_index])
     ], style={'margin-left':'25px', 'margin-right':'25px', 'margin-bottom':'20px'})]
     return children
 
@@ -60,7 +62,7 @@ layout = html.Div(
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
                             html.Center(html.Img(src='/static/input_step4.png', title='Step 4 of 4', style={'width':'50%'}, className="step_counter")), 
-                            html.P('Provide your best estimate if data is not available',className='card-text'),
+                            html.P('Provide your best estimate if data is not available', className='card-text'),
                             html.H5('Health Interventions (Part II)', className='card-text'),
                             html.Header('Effectiveness of Interventions', className='card-text'),
                             html.Header('How effective are the following measures at the camp?', className='card-text', style={'color':'darkgray'}), 
