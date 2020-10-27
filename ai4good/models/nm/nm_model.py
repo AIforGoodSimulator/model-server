@@ -5,7 +5,8 @@ from ai4good.models.nm.models.nm_baseline import *
 from ai4good.models.nm.models.nm_interventions import *
 import logging
 from ai4good.utils.logger_util import get_logger
-
+import dask
+from dask.diagnostics import ProgressBar
 logger = get_logger(__name__)
 
 
@@ -47,12 +48,28 @@ class NetworkModel(Model):
         p.initialise_age_parameters(sampled_graph)
 
         logging.info("Running network model...")
-        if "interventions" in p.profile_name:
-            result = process_graph_interventions(p, sampled_graph)
-        else:
-            result = process_graph(p, sampled_graph)
-
+        results = run_parallel(p, sampled_graph)
+        
         return ModelResult(self.result_id(p), {
             'params': p,
-            'result': result
+            'result': aggregate_results(results)
         })
+
+
+def run_parallel(p, sampled_graph):
+    lazy_sols = []
+    for ii in range(10):
+        if "interventions" in p.profile_name:
+                lazy_result = dask.delayed(process_graph_interventions)(p, sampled_graph)
+        else:
+            lazy_result = dask.delayed(process_graph)(p, sampled_graph)
+        
+        lazy_sols.append(lazy_result)
+        
+    with dask.config.set(scheduler='processes', num_workers=10):
+            with ProgressBar():
+                sols = dask.compute(*lazy_sols)
+    return sols
+
+def aggregate_results(results):
+    return pd.concat(results).groupby(level=0).mean()
