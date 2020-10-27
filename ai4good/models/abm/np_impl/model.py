@@ -356,7 +356,7 @@ class Camp:
         # return updated agents array
         return agents, num_new_infections
 
-    def simulate_queues(self, ids, queue_name):
+    def simulate_queues(self, ids: np.array, queue_name: str, queue_pos: np.array) -> int:
         """
         Simulate agent visits to toilet and food line queues. The queue is assumed to be a single line (per toilet and
         food line), hence one agent will either interact with the agent on his front and/or the agent on his back.
@@ -365,7 +365,8 @@ class Camp:
         Parameters
         ----------
         ids: Boolean array containing `True` at indices where agent will go to queue else `False`
-        queue_name: Name of the queue. Possible values ["toilet", "food_line"]
+        queue_name: Type of the queue. Possible values ["toilet", "food_line"]
+        queue_pos: (x,y) co-ordinates of the queues of type `queue_name`
 
         Returns
         -------
@@ -375,20 +376,21 @@ class Camp:
 
         agents = self.agents[ids, :].reshape((-1, A_FEATURES))
 
-        # get the queues where agents are going
-        queue = agents[:, A_TOILET if queue_name == "toilet" else A_FOOD_LINE].copy()
-
-        # add agents to the queue (in random order)
+        # Get the queue indices where agents are going
+        queue = agents[:, A_TOILET if queue_name == "toilet" else A_FOOD_LINE].copy().astype(np.int32)
+        # Randomize queue visit
         np.random.shuffle(queue)
 
         for i, q in enumerate(queue):
             # add agent to queue if he/she is not already in the queue
             if agents[i, A_ACTIVITY] != ACTIVITY_TOILET and queue_name == "toilet":
-                self.toilet_queue[q].append(ids[i])
-                self.agents[ids[i], A_ACTIVITY] = ACTIVITY_TOILET
+                self.toilet_queue[q].append(ids[i])  # add agent to queue
+                self.agents[ids[i], A_ACTIVITY] = ACTIVITY_TOILET  # update agent's activity
+                self.agents[ids[i], [A_X, A_Y]] = queue_pos[q, :]  # update agent's co-ordinates
             elif agents[i, A_ACTIVITY] != ACTIVITY_FOOD_LINE and queue_name == "food_line":
-                self.food_line_queue[q].append(ids[i])
-                self.agents[ids[i], A_ACTIVITY] = ACTIVITY_FOOD_LINE
+                self.food_line_queue[q].append(ids[i])  # add agent to queue
+                self.agents[ids[i], A_ACTIVITY] = ACTIVITY_FOOD_LINE  # update agent's activity
+                self.agents[ids[i], [A_X, A_Y]] = queue_pos[q, :]  # update agent's co-ordinates
 
         # Simulate infection spread
 
