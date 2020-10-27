@@ -15,7 +15,7 @@ from ai4good.utils.logger_util import get_logger
 
 MAX_CONCURRENT_MODELS = 3
 HISTORY_SIZE = 10
-INPUT_PARAMETER_TIMEOUT = 10 # in seconds
+INPUT_PARAMETER_TIMEOUT = 60*30 # in seconds
 logger = get_logger(__name__)
 
 _sid = np.random.randint(100000000, 1000000000)  # session id
@@ -27,8 +27,8 @@ class InputParameterCache:
     def __init__(self, _redis: redis.Redis):
         self._redis = _redis
 
-    def cache_get(self, input_param):
-        value = [self._redis.hget(self._CACHE_KEY, str(i)) for i in input_param.keys()]
+    @staticmethod
+    def _decode_byte(value) -> List:
         value = [i.decode('utf-8') if i is not None else None for i in value]
         value = [i if i is None else None if i.strip() == '' else i for i in value]
         for i,j in enumerate(value):
@@ -37,8 +37,19 @@ class InputParameterCache:
                     value[i] = int(j)
                 except:
                     value[i] = j
-        print(self._CACHE_KEY)
-        return value
+        return value        
+        
+    def cache_get_all(self):
+        key_value_pair_dict = self._redis.hgetall(self._CACHE_KEY)
+        key = list(key_value_pair_dict.keys())
+        value = list(key_value_pair_dict.values())
+        return self._decode_byte(key), self._decode_byte(value)
+    
+    def cache_get(self, input_param_key):
+        if isinstance(input_param_key, str):
+            input_param_key = [input_param_key]
+        value = [self._redis.hget(self._CACHE_KEY, str(i)) for i in input_param_key]
+        return self._decode_byte(value)
 
     def cache_set(self, input_param, page_number):
         with self._redis.pipeline() as pipe:
@@ -53,10 +64,6 @@ class InputParameterCache:
                     pipe.execute()
                     pipe.unwatch()
                     self._redis.expire(self._CACHE_KEY, INPUT_PARAMETER_TIMEOUT)
-                    print(self._CACHE_KEY)
-                    print(self._redis.hgetall(self._CACHE_KEY))
-                    print(self._redis.ttl(self._CACHE_KEY))
-                    print(self._redis.scan())
                     return None
                 except redis.WatchError:
                     error_count += 1
