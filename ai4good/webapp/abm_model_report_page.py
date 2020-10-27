@@ -39,7 +39,7 @@ def layout(camp, profile, cmp_profiles):
             dcc.Markdown(overview_interventions(camp,params), style={'margin': 30}),
             html.Img(src='/static/abm_restable.png'),
             dcc.Markdown(overview_results(camp,params), style={'margin': 30}),
-            html.Img(src='/static/HTHIplots.png'),
+            html.Img(src='/static/abm_HTHIplots.png'),
         ], style={'margin': 50}
     )
 
