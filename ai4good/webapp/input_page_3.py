@@ -40,10 +40,11 @@ layout = html.Div(
                                 options=radio_option_3, value=not_sure_yes_no, id='remove-high-risk-off-site', inline=True, style={'margin-bottom':'25px'}),
                             html.Header('What is the age range of people that are moved off-site at the settlement?', className='card-text', style={'color':'darkgray'}), 
                             html.Div([
+                                html.B(''), 
                                 dbc.Label('', id='age-min-moved-off-site'), 
                                 dcc.RangeSlider(id='age-range-moved-off-site', min=0, max=100, step=1, value=age_off_site_range, updatemode='drag', allowCross=False), 
                                 dbc.Label('', id='age-max-moved-off-site')], 
-                                style={'display':'grid', 'grid-template-columns':'10% 80% 10%', 'margin-bottom':'25px'}),
+                                style={'display':'grid', 'grid-template-columns':'6% 4% 80% 10%', 'margin-bottom':'25px'}),
                             html.Header('Residents with Comorbidity', className='card-text'),
                             html.Header('What is the total number of people with known comorbidity of coronavirus?', className='card-text', id='question-number-known-comorbidity', style={'color':'darkgray'}), 
                             dbc.Tooltip('Comorbidity - the simultaneous presence of two or more diseases or medical conditions in a patient', target='question-number-known-comorbidity'), 

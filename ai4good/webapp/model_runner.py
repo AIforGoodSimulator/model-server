@@ -13,8 +13,8 @@ import socket
 from ai4good.webapp.commit_date import get_version_date
 from ai4good.utils.logger_util import get_logger
 
-MAX_CONCURRENT_MODELS = 3
-HISTORY_SIZE = 10
+MAX_CONCURRENT_MODELS = 30
+HISTORY_SIZE = 100
 INPUT_PARAMETER_TIMEOUT = 60*30 # in seconds
 logger = get_logger(__name__)
 

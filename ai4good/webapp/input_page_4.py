@@ -46,7 +46,7 @@ def generate_activity_gathering_children(id_index):
         html.Header(activity_gaterhing_detail[0], className='card-text'), 
         dbc.Input(id=id_activity_no_place[id_index], placeholder=activity_gathering_required[id_index], type='number', min=0, max=1000, step=1, bs_size='sm', style={'margin-bottom':'25px'}),        
         html.Header(activity_gaterhing_detail[1], className='card-text'), 
-        dbc.Input(id=id_activity_no_person[id_index], placeholder=activity_gathering_required[id_index], type='number', min=0, max=100000, step=10, bs_size='sm', style={'margin-bottom':'25px'}),        
+        dbc.Input(id=id_activity_no_person[id_index], placeholder=activity_gathering_required[id_index], type='number', min=0, max=100000, step=1, bs_size='sm', style={'margin-bottom':'25px'}),        
         html.Header(activity_gaterhing_detail[2], className='card-text'), 
         dbc.Input(id=id_activity_no_visit[id_index], placeholder=activity_gathering_required[id_index], type='number', min=0, max=100, step=1, bs_size='sm', style={'margin-bottom':'25px'}),        
     ], style={'margin-left':'25px', 'margin-right':'25px', 'margin-bottom':'20px'})]
