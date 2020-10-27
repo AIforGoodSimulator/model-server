@@ -43,11 +43,11 @@ def generate_html_age_group(age, id_age_popu, age_perc, total_popu):
                dbc.Input(id={
                    'type':'age-popu-input',
                    'index':id_age_popu
-               }, placeholder='Required', type='number', value=[], min=0, max=total_popu, step=1, bs_size='sm', style={'justify':'right', 'margin-bottom':'5px'}), 
+               }, placeholder='Required', type='number', value=0, min=0, max=total_popu, step=1, bs_size='sm', style={'justify':'right', 'margin-bottom':'5px'}), 
                dcc.Slider(id={
                    'type':'age-popu-slider', 
                    'index':id_age_popu
-               }, value=[], min=0, max=total_popu, step=1, updatemode='drag'),
+               }, value=0, min=0, max=total_popu, step=1, updatemode='drag'),
                dbc.Label(str(age_perc)+'%', id={
                    'type':'age-perc-label', 
                    'index':id_age_popu}), 
