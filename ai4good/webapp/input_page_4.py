@@ -34,7 +34,7 @@ def generate_health_intervent_children(id_index):
         dbc.Label(health_intervent_full[id_index], color='secondary'), 
         dbc.Container(dbc.Label(health_intervent_required[id_index], color='secondary', size='sm')), 
         dbc.RadioItems(
-            options = [{'label':y, 'value':x} for x,y in enumerate(health_intervent_option)], value=not_sure_effectiveness, id=radio_id_health_intervent[id_index])
+            options = [{'label':y, 'value':} for x,y in enumerate(health_intervent_option)], value=not_sure_effectiveness, id=radio_id_health_intervent[id_index])
     ], style={'margin-left':'25px', 'margin-right':'25px', 'margin-bottom':'20px'})]
     return children
 
@@ -43,11 +43,11 @@ def generate_activity_gathering_children(id_index):
         html.P(''), 
         dbc.Label(activity_gathering_full[id_index], color='secondary'), 
         html.Header(activity_gaterhing_detail[0], className='card-text'), 
-        dbc.Input(id=id_activity_no_place[0], placeholder=activity_gathering_required[id_index], type='number', min=0, max=1000, step=1, bs_size='sm', style={'margin-bottom':'25px'}),        
+        dbc.Input(id=id_activity_no_place[id_index], placeholder=activity_gathering_required[id_index], type='number', min=0, max=1000, step=1, bs_size='sm', style={'margin-bottom':'25px'}),        
         html.Header(activity_gaterhing_detail[1], className='card-text'), 
-        dbc.Input(id=id_activity_no_person[1], placeholder=activity_gathering_required[id_index], type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),        
+        dbc.Input(id=id_activity_no_person[id_index], placeholder=activity_gathering_required[id_index], type='number', min=0, max=100000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),        
         html.Header(activity_gaterhing_detail[2], className='card-text'), 
-        dbc.Input(id=id_activity_no_visit[2], placeholder=activity_gathering_required[id_index], type='number', min=0, max=100, step=1, bs_size='sm', style={'margin-bottom':'25px'}),        
+        dbc.Input(id=id_activity_no_visit[id_index], placeholder=activity_gathering_required[id_index], type='number', min=0, max=100, step=1, bs_size='sm', style={'margin-bottom':'25px'}),        
     ], style={'margin-left':'25px', 'margin-right':'25px', 'margin-bottom':'20px'})]
     return children
 
