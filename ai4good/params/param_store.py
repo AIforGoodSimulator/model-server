@@ -70,7 +70,7 @@ class SimpleParamStore(ParamStore):
 
     def get_profiles(self, model: str) -> List[str]:
         df = self._read_csv(model + "_profile_params.csv")
-        return df['Profile'].unique().tolist()
+        return df['Profile'].dropna().unique().tolist()
 
     def get_params(self, model: str, profile: str) -> pd.DataFrame:
         df = self._read_csv(model + "_profile_params.csv")

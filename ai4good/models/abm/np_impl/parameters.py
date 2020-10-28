@@ -107,13 +107,15 @@ class Parameters(object):
         # Factor to scale probability of spread (by wearing masks, etc.)
         self.transmission_reduction = float(profile.loc['transmission_reduction', VALUE])
         # Probability that camp managers can detect symptomatic people in the camp so as to isolate them
-        self.probability_spotting_symptoms_per_day = float(profile.loc['probability_spotting_symptoms_per_day', VALUE])
+        self.probability_spotting_symptoms_per_day = Parameters.get_float(profile, "probability_spotting_symptoms_per_day")
         # Number of days needed to be cleared of isolation
         self.clear_day = int(profile.loc['clearday', VALUE])
         # Probability that people will violate lockdown
-        self.prop_violating_lockdown = float(profile.loc["prop_violating_lockdown", VALUE])
+        self.prop_violating_lockdown = Parameters.get_float(profile, "prop_violating_lockdown")
+        # New home range of agents following lockdown
+        self.lockdown_home_range = Parameters.get_float(profile, "lockdown_home_range")
 
-        self.percentage_of_toilet_queue_cleared_at_each_step = 0.8
+        self.percentage_of_toilet_queue_cleared_at_each_step = 1.0
         # TODO: add to the new list of parameters
         # float(profile.loc['percentage_of_toilet_queue_cleared_at_each_step', VALUE])
 
@@ -171,6 +173,12 @@ class Parameters(object):
         age_and_gender = age_and_gender[np.random.randint(age_and_gender.shape[0], size=num_ppl)]
         return age_and_gender
 
+    @staticmethod
+    def get_float(df, idx):
+        if pd.isna(df.loc[idx, VALUE]):
+            return None
+        return float(df.loc[idx, VALUE])
+
     def validate(self):
         # Validate parameter values so that only valid simulations are run
 
@@ -206,9 +214,13 @@ class Parameters(object):
         assert 0.0 < self.relative_strength_of_interaction <= 1.0, "Parameter value must be between (0,1]"
 
         assert 0.0 < self.transmission_reduction <= 1.0, "Probability value must be between (0,1]"
-        assert 0.0 <= self.probability_spotting_symptoms_per_day <= 1.0, "Probability value must be between [0,1]"
+        assert self.probability_spotting_symptoms_per_day is None or \
+               (0.0 <= self.probability_spotting_symptoms_per_day <= 1.0), "Probability value must be between [0,1]"
         assert self.clear_day > 0, "Parameter must be a positive integer"
-        assert 0.0 <= self.prop_violating_lockdown <= 1.0, "Probability value must be between [0,1]"
+        assert self.prop_violating_lockdown is None or \
+               (0.0 <= self.prop_violating_lockdown <= 1.0), "Probability value must be between [0,1]"
+        assert self.lockdown_home_range is None or \
+               (0.0 < self.lockdown_home_range < 1), "Parameter value must be between (0,1)"
 
         for p in self.prob_symp2sevr:
             assert 0 <= p <= 1, "Probability value must be between [0,1]"
