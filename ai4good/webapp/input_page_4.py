@@ -78,7 +78,7 @@ layout = html.Div(
                                     dbc.Tab(label=health_intervent[1], tab_id=tab_id_health_intervent[1], children=generate_health_intervent_children(1), disabled=True), 
                                     dbc.Tab(label=health_intervent[2], tab_id=tab_id_health_intervent[2], children=generate_health_intervent_children(2), disabled=True), 
                                     dbc.Tab(label=health_intervent[3], tab_id=tab_id_health_intervent[3], children=generate_health_intervent_children(3), disabled=True), 
-                                    dbc.Tab(label=health_intervent[4], tab_id=tab_id_health_intervent[4], children=generate_health_intervent_children(4)), 
+                                    dbc.Tab(label=health_intervent[4], tab_id=tab_id_health_intervent[4], children=generate_health_intervent_children(4), disabled=True), 
                                 ], id='tabs-health-intervent', active_tab=tab_id_health_intervent[0]), 
                             ], style={'border':'1px lightgray solid'}),
                             html.P(''),
