@@ -152,7 +152,7 @@ class CampTester(unittest.TestCase):
         # Simulate function could only do transmission of susceptible->exposed
         self.assertTrue(pre_total_susc == (post_total_susc + num_new_inf))
         # Number of exposed agents should not decrease
-        self.assertTrue(pre_total_exps >= post_total_exps)
+        self.assertTrue(pre_total_exps <= post_total_exps)
 
         # Test: Agents are inside their home ranges
         dist_from_hh = np.sqrt(
@@ -186,7 +186,7 @@ class CampTester(unittest.TestCase):
         # Simulate function could only do transmission of susceptible->exposed
         self.assertTrue(pre_total_susc == (post_total_susc + num_new_inf))
         # Number of exposed agents should not decrease
-        self.assertTrue(pre_total_exps >= post_total_exps)
+        self.assertTrue(pre_total_exps <= post_total_exps)
 
         # Test: Agents are inside their households
         dist_from_hh = np.sqrt(
