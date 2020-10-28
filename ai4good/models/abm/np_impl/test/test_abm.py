@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 
 """
    To run the unit tests, run following command from project root:
-   > python -m unittest discover -s ai4good\models\abm\np_impl\test
+   > python -m unittest discover -s ai4good/models/abm/np_impl/test
 """
 
 
@@ -25,6 +25,7 @@ def get_params(_profile='BaselineHTHI'):
 class OpTester(unittest.TestCase):
 
     def test_position_blocks(self):
+        logger.info("Running test: test_position_blocks")
 
         camp_size = 100
         euclidean = lambda p1, p2: ((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2) ** 0.5  # helper function for distance
@@ -53,6 +54,7 @@ class OpTester(unittest.TestCase):
                 self.assertAlmostEqual(d_, d)
 
     def test_find_nearest(self):
+        logger.info("Running test: test_find_nearest")
 
         # Test on custom data
         pos = np.array([0, 0])
@@ -69,6 +71,7 @@ class OpTester(unittest.TestCase):
         self.assertTrue(min_val == 1.0 ** 2)
 
     def test_showing_symptoms(self):
+        logger.info("Running test: test_showing_symptoms")
 
         # Only symptomatic, mild and severe agents show symptoms
         inp = np.array([INF_SUSCEPTIBLE, INF_EXPOSED, INF_PRESYMPTOMATIC, INF_SYMPTOMATIC, INF_MILD, INF_SEVERE,
@@ -79,6 +82,7 @@ class OpTester(unittest.TestCase):
         self.assertTrue(np.all(out == exp))
 
     def test_is_infected(self):
+        logger.info("Running test: test_is_infected")
 
         # Presymptomatic, symptomatic, mild, severe, asymptomatic1, asymptomatic2 are infected
         inp = np.array([INF_SUSCEPTIBLE, INF_EXPOSED, INF_PRESYMPTOMATIC, INF_SYMPTOMATIC, INF_MILD, INF_SEVERE,
@@ -136,9 +140,9 @@ class CampTester(unittest.TestCase):
 
         # Perform simulation
         to_wander, num_new_inf = Moria.simulate_wander(to_wander, CAMP_SIZE,
-                                                      self.camp.params.relative_strength_of_interaction,
-                                                      self.camp.params.infection_radius * CAMP_SIZE,
-                                                      self.camp.params.prob_spread_wander)
+                                                       self.camp.params.relative_strength_of_interaction,
+                                                       self.camp.params.infection_radius * CAMP_SIZE,
+                                                       self.camp.params.prob_spread_wander)
 
         # Values after execution
         post_total_susc = np.count_nonzero(to_wander[:, A_DISEASE] == INF_SUSCEPTIBLE)
@@ -172,7 +176,8 @@ class CampTester(unittest.TestCase):
         pre_total_exps = np.count_nonzero(to_house[:, A_DISEASE] == INF_EXPOSED)
 
         # Perform simulation
-        to_house, num_new_inf = Moria.simulate_households(to_house, self.camp.params.prob_spread_house, ACTIVITY_HOUSEHOLD)
+        to_house, num_new_inf = Moria.simulate_households(to_house, self.camp.params.prob_spread_house,
+                                                          ACTIVITY_HOUSEHOLD)
 
         # Values after execution
         post_total_susc = np.count_nonzero(to_house[:, A_DISEASE] == INF_SUSCEPTIBLE)
@@ -193,3 +198,33 @@ class CampTester(unittest.TestCase):
             ((to_house[:, [A_X, A_Y]] - to_house[:, [A_HOUSEHOLD_X, A_HOUSEHOLD_Y]]) ** 2).sum(axis=1)
         )
         self.assertTrue(np.all(dist_from_hh <= SMALL_ERROR), msg="Invalid agent co-ordinates after going to household")
+
+    def test_update_queues(self):
+        logger.info("Running test: test_update_queues")
+
+        # number of agents in the camp
+        n = self.camp.agents.shape[0]
+
+        for n_toilet in [0, 3, 5]:  # loop through test values of "number of agents to be put in the queue"
+            # select few agents to be put in the queues
+            to_toilet_ids = np.array(random.sample(range(n), n_toilet), dtype=np.int32)
+
+            # First send the selected agents to the queue
+            _ = self.camp.simulate_queues(to_toilet_ids, "toilet", self.camp.toilets)
+
+            t_queues = self.camp.agents[to_toilet_ids, A_TOILET].astype(np.int32)  # Id of the queue of each agent
+            t_queues_pos = self.camp.toilets[t_queues, :]  # Co-ordinates of the queue in the camp for each agent
+
+            # Run tests: `to_toilet_ids` agents should be sent to toilet queue
+            self.assertTrue(np.all(self.camp.agents[to_toilet_ids, A_ACTIVITY] == ACTIVITY_TOILET),
+                            "Some agents didn't visit queue")
+            self.assertTrue(np.all(self.camp.agents[to_toilet_ids][:, [A_X, A_Y]] == t_queues_pos),
+                            "Agent's position didn't update properly")
+            self.assertTrue(np.all(self.camp.agents[to_toilet_ids, A_ACTIVITY_BEFORE_QUEUE] != -1),
+                            "A_ACTIVITY_BEFORE_QUEUE not updating properly")
+
+            # Now, update the queues (de-queue everyone)
+            self.camp.update_queues(1.0)
+            # Run test: no one should be still in queue
+            num_in_toilet_queue = np.count_nonzero(self.camp.agents[:, A_ACTIVITY] == ACTIVITY_TOILET)
+            self.assertTrue(num_in_toilet_queue == 0, "After dequeue everyone, still people's position shows in queue")
