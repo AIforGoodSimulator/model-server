@@ -341,7 +341,7 @@ class Camp:
         ----------
         ids: Boolean array containing `True` at indices where agent will go to queue else `False`
         queue_name: Type of the queue. Possible values ["toilet", "food_line"]
-        queue_pos: (x,y) co-ordinates of the queues of type `queue_name`
+        queue_pos: (x,y) co-ordinates of all the queues of type `queue_name`
 
         Returns
         -------
@@ -349,21 +349,21 @@ class Camp:
 
         """
 
-        agents = self.agents[ids, :].reshape((-1, A_FEATURES))
+        # Get the queue indices where each agents is going
+        queue = self.agents[ids, A_TOILET if queue_name == "toilet" else A_FOOD_LINE].astype(np.int32)
+        # Random order of queueing agents (useful specifically when two agents in `ids` have same queue)
+        q_order = list(range(ids.shape[0]))
+        random.shuffle(q_order)
 
-        # Get the queue indices where agents are going
-        queue = agents[:, A_TOILET if queue_name == "toilet" else A_FOOD_LINE].copy().astype(np.int32)
-        # Randomize queue visit
-        np.random.shuffle(queue)
-
-        for i, q in enumerate(queue):
+        for i in q_order:
+            q = queue[i]
             # add agent to queue if he/she is not already in the queue
-            if agents[i, A_ACTIVITY] != ACTIVITY_TOILET and queue_name == "toilet":
+            if self.agents[ids[i], A_ACTIVITY] != ACTIVITY_TOILET and queue_name == "toilet":
                 self.toilet_queue[q].append(ids[i])  # add agent to queue
                 self.agents[ids[i], A_ACTIVITY_BEFORE_QUEUE] = self.agents[ids[i], A_ACTIVITY]  # save current activity
                 self.agents[ids[i], A_ACTIVITY] = ACTIVITY_TOILET  # update agent's activity
                 self.agents[ids[i], [A_X, A_Y]] = queue_pos[q, :]  # update agent's co-ordinates
-            elif agents[i, A_ACTIVITY] != ACTIVITY_FOOD_LINE and queue_name == "food_line":
+            elif self.agents[ids[i], A_ACTIVITY] != ACTIVITY_FOOD_LINE and queue_name == "food_line":
                 self.food_line_queue[q].append(ids[i])  # add agent to queue
                 self.agents[ids[i], A_ACTIVITY_BEFORE_QUEUE] = self.agents[ids[i], A_ACTIVITY]  # save current activity
                 self.agents[ids[i], A_ACTIVITY] = ACTIVITY_FOOD_LINE  # update agent's activity
