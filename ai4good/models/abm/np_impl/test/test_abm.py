@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 
 """
    To run the unit tests, run following command from project root:
-   > python -m unittest discover -s ai4good\models\abm\np_impl\test
+   > python -m unittest discover -s ai4good/models/abm/np_impl/test
 """
 
 
@@ -140,9 +140,9 @@ class CampTester(unittest.TestCase):
 
         # Perform simulation
         to_wander, num_new_inf = Moria.simulate_wander(to_wander, CAMP_SIZE,
-                                                      self.camp.params.relative_strength_of_interaction,
-                                                      self.camp.params.infection_radius * CAMP_SIZE,
-                                                      self.camp.params.prob_spread_wander)
+                                                       self.camp.params.relative_strength_of_interaction,
+                                                       self.camp.params.infection_radius * CAMP_SIZE,
+                                                       self.camp.params.prob_spread_wander)
 
         # Values after execution
         post_total_susc = np.count_nonzero(to_wander[:, A_DISEASE] == INF_SUSCEPTIBLE)
@@ -176,7 +176,8 @@ class CampTester(unittest.TestCase):
         pre_total_exps = np.count_nonzero(to_house[:, A_DISEASE] == INF_EXPOSED)
 
         # Perform simulation
-        to_house, num_new_inf = Moria.simulate_households(to_house, self.camp.params.prob_spread_house, ACTIVITY_HOUSEHOLD)
+        to_house, num_new_inf = Moria.simulate_households(to_house, self.camp.params.prob_spread_house,
+                                                          ACTIVITY_HOUSEHOLD)
 
         # Values after execution
         post_total_susc = np.count_nonzero(to_house[:, A_DISEASE] == INF_SUSCEPTIBLE)
