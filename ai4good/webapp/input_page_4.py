@@ -35,7 +35,7 @@ def generate_health_intervent_children(id_index):
         dbc.Label(health_intervent_full[id_index], color='secondary'), 
         dbc.Container(dbc.Label(health_intervent_required[id_index], color='secondary', size='sm')), 
         dbc.RadioItems(
-            options = [{'label':y, 'value':x} for x,y in enumerate(health_intervent_option)], value=not_sure_effectiveness, id=radio_id_health_intervent[id_index])
+            options = [{'label':y, 'value':x} for x,y in enumerate(health_intervent_option)], id=radio_id_health_intervent[id_index])
     ], style={'margin-left':'25px', 'margin-right':'25px', 'margin-bottom':'20px'})]
     return children
 
@@ -68,13 +68,18 @@ layout = html.Div(
                             html.Header('Effectiveness of Interventions', className='card-text'),
                             html.Header('How effective are the following measures at the camp?', className='card-text', style={'color':'darkgray'}), 
                             html.Div([
+                                html.B(''), 
+                                dcc.Slider(id='slider-health-intervent', min=0, max=4, step=1, value=0, updatemode='drag', marks={i: {'label': str(i+1), 'style': {'font-size': '1.2em'}} for i in range(5)}), 
+                                html.B('')], 
+                                style={'display':'grid', 'grid-template-columns':'5% 90% 5%', 'margin-bottom':'10px'}), 
+                            html.Div([
                                 dbc.Tabs([
-                                    dbc.Tab(label=health_intervent[0], tab_id=tab_id_health_intervent[0], children=generate_health_intervent_children(0)), 
-                                    dbc.Tab(label=health_intervent[1], tab_id=tab_id_health_intervent[1], children=generate_health_intervent_children(1)), 
-                                    dbc.Tab(label=health_intervent[2], tab_id=tab_id_health_intervent[2], children=generate_health_intervent_children(2)), 
-                                    dbc.Tab(label=health_intervent[3], tab_id=tab_id_health_intervent[3], children=generate_health_intervent_children(3)), 
-                                    dbc.Tab(label=health_intervent[4], tab_id=tab_id_health_intervent[4], children=generate_health_intervent_children(4)), 
-                                ], id='tabs-health-intervention', active_tab=tab_id_health_intervent[0]), 
+                                    dbc.Tab(label=health_intervent[0], tab_id=tab_id_health_intervent[0], children=generate_health_intervent_children(0), disabled=True), 
+                                    dbc.Tab(label=health_intervent[1], tab_id=tab_id_health_intervent[1], children=generate_health_intervent_children(1), disabled=True), 
+                                    dbc.Tab(label=health_intervent[2], tab_id=tab_id_health_intervent[2], children=generate_health_intervent_children(2), disabled=True), 
+                                    dbc.Tab(label=health_intervent[3], tab_id=tab_id_health_intervent[3], children=generate_health_intervent_children(3), disabled=True), 
+                                    dbc.Tab(label=health_intervent[4], tab_id=tab_id_health_intervent[4], children=generate_health_intervent_children(4), disabled=True), 
+                                ], id='tabs-health-intervent', active_tab=tab_id_health_intervent[0]), 
                             ], style={'border':'1px lightgray solid'}),
                             html.P(''),
                             html.P(''),
@@ -82,12 +87,17 @@ layout = html.Div(
                             html.Header('Activities and Gatherings', className='card-text'),
                             html.Header('What are scope of acitivities and gatherings at the camp?', className='card-text', style={'color':'darkgray'}), 
                             html.Div([
+                                html.B(''), 
+                                dcc.Slider(id='slider-activity-gathering', min=0, max=4, step=1, value=0, updatemode='drag', marks={i: {'label': str(i+1), 'style': {'font-size': '1.2em'}} for i in range(5)}), 
+                                html.B('')], 
+                                style={'display':'grid', 'grid-template-columns':'5% 90% 5%', 'margin-bottom':'10px'}), 
+                            html.Div([
                                 dbc.Tabs([
-                                    dbc.Tab(label=activity_gathering[0], tab_id=tab_id_activity_gathering[0], children=generate_activity_gathering_children(0)), 
-                                    dbc.Tab(label=activity_gathering[1], tab_id=tab_id_activity_gathering[1], children=generate_activity_gathering_children(1)), 
-                                    dbc.Tab(label=activity_gathering[2], tab_id=tab_id_activity_gathering[2], children=generate_activity_gathering_children(2)), 
-                                    dbc.Tab(label=activity_gathering[3], tab_id=tab_id_activity_gathering[3], children=generate_activity_gathering_children(3)), 
-                                    dbc.Tab(label=activity_gathering[4], tab_id=tab_id_activity_gathering[4], children=generate_activity_gathering_children(4)), 
+                                    dbc.Tab(label=activity_gathering[0], tab_id=tab_id_activity_gathering[0], children=generate_activity_gathering_children(0), disabled=True), 
+                                    dbc.Tab(label=activity_gathering[1], tab_id=tab_id_activity_gathering[1], children=generate_activity_gathering_children(1), disabled=True), 
+                                    dbc.Tab(label=activity_gathering[2], tab_id=tab_id_activity_gathering[2], children=generate_activity_gathering_children(2), disabled=True), 
+                                    dbc.Tab(label=activity_gathering[3], tab_id=tab_id_activity_gathering[3], children=generate_activity_gathering_children(3), disabled=True), 
+                                    dbc.Tab(label=activity_gathering[4], tab_id=tab_id_activity_gathering[4], children=generate_activity_gathering_children(4), disabled=True), 
                                 ], id='tabs-activity-gathering', active_tab=tab_id_activity_gathering[0]), 
                             ], style={'border':'1px lightgray solid'}),
                             html.P(''),
@@ -101,6 +111,18 @@ layout = html.Div(
         ])
     ]
 )
+
+@dash_app.callback(
+    [Output('tabs-activity-gathering', 'active_tab')], 
+    [Input('slider-activity-gathering','value')])
+def update_activity_gathering_tab(value):
+    return [tab_id_activity_gathering[value]]
+
+@dash_app.callback(
+    [Output('tabs-health-intervent', 'active_tab')], 
+    [Input('slider-health-intervent','value')])
+def update_health_intervent_tab(value):
+    return [tab_id_health_intervent[value]]
 
 @dash_app.callback(
     [Output('radio-intervene-social', 'value'), Output('radio-intervene-face', 'value'), 
@@ -158,12 +180,6 @@ def update_input_parameter_page_4(
     }
     if n_clicks is None:
         value = inputParameterCache.cache_get(input_param.keys())  # get cached value
-        for i,j in enumerate(value):
-            if j is None:  # if first time loading, get default value
-                if list(input_param.keys())[i] in {'radio-intervene-social', 'radio-intervene-face', 'radio-intervene-handwashing', 'radio-intervene-testing', 'radio-intervene-lockdown'}:
-                    value[i] = not_sure_effectiveness
-                else:
-                    value[i] = None
         return value
     else:
         inputParameterCache.cache_set(input_param, 4)  # put all input parameters in input page 4 to cache
