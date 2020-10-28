@@ -148,7 +148,7 @@ layout = html.Div(
                             html.Header('Accommodation details provide population density estimate and suggest mobility pattern', className='card-text', style={'color':'darkgray'}), 
                             html.Div([
                                 html.B(''), 
-                                dcc.Slider(id='slider-accommodation-info', min=0, max=2, step=1, value=0, updatemode='drag', marks={i: {'label': i+1, 'style': {'font-size': '1.2em'}} for i in range(3)}), 
+                                dcc.Slider(id='slider-accommodation-info', min=0, max=2, step=1, value=0, updatemode='drag', marks={i: {'label': str(i+1), 'style': {'font-size': '1.2em'}} for i in range(3)}), 
                                 html.B('')], 
                                 style={'display':'grid', 'grid-template-columns':'5% 90% 5%', 'margin-bottom':'10px'}), 
                             html.Div([

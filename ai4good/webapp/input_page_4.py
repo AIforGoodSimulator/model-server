@@ -69,7 +69,7 @@ layout = html.Div(
                             html.Header('How effective are the following measures at the camp?', className='card-text', style={'color':'darkgray'}), 
                             html.Div([
                                 html.B(''), 
-                                dcc.Slider(id='slider-health-intervent', min=0, max=4, step=1, value=0, updatemode='drag', marks={i: {'label': i+1, 'style': {'font-size': '1.2em'}} for i in range(5)}), 
+                                dcc.Slider(id='slider-health-intervent', min=0, max=4, step=1, value=0, updatemode='drag', marks={i: {'label': str(i+1), 'style': {'font-size': '1.2em'}} for i in range(5)}), 
                                 html.B('')], 
                                 style={'display':'grid', 'grid-template-columns':'5% 90% 5%', 'margin-bottom':'10px'}), 
                             html.Div([
@@ -88,7 +88,7 @@ layout = html.Div(
                             html.Header('What are scope of acitivities and gatherings at the camp?', className='card-text', style={'color':'darkgray'}), 
                             html.Div([
                                 html.B(''), 
-                                dcc.Slider(id='slider-activity-gathering', min=0, max=4, step=1, value=0, updatemode='drag', marks={i: {'label': i+1, 'style': {'font-size': '1.2em'}} for i in range(5)}), 
+                                dcc.Slider(id='slider-activity-gathering', min=0, max=4, step=1, value=0, updatemode='drag', marks={i: {'label': str(i+1), 'style': {'font-size': '1.2em'}} for i in range(5)}), 
                                 html.B('')], 
                                 style={'display':'grid', 'grid-template-columns':'5% 90% 5%', 'margin-bottom':'10px'}), 
                             html.Div([
