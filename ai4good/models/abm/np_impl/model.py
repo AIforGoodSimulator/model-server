@@ -75,35 +75,6 @@ class OptimizedOps(object):
 
     @staticmethod
     @nb.njit
-    def distance_matrix(pos: np.array) -> np.array:
-        """
-        Calculate and returns the distance matrix given (x,y) positions. For `n` positions, distance matrix returns a
-        `n`x`n` matrix where element `i`,`j` gives the Euclidean distance between position `i` and position `j`.
-        Parameters
-        ----------
-        pos: Position matrix of size n x 2 containing (x, y) co-ordinates
-
-        Returns
-        -------
-        out: Distance matrix of size n x n
-
-        """
-        n = pos.shape[0]  # number of positions
-        mat = np.zeros(shape=(n, n), dtype=np.float32)  # initialize distance matrix
-
-        # loop through all pairs
-        for i in range(n):
-            for j in range(n):
-                # calculate Euclidean distance between (i) and (j)
-                dij = (pos[i, 0] - pos[j, 0]) ** 2 + (pos[i, 1] - pos[j, 1]) ** 2
-                dij = dij ** 0.5
-                # store result in distance matrix
-                mat[i, j] = dij
-        # return distance matrix
-        return mat
-
-    @staticmethod
-    @nb.njit
     def position_blocks(grid_size: int, camp_size: float) -> np.array:
         """
         Uniform placement of blocks (typically food line or toilet) in the camp.
@@ -115,7 +86,7 @@ class OptimizedOps(object):
 
         Returns
         -------
-            out: A (grid_size * grid_size, 2) shaped array containing (x, y) co-ordinates of the blocks
+            out: An array of length grid_size * grid_size (x, y) co-ordinates of the blocks
 
         """
 
@@ -370,7 +341,7 @@ class Camp:
         ----------
         ids: Boolean array containing `True` at indices where agent will go to queue else `False`
         queue_name: Type of the queue. Possible values ["toilet", "food_line"]
-        queue_pos: (x,y) co-ordinates of the queues of type `queue_name`
+        queue_pos: (x,y) co-ordinates of all the queues of type `queue_name`
 
         Returns
         -------
@@ -378,21 +349,21 @@ class Camp:
 
         """
 
-        agents = self.agents[ids, :].reshape((-1, A_FEATURES))
+        # Get the queue indices where each agents is going
+        queue = self.agents[ids, A_TOILET if queue_name == "toilet" else A_FOOD_LINE].astype(np.int32)
+        # Random order of queueing agents (useful specifically when two agents in `ids` have same queue)
+        q_order = list(range(ids.shape[0]))
+        random.shuffle(q_order)
 
-        # Get the queue indices where agents are going
-        queue = agents[:, A_TOILET if queue_name == "toilet" else A_FOOD_LINE].copy().astype(np.int32)
-        # Randomize queue visit
-        np.random.shuffle(queue)
-
-        for i, q in enumerate(queue):
+        for i in q_order:
+            q = queue[i]
             # add agent to queue if he/she is not already in the queue
-            if agents[i, A_ACTIVITY] != ACTIVITY_TOILET and queue_name == "toilet":
+            if self.agents[ids[i], A_ACTIVITY] != ACTIVITY_TOILET and queue_name == "toilet":
                 self.toilet_queue[q].append(ids[i])  # add agent to queue
                 self.agents[ids[i], A_ACTIVITY_BEFORE_QUEUE] = self.agents[ids[i], A_ACTIVITY]  # save current activity
                 self.agents[ids[i], A_ACTIVITY] = ACTIVITY_TOILET  # update agent's activity
                 self.agents[ids[i], [A_X, A_Y]] = queue_pos[q, :]  # update agent's co-ordinates
-            elif agents[i, A_ACTIVITY] != ACTIVITY_FOOD_LINE and queue_name == "food_line":
+            elif self.agents[ids[i], A_ACTIVITY] != ACTIVITY_FOOD_LINE and queue_name == "food_line":
                 self.food_line_queue[q].append(ids[i])  # add agent to queue
                 self.agents[ids[i], A_ACTIVITY_BEFORE_QUEUE] = self.agents[ids[i], A_ACTIVITY]  # save current activity
                 self.agents[ids[i], A_ACTIVITY] = ACTIVITY_FOOD_LINE  # update agent's activity
