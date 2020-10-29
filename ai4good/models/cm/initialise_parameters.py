@@ -11,12 +11,17 @@ from ai4good.params.model_control_params import model_config_cm
 
 class Parameters:
     def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
+        from ai4good.webapp.apps import _redis
+        from ai4good.webapp.model_runner import InputParameterCache
+        self.inputParameterCache = InputParameterCache(_redis)
+
         self.ps = ps
-        self.camp = camp
+        self.camp = str(self.get_from_cache('name-camp')) or camp
+        self.country = str(self.get_from_cache('country-dropdown'))
         self.age_limits = np.array([0, 10, 20, 30, 40, 50, 60, 70, 80], dtype=int)
         # disease_params = ps.get_disease_params()
         disease_params = covid_specific_parameters
-        self.camp_params = ps.get_camp_params(camp)
+        # self.camp_params = ps.get_camp_params(camp)
         # ------------------------------------------------------------
         # disease params
         # parameter_csv = disease_params
@@ -53,7 +58,7 @@ class Parameters:
         categories_df = pd.DataFrame(categories_dicts, index =['longname', 'shortname','colour','index','fill_colour'])
         self.categories: dict = categories_df.to_dict()
 
-        self.population_frame, self.population = self.prepare_population_frame(self.camp_params)
+        self.population_frame, self.population = self.prepare_population_frame()
 
         self.control_dict, self.icu_count = self.load_control_dict(profile, profile_override_dict)
 
@@ -139,18 +144,32 @@ class Parameters:
 
         return dct, icu_capacity
 
-    @staticmethod
-    def prepare_population_frame(population_frame):
-        population_frame = population_frame.loc[:, 'Age':'Total_population']
+    def get_from_cache(self, key):
+        return self.inputParameterCache.cache_get(key)[0]
 
-        population_frame = population_frame.assign(p_hospitalised=lambda x: (x.Hosp_given_symptomatic / 100),
-                                                   # *frac_symptomatic,
-                                                   p_critical=lambda x: (x.Critical_given_hospitalised / 100))
+    def prepare_population_frame(self, df=None):
+        age0to5 = int(self.get_from_cache('age-population-0-5'))
+        age6to9 = int(self.get_from_cache('age-population-6-9'))
+        population_structure = [age0to5 + age6to9, int(self.get_from_cache('age-population-10-19')),
+                int(self.get_from_cache('age-population-20-29')), int(self.get_from_cache('age-population-30-39')),
+                int(self.get_from_cache('age-population-40-49')), int(self.get_from_cache('age-population-50-59')),
+                int(self.get_from_cache('age-population-60-69')), int(self.get_from_cache('age-population-70+'))]
+        ages = ['0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70+']
+        population_frame = \
+            pd.DataFrame({'Age': ages, 'Population_structure': population_structure,
+                         'p_symptomatic': covid_specific_parameters['p_symptomatic'],
+                        'p_hosp_given_symptomatic': covid_specific_parameters['p_hosp_given_symptomatic'],
+                         'p_critical_given_hospitalised': covid_specific_parameters['p_critical_given_hospitalised']})
+        # population_frame = population_frame.loc[:, 'Age':'Total_population']
+
+        # population_frame = population_frame.assign(p_hospitalised=lambda x: (x.Hosp_given_symptomatic / 100),
+        #                                            # *frac_symptomatic,
+        #                                            p_critical=lambda x: (x.Critical_given_hospitalised / 100))
 
         # make sure population frame.value sum to 100
         # population_frame.loc[:,'Population'] = population_frame.Population/sum(population_frame.Population)
 
-        population_size = np.float(population_frame.reset_index()['Total_population'][0])
+        population_size = self.get_from_cache('total-population')
 
         return population_frame, population_size
 
@@ -174,11 +193,9 @@ class Parameters:
         return infection_matrix, beta_list, largest_eigenvalue
 
     def generate_contact_matrix(self, age_limits: np.array):
-        supported_countries = self.ps.get_supported_countries()
-        self.country = self.camp_params['Country'].tolist()[0]
         contact_matrix_path = pu.params_path(f'contact_matrices/{self.country}.csv')
         contact_matrix = pd.read_csv(contact_matrix_path).to_numpy()
-        population_array = self.camp_params['Population_structure'].to_numpy()
+        population_array = self.population_frame['Population_structure'].to_numpy()
         n_categories = len(age_limits) - 1
         ind_limits = np.array(age_limits / 5, dtype=int)
         p = np.zeros(16)

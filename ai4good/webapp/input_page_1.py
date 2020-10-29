@@ -15,7 +15,7 @@ import os
 text_disclaimer = 'Disclaimer: This tool is for informational and research purposes only and should not be considered as a medical predictor. The input parameters you have provided is a determining factor in the simulation results. '
 
 base = '../../fs'
-path_country = pu._path(f'{base}/params/cm_model/contact_matrices/', '')
+path_country = pu.params_path('contact_matrices')
 country_raw = [f for f in os.listdir(path_country) if os.path.isfile(os.path.join(path_country, f))]
 country_clean = sorted([f.split('.')[0] for f in country_raw])
 

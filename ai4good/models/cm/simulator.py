@@ -190,8 +190,8 @@ class Simulator:
         y0 = y1.T.reshape(self.params.number_compartments*age_categories)
 
         symptomatic_prob = np.asarray(population_frame.p_symptomatic)
-        hospital_prob = np.asarray(population_frame.p_hospitalised)
-        critical_prob = np.asarray(population_frame.p_critical)
+        hospital_prob = np.asarray(population_frame.p_hosp_given_symptomatic)
+        critical_prob = np.asarray(population_frame.p_critical_given_hospitalised)
 
         sol = ode(self.ode_system2d).set_f_params(
             self.params.infection_matrix,
