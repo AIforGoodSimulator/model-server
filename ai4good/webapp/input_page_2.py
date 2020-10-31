@@ -23,16 +23,19 @@ id_ethnic_no = ['ethnic-no-'+str(i+1) for i in range(10)]
 accommodation_info = ['Type 1', 'Type 2', 'Type 3']
 accommodation_info_full = ['Accommodation Type 1', 'Accommodation Type 2', 'Accommodation Type 3']
 accommodation_info_required = ['Optional', 'Optional', 'Optional']
-accommodation_info_detail = ['Area covered (m²)', 'No. of total camp residents in this type of accommodation', 'No. of existing units of accommodation']
+accommodation_info_detail = ['Area covered (m²)', 'No. of existing units of accommodation', 'No. of total camp residents in this type of accommodation']
 tab_id_accommodation_info = ['tab-accommodation-info-' + x.replace(' ','').lower() for x in accommodation_info]
 id_accommodation_area = ['accommodation-area-' + x.replace(' ','').lower() for x in accommodation_info]
-id_accommodation_no_person = ['accommodation-no-person-' + x.replace(' ','').lower() for x in accommodation_info]
 id_accommodation_no_unit = ['accommodation-no-unit-' + x.replace(' ','').lower() for x in accommodation_info]
+id_accommodation_no_person = ['accommodation-no-person-' + x.replace(' ','').lower() for x in accommodation_info]
 
 def int_perc_1dp(nom, dem):
-    perc = nom/dem*100 if dem !=0 else 0
-    perc_1dp = "{:.1f}".format(perc)
-    return str(perc_1dp)+'%'
+    if None in [nom, dem]:
+        return None
+    else:
+        perc = nom/dem*100 if dem !=0 else 0
+        perc_1dp = "{:.1f}".format(perc)
+        return str(perc_1dp)+'%'
 
 def generate_html_age_group(age, id_age_popu, age_perc, total_popu):
     return html.Div([
@@ -41,7 +44,7 @@ def generate_html_age_group(age, id_age_popu, age_perc, total_popu):
                dbc.Input(id={
                    'type':'age-popu-input',
                    'index':id_age_popu
-               }, placeholder='Required', type='number', value=0, min=0, max=total_popu, step=1, bs_size='sm', style={'justify':'right', 'margin-bottom':'5px'}), 
+               }, placeholder='', type='number', value=0, min=0, max=total_popu, step=1, bs_size='sm', style={'justify':'right', 'margin-bottom':'5px'}), 
                dcc.Slider(id={
                    'type':'age-popu-slider', 
                    'index':id_age_popu
@@ -55,10 +58,10 @@ def generate_ethnic_popu_children(id_two_no, id_ethnic_no, str_info, max_no, mar
     children = html.Div([
         html.B(''),
         html.B(str_info + str(id_two_no[0]+1)),
-        dbc.Input(id=id_ethnic_no[id_two_no[0]], placeholder='Optional', type='number', min=0, max=max_no, step=1, n_submit=0, bs_size='sm'),
+        dbc.Input(id=id_ethnic_no[id_two_no[0]], placeholder='', type='number', min=0, max=max_no, step=1, n_submit=0, bs_size='sm'),
         html.B(''),
         html.B(str_info + str(id_two_no[1]+1)),
-        dbc.Input(id=id_ethnic_no[id_two_no[1]], placeholder='Optional', type='number', min=0, max=max_no, step=1, n_submit=0, bs_size='sm'),
+        dbc.Input(id=id_ethnic_no[id_two_no[1]], placeholder='', type='number', min=0, max=max_no, step=1, n_submit=0, bs_size='sm'),
         html.B(''), 
     ], style={'display':'grid', 'grid-template-columns':'7% 18% 20% 12% 18% 20% 5%', 'margin-bottom':margin_bottom})
     return children
@@ -70,9 +73,9 @@ def generate_accommodation_info_children(id_index):
         html.Header(accommodation_info_detail[0], className='card-text'), 
         dbc.Input(id=id_accommodation_area[id_index], placeholder=accommodation_info_required[id_index], type='number', min=0, max=1000000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),        
         html.Header(accommodation_info_detail[1], className='card-text'), 
-        dbc.Input(id=id_accommodation_no_person[id_index], placeholder=accommodation_info_required[id_index], type='number', min=0, max=100000, step=1, bs_size='sm', style={'margin-bottom':'25px'}),        
-        html.Header(accommodation_info_detail[2], className='card-text'), 
         dbc.Input(id=id_accommodation_no_unit[id_index], placeholder=accommodation_info_required[id_index], type='number', min=0, max=10000, step=1, bs_size='sm', style={'margin-bottom':'25px'}),        
+        html.Header(accommodation_info_detail[2], className='card-text'), 
+        dbc.Input(id=id_accommodation_no_person[id_index], placeholder=accommodation_info_required[id_index], type='number', min=0, max=100000, step=1, bs_size='sm', style={'margin-bottom':'25px'}),        
     ], style={'margin-left':'25px', 'margin-right':'25px', 'margin-bottom':'20px'})]
     return children
 
@@ -90,8 +93,8 @@ layout = html.Div(
                             html.P('Fill in the following about the age structure accommodation type of the settlement',className='card-text'),
                             html.H5('Population', className='card-text'),
                             html.Header('Total Population', className='card-text'),
-                            html.Header('What is the total population in the camp, rounding off to the nearest 10?',className='card-text', style={'color':'darkgray'}),
-                            dbc.Input(id='total-population', placeholder='Required', value=20000, type='number', min=0, max=100000, step=10, n_submit=0, bs_size='sm', style={'margin-bottom':'25px'}),
+                            html.Header('What is the total population in the camp?',className='card-text', style={'color':'darkgray'}),
+                            dbc.Input(id='total-population', placeholder='', value=20000, type='number', min=0, max=100000, step=1, n_submit=0, bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Age Group Structure', className='card-text'),
                             html.Header('Enter the percentage or actual population that each age range represents',className='card-text', style={'color':'darkgray'}),
                             html.Div([
@@ -136,12 +139,12 @@ layout = html.Div(
                                 html.Label('', id='gender-perc-male')], 
                                 style={'display':'grid', 'grid-template-columns':'5% 10% 70% 5% 10%', 'margin-bottom':'25px'}),                            
                             html.Header('Population by Ethnicity', className='card-text'),
-                            html.Header('Enter the population represented by each ethnic group', className='card-text', style={'color':'darkgray'}), 
+                            html.Header('Enter the population represented by each ethnic group (optional)', className='card-text', style={'color':'darkgray'}), 
                             generate_ethnic_popu_children([0, 1], id_ethnic_no, 'Group ', 100000, '10px'), 
                             generate_ethnic_popu_children([2, 3], id_ethnic_no, 'Group ', 100000, '10px'), 
                             generate_ethnic_popu_children([4, 5], id_ethnic_no, 'Group ', 100000, '10px'), 
                             generate_ethnic_popu_children([6, 7], id_ethnic_no, 'Group ', 100000, '10px'), 
-                            generate_ethnic_popu_children([8, 9], id_ethnic_no, 'Group ', 100000, '0px'), 
+                            generate_ethnic_popu_children([8, 9], id_ethnic_no, 'Group ', 100000), 
                             html.P(''),
                             html.H5('Accommodation Information', className='card-text'),
                             html.Header('Population Accommodation', className='card-text'),
@@ -183,7 +186,7 @@ def update_accommodation_info_tab(value):
 def update_gender_perc_label(slider_value):
     perc_female = slider_value
     perc_male = 100 - slider_value
-    return str(perc_female), str(perc_male)
+    return perc_female, perc_male
 
 @dash_app.callback(
     [Output({'type':'age-perc-label', 'index':MATCH}, 'children')], 
@@ -274,8 +277,8 @@ def update_age_popu_max(total_value, default_n_clicks, input_values, total_min, 
      Output('ethnic-no-7', 'value'), Output('ethnic-no-8', 'value'), Output('ethnic-no-9', 'value'), 
      Output('ethnic-no-10', 'value'), 
      Output('accommodation-area-type1', 'value'), Output('accommodation-area-type2', 'value'), Output('accommodation-area-type3', 'value'), 
-     Output('accommodation-no-person-type1', 'value'), Output('accommodation-no-person-type2', 'value'), Output('accommodation-no-person-type3', 'value'), 
-     Output('accommodation-no-unit-type1', 'value'), Output('accommodation-no-unit-type2', 'value'), Output('accommodation-no-unit-type3', 'value')], 
+     Output('accommodation-no-unit-type1', 'value'), Output('accommodation-no-unit-type2', 'value'), Output('accommodation-no-unit-type3', 'value'), 
+     Output('accommodation-no-person-type1', 'value'), Output('accommodation-no-person-type2', 'value'), Output('accommodation-no-person-type3', 'value')], 
     [Input('page-2-button', 'n_clicks')], 
     [State('total-population', 'value'), State({'type':'age-popu-input','index':ALL}, 'value'), 
      State('gender-perc-female', 'children'), State('gender-perc-male', 'children'), 
@@ -284,8 +287,8 @@ def update_age_popu_max(total_value, default_n_clicks, input_values, total_min, 
      State('ethnic-no-7', 'value'), State('ethnic-no-8', 'value'), State('ethnic-no-9', 'value'), 
      State('ethnic-no-10', 'value'), 
      State('accommodation-area-type1', 'value'), State('accommodation-area-type2', 'value'), State('accommodation-area-type3', 'value'), 
-     State('accommodation-no-person-type1', 'value'), State('accommodation-no-person-type2', 'value'), State('accommodation-no-person-type3', 'value'), 
-     State('accommodation-no-unit-type1', 'value'), State('accommodation-no-unit-type2', 'value'), State('accommodation-no-unit-type3', 'value')])
+     State('accommodation-no-unit-type1', 'value'), State('accommodation-no-unit-type2', 'value'), State('accommodation-no-unit-type3', 'value'), 
+     State('accommodation-no-person-type1', 'value'), State('accommodation-no-person-type2', 'value'), State('accommodation-no-person-type3', 'value')])
 def update_input_parameter_page_2(
     n_clicks, total_population_value, age_popu_input_values, 
     gender_perc_female_value, gender_perc_male_value, 
@@ -293,8 +296,8 @@ def update_input_parameter_page_2(
     ethnic_no_4_value, ethnic_no_5_value, ethnic_no_6_value, 
     ethnic_no_7_value, ethnic_no_8_value, ethnic_no_9_value, ethnic_no_10_value, 
     accommodation_area_type1_value, accommodation_area_type2_value, accommodation_area_type3_value, 
-    accommodation_no_person_type1_value, accommodation_no_person_type2_value, accommodation_no_person_type3_value, 
-    accommodation_no_unit_type1_value, accommodation_no_unit_type2_value, accommodation_no_unit_type3_value
+    accommodation_no_unit_type1_value, accommodation_no_unit_type2_value, accommodation_no_unit_type3_value, 
+    accommodation_no_person_type1_value, accommodation_no_person_type2_value, accommodation_no_person_type3_value
 ):
     inputParameterCache = InputParameterCache(_redis)
     input_param = {
@@ -323,12 +326,12 @@ def update_input_parameter_page_2(
         'accommodation-area-type1': accommodation_area_type1_value, 
         'accommodation-area-type2': accommodation_area_type2_value, 
         'accommodation-area-type3': accommodation_area_type3_value, 
-        'accommodation-no-person-type1': accommodation_no_person_type1_value, 
-        'accommodation-no-person-type2': accommodation_no_person_type2_value, 
-        'accommodation-no-person-type3': accommodation_no_person_type3_value, 
         'accommodation-no-unit-type1': accommodation_no_unit_type1_value, 
         'accommodation-no-unit-type2': accommodation_no_unit_type2_value, 
         'accommodation-no-unit-type3': accommodation_no_unit_type3_value, 
+        'accommodation-no-person-type1': accommodation_no_person_type1_value, 
+        'accommodation-no-person-type2': accommodation_no_person_type2_value, 
+        'accommodation-no-person-type3': accommodation_no_person_type3_value, 
     }
     if n_clicks is None:
         value = inputParameterCache.cache_get(input_param.keys())  # get cached value
