@@ -23,6 +23,14 @@ jobs:
           chmod 755 ./run_tests.sh
           ./run_tests.sh
 
+      - name: Wemake Python Stylguide
+        uses: wemake-services/wemake-python-styleguide@0.13.4
+        continue-on-error: true
+        with:
+          reporter: 'github-pr-review'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 #      - name: Run acceptance tests
 #        run: |
 #          waitress-serve --port 8050 --host 0.0.0.0 ai4good.webapp.server:flask_app
