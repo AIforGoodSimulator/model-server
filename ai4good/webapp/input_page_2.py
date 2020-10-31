@@ -144,7 +144,7 @@ layout = html.Div(
                             generate_ethnic_popu_children([2, 3], id_ethnic_no, 'Group ', 100000, '10px'), 
                             generate_ethnic_popu_children([4, 5], id_ethnic_no, 'Group ', 100000, '10px'), 
                             generate_ethnic_popu_children([6, 7], id_ethnic_no, 'Group ', 100000, '10px'), 
-                            generate_ethnic_popu_children([8, 9], id_ethnic_no, 'Group ', 100000, '0px'), 
+                            generate_ethnic_popu_children([8, 9], id_ethnic_no, 'Group ', 100000), 
                             html.P(''),
                             html.H5('Accommodation Information', className='card-text'),
                             html.Header('Population Accommodation', className='card-text'),
