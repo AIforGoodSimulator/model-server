@@ -16,7 +16,7 @@ not_sure_effectiveness = 0
 health_intervent = ['Social', 'Face', 'Handwashing', 'Testing', 'Lockdown']
 health_intervent_full = ['Social Distancing', 'Face Covering / Mask Wearing', 'Handwashing / Soap / Handwashing Facilities', 'Testing for Infectious Diseases', 'Lockdown / Movement Restrictions']
 health_intervent_option = ['0 Not sure', '1 Not Effective', '2 Somewhat Effective', '3 Effective', '4 Very Effective']
-health_intervent_required = ['Required', 'Required', 'Required', 'Optional', 'Optional']
+health_intervent_required = ['', '', '', 'Optional', 'Optional']
 tab_id_health_intervent = ['tab-intervene-' + x.lower() for x in health_intervent]
 radio_id_health_intervent = ['radio-intervene-' + x.lower() for x in health_intervent]
 
