@@ -24,6 +24,8 @@ def params_path(name: str) -> str:
 def reports_path(name: str) -> str:
     return _path(f'{base}/reports', name)
 
+def raw_csvs_path(name: str) -> str:
+    return _path(f'{base}/raw_csvs', name)
 
 def cache_path() -> str:
     return _path(f'{base}/cache')

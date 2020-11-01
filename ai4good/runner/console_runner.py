@@ -1,14 +1,12 @@
 import argparse
-import plotly.graph_objects as go
 from typeguard import typechecked
 from ai4good.models.model import Model, ModelResult
 from ai4good.models.model_registry import get_models, create_params
-from ai4good.models.cm.cm_model import CompartmentalModel
 from ai4good.runner.facade import Facade
-from ai4good.models.cm.plotter import figure_generator, age_structure_plot, stacked_bar_plot, uncertainty_plot
 from ai4good.utils.logger_util import get_logger
 import ai4good.utils.path_utils as pu
-
+from ai4good.models.cm.cm_model import CompartmentalModel
+from ai4good.webapp.apps import facade
 facade = Facade.simple()
 logger = get_logger(__name__)
 
@@ -39,6 +37,7 @@ def run_model(_model: str, _profile: str, camp: str, load_from_cache: bool,
     if is_save_report:
         save_report(mr, res_id)
     return mr
+
 
 
 # def save_plots_abm(mr, res_id, is_save_plots, is_show_plots):
@@ -73,7 +72,6 @@ def run_model(_model: str, _profile: str, camp: str, load_from_cache: bool,
 # def save_plots(mr, res_id, is_save_plots, is_show_plots):
 #     multiple_categories_to_plot = ['E', 'A', 'I', 'R', 'H', 'C', 'D', 'O', 'Q', 'U']  # categories to plot
 #     single_category_to_plot = 'C'  # categories to plot in final 3 plots #TODO: make selectable
-
 #     # plot graphs
 #     sol = mr.get('standard_sol')
 #     percentiles = mr.get('percentiles')
