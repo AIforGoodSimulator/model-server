@@ -20,4 +20,3 @@ dash_bootstrap_components==0.10.7
 PyGithub==1.53
 selenium==3.141.0
 dask[complete]
-isort
