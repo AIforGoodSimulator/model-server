@@ -4,8 +4,8 @@ numba==0.48.0
 scipy==1.5.2
 Flask_Caching==1.9.0
 numpy==1.18.5
-dash_core_components==1.12.1
-dash_table==4.10.1
+dash_core_components==1.13.0
+dash_table==4.11.0
 pandas==1.0.5
 typeguard==2.8.0
 dash_html_components==1.1.1
@@ -14,7 +14,7 @@ seaborn==0.10.1
 redis==3.5.3
 networkx==2.5
 Flask==1.1.2
-dash==1.16.3
+dash==1.17.0
 plotly==4.11.0
 dash_bootstrap_components==0.10.7
 PyGithub==1.53
