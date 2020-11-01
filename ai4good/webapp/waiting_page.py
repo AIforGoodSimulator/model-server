@@ -27,26 +27,6 @@ profile = 'baseline'
 camp = 'Moria'
 
 
-
-
-# def run_model_results_for_message_1():
-#     for prof in profile:
-#         res = model_runner.run_model(model, profile, camp)
-#         if res == ModelScheduleRunResult.SCHEDULED:
-#             print("Model run scheduled")
-#         elif res == ModelScheduleRunResult.CAPACITY:
-#             print("Can not run model now, over capacity, try again later")
-#         elif res == ModelScheduleRunResult.ALREADY_RUNNING:
-#             print("Already running")
-#         else:
-#             raise RuntimeError("Unsupported result type: "+str(res))
-#     return None
-
-# # Runs the model so that there is something to check for in cache
-# run_model_results_for_message_1()
-
-
-
 layout = html.Div([
         dcc.Interval(id='interval1', interval=10 * 1000, n_intervals=0),
         run_model_page.nav_bar(),
