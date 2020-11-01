@@ -4,7 +4,7 @@ from flask import Flask
 from flask_caching import Cache
 from dask.distributed import Client
 from ai4good.runner.facade import Facade
-from ai4good.webapp.model_runner import ModelRunner
+from ai4good.webapp.model_runner import ModelRunner, _sid
 import redis
 import socket
 
@@ -49,4 +49,4 @@ def dask_client() -> Client:
 
 
 facade = Facade.simple()
-model_runner = ModelRunner(facade, _redis, dask_client)
+model_runner = ModelRunner(facade, _redis, dask_client, _sid)

@@ -3,13 +3,11 @@ from ai4good.webapp.model_runner import ModelScheduleRunResult
 from ai4good.webapp.model_results_config import model_profile_config
 # model name possibiltiies: ['compartmental-model', 'network-model', 'agent-based-model']
 
-CAMP = 'Moria' #this logic needs to be changed later where the user input params will be stored
-
 def run_model_results_for_message(message_key):
     for model in model_profile_config[message_key].keys():
         if len(model_profile_config[message_key][model])>0:
             for profile in model_profile_config[message_key][model]:
-                res = model_runner.run_model(model, profile, CAMP)
+                res = model_runner.run_model(model, profile, None)
                 if res == ModelScheduleRunResult.SCHEDULED:
                     print("Model run scheduled")
                 elif res == ModelScheduleRunResult.CAPACITY:
