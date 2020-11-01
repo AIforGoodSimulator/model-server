@@ -10,29 +10,12 @@ from ai4good.params.model_control_params import model_config_cm
 
 
 class Parameters:
-    def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
-        from ai4good.webapp.apps import _redis
-        from ai4good.webapp.model_runner import InputParameterCache
-        self.inputParameterCache = InputParameterCache(_redis)
-
+    def __init__(self, ps: ParamStore, camp: str, user_input_parameters: str, profile: pd.DataFrame, profile_override_dict={}):
+        self.user_input = json.loads(user_input_parameters)
         self.ps = ps
-        self.camp = str(self.get_from_cache('name-camp')) or camp
-        self.country = str(self.get_from_cache('country-dropdown'))
+        self.camp = str(self.user_input['name-camp'])
+        self.country = str(self.user_input['country-dropdown'])
         self.age_limits = np.array([0, 10, 20, 30, 40, 50, 60, 70, 80], dtype=int)
-        # disease_params = ps.get_disease_params()
-        disease_params = covid_specific_parameters
-        # self.camp_params = ps.get_camp_params(camp)
-        # ------------------------------------------------------------
-        # disease params
-        # parameter_csv = disease_params
-        # model_params = parameter_csv[parameter_csv['Type'] == 'Model Parameter']
-        # model_params = model_params.loc[:, ['Name', 'Value']]
-        # control_data = parameter_csv[parameter_csv['Type'] == 'Control']
-        # self.model_params = model_params
-
-        # TODO: get all the disease parameters injected to the right place
-        # TODO: seperate the profile default parameters into a model config or something
-
         self.R_0_list = np.asarray([covid_specific_parameters["R0_low"],covid_specific_parameters["R0_medium"],covid_specific_parameters["R0_high"]])
         self.latent_rate = 1 / (np.float(covid_specific_parameters["Latent_period"]))
         self.removal_rate = 1 / (np.float(covid_specific_parameters["Infectious_period"]))
@@ -144,32 +127,22 @@ class Parameters:
 
         return dct, icu_capacity
 
-    def get_from_cache(self, key):
-        return self.inputParameterCache.cache_get(key)[0]
 
     def prepare_population_frame(self, df=None):
-        age0to5 = int(self.get_from_cache('age-population-0-5'))
-        age6to9 = int(self.get_from_cache('age-population-6-9'))
-        population_structure = [age0to5 + age6to9, int(self.get_from_cache('age-population-10-19')),
-                int(self.get_from_cache('age-population-20-29')), int(self.get_from_cache('age-population-30-39')),
-                int(self.get_from_cache('age-population-40-49')), int(self.get_from_cache('age-population-50-59')),
-                int(self.get_from_cache('age-population-60-69')), int(self.get_from_cache('age-population-70+'))]
+        age0to5 = int(self.user_input['age-population-0-5'])
+        age6to9 = int(self.user_input['age-population-6-9'])
+        population_structure = [age0to5 + age6to9, int(self.user_input['age-population-10-19']),
+                int(self.user_input['age-population-20-29']), int(self.user_input['age-population-30-39']),
+                int(self.user_input['age-population-40-49']), int(self.user_input['age-population-50-59']),
+                int(self.user_input['age-population-60-69']), int(self.user_input['age-population-70+'])]
         ages = ['0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70+']
         population_frame = \
             pd.DataFrame({'Age': ages, 'Population_structure': population_structure,
                          'p_symptomatic': covid_specific_parameters['p_symptomatic'],
                         'p_hosp_given_symptomatic': covid_specific_parameters['p_hosp_given_symptomatic'],
                          'p_critical_given_hospitalised': covid_specific_parameters['p_critical_given_hospitalised']})
-        # population_frame = population_frame.loc[:, 'Age':'Total_population']
 
-        # population_frame = population_frame.assign(p_hospitalised=lambda x: (x.Hosp_given_symptomatic / 100),
-        #                                            # *frac_symptomatic,
-        #                                            p_critical=lambda x: (x.Critical_given_hospitalised / 100))
-
-        # make sure population frame.value sum to 100
-        # population_frame.loc[:,'Population'] = population_frame.Population/sum(population_frame.Population)
-
-        population_size = self.get_from_cache('total-population')
+        population_size = self.user_input['total-population']
 
         return population_frame, population_size
 

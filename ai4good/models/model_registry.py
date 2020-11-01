@@ -16,12 +16,13 @@ def get_models() -> Dict[str, Any]:
     }
 
 
-def create_params(ps, _model, _profile, camp, overrides=None):  # model specific params
+def create_params(ps, _model, _profile, camp, user_input_parameters, overrides=None):  # model specific params
     """
     :param ps:
     :param _model:
     :param _profile: str or pd.Dataframe
     :param camp:
+    :param user_input_parameters: str (json object):
     :param overrides:
     :return:
     """
@@ -31,7 +32,7 @@ def create_params(ps, _model, _profile, camp, overrides=None):  # model specific
             type(_profile) is str) else _profile
         if len(profile_df) == 0:
             raise ValueError('Unknown profile: '+_profile)
-        return Parameters(ps, camp, profile_df, override_dct)
+        return Parameters(ps, camp, user_input_parameters, profile_df, override_dct)
     elif _model == ABM.ID:
         override_dct = {} if overrides is None else json.loads(overrides)
         profile_df = ps.get_params(_model, _profile) if (

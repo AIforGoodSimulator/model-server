@@ -9,7 +9,9 @@ from ai4good.models.model import Model, ModelResult
 from ai4good.models.model_registry import get_models, create_params
 from datetime import datetime
 import pickle
+import json
 import socket
+from ai4good.utils import path_utils as pu
 from ai4good.webapp.commit_date import get_version_date
 from ai4good.utils.logger_util import get_logger
 
@@ -18,8 +20,8 @@ HISTORY_SIZE = 100
 INPUT_PARAMETER_TIMEOUT = 60*30 # in seconds
 logger = get_logger(__name__)
 
-_sid = np.random.randint(100000000, 1000000000)  # session id
-
+# _sid = np.random.randint(100000000, 1000000000)  # session id
+_sid = 42 #fixed for local dev
 
 class InputParameterCache:
     _CACHE_KEY = f'{socket.gethostname()}_{_sid}_input_parameter'
@@ -69,6 +71,13 @@ class InputParameterCache:
                     error_count += 1
                     logger.warning('Input page #%d optimistic lock error #%d; retrying', page_number, error_count)
         raise RuntimeError('Failed to obtain lock - input parameters')
+    def cache_save(self):
+        """Save cache locally before processing it with the models"""
+        output_dict = dict(zip(self.cache_get_all))
+        pickle.dump(output_dict, open(pu.cache_path(f"{_CACHE_KEY}.pickle"), "wb"))
+
+
+
 
 
 class ModelScheduleRunResult(Enum):
@@ -155,11 +164,16 @@ class ModelsRunningNow:
 
 class ModelRunner:
 
-    def __init__(self, facade, _redis: redis.Redis, dask_client_provider):
+    def __init__(self, facade, _redis: redis.Redis, dask_client_provider, _sid):
         self.facade = facade
         self.history = ModelRunHistory(_redis)
         self.models_running_now = ModelsRunningNow(_redis)
         self.dask_client_provider = dask_client_provider
+        # access the particular cache from the cache ID
+        input_param_cache = InputParameterCache(_redis)
+        input_param_cache._CACHE_KEY = f'{socket.gethostname()}_{_sid}_input_parameter'
+        saved_keys, saved_values = input_param_cache.cache_get_all()
+        self.user_input = json.dumps(dict(zip(saved_keys, saved_values)))
 
     def run_model(self, _model: str, _profile: str, camp: str) -> ModelScheduleRunResult:
 
@@ -215,7 +229,7 @@ class ModelRunner:
     def _sync_run_model(facade, _model: str, _profile: str, camp: str) -> ModelResult:
         logger.info('Running %s model with %s profile', _model, _profile)
         _mdl: Model = get_models()[_model](facade.ps)
-        params = create_params(facade.ps, _model, _profile, camp)
+        params = create_params(facade.ps, _model, _profile, camp, self.user_input)
         res_id = _mdl.result_id(params)
         logger.info("Running model for camp %s", camp)
         mr = _mdl.run(params)
