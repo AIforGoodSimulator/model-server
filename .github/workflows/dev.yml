@@ -9,9 +9,6 @@ env:
   AZURE_WEBAPP_NAME: ai4good-dev 
   AZURE_WEBAPP_PACKAGE_PATH: '.' 
 
-codecov:
-  branch: dev
-
 jobs:
   build:
     runs-on: ubuntu-18.04
