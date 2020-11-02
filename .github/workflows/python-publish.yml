@@ -11,7 +11,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@master
         with:
-          python-version: 3.8
+          python-version: 3.7
         
       - name: Set up dependancies
         run: |
@@ -24,7 +24,7 @@ jobs:
           ./run_tests.sh
 
       - name: Wemake Python Stylguide
-        uses: wemake-services/wemake-python-styleguide
+        uses: wemake-services/wemake-python-styleguide@0.14.0
         continue-on-error: true
         with:
           reporter: 'github-pr-review'
