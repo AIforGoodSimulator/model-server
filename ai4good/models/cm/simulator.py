@@ -202,7 +202,7 @@ class Simulator:
             beta, # params
             latent_rate,removal_rate,hosp_rate,death_rate_ICU,death_rate_no_ICU, # more params
             control_dict['better_hygiene'],control_dict['remove_symptomatic'],control_dict['remove_high_risk'],control_dict['ICU_capacity']
-        )
+        ).set_integrator('vode',nsteps=2000)
 
 
         tim = np.linspace(0,T_stop, T_stop+1) # 1 time value per day

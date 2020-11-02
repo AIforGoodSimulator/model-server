@@ -4,27 +4,28 @@ import dash
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
-from ai4good.webapp.apps import dash_app, facade, model_runner
 import ai4good.webapp.run_model_page as run_model_page
 from ai4good.webapp.model_runner import ModelScheduleRunResult
 from ai4good.webapp.apps import model_runner
+from ai4good.webapp.apps import dash_app, facade, model_runner, _redis
+from ai4good.webapp.model_runner import InputParameterCache, ModelsRunningNow
 from ai4good.webapp.model_runner import ModelScheduleRunResult
 import ai4good.utils.path_utils as pu
 from dash.dependencies import Input, Output, State
 import dash_table
 import os
 import time
-
-# some default stuff
-base = '../../fs'
+import ai4good.webapp.run_model_for_dashboard as run_model_for_dashboard
+# # some default stuff
+# base = '../../fs'
 initial_status = "Simulation Running ..."
 initial_time = time.localtime()
 initial_time = time.strftime("%m/%d/%Y, %H:%M:%S", initial_time)
-
-# model Parameter
-model = 'compartmental-model'
-profile = 'baseline'
-camp = 'Moria'
+#
+# # model Parameter
+# model = 'compartmental-model'
+# profile = 'baseline'
+# camp = 'Moria'
 
 
 layout = html.Div([
@@ -54,10 +55,11 @@ layout = html.Div([
 
 
 # Check every 10 seconds to check if there is a report ready
+# Or make the previous run model blocking and update the message once the operations there are done
 @dash_app.callback([Output('update_String', 'children'),Output('status_String', 'children')],
     [Input('interval1', 'n_intervals')])
 def check_Model(n):
-    if (model_runner.results_exist(model, profile, camp)):
+    if (model_runner.results_exist(model, profile)):
         return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), ("Status: Finished")
     else:
         print("No results yet " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime())))

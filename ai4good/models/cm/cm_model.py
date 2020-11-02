@@ -32,15 +32,15 @@ class CompartmentalModel(Model):
         # Precompute some reports
         logger.info("Generating main report")
         report_raw = generate_csv(sols_raw, p, input_type='raw')
-        report = normalize_report(report_raw, p)
-        logger.info("Computing prevalence_age_table")
-        prevalence_age = prevalence_age_table(report)
-        logger.info("Computing prevalence_all_table")
-        prevalence_all = prevalence_all_table(report)
-        logger.info("Computing cumulative_all_table")
-        cumulative_all = cumulative_all_table(report, p.population, p.camp_params)
-        logger.info("Computing cumulative_age_table")
-        cumulative_age = cumulative_age_table(report, p.camp_params)
+        # report = normalize_report(report_raw, p)
+        # logger.info("Computing prevalence_age_table")
+        # prevalence_age = prevalence_age_table(report)
+        # logger.info("Computing prevalence_all_table")
+        # prevalence_all = prevalence_all_table(report)
+        # logger.info("Computing cumulative_all_table")
+        # cumulative_all = cumulative_all_table(report, p.population, p.camp_params)
+        # logger.info("Computing cumulative_age_table")
+        # cumulative_age = cumulative_age_table(report, p.camp_params)
 
         logger.info("Model result ready")
         return ModelResult(self.result_id(p), {
@@ -48,10 +48,10 @@ class CompartmentalModel(Model):
             'config_dict': config_dict,
             'params': p,
             'report': report_raw,
-            'prevalence_age': prevalence_age,
-            'prevalence_all': prevalence_all,
-            'cumulative_all': cumulative_all,
-            'cumulative_age': cumulative_age
+            # 'prevalence_age': prevalence_age,
+            # 'prevalence_all': prevalence_all,
+            # 'cumulative_all': cumulative_all,
+            # 'cumulative_age': cumulative_age
         })
 
 

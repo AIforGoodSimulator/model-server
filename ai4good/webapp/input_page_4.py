@@ -8,7 +8,7 @@ from dash.dependencies import Input, Output, State, MATCH, ALL
 from dash.exceptions import PreventUpdate
 from ai4good.webapp.apps import dash_app, facade, model_runner, _redis
 import ai4good.webapp.run_model_page as run_model_page
-from ai4good.webapp.model_runner import InputParameterCache
+from ai4good.webapp.model_runner import InputParameterCache, ModelsRunningNow
 import ai4good.webapp.run_model_for_dashboard as run_model_for_dashboard
 import ai4good.utils.path_utils as pu
 
@@ -170,8 +170,11 @@ def update_input_parameter_page_4(
         inputParameterCache.cache_set(input_param, 4)  # put all input parameters in input page 4 to cache
         raise PreventUpdate
 
+
 @dash_app.callback(Output('input-page-4-alert', 'children'),[Input('page-4-button', 'n_clicks')])
 def model_Dashboard(n_clicks):
-    if n_clicks != 0:
+    if n_clicks:
+        running_log = ModelsRunningNow(_redis)
+        running_log.clear_run()
         run_model_for_dashboard.run_model_results_for_message("message_1")
         run_model_for_dashboard.run_model_results_for_message("message_5")

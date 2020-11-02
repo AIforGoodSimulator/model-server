@@ -15,8 +15,8 @@ from ai4good.utils import path_utils as pu
 from ai4good.webapp.commit_date import get_version_date
 from ai4good.utils.logger_util import get_logger
 
-MAX_CONCURRENT_MODELS = 30
-HISTORY_SIZE = 100
+MAX_CONCURRENT_MODELS = 3
+HISTORY_SIZE = 10
 INPUT_PARAMETER_TIMEOUT = 60*30 # in seconds
 logger = get_logger(__name__)
 
@@ -161,6 +161,10 @@ class ModelsRunningNow:
                     logger.warning("ModelsRunningNow optimistic lock error #%d; retrying", error_count)
         raise RuntimeError("Failed to obtain lock")
 
+    def clear_run(self):
+        for running_now in self._redis.smembers(self._CACHE_KEY):
+            self._redis.srem(self._CACHE_KEY, running_now)
+
 
 class ModelRunner:
 
@@ -175,7 +179,7 @@ class ModelRunner:
         saved_keys, saved_values = input_param_cache.cache_get_all()
         self.user_input = json.dumps(dict(zip(saved_keys, saved_values)))
 
-    def run_model(self, _model: str, _profile: str, camp: str) -> ModelScheduleRunResult:
+    def run_model(self, _model: str, _profile: str) -> ModelScheduleRunResult:
 
         def on_future_done(f: Future):
             self.models_running_now.pop(key)
@@ -194,10 +198,10 @@ class ModelRunner:
         def submit():
             client = self.dask_client_provider()
             self.history.record_scheduled(key)
-            future: Future = client.submit(self._sync_run_model, self.facade, _model, _profile, camp)
+            future: Future = client.submit(self._sync_run_model, self.facade, _model, _profile, self.user_input)
             future.add_done_callback(on_future_done)
         
-        key = (_model, _profile, camp)
+        key = (_model, _profile)
         return self.models_running_now.start_run(key, submit)
 
     @staticmethod
@@ -226,12 +230,12 @@ class ModelRunner:
         return pd.DataFrame(rows)
 
     @staticmethod
-    def _sync_run_model(facade, _model: str, _profile: str, camp: str) -> ModelResult:
+    def _sync_run_model(facade, _model: str, _profile: str, user_input: str) -> ModelResult:
         logger.info('Running %s model with %s profile', _model, _profile)
         _mdl: Model = get_models()[_model](facade.ps)
-        params = create_params(facade.ps, _model, _profile, camp, self.user_input)
+        params = create_params(facade.ps, _model, _profile, user_input)
         res_id = _mdl.result_id(params)
-        logger.info("Running model for camp %s", camp)
+        logger.info(f"Running model for camp with {_mdl.id()} %s")
         mr = _mdl.run(params)
         logger.info("Saving model result to cache")
         facade.rs.store(_mdl.id(), res_id, mr)
@@ -239,12 +243,12 @@ class ModelRunner:
 
     def results_exist(self, _model: str, _profile: str, camp: str) -> bool:
         _mdl: Model = get_models()[_model](self.facade.ps)
-        params = create_params(self.facade.ps, _model, _profile, camp)
+        params = create_params(self.facade.ps, _model, _profile, self.user_input)
         res_id = _mdl.result_id(params)
         return self.facade.rs.exists(_mdl.id(), res_id)
 
     def get_result(self, _model: str, _profile: str, camp: str) -> ModelResult:
         _mdl: Model = get_models()[_model](self.facade.ps)
-        params = create_params(self.facade.ps, _model, _profile, camp)
+        params = create_params(self.facade.ps, _model, _profile, self.user_input)
         res_id = _mdl.result_id(params)
         return self.facade.rs.load(_mdl.id(), res_id)

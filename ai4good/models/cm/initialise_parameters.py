@@ -10,7 +10,7 @@ from ai4good.params.model_control_params import model_config_cm
 
 
 class Parameters:
-    def __init__(self, ps: ParamStore, camp: str, user_input_parameters: str, profile: pd.DataFrame, profile_override_dict={}):
+    def __init__(self, ps: ParamStore, user_input_parameters: str, profile: pd.DataFrame, profile_override_dict={}):
         self.user_input = json.loads(user_input_parameters)
         self.ps = ps
         self.camp = str(self.user_input['name-camp'])
