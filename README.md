@@ -1,3 +1,5 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/aiforgoodsimulator/model-server/badge)](https://www.codefactor.io/repository/github/aiforgoodsimulator/model-server)
+
 ### Install 
 
 To start install required packages with 

@@ -1,6 +1,5 @@
 #from ai4good.models.cm.initialise_parameters import params, control_data, categories, calculated_categories, change_in_categories
 
-import logging
 import statistics
 from math import ceil, floor
 
@@ -12,6 +11,9 @@ from scipy.integrate import ode
 from tqdm import tqdm
 
 from ai4good.models.cm.initialise_parameters import Parameters
+from ai4good.utils.logger_util import get_logger
+
+logger = get_logger(__name__)
 
 AGE_SEP = ': '  # separate compartment and age in column name
 
@@ -322,7 +324,7 @@ class Simulator:
 
 
     def simulate_over_parameter_range_parallel(self, numberOfIterations, t_stop, n_processes):
-        logging.info(f"Running parallel simulation with {n_processes} processes")
+        logger.info(f"Running parallel simulation with {n_processes} processes")
         lazy_sols = []
         config_dict = []
         sols_raw = {}

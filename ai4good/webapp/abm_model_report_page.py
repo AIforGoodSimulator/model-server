@@ -1,19 +1,16 @@
-from functools import reduce
-import logging
 import textwrap
 
-import plotly.graph_objs as go
-from plotly.subplots import make_subplots
-from dash.dependencies import Input, Output
 import dash_html_components as html
 import dash_core_components as dcc
-import dash_bootstrap_components as dbc
 
 from ai4good.models.abm.abm_model import ABM
 from ai4good.models.abm.initialise_parameters import Parameters
 from ai4good.webapp.apps import dash_app, facade, model_runner, cache, local_cache, cache_timeout
 # from ai4good.webapp.abm_model_report_utils import *
 from ai4good.webapp.metadata_report import GenerateMetadataDict, GenerateMetadataHTML
+from ai4good.utils.logger_util import get_logger
+
+logger = get_logger(__name__)
 
 
 @cache.memoize(timeout=cache_timeout)
@@ -42,10 +39,7 @@ def layout(camp, profile, cmp_profiles):
             dcc.Markdown(overview_interventions(camp,params), style={'margin': 30}),
             html.Img(src='/static/abm_restable.png'),
             dcc.Markdown(overview_results(camp,params), style={'margin': 30}),
-            html.Img(src='/static/abm_fm.png'),
-            html.Img(src='/static/abm_quarantine.png'),
-            html.Img(src='/static/abm_sectoring.png'),
-            html.Img(src='/static/abm_allinterv.png'),
+            html.Img(src='/static/abm_comp_profiles.png'),
         ], style={'margin': 50}
     )
 
@@ -112,12 +106,12 @@ def overview_population(camp: str, params: Parameters):
         
 def overview_results(camp: str, params: Parameters):     
      return textwrap.dedent(f'''
-     Interventions are applied by changing the probability of interactions in different daily activities and by dividing the camp in sectors. It is possible to test multiple combinations of interventions in different interactions scenario. Example output is presented in the pictures below, where the number of infected people (in any disease state) is presented over a 200 day period.
+     Interventions are applied by changing the probability of interactions in different daily activities and by dividing the camp in sectors. It is possible to test multiple combinations of interventions in different interactions scenario. Example output is presented in the pictures below, where the number of infected people (in any disease state) is presented over a 200 day period and averaged over 10 simulations.
      ''')  
 
 @local_cache.memoize(timeout=cache_timeout)
 def get_model_result(camp: str, profile: str):
-    logging.info("Reading data for: " + camp + ", " + profile)
+    logger.info("Reading data for: " + camp + ", " + profile)
     mr = model_runner.get_result(ABM.ID, profile, camp)
     assert mr is not None
     profile_df = facade.ps.get_params(ABM.ID, profile).drop(columns=['Profile'])

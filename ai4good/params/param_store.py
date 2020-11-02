@@ -1,3 +1,5 @@
+import os
+
 from typeguard import typechecked
 from typing import List, Dict, Any
 from abc import ABC, abstractmethod
@@ -59,6 +61,10 @@ class ParamStore(ABC):
     def get_generated_disease_param_vectors(self) -> pd.DataFrame:
         pass
 
+    @abstractmethod
+    def get_supported_countries(self) -> List:
+        pass
+
 
 @typechecked
 class SimpleParamStore(ParamStore):
@@ -68,7 +74,7 @@ class SimpleParamStore(ParamStore):
 
     def get_profiles(self, model: str) -> List[str]:
         df = self._read_csv(model + "_profile_params.csv")
-        return df['Profile'].unique().tolist()
+        return df['Profile'].dropna().unique().tolist()
 
     def get_params(self, model: str, profile: str) -> pd.DataFrame:
         df = self._read_csv(model + "_profile_params.csv")
@@ -106,6 +112,10 @@ class SimpleParamStore(ParamStore):
 
     def get_generated_disease_param_vectors(self) -> pd.DataFrame:
         return self._read_csv("generated_params.csv")
+
+    def get_supported_countries(self):
+        countries = [f.split('.')[0] for f in os.listdir(pu.cm_params_path('contact_matrices')) if f.endswith('.csv')]
+        return countries
 
     @staticmethod
     def _read_csv(name: str) -> pd.DataFrame:
