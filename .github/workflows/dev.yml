@@ -32,6 +32,18 @@ jobs:
         pip install -r requirements.txt
         pip install "dask[distributed]" --upgrade
 
+    - name: Generate coverage report
+      run: |
+        pip install pytest
+        pip install pytest-cov
+        pytest ./ai4good --cov=./ --cov-report=xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.xml
+        flags: unittests
+
     - name: Building web app
       uses: azure/appservice-build@v2-beta
 
