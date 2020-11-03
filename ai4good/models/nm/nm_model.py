@@ -5,7 +5,9 @@ from ai4good.models.nm.models.nm_multiple_food_queues_interventions import *
 from ai4good.params.param_store import SimpleParamStore
 from ai4good.models.nm.models.nm_baseline import *
 from ai4good.models.nm.models.nm_baseline_interventions import *
-import logging
+from ai4good.utils.logger_util import get_logger
+
+logger = get_logger(__name__)
 
 
 @typechecked
@@ -22,10 +24,10 @@ class NetworkModel(Model):
         return p.sha1_hash()
 
     def run(self, p: Parameters) -> ModelResult:
-        logging.info("Generating network graph...")
+        logger.info("Generating network graph...")
         graph, nodes_per_struct = create_new_graph(p)
 
-        logging.info("Running network model...")
+        logger.info("Running network model...")
         p.initialise_age_parameters(graph)
 
         if p.profile_name == 'baseline':

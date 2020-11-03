@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
+
+*
+{
+  font-family: 'Roboto Mono', monospace;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 600;
+}
+
+#test
+{
+  width: 100px;
+  height: 100px;
+  background-color: red;
+}
+
+body
+{
+  background-color: #ecf0f1!important;
+}
+.card
+{
+  /* background-color: #ecf0f1!important; */
+  border: 0 solid black;
+  border-radius: 0px;
+  -webkit-box-shadow: 0px 3px 33px -8px rgba(0,0,0,0.5);
+  -moz-box-shadow: 0px 3px 33px -8px rgba(0,0,0,0.5);
+  box-shadow: 0px 3px 33px -8px rgba(0,0,0,0.5);
+}
+
+.lighternav
+{
+  background-color: #f8f9fa!important;
+}
+.lighternav a
+{
+  color: black!important;
+}
+.darkButton
+{
+  background-color: black!important;
+  border: 0px solid black;
+}
+
+.light_navBar
+{
+  background-color: white!important;
+  color: black!important;
+  -webkit-box-shadow: 0px 3px 33px -8px rgba(0,0,0,0.5);
+  -moz-box-shadow: 0px 3px 33px -8px rgba(0,0,0,0.5);
+  box-shadow: 0px 3px 33px -8px rgba(0,0,0,0.5);
+}
+
+.light_navBar a
+{
+  color: black!important;
+}
+
+.step_counter
+{
+padding: 30px 0 30px 0;
+}
+
+.card-footer
+{
+background-color: transparent!important;
+
+}
+
+.card-title
+{
+  text-align: center!important;
+  font-weight: 600;
+}
+
+.btn-dark,.btn-secondary
+{
+  background-color: black!important;
+}
+
+.nav-tabs
+{
+  background-color: #eeeeee;
+}
+
+.nav-tabs a
+{
+  border-top-left-radius: 0px!important;
+  border-top-right-radius: 0px!important;
+}
+
+.nav-link.active
+{
+  border-color: TRANSPARENT #dee2e6 TRANSPARENT #dee2e6!important;
+  color: black!important;
+}

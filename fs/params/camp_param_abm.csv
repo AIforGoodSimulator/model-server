@@ -1,0 +1,16 @@
+﻿CAMP,PARAMETER,DESCRIPTION,Value
+MORIA,number_of_people_in_isoboxes,Total number of people living in Isoboxes,8100
+MORIA,number_of_people_in_one_isobox,Number of people living in each isobox,10
+MORIA,number_of_people_in_tents,Total number of people living in Tents,10600
+MORIA,number_of_people_in_one_tent,Number of people living in each tent,4
+MORIA,permanently_asymptomatic_cases,Percentage of infected individuals which never show symptoms and eventually recover from the disease.,0.179
+MORIA,area_covered_by_isoboxes,Area of the camp occupied by the isoboxes,0.5
+MORIA,relative_strength_of_interaction,Interaction rate between individuals,0.2
+MORIA,overlapping_rages_radius,Range of household overlap where 2 individuals interact,0.02
+MORIA,num_toilet_visit,Number of daily visit to the toilet,3
+MORIA,num_toilet_contact,Number of contacts in the toilets area,2
+MORIA,num_food_visit,Number of visits to the food lane per day,1
+MORIA,num_food_contact,Number of people with which an individual interact while in the food line,2
+MORIA,pct_food_visit,Percentage of time an individual visit the food line,0.75
+MORIA,clearday,Number of days needed to be cleared of isolation,14
+MORIA,toilets_blocks,Number of toilets in the camp,"12,12"

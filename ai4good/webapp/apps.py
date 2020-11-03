@@ -8,7 +8,6 @@ from ai4good.webapp.model_runner import ModelRunner
 import redis
 import socket
 
-
 flask_app = Flask(__name__)
 
 cache_timeout = 60*60*2  # In seconds
@@ -28,7 +27,6 @@ cache = Cache(flask_app, config={
     'CACHE_KEY_PREFIX': socket.gethostname()
 })
 
-
 _redis = redis.Redis.from_url(REDIS_URL)
 
 dash_app = dash.Dash(
@@ -36,7 +34,7 @@ dash_app = dash.Dash(
     server=flask_app,
     routes_pathname_prefix='/sim/',
     suppress_callback_exceptions=True,
-    external_stylesheets=[dbc.themes.BOOTSTRAP]
+    external_stylesheets=[dbc.themes.BOOTSTRAP, '/static/css/ai4good.css']
 )
 dash_app.title = "AI4Good COVID-19 Model Server"
 
