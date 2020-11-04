@@ -1,4 +1,4 @@
-name: Python CI/CD DEV
+name: DEV Build Deploy
 # Unit/function/acceptance tests to be added 
 on:
   push:
@@ -11,6 +11,7 @@ env:
 
 jobs:
   build:
+    name: Deploy to DEV Azure Web App
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v1
@@ -30,7 +31,6 @@ jobs:
         sudo apt-get install -y build-essential libssl-dev libffi-dev python3.6-dev
         sudo apt-get install -y python-numba python3-dask
         pip install -r requirements.txt
-        pip install "dask[distributed]" --upgrade
 
     - name: Generate coverage report
       run: |
