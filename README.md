@@ -1,5 +1,10 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/aiforgoodsimulator/model-server/badge)](https://www.codefactor.io/repository/github/aiforgoodsimulator/model-server)
 [![codecov](https://codecov.io/gh/AIforGoodSimulator/model-server/branch/dev/graph/badge.svg?token=TK647J6ZUC)](https://codecov.io/gh/AIforGoodSimulator/model-server)
+[![wemake-python-styleguide](https://img.shields.io/badge/style-wemake-000000.svg)](https://github.com/wemake-services/wemake-python-styleguide)
+[![Testing](https://github.com/AIforGoodSimulator/model-server/workflows/AIforGood%20ModelServer%20Tests/badge.svg)](https://github.com/AIforGoodSimulator/model-server/actions?query=workflow%3A%22AIforGood+ModelServer+test+workflow%22)
+[![Dev-Build-Deploy](https://github.com/AIforGoodSimulator/model-server/workflows/DEV%20Build%20Deploy/badge.svg)](https://github.com/AIforGoodSimulator/model-server/actions?query=workflow%3A%22AIforGood+ModelServer+test+workflow%22)
+[![UAT-Build-Deploy](https://github.com/AIforGoodSimulator/model-server/workflows/UAT%20Build%20Deploy/badge.svg)](https://github.com/AIforGoodSimulator/model-server/actions?query=workflow%3A%22AIforGood+ModelServer+test+workflow%22)
+
 
 
 ### Install 

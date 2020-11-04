@@ -1,4 +1,4 @@
-name: Python CI/CD DEV
+name: DEV Build Deploy
 # Unit/function/acceptance tests to be added 
 on:
   push:
