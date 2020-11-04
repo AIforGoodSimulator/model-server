@@ -1,4 +1,6 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/aiforgoodsimulator/model-server/badge)](https://www.codefactor.io/repository/github/aiforgoodsimulator/model-server)
+[![codecov](https://codecov.io/gh/AIforGoodSimulator/model-server/branch/dev/graph/badge.svg?token=TK647J6ZUC)](https://codecov.io/gh/AIforGoodSimulator/model-server)
+
 
 ### Install 
 
