@@ -24,7 +24,7 @@ jobs:
           ./run_tests.sh
 
       - name: Wemake Python Stylguide
-        uses: wemake-services/wemake-python-styleguide@0.14.0
+        uses: wemake-services/wemake-python-styleguide@0.14.1
         continue-on-error: true
         with:
           reporter: 'github-pr-review'
