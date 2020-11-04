@@ -40,4 +40,4 @@ class InitialiseParameters(unittest.TestCase):
             expected = pd.read_csv(os.path.join(os.path.dirname(__file__), 'resources/Greece_contact_matrix.csv'), index_col=0)
 
         actual = pd.DataFrame(params.infection_matrix)
-        #self.assertTrue(np.allclose(expected.values, actual.values))
+        self.assertTrue(np.allclose(expected.values, actual.values))
