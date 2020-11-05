@@ -13,7 +13,7 @@ model_runner = ModelRunner(facade, _redis, dask_client, _sid)
 queue = []
 
 class queueItem:
-    def __init__(self, model, profile, CAMP):
+    def __init__(self, model, profile):
         self.model = model
         self.profile = profile
 
@@ -26,7 +26,7 @@ def run_model_results_for_message(message_key):
                 if res == ModelScheduleRunResult.SCHEDULED:
                     print("Model run scheduled")
                 elif res == ModelScheduleRunResult.CAPACITY:
-                    queue.append(queueItem(model, profile, CAMP))
+                    queue.append(queueItem(model, profile))
                     print("Can not run model now, added to queue position: ",len(queue))
                 elif res == ModelScheduleRunResult.ALREADY_RUNNING:
                     print("Already running")

@@ -241,13 +241,13 @@ class ModelRunner:
         facade.rs.store(_mdl.id(), res_id, mr)
         return mr
 
-    def results_exist(self, _model: str, _profile: str, camp: str) -> bool:
+    def results_exist(self, _model: str, _profile: str) -> bool:
         _mdl: Model = get_models()[_model](self.facade.ps)
         params = create_params(self.facade.ps, _model, _profile, self.user_input)
         res_id = _mdl.result_id(params)
         return self.facade.rs.exists(_mdl.id(), res_id)
 
-    def get_result(self, _model: str, _profile: str, camp: str) -> ModelResult:
+    def get_result(self, _model: str, _profile: str) -> ModelResult:
         _mdl: Model = get_models()[_model](self.facade.ps)
         params = create_params(self.facade.ps, _model, _profile, self.user_input)
         res_id = _mdl.result_id(params)

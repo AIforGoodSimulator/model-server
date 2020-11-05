@@ -23,9 +23,9 @@ initial_time = time.localtime()
 initial_time = time.strftime("%m/%d/%Y, %H:%M:%S", initial_time)
 #
 # # model Parameter
-# model = 'compartmental-model'
-# profile = 'baseline'
-# camp = 'Moria'
+model = 'compartmental-model'
+profile = 'baseline'
+camp = 'Moria'
 
 
 layout = html.Div([
