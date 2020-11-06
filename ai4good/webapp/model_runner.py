@@ -14,6 +14,7 @@ import socket
 from ai4good.utils import path_utils as pu
 from ai4good.webapp.commit_date import get_version_date
 from ai4good.utils.logger_util import get_logger
+from dask.distributed import wait
 
 MAX_CONCURRENT_MODELS = 3
 HISTORY_SIZE = 10
@@ -165,6 +166,13 @@ class ModelsRunningNow:
         for running_now in self._redis.smembers(self._CACHE_KEY):
             self._redis.srem(self._CACHE_KEY, running_now)
 
+    def run_available(self):
+        n_running = self._redis.scard(self._CACHE_KEY)
+        if n_running >= MAX_CONCURRENT_MODELS:
+            return False
+        else:
+            return True
+
 
 class ModelRunner:
 
@@ -173,14 +181,13 @@ class ModelRunner:
         self.history = ModelRunHistory(_redis)
         self.models_running_now = ModelsRunningNow(_redis)
         self.dask_client_provider = dask_client_provider
-        # access the particular cache from the cache ID
-        input_param_cache = InputParameterCache(_redis)
-        input_param_cache._CACHE_KEY = f'{socket.gethostname()}_{_sid}_input_parameter'
-        saved_keys, saved_values = input_param_cache.cache_get_all()
-        self.user_input = json.dumps(dict(zip(saved_keys, saved_values)))
+        self._redis = _redis
+        self._sid = _sid
+        self.user_input = None
 
     def run_model(self, _model: str, _profile: str) -> ModelScheduleRunResult:
-
+        if self.user_input is None:
+            self.user_input = self.load_input_params()
         def on_future_done(f: Future):
             self.models_running_now.pop(key)
             if f.status == 'finished':
@@ -203,6 +210,35 @@ class ModelRunner:
         
         key = (_model, _profile)
         return self.models_running_now.start_run(key, submit)
+
+    def batch_run_model(self, run_config: dict):
+        if self.user_input is None:
+            self.user_input = self.load_input_params()
+        # initialise the client
+        client = self.dask_client_provider()
+        futures = []
+        for model in run_config.keys():
+            if len(run_config[model]) > 0:
+                for profile in run_config[model]:
+                    def on_future_done(f: Future):
+                        if f.status == 'finished':
+                            logger.info("Model run %s success", str(key))
+                            self.history.record_finished(key, f.result())
+                        elif f.status == 'cancelled':
+                            logger.info("Model run %s cancelled", str(key))
+                            self.history.record_cancelled(key)
+                        else:
+                            tb = f.traceback()
+                            error_details = traceback.format_tb(tb)
+                            logger.error("Model run %s failed: %s", str(key), error_details)
+                            self.history.record_error(key, error_details)
+                    key = (model, profile)
+                    future: Future = client.submit(self._sync_run_model, self.facade, model, profile, self.user_input)
+                    future.add_done_callback(on_future_done)
+                    futures.append(future)
+        wait(futures) # block operation until all futures are finished
+        logger.info('all runs have finished')
+        return True
 
     @staticmethod
     def history_columns() -> List[str]:
@@ -252,3 +288,11 @@ class ModelRunner:
         params = create_params(self.facade.ps, _model, _profile, self.user_input)
         res_id = _mdl.result_id(params)
         return self.facade.rs.load(_mdl.id(), res_id)
+
+    def load_input_params(self):
+        # access the particular cache from the cache ID
+        input_param_cache = InputParameterCache(self._redis)
+        input_param_cache._CACHE_KEY = f'{socket.gethostname()}_{self._sid}_input_parameter'
+        saved_keys, saved_values = input_param_cache.cache_get_all()
+        user_input = json.dumps(dict(zip(saved_keys, saved_values)))
+        return user_input
