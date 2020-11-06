@@ -18,6 +18,7 @@ class ModelQueueItem:
         self.model = model
         self.profile = profile
 
+
 def run_model_results_for_messages(model_runner,message_keys):
     run_config = {}
     queue = []
