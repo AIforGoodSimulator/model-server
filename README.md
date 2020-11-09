@@ -1,3 +1,12 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/aiforgoodsimulator/model-server/badge)](https://www.codefactor.io/repository/github/aiforgoodsimulator/model-server)
+[![codecov](https://codecov.io/gh/AIforGoodSimulator/model-server/branch/dev/graph/badge.svg?token=TK647J6ZUC)](https://codecov.io/gh/AIforGoodSimulator/model-server)
+[![wemake-python-styleguide](https://img.shields.io/badge/style-wemake-000000.svg)](https://github.com/wemake-services/wemake-python-styleguide)
+[![Testing](https://github.com/AIforGoodSimulator/model-server/workflows/AIforGood%20ModelServer%20Tests/badge.svg)](https://github.com/AIforGoodSimulator/model-server/actions?query=workflow%3A%22AIforGood+ModelServer+test+workflow%22)
+[![Dev-Build-Deploy](https://github.com/AIforGoodSimulator/model-server/workflows/DEV%20Build%20Deploy/badge.svg)](https://github.com/AIforGoodSimulator/model-server/actions?query=workflow%3A%22DEV+Build+Deploy%22)
+[![UAT-Build-Deploy](https://github.com/AIforGoodSimulator/model-server/workflows/UAT%20Build%20Deploy/badge.svg)](https://github.com/AIforGoodSimulator/model-server/actions?query=workflow%3A%22UAT+Build+Deploy%22)
+
+
+
 ### Install 
 
 To start install required packages with 
@@ -185,13 +194,13 @@ The following workflow should be used for development:
     http://ai4good-dev.azurewebsites.net/sim/run_model (DEV)
 
 
-* Now create a pull request to the 'uat' branch and merge. Tests will be run again and the uat branch will be deployed to the uat server.
+* Now create a pull request to the 'uat' branch. This pull request can be merged by the people below.
 * You can view your changes on : (Note build and deployment can take 5+ minutes) 
-* This is the branch the the testing team will do UAT testing on.
+* This is the branch the testing team will do UAT testing on.
 
     http://ai4good-uat.azurewebsites.net/sim/run_model (UAT)
 
-* Now create a pull request to the 'Master' branch.  This pull request can be merged by the following people :
+* The pull to 'Master' branch will happen manually once UAT has been accepted.  This pull request can be merged by the following people :
 
     [pardf](https://github.com/pardf)
 
