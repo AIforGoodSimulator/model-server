@@ -11,7 +11,7 @@ import dash_table
 import csv
 from ai4good.utils import path_utils as pu
 from ai4good.webapp.model_results_config import model_profile_config
-from collections import defaultdict
+import ai4good.webapp.common_elements as common_elements
 
 
 def camp_selector():
@@ -319,22 +319,9 @@ def history_table():
     ])
 
 
-def nav_bar():
-    return dbc.NavbarSimple(
-        children=[
-            dbc.NavItem(dbc.NavLink("Home", href="https://www.aiforgood.co.uk/", target="_blank")),
-            dbc.NavItem(dbc.NavLink("What is it?", href="https://www.aiforgoodsimulator.com/", target="_blank")),
-            dbc.NavItem(dbc.NavLink("About us", href="https://www.aiforgood.co.uk/about-us", target="_blank")),
-        ],
-        brand="AI for Good Simulator",
-        brand_href="#",
-        color="primary",
-        dark=True,
-    )
-
 layout = html.Div(
     [
-        nav_bar(),
+        common_elements.nav_bar(),
         html.Div(
         [
             html.H3('Select Parameters'),
