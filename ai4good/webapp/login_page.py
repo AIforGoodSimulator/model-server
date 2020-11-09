@@ -6,14 +6,14 @@ import dash_bootstrap_components as dbc
 import dash_html_components as html
 from ai4good.webapp.apps import dash_app, facade, model_runner
 import ai4good.webapp.run_model_page as run_model_page
+import ai4good.webapp.common_elements as common_elements
 from ai4good.webapp.model_runner import ModelScheduleRunResult
 from dash.dependencies import Input, Output, State
 import dash_table
 
 layout = html.Div(
     [
-        run_model_page.nav_bar(),
-        
+        common_elements.nav_bar(),
         html.Div([
             dbc.Container([
                 dbc.Row(

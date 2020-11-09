@@ -1,1 +1,1 @@
-python -m unittest discover -s ai4good/ -p "test_*.py"
+pytest ./ai4good --cov=./ --cov-report=xml

@@ -8,6 +8,7 @@ from dash.dependencies import Input, Output, State, MATCH, ALL
 from dash.exceptions import PreventUpdate
 from ai4good.webapp.apps import dash_app, facade, model_runner, _redis
 import ai4good.webapp.run_model_page as run_model_page
+import ai4good.webapp.common_elements as common_elements
 from ai4good.webapp.model_runner import InputParameterCache
 import ai4good.utils.path_utils as pu
 
@@ -54,7 +55,7 @@ def generate_activity_gathering_children(id_index):
 
 layout = html.Div(
     [
-        run_model_page.nav_bar(),
+        common_elements.nav_bar(),
  
         html.Div([
             dbc.Container([

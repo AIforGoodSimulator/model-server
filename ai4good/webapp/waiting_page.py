@@ -11,6 +11,7 @@ from ai4good.webapp.apps import model_runner
 from ai4good.webapp.model_runner import ModelScheduleRunResult
 import ai4good.utils.path_utils as pu
 from dash.dependencies import Input, Output, State
+import ai4good.webapp.common_elements as common_elements
 import dash_table
 import os
 import time
@@ -49,7 +50,7 @@ camp = 'Moria'
 
 layout = html.Div([
         dcc.Interval(id='interval1', interval=10 * 1000, n_intervals=0),
-        run_model_page.nav_bar(),
+        common_elements.nav_bar(),
         html.Br(),
         html.Div([
             dbc.Container([

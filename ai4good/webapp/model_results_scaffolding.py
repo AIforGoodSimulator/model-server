@@ -14,47 +14,32 @@ from ai4good.models.cm.initialise_parameters import Parameters
 import plotly.graph_objs as go
 from ai4good.utils.logger_util import get_logger
 from plotly.colors import DEFAULT_PLOTLY_COLORS
+import ai4good.webapp.common_elements as common_elements
 
 logger = get_logger(__name__)
 
-
-# CAMP = 'Moria'
-# this logic needs to be changed later where the user input params will be stored
-# can read in the camp parameters here directly from the user input thus avoiding retrieving data from the system elsewhere
-
-color_scheme_main = ['rgba(0, 176, 246, 0.2)',
-                     'rgba(130, 190, 240, 1)', 'rgb(0, 176, 246)']
-color_scheme_secondary = ['rgba(245, 240, 240, 0.5)']
-
-
-@cache.memoize(timeout=cache_timeout)
+# @cache.memoize(timeout=cache_timeout)
 def layout(camp):
     # get results here based on the camp
     message_1 = render_message_1_plots(camp)
     message_5 = render_message_5_plots(camp)
     return html.Div(
         [
-            html.A(html.Button('Print', className="btn btn-light"), href='javascript:window.print()', className='d-print-none', style={"float": 'right'}),
-            dcc.Markdown(disclaimer(), style={'margin': 30}),
-            html.H1(f'AI for Good Simulator: Model Results Dashboard for the {camp} Camp', style={
-                    'margin': 30}),
-            # dcc.Markdown(overview(camp, params), style={'margin': 30}),
-            dcc.Markdown(high_level_message_1(), style={'margin': 30}),
-            html.Div(message_1, style={'margin': 30}),
-            dcc.Markdown(high_level_message_2(), style={'margin': 30}),
-            dcc.Markdown(high_level_message_3(), style={'margin': 30}),
-            dcc.Markdown(high_level_message_4(), style={'margin': 30}),
-            dcc.Markdown(high_level_message_5(), style={'margin': 30}),
-            html.Div(message_5, style={'margin': 30}),
-            dcc.Loading(
-                html.Div([], id='main_section_part2', style={'margin': 30})),
-            # base_profile_chart_section(),
-            # dcc.Loading(html.Div([], id='cmp_section', style={'margin': 30})),
-            # html.Div(camp, id='_camp_param', style={'display': 'none'}),
-            # html.Div(profile, id='_profile_param', style={'display': 'none'}),
-            # html.Div('¬'.join(cmp_profiles), id='_cmp_profiles',
-            #          style={'display': 'none'})
-        ], style={'margin': 50}
+            common_elements.nav_bar(),
+            html.Div([
+                html.A(html.Button('Print', className="btn btn-light"), href='javascript:window.print()', className='d-print-none', style={"float": 'right'}),
+                dcc.Markdown(disclaimer(), style={'margin': 30}),
+                html.H1(f'AI for Good Simulator: Model Results Dashboard for the {camp} Camp', style={
+                        'margin': 30}),
+                dcc.Markdown(high_level_message_1(), style={'margin': 30}),
+                html.Div(message_1, style={'margin': 30}),
+                dcc.Markdown(high_level_message_2(), style={'margin': 30}),
+                dcc.Markdown(high_level_message_3(), style={'margin': 30}),
+                dcc.Markdown(high_level_message_4(), style={'margin': 30}),
+                dcc.Markdown(high_level_message_5(), style={'margin': 30}),
+                html.Div(message_5, style={'margin': 30}),
+            ], style={'margin': 30})
+        ]
     )
 
 
@@ -172,6 +157,7 @@ def render_message_1_plots(camp):
         showlegend=True
 
     )
+    fig.layout.paper_bgcolor = '#ecf0f1!important'
 
     return [
         dcc.Graph(
@@ -224,6 +210,7 @@ def render_message_5_plots(camp):
         legend_title_text='Scenarios'
 
     )
+    fig.layout.paper_bgcolor = '#ecf0f1!important'
 
     return [
         dcc.Graph(
