@@ -18,7 +18,7 @@ from plotly.colors import DEFAULT_PLOTLY_COLORS
 logger = get_logger(__name__)
 
 
-CAMP = 'Moria'
+# CAMP = 'Moria'
 # this logic needs to be changed later where the user input params will be stored
 # can read in the camp parameters here directly from the user input thus avoiding retrieving data from the system elsewhere
 
@@ -28,9 +28,10 @@ color_scheme_secondary = ['rgba(245, 240, 240, 0.5)']
 
 
 # @cache.memoize(timeout=cache_timeout)
-def layout():
-    # camp, profile, cmp_profiles
-    # _, profile_df, params, _ = get_model_result(camp, profile)
+def layout(camp):
+    # get results here based on the camp
+    message_1 = render_message_1_plots(camp)
+    message_5 = render_message_5_plots(camp)
     return html.Div(
         [
             html.A(html.Button('Print', className="btn btn-light"), href='javascript:window.print()', className='d-print-none', style={"float": 'right'}),
@@ -39,12 +40,12 @@ def layout():
                     'margin': 30}),
             # dcc.Markdown(overview(camp, params), style={'margin': 30}),
             dcc.Markdown(high_level_message_1(), style={'margin': 30}),
-            html.Div(render_message_1_plots(), style={'margin': 30}),
+            html.Div(message_1, style={'margin': 30}),
             dcc.Markdown(high_level_message_2(), style={'margin': 30}),
             dcc.Markdown(high_level_message_3(), style={'margin': 30}),
             dcc.Markdown(high_level_message_4(), style={'margin': 30}),
             dcc.Markdown(high_level_message_5(), style={'margin': 30}),
-            html.Div(render_message_5_plots(), style={'margin': 30}),
+            html.Div(message_5, style={'margin': 30}),
             dcc.Loading(
                 html.Div([], id='main_section_part2', style={'margin': 30})),
             # base_profile_chart_section(),
@@ -103,21 +104,21 @@ def high_level_message_5():
 
 
 @local_cache.memoize(timeout=cache_timeout)
-def get_model_result_message(message_key):
+def get_model_result_message(message_key, camp):
     logger.info(f"Reading data for high level message: {message_key}")
     model_profile_report_dict = defaultdict(dict)
     for model in model_profile_config[message_key].keys():
         if len(model_profile_config[message_key][model]) > 0:
             for profile in model_profile_config[message_key][model]:
                 try:
-                    mr = model_runner.get_result(model, profile, CAMP)
+                    mr = model_runner.get_result(model, profile, camp)
                     profile_df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
-                    params = Parameters(facade.ps, CAMP, profile_df, {})
+                    params = Parameters(facade.ps, camp, profile_df, {})
                     report = load_report(mr, params)
                     assert mr is not None
                     model_profile_report_dict[model][profile] = report
                 except:
-                    logger.info(f"Unable to load result for model: ({model}, {profile}, {CAMP}).")
+                    logger.info(f"Unable to load result for model: ({model}, {profile}, {camp}).")
     return model_profile_report_dict
 
 
@@ -134,8 +135,8 @@ def get_model_result_message(message_key):
 
 color_scheme_updated = DEFAULT_PLOTLY_COLORS
 
-def render_message_1_plots():
-    model_profile_report_dict = get_model_result_message("message_1")
+def render_message_1_plots(camp):
+    model_profile_report_dict = get_model_result_message("message_1", camp)
     columns_to_plot = ['Infected (symptomatic)']
     fig = go.Figure()
     col = columns_to_plot[0]
@@ -181,8 +182,8 @@ def render_message_1_plots():
     ]
 
 
-def render_message_5_plots():
-    model_profile_report_dict = get_model_result_message("message_5")
+def render_message_5_plots(camp):
+    model_profile_report_dict = get_model_result_message("message_5", camp)
     columns_to_plot = ['Deaths']
     fig = make_subplots()
     col = columns_to_plot[0]

@@ -10,6 +10,9 @@ from dash.dependencies import Input, Output, State
 import dash_table
 import csv
 from ai4good.utils import path_utils as pu
+from ai4good.webapp.model_results_config import model_profile_config
+from collections import defaultdict
+
 
 def camp_selector():
     return dbc.Row([
@@ -252,6 +255,8 @@ def model_run_buttons():
         html.Div([
             dbc.Button("See Results", id="model_results_button", color="success", className="mr-1", target="_blank", disabled=True, external_link=True, href='none', key='model_results_button_key'), 
             dbc.Button("See Report", id="model_report_button", color="success", className="mr-1", disabled=True, key='model_report_button_key'),
+            dbc.Button("See Dashboard", id="model_dashboard_button", color="success", className="mr-1", target="_blank",
+                       disabled=True, external_link=True, href='none', key='model_dashboard_button_key')
         ], id='display_outputs', style={'margin-bottom':'25px'}),
         dbc.Toast(
             [],
@@ -496,6 +501,31 @@ def on_see_results_click_and_state_update(n, camp, model, profile):
                    True, '', \
                    True, \
                    dbc.Tooltip('No cached results, please run model first', id='_mr_tt', target='run_buttons_div'),
+
+
+@dash_app.callback(
+    [
+        Output('model_dashboard_button', 'disabled'),
+        Output('model_dashboard_button', 'href'),
+    ],
+    [
+        Input('interval-component', 'n_intervals'),
+        Input('camp-dropdown', 'value'),
+    ]
+)
+def on_see_dashboard_click_and_state_update(n, camp):
+    # parse the model profile config into models and their profiles and check via model_runner to see if they exist
+    if camp is None:
+        return True, ''
+    else:
+        for model_runs in model_profile_config.values():
+            for model,profiles in model_runs.items():
+                if len(profiles)>0:
+                    for profile in profiles:
+                        if not model_runner.results_exist(model, profile, camp):
+                            return True, ''
+    return False, f'/sim/dashboard?camp={camp}'
+
 
 
 @dash_app.callback(
