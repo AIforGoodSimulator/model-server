@@ -27,7 +27,7 @@ color_scheme_main = ['rgba(0, 176, 246, 0.2)',
 color_scheme_secondary = ['rgba(245, 240, 240, 0.5)']
 
 
-# @cache.memoize(timeout=cache_timeout)
+@cache.memoize(timeout=cache_timeout)
 def layout(camp):
     # get results here based on the camp
     message_1 = render_message_1_plots(camp)
@@ -36,7 +36,7 @@ def layout(camp):
         [
             html.A(html.Button('Print', className="btn btn-light"), href='javascript:window.print()', className='d-print-none', style={"float": 'right'}),
             dcc.Markdown(disclaimer(), style={'margin': 30}),
-            html.H1(f'AI for Good Simulator: Model Results Dashboard for the Refugee Camp', style={
+            html.H1(f'AI for Good Simulator: Model Results Dashboard for the {camp} Camp', style={
                     'margin': 30}),
             # dcc.Markdown(overview(camp, params), style={'margin': 30}),
             dcc.Markdown(high_level_message_1(), style={'margin': 30}),
