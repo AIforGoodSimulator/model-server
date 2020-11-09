@@ -21,17 +21,18 @@ logger = get_logger(__name__)
 # @cache.memoize(timeout=cache_timeout)
 def layout(camp):
     # get results here based on the camp
-    message_1 = render_message_1_plots(camp)
+    message_1 = message_1_section(camp)
     message_5 = render_message_5_plots(camp)
     return html.Div(
         [
+            # Hidden div inside the app that stores the intermediate value
+            html.Div(camp, id='camp-name', style={'display': 'none'}),
             common_elements.nav_bar(),
             html.Div([
                 html.A(html.Button('Print', className="btn btn-light"), href='javascript:window.print()', className='d-print-none', style={"float": 'right'}),
                 dcc.Markdown(disclaimer(), style={'margin': 30}),
                 html.H1(f'AI for Good Simulator: Model Results Dashboard for the {camp} Camp', style={
                         'margin': 30}),
-                dcc.Markdown(high_level_message_1(), style={'margin': 30}),
                 html.Div(message_1, style={'margin': 30}),
                 dcc.Markdown(high_level_message_2(), style={'margin': 30}),
                 dcc.Markdown(high_level_message_3(), style={'margin': 30}),
@@ -120,9 +121,10 @@ def get_model_result_message(message_key, camp):
 
 color_scheme_updated = DEFAULT_PLOTLY_COLORS
 
-def render_message_1_plots(camp):
+
+def render_message_1_plots(camp, category="Infected (symptomatic)"):
     model_profile_report_dict = get_model_result_message("message_1", camp)
-    columns_to_plot = ['Infected (symptomatic)']
+    columns_to_plot = [category]
     fig = go.Figure()
     col = columns_to_plot[0]
     plot_num = 0
@@ -135,7 +137,6 @@ def render_message_1_plots(camp):
             label_name = 'Wearing facemask for 3 month '
         elif profile == 'better_hygiene_six_month':
             label_name = 'Using Hand Sanitizers & facemask for 6 month'
-
         else:
             label_name = 'default'
 
@@ -157,14 +158,52 @@ def render_message_1_plots(camp):
         showlegend=True
 
     )
-    fig.layout.paper_bgcolor = '#ecf0f1!important'
+    # Match the background colour from external css style sheet
+    fig.layout.paper_bgcolor = '#ecf0f1'
 
-    return [
+    return fig
+
+
+@dash_app.callback(
+    Output("plot_message1_fig", "figure"),
+    [Input("camp-name", "children"), Input("message_1_selection", "value")]
+)
+def update_message_1_plots(camp, category):
+    fig = render_message_1_plots(camp, category)
+    return fig
+
+
+def message_1_section(camp):
+    # categories of interest for plotting
+    categories = ["Infected (symptomatic)", "Hospitalised", "Critical", "Deaths"]
+    # for dropdowns to select
+    dropdown_options = []
+    for option in categories:
+        dropdown_options.append({"label": option, "value": option})
+    dropdown_button = html.Div(
+        [
+            html.H5("Category: "),
+            dcc.Dropdown(
+                id="message_1_selection",
+                options=dropdown_options,
+                value="Infected (symptomatic)",
+                searchable=False,
+                clearable=False,
+                style={"width": "100%"}
+            )
+        ],
+        style={"width": "100%"},
+        className='d-print-none'
+    )
+    fig = render_message_1_plots(camp)
+    return[
+        dcc.Markdown(high_level_message_1()),
+        dropdown_button,
         dcc.Graph(
             id='plot_message1_fig',
             figure=fig,
             style={'width': '100%'}
-        )
+        ),
     ]
 
 
@@ -210,7 +249,9 @@ def render_message_5_plots(camp):
         legend_title_text='Scenarios'
 
     )
-    fig.layout.paper_bgcolor = '#ecf0f1!important'
+
+    # Match the background colour from external css style sheet
+    fig.layout.paper_bgcolor = '#ecf0f1'
 
     return [
         dcc.Graph(
