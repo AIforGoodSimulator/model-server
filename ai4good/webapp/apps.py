@@ -44,7 +44,7 @@ _client = None  # Needs lazy init
 def dask_client() -> Client:
     global _client
     if _client is None:
-        _client = Client(processes=False)
+        _client = Client('dask-dev.uksouth.cloudapp.azure.com:8787')
     return _client
 
 
