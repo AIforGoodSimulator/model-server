@@ -21,18 +21,18 @@ logger = get_logger(__name__)
 # @cache.memoize(timeout=cache_timeout)
 def layout(camp):
     # get results here based on the camp
-    message_1 = render_message_1_plots(camp)
     message_5 = render_message_5_plots(camp)
     return html.Div(
         [
+            # Hidden div inside the app that stores the intermediate value
+            html.Div(camp, id='camp-name', style={'display': 'none'}),
             common_elements.nav_bar(),
             html.Div([
                 html.A(html.Button('Print', className="btn btn-light"), href='javascript:window.print()', className='d-print-none', style={"float": 'right'}),
                 dcc.Markdown(disclaimer(), style={'margin': 30}),
                 html.H1(f'AI for Good Simulator: Model Results Dashboard for the {camp} Camp', style={
                         'margin': 30}),
-                dcc.Markdown(high_level_message_1(), style={'margin': 30}),
-                html.Div(message_1, style={'margin': 30}),
+                dcc.Loading(html.Div([], id='message_1_section', style={'margin': 30})),
                 dcc.Markdown(high_level_message_2(), style={'margin': 30}),
                 dcc.Markdown(high_level_message_3(), style={'margin': 30}),
                 dcc.Markdown(high_level_message_4(), style={'margin': 30}),
@@ -120,26 +120,30 @@ def get_model_result_message(message_key, camp):
 
 color_scheme_updated = DEFAULT_PLOTLY_COLORS
 
-def render_message_1_plots(camp):
+
+def render_message_1_plots(camp, category="Infected (symptomatic)"):
     model_profile_report_dict = get_model_result_message("message_1", camp)
-    columns_to_plot = ['Infected (symptomatic)']
+    columns_to_plot = [category]
     fig = go.Figure()
     col = columns_to_plot[0]
     plot_num = 0
     for profile in model_profile_report_dict["compartmental-model"].keys():
         if profile == 'baseline':
             label_name = 'No interventions'
+            hover_text = '0 month'
         elif profile == 'better_hygiene_one_month':
             label_name = 'Wearing facemask for 1 month'
+            hover_text = '1 month'
         elif profile == 'better_hygiene_three_month':
             label_name = 'Wearing facemask for 3 month '
+            hover_text = '3 months'
         elif profile == 'better_hygiene_six_month':
             label_name = 'Using Hand Sanitizers & facemask for 6 month'
-
+            hover_text = '6 months'
         else:
             label_name = 'default'
-
-        ci,line= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_name)
+            hover_text = None
+        ci, line = plot_iqr(model_profile_report_dict["compartmental-model"][profile], col, label_name, hover_text)
         fig.add_trace(ci)
         fig.add_trace(line)
         fig.update_yaxes(title_text=col)
@@ -154,17 +158,64 @@ def render_message_1_plots(camp):
     fig.update_layout(
         margin=dict(l=0, r=0, t=30, b=0),
         height=400,
-        showlegend=True
-
+        showlegend=True,
+        hovermode="x"
     )
-    fig.layout.paper_bgcolor = '#ecf0f1!important'
+    # Match the background colour from external css style sheet
+    fig.layout.paper_bgcolor = '#ecf0f1'
+    fig.layout.xaxis.showspikes = True
+    fig.layout.xaxis.spikemode = 'across'
+    fig.layout.xaxis.spikesnap = 'cursor'
+    fig.layout.xaxis.showline = True
+    fig.layout.xaxis.showgrid = True
 
-    return [
+    return fig
+
+
+@dash_app.callback(
+    Output("plot_message1_fig", "figure"),
+    [Input("camp-name", "children"), Input("message_1_selection", "value")]
+)
+def update_message_1_plots(camp, category):
+    fig = render_message_1_plots(camp, category)
+    return fig
+
+
+@dash_app.callback(
+    Output('message_1_section', 'children'),
+    [Input("camp-name", "children")]
+)
+def message_1_section(camp):
+    # categories of interest for plotting
+    categories = ["Infected (symptomatic)", "Hospitalised", "Critical", "Deaths"]
+    # for dropdowns to select
+    dropdown_options = []
+    for option in categories:
+        dropdown_options.append({"label": option, "value": option})
+    dropdown_button = html.Div(
+        [
+            html.H5("Category: "),
+            dcc.Dropdown(
+                id="message_1_selection",
+                options=dropdown_options,
+                value="Infected (symptomatic)",
+                searchable=False,
+                clearable=False,
+                style={"width": "100%"}
+            )
+        ],
+        style={"width": "100%"},
+        className='d-print-none'
+    )
+    fig = render_message_1_plots(camp)
+    return[
+        dcc.Markdown(high_level_message_1()),
+        dropdown_button,
         dcc.Graph(
             id='plot_message1_fig',
             figure=fig,
             style={'width': '100%'}
-        )
+        ),
     ]
 
 
@@ -186,7 +237,7 @@ def render_message_5_plots(camp):
         else:
             label_name = 'default'
 
-        p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_name)
+        p1, p2 = plot_iqr(model_profile_report_dict["compartmental-model"][profile], col, label_name, '')
         
         fig.add_trace(p1, row=1, col=1)
         fig.add_trace(p2, row=1, col=1)
@@ -210,7 +261,9 @@ def render_message_5_plots(camp):
         legend_title_text='Scenarios'
 
     )
-    fig.layout.paper_bgcolor = '#ecf0f1!important'
+
+    # Match the background colour from external css style sheet
+    fig.layout.paper_bgcolor = '#ecf0f1'
 
     return [
         dcc.Graph(
@@ -221,8 +274,8 @@ def render_message_5_plots(camp):
     ]
 
 
-def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str,
-             x_col='Time', estimator=np.median, estimator_name='median',
+def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str, hover_text: str,
+             x_col='Time', estimator=np.median,
              iqr_low=0.25, iqr_high=0.75):
     grouped = df.groupby(x_col)[y_col]
     est = grouped.agg(estimator)
@@ -238,7 +291,9 @@ def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str,
     
     ci = go.Scatter(
         x=x + x_rev, y=y_upper + y_lower, fill='toself', showlegend=False, hoverinfo="skip")
-    line = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6))
+    line = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6),
+                      text=[f'{round(number)}' for number in est],
+                      hovertemplate='%{text}' + f'<extra>{hover_text}</extra>')
     return ci, line
 
 # @dash_app.callback(
