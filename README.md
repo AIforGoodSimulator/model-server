@@ -194,13 +194,13 @@ The following workflow should be used for development:
     http://ai4good-dev.azurewebsites.net/sim/run_model (DEV)
 
 
-* Now create a pull request to the 'uat' branch and merge. Tests will be run again and the uat branch will be deployed to the uat server.
+* Now create a pull request to the 'uat' branch. This pull request can be merged by the people below.
 * You can view your changes on : (Note build and deployment can take 5+ minutes) 
-* This is the branch the the testing team will do UAT testing on.
+* This is the branch the testing team will do UAT testing on.
 
     http://ai4good-uat.azurewebsites.net/sim/run_model (UAT)
 
-* Now create a pull request to the 'Master' branch.  This pull request can be merged by the following people :
+* The pull to 'Master' branch will happen manually once UAT has been accepted.  This pull request can be merged by the following people :
 
     [pardf](https://github.com/pardf)
 
