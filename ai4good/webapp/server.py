@@ -59,8 +59,8 @@ def display_page(pathname, query=None):
         return run_model_page.layout
     elif pathname == '/sim/results':
         query = parse_qs(urlparse(query).query)
-        if query['model'][0] == 'compartmental-model':
-            return cm_model_results_page.layout(query['camp'][0], query['profile'][0])
+        if query['model'][0] in ['compartmental-model', 'compartmental-model-stochastic']:
+            return cm_model_results_page.layout(query['model'][0], query['camp'][0], query['profile'][0])
         elif query['model'][0] == 'agent-based-model':
             return abm_model_results_page.layout(query['camp'][0], query['profile'][0])
         elif query['model'][0] == 'network-model':
@@ -69,9 +69,9 @@ def display_page(pathname, query=None):
             return '404'
     elif pathname == '/sim/report':
         query = parse_qs(urlparse(query).query)
-        if query['model'][0] == 'compartmental-model':
+        if query['model'][0] in ['compartmental-model', 'compartmental-model-stochastic']:
             interventions = query.get('intervention', [])
-            return cm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)
+            return cm_model_report_page.layout(query['model'][0], query['camp'][0], query['profile'][0], interventions)
         elif query['model'][0] == 'agent-based-model':
             interventions = query.get('intervention', [])
             return abm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)

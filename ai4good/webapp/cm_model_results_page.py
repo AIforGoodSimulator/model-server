@@ -61,8 +61,8 @@ def charts(mr):
     ])
 
 
-def layout(camp, profile):
-    mr = model_runner.get_result(CompartmentalModel.ID, profile, camp)
+def layout(modelId, camp, profile):
+    mr = model_runner.get_result(modelId, profile, camp)
     assert mr is not None
     return html.Div(
         [

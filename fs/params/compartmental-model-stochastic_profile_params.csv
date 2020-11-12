@@ -1,0 +1,64 @@
+Profile,Parameter,Start Time,End Time,Value
+baseline,better_hygiene,0,0,<default>
+baseline,ICU_capacity,<no_edit>,<no_edit>,6
+baseline,remove_symptomatic,0,0,10
+baseline,shielding,<no_edit>,<no_edit>,False
+baseline,remove_high_risk,0,0,20
+baseline,remove_high_risk_categories,<no_edit>,<no_edit>,2
+baseline,t_sim,<no_edit>,<no_edit>,200
+baseline,numberOfIterations,<no_edit>,<no_edit>,1000
+baseline,nProcesses,<no_edit>,<no_edit>,4
+better_hygiene,better_hygiene,0,30,<default>
+better_hygiene,ICU_capacity,<no_edit>,<no_edit>,6
+better_hygiene,remove_symptomatic,0,0,10
+better_hygiene,shielding,<no_edit>,<no_edit>,False
+better_hygiene,remove_high_risk,0,0,20
+better_hygiene,remove_high_risk_categories,<no_edit>,<no_edit>,2
+better_hygiene,t_sim,<no_edit>,<no_edit>,200
+better_hygiene,numberOfIterations,<no_edit>,<no_edit>,1000
+better_hygiene,nProcesses,<no_edit>,<no_edit>,4
+custom,better_hygiene,0,200,0.7
+custom,ICU_capacity,<no_edit>,<no_edit>,6
+custom,remove_symptomatic,30,90,50
+custom,shielding,<no_edit>,<no_edit>,False
+custom,remove_high_risk,0,12,50
+custom,remove_high_risk_categories,<no_edit>,<no_edit>,2
+custom,t_sim,<no_edit>,<no_edit>,200
+custom,numberOfIterations,<no_edit>,<no_edit>,1000
+custom,nProcesses,<no_edit>,<no_edit>,4
+remove_highrisk,better_hygiene,0,200,<default>
+remove_highrisk,ICU_capacity,<no_edit>,<no_edit>,6
+remove_highrisk,remove_symptomatic,0,0,10
+remove_highrisk,shielding,<no_edit>,<no_edit>,False
+remove_highrisk,remove_high_risk,0,6,100
+remove_highrisk,remove_high_risk_categories,<no_edit>,<no_edit>,2
+remove_highrisk,t_sim,<no_edit>,<no_edit>,200
+remove_highrisk,numberOfIterations,<no_edit>,<no_edit>,1000
+remove_highrisk,nProcesses,<no_edit>,<no_edit>,4
+remove_symptomatic,better_hygiene,0,0,<default>
+remove_symptomatic,ICU_capacity,<no_edit>,<no_edit>,6
+remove_symptomatic,remove_symptomatic,0,200,20
+remove_symptomatic,shielding,<no_edit>,<no_edit>,False
+remove_symptomatic,remove_high_risk,0,0,20
+remove_symptomatic,remove_high_risk_categories,<no_edit>,<no_edit>,2
+remove_symptomatic,t_sim,<no_edit>,<no_edit>,200
+remove_symptomatic,numberOfIterations,<no_edit>,<no_edit>,1000
+remove_symptomatic,nProcesses,<no_edit>,<no_edit>,4
+shielding,better_hygiene,0,0,<default>
+shielding,ICU_capacity,<no_edit>,<no_edit>,6
+shielding,remove_symptomatic,0,0,10
+shielding,shielding,<no_edit>,<no_edit>,True
+shielding,remove_high_risk,0,0,20
+shielding,remove_high_risk_categories,<no_edit>,<no_edit>,2
+shielding,t_sim,<no_edit>,<no_edit>,200
+shielding,numberOfIterations,<no_edit>,<no_edit>,1000
+shielding,nProcesses,<no_edit>,<no_edit>,4
+better hygiene_kostya,better_hygiene,0,20,0.7
+better hygiene_kostya,ICU_capacity,<no_edit>,<no_edit>,6
+better hygiene_kostya,remove_symptomatic,0,0,10
+better hygiene_kostya,shielding,<no_edit>,<no_edit>,False
+better hygiene_kostya,remove_high_risk,0,0,20
+better hygiene_kostya,remove_high_risk_categories,<no_edit>,<no_edit>,2
+better hygiene_kostya,t_sim,<no_edit>,<no_edit>,200
+better hygiene_kostya,numberOfIterations,<no_edit>,<no_edit>,1000
+better hygiene_kostya,nProcesses,<no_edit>,<no_edit>,4
