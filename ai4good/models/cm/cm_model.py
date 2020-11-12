@@ -2,14 +2,12 @@ from abc import ABCMeta, abstractmethod
 
 from typeguard import typechecked
 
-from ai4good.models.cm.sdegenerator import SDEGenerator
 from ai4good.models.cm.seirsde import SEIRSDESolver
 from ai4good.models.model import Model, ModelResult
 from ai4good.params.param_store import ParamStore
 from ai4good.models.cm.initialise_parameters import Parameters
 from ai4good.models.cm.simulator import Simulator, generate_csv
 from ai4good.models.cm.simulator import generate_csv
-from ai4good.webapp.cm_model_report_utils import *
 from ai4good.utils.logger_util import get_logger
 from ai4good.webapp.cm_model_report_utils import normalize_report, prevalence_age_table, prevalence_all_table, \
     cumulative_all_table, cumulative_age_table

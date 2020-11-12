@@ -7,10 +7,7 @@ from math import ceil, floor
 
 import dask
 import numpy as np
-import pandas as pd
 from dask.diagnostics import ProgressBar
-from scipy.integrate import ode
-from tqdm import tqdm
 import sdeint
 
 from ai4good.models.cm.initialise_parameters import Parameters
