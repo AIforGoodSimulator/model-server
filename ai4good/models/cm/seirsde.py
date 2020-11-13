@@ -69,7 +69,7 @@ class SEIRSDESolver:
         self.index_removal = 2
         self.index_hosp = 3
         self.index_death_icu = 4
-        self.index_death_no_icu = 4
+        self.index_death_no_icu = 5
 
         self.better_hygiene = control_dict['better_hygiene']
         self.remove_symptomatic = control_dict['remove_symptomatic']
@@ -261,7 +261,7 @@ class SEIRSDESolver:
         else:
             hospitalized_on_icu = np.full(self.age_categories, self.icu_capacity['value'])
 
-        # ODE system:
+        # SDE system Wiener part:
         # S
         infection_I = np.dot(self.infection_matrix, I_vec)
         infection_A = np.dot(self.infection_matrix, A_vec)
