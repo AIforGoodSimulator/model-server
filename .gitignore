@@ -31,3 +31,4 @@ temp/
 upload.txt
 coverage.xml
 venv/
+.env
