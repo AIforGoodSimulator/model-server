@@ -5,8 +5,14 @@ from flask_caching import Cache
 from dask.distributed import Client
 from ai4good.runner.facade import Facade
 from ai4good.webapp.model_runner import ModelRunner
+from ai4good.utils.logger_util import get_logger
+from dotenv import load_dotenv
 import redis
 import socket
+import os
+
+logger = get_logger(__name__,'DEBUG')
+load_dotenv()
 
 flask_app = Flask(__name__)
 
@@ -41,10 +47,23 @@ dash_app.title = "AI4Good COVID-19 Model Server"
 _client = None  # Needs lazy init
 
 
-def dask_client() -> Client:
+def dask_client() -> Client:    
     global _client
+
     if _client is None:
-        _client = Client('20.50.108.240:8786')
+        if ("DASK_SCHEDULER_HOST" not in os.environ) :
+            logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
+            _client = Client()
+        elif (os.environ.get("DASK_SCHEDULER_HOST")=="127.0.0.1") :
+            logger.info("Running Dask locally ...")
+            _client = Client()
+        elif (os.environ.get("DASK_SCHEDULER_HOST")=='') :
+            logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
+            _client = Client()
+        else :
+            logger.info("Running Dask Distributed using Dask Scheduler ["+os.environ.get("DASK_SCHEDULER_HOST")+"] ...")
+            _client = Client(os.environ.get("DASK_SCHEDULER_HOST")+":"+os.environ.get("DASK_SCHEDULER_PORT"))
+
     return _client
 
 
