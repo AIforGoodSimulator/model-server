@@ -2,15 +2,11 @@ from seirsplus.models import *
 from ai4good.models.nm.utils.network_utils import *
 from ai4good.models.nm.utils.intervention_utils import *
 
-# Load graphs and process
-def process_graph_bm_interventions(p, graph, nodes_per_struct):
-    # Add 1 food queue
-    graph = connect_food_queue(
-        graph, nodes_per_struct, p.food_weight, "food")
 
+def process_graph_interventions(p, graph):
     # Create quarantine graph - This also includes neighbor/friendship edges
     quarantine_graph = remove_edges_from_graph(graph, scale=2, edge_label_list=[
-                                               "food", "friendship"], min_num_edges=2)
+        "food", "friendship"], min_num_edges=2)
 
     # Create interventions
     interventions = Interventions()
