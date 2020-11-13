@@ -20,14 +20,11 @@ dash_bootstrap_components==0.10.7
 PyGithub==1.53
 selenium==3.141.0
 dask[complete]
-<<<<<<< HEAD
 bcrypt==2.20
 mysql-connector-python==8.0.22
-=======
 distributed==2.30.0
 pytest
 pytest-cov
 tornado==6.0.4
 blosc==1.9.2
 lz4==3.1.0
->>>>>>> 69a4db53a45a8171046f74b83057b0dc7d33b78c
