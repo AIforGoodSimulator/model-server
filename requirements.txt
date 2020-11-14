@@ -3,7 +3,7 @@ tqdm==4.47.0
 numba==0.48.0
 scipy==1.5.2
 Flask_Caching==1.9.0
-numpy==1.18.5
+numpy==1.18.1
 dash_core_components==1.12.1
 dash_table==4.10.1
 pandas==1.0.5
@@ -24,6 +24,11 @@ distributed==2.30.0
 pytest
 pytest-cov
 tornado==6.0.4
-blosc==1.9.2
 lz4==3.1.0
+cloudpickle==1.6.0
+toolz==0.11.1
+requests==2.25.0
+urllib3==1.24.2
+blosc==1.7.0
+python-dotenv
 sdeint==0.2.1
