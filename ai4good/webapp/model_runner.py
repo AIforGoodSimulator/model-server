@@ -161,6 +161,12 @@ class ModelRunner:
         self.models_running_now = ModelsRunningNow(_redis)
         self.dask_client_provider = dask_client_provider
 
+    def cancel_model(self, _model: str, _profile: str, camp: str):
+        key = (_model, _profile, camp)
+        self.models_running_now.pop(key)
+        logger.info("Model run %s cancelled", str(key))
+        self.history.record_cancelled(key)
+
     def run_model(self, _model: str, _profile: str, camp: str) -> ModelScheduleRunResult:
 
         def on_future_done(f: Future):
