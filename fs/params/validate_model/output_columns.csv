@@ -1,0 +1,8 @@
+columns,columns_abm,columns_cm
+Exposed,EXPOSED,Exposed
+Symptomatic,SYMPTOMATIC,Infected (symptomatic)
+Asymptomatic,ASYMPTOMATIC,Asymptomatically Infected
+Recovered,RECOVERED,Recovered
+Hospitalised,HOSPITALIZED,Hospitalised
+Critical,SEVERE,Critical
+Deaths,DECEASED,Deaths

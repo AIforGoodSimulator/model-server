@@ -246,7 +246,7 @@ def model_run_buttons():
         html.Label('Start simulation', style={'font-weight': 'bold'}),
         html.Div([
             dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True), 
-            dbc.Button("Validate Model", id="validate_model_button", color="secondary", className="mr-1", disabled=True),
+            dbc.Button("Validate Model", id="validate_model_button", color="primary", className="mr-1", disabled=True),
         ], id='start_simulation', style={'margin-bottom':'25px'}),
         html.Label('Display outputs', style={'font-weight': 'bold'}),
         html.Div([
@@ -467,10 +467,11 @@ def update_history(n):
     [
         Output('run_model_button', 'disabled'),
         Output('validate_model_button', 'disabled'),
+        Output('validate_model_button', 'href'),
         Output('model_results_button', 'disabled'),
         Output('model_results_button', 'href'),
         Output('model_report_button', 'disabled'),
-        Output("model_run_tooltip_holder", "children")
+        Output('model_run_tooltip_holder', 'children')
     ],
     [
         Input('interval-component', 'n_intervals'),
@@ -483,18 +484,20 @@ def on_see_results_click_and_state_update(n, camp, model, profile):
 
     if camp is None or model is None or profile is None:
         return True, \
-               True, \
+               True, '', \
                True, '', \
                True, \
                dbc.Tooltip('Select camp, model and profile to see results', id='_mr_tt', target="run_buttons_div")
     else:
         if model_runner.results_exist(model, profile, camp):
             return False, \
+                   False, '/sim/validate_model', \
                    False, f'/sim/results?model={model}&profile={profile}&camp={camp}', \
                    False, \
                    []
         else:
             return False, \
+                   True, \
                    True, '', \
                    True, \
                    dbc.Tooltip('No cached results, please run model first', id='_mr_tt', target='run_buttons_div'),

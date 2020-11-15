@@ -4,88 +4,218 @@ import dash
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
+from dash.dependencies import Input, Output, State, MATCH, ALL
+from dash.exceptions import PreventUpdate
+import os
+import json
+import ai4good.utils.path_utils as pu
 from ai4good.webapp.apps import dash_app, facade, model_runner
 import ai4good.webapp.run_model_page as run_model_page
-from ai4good.webapp.model_runner import ModelScheduleRunResult
-import ai4good.utils.path_utils as pu
-from dash.dependencies import Input, Output, State
-import plotly.express as px
-import dash_table
-import os
-from datetime import date, timedelta
-import sklearn
+from ai4good.models.validate.model_validation_metrics import model_validation_metrics
+from ai4good.models.validate.model_validation_plots import model_validation_plots
 
-def get_autocorrelation_plots(pred):
-    def get_autocorrelation(sequence, shifts=31):
-        correlations = []
-        
-        for shift in range(1, shifts):
-            correlation = np.corrcoef(sequence[:-shift], sequence[shift:])[0, 1]
-            correlations.append(correlation)
-        return [1] + correlations  # correlation with 0 shift -> 1
+# get output paths
+population = 18700
+output_filetype = 'csv'
+age_categories_filename = 'age_categories.csv'
+cm_output_columns_filename = 'cm_output_columns.csv'
+abm_output_columns_filename = 'abm_output_columns.csv'
+nm_output_columns_filename = 'nm_output_columns.csv'
 
-    def get_partial_autocorrelation(sequence, shifts=31):
-        p_correlations = []
+base_sample = '../../ai4good'
+base_output = base_sample
+base_param = '../../fs'
+path_sample = pu._path(f'{base_sample}/models/validate/output_sample/', '')
+path_output = path_sample
+path_param = pu._path(f'{base_param}/params/validate_model/', '')
+sample_output = [f for f in os.listdir(path_sample) if os.path.isfile(os.path.join(path_sample, f))]
+sample_output_clean = sorted([f.split('.')[0] for f in sample_output])
+age_categories_param = os.path.join(path_param, age_categories_filename)
+cm_output_columns_param = os.path.join(path_param, cm_output_columns_filename)
+abm_output_columns_param = os.path.join(path_param, abm_output_columns_filename)
+nm_output_columns_param = os.path.join(path_param, nm_output_columns_filename)
+validate_param_filepath = {   ## dictionary of model validation parameters
+    'age_categories_param': age_categories_param,
+    'cm_output_columns_param': cm_output_columns_param, 
+    'abm_output_columns_param': abm_output_columns_param, 
+    'nm_output_columns_param': nm_output_columns_param
+}
 
-        residuals = sequence
-        for shift in range(1, shifts):
-            correlation = np.corrcoef(sequence[:-shift], residuals[shift:])[0, 1]
-            p_correlations.append(correlation)
+# create tooltip
+metric_tooltip = 'Key: \n' + \
+    ' MAPE = Mean absolute percentage error \n' + \
+    ' RMSE = Root mean square error \n' + \
+    ' MSE  = Mean square error \n' + \
+    ' MeanAE = Mean average error \n' + \
+    ' MedianAE = Median average error \n' + \
+    ' R2_Score = Coefficient of determination (R squared) \n' + \
+    ' MSLE = Mean square logarithmic error'
+plot_tooltip = 'To isolate two traces, double click on one in the legend \n' + \
+    'then single click on the second one to show'
 
-            m, c =  np.polyfit(sequence[:-shift], residuals[shift:], 1)  # m -> grad.; c -> intercept
-            residuals[shift:] = residuals[shift:] - (m * sequence[:-shift] + c)
-        return [1] + p_correlations
+# initialise metric filter
+age_categories = []
+age_categories_dropdown = []
+case_cols_dropdown = []
+case_cols = []
 
-    ac_df = pd.DataFrame(data={"shift": np.linspace(0, 30, 31), "ac": get_autocorrelation(pred.to_numpy().copy())})
-    pac_df = pd.DataFrame(data={"shift": np.linspace(0, 30, 31), "pac": get_partial_autocorrelation(pred.to_numpy())})
-
-    ac_fig = px.bar(ac_df, x="shift", y="ac", title="autocorrelation")
-    pac_fig = px.bar(pac_df, x="shift", y="pac", title="partial autocorrelation")
-
-    return ac_fig, pac_fig
-
-def get_random_pred():  # Get random pred for graph demo
-    pd.set_option("display.max_rows", None, "display.max_columns", None)
-    df = pd.DataFrame(columns=["date", "actual", "pred"])
-    today = date.today()
-    begin = today - timedelta(days=99)
-    df["date"] = pd.date_range(begin, today)
-    data = np.random.randint(100,150,size=(100,2))
-    df[["actual", "pred"]] = pd.DataFrame(data, columns=["actual", "pred"])
-    pred = df["pred"]
-    
-    return pred
-
-pred = get_random_pred()
-ac_fig, pac_fig = get_autocorrelation_plots(pred)
-
+# output for validation results
 layout = html.Div(
     [
         run_model_page.nav_bar(),
-        
+    
         html.Div([
             dbc.Container([
                 dbc.Row(
                     dbc.Col([
                         dbc.Card([
-                            html.H4('Model Validation', className='card-title'),
-                            html.P('Descriptions',className='card-text'),
-                            html.H5('Section 1', className='card-text'),
-                            html.Header('Result 1', className='card-text'),
-                            html.Header('Result 2', className='card-text'),
-                            html.P(''), 
-                            html.H5('Section 2', className='card-text'),
-                            html.Header('Result 3', className='card-text'),
-                            html.Header('Result 4', className='card-text'),
-                            dcc.Graph(figure=ac_fig),
-                            dcc.Graph(figure=pac_fig),
+                            html.H4('Model Validation', className='card-title'), 
+                            html.P('Model validation comparison to baseline', className='card-text'), 
+                            html.H5('Validation display', className='card-text'), 
+                            html.Header('Choose baseline and model outputs', className='card-text'), 
+                            html.Small(dcc.Dropdown(options=[{'label': k, 'value': k} for k in sample_output_clean], id='validate-baseline-output-dropdown', placeholder='Baseline output', style={'width':'60%'})), 
+                            html.Small(dcc.Dropdown(options=[{'label': k, 'value': k} for k in sample_output_clean], id='validate-model-output-dropdown', placeholder='Model output', style={'width':'60%'})), 
+                            html.Div(html.Small(id='validate-model-status-text', style={'margin-bottom':'20px'})), 
+                            html.Header('Choose age group and case', className='card-text'), 
+                            html.Small(dcc.Dropdown(options=[], id='validate-age-dropdown', placeholder='Age group (years)', style={'width':'60%'})), 
+                            html.Small(dcc.Dropdown(options=[], id='validate-case-dropdown', placeholder='Case group', style={'width':'60%', 'margin-bottom':'25px'})), 
+                            dcc.Loading(children=[
+                                html.H5([
+                                    html.B('Validation metrics '), 
+                                    html.Abbr('\u2139', title=metric_tooltip), 
+                                ], className='card-text'), 
+                                html.Div(html.Small(id='validate-metric-table-div', style={'text-align':'right'})), 
+                                html.P(''), 
+                                html.H5([
+                                    html.B('Validation plots '), 
+                                    html.Abbr('\u2139', title=plot_tooltip), 
+                                ], className='card-text'), 
+                                html.Div(id='validate-metric-graph-div'), 
+                                html.Div('', id='validate-data-storage', style={'display': 'none'})  # hidden data storage
+                            ], id='validate-loading-storage', type='circle'), 
                             dbc.CardFooter(dbc.Button('Back', id='validate-model-button', color='secondary', href='/sim/run_model', style={'float':'right'})),
                             html.Div(id='validate-model-page-alert'), 
                             ], body=True), 
-                        html.Br()], width=8
+                        html.Br()], width=12
                     ), justify='center', style={'margin-top':'50px'}
                 )
             ])
         ])
     ]
 )
+
+def generate_validation_data(model:str, baseline_output:str, model_output:str):
+    # get output paths
+    baseline_output_filename = baseline_output + '.' + output_filetype
+    model_output_filename = model_output + '.' + output_filetype
+    baseline_output = os.path.join(path_output, baseline_output_filename)
+    model_output = os.path.join(path_output, model_output_filename)
+    validate_output_filepath = {   ## dictionary of model validation output files
+        'baseline_output': baseline_output, 
+        'model_output': model_output
+    }
+    # generate output components
+    [df_model_metrics, df_baseline, df_model, age_categories, case_cols] = \
+        model_validation_metrics(population, model, validate_output_filepath, validate_param_filepath)
+    return [df_model_metrics, df_baseline, df_model, age_categories, case_cols]
+
+@dash_app.callback(
+    [Output('validate-model-status-text', 'children'), Output('validate-data-storage', 'Children'), 
+        Output('validate-age-dropdown','options'), Output('validate-case-dropdown','options')], 
+    [Input('validate-baseline-output-dropdown', 'value'), Input('validate-model-output-dropdown', 'value')])
+def update_validation_data(baseline_output_value, model_output_value):
+    dataset = None
+    age_dropdown_options = []
+    case_dropdown_options = []
+    if (baseline_output_value is None) & (model_output_value is None):
+        status_str = 'Select output data'
+    elif (baseline_output_value is None):
+        status_str = 'Select baseline output data'
+    elif (model_output_value is None):
+        status_str = 'Select model output data'
+    else:
+        # check baseline and model output compatibility
+        baseline_output_model = baseline_output_value.split('_')[0].strip().upper()
+        model_output_model = model_output_value.split('_')[0].strip().upper()
+        # update status
+        if (baseline_output_model != model_output_model):
+            status_str = 'Baseline output does not match with model output'
+        else:
+            # generate validation data
+            model = baseline_output_model
+            [df_model_metrics, df_baseline, df_model, age_categories, case_cols] = \
+                generate_validation_data(model, baseline_output_value, model_output_value)
+            # serialise output as JSON
+            dataset = {
+                'df_model_metrics': df_model_metrics.to_json(orient='split'), 
+                'df_baseline': df_baseline.to_json(orient='split'), 
+                'df_model': df_model.to_json(orient='split'), 
+                'age_categories': age_categories, 
+                'case_cols': case_cols, 
+                'model': model}
+            # update metric dropdown options
+            age_categories_dropdown = age_categories[:]
+            age_categories_dropdown.append('All')
+            case_cols_dropdown = case_cols[:]
+            case_cols_dropdown.append('All')
+            age_dropdown_options = [{'label': k, 'value': k} for k in age_categories_dropdown]
+            case_dropdown_options = [{'label': k, 'value': k} for k in case_cols_dropdown]
+            status_str = 'Model validation data available for ' + baseline_output_model
+    return [status_str, json.dumps(dataset), age_dropdown_options, case_dropdown_options]
+
+@dash_app.callback(
+    [Output('validate-metric-table-div', 'children'), Output('validate-metric-graph-div', 'children')], 
+    [Input('validate-age-dropdown', 'value'), Input('validate-case-dropdown', 'value')], 
+    [State('validate-age-dropdown', 'options'), State('validate-case-dropdown', 'options'), State('validate-data-storage', 'Children')])
+def update_validation_display(age_value, case_value, age_dropdown_options, case_dropdown_options, data_storage_children):
+    if (not age_dropdown_options) | (not case_dropdown_options):
+        return [None, None]  ## do not return table or plots before initialisations
+    else:
+        # load json data
+        dataset = json.loads(data_storage_children)
+        df_model_metrics = pd.read_json(dataset['df_model_metrics'], orient='split')
+        df_baseline = pd.read_json(dataset['df_baseline'], orient='split')
+        df_model = pd.read_json(dataset['df_model'], orient='split')
+        age_categories = dataset['age_categories']
+        case_cols = dataset['case_cols']
+        model = dataset['model']
+        # update validation metric table    
+        if (age_value is None) & ((case_value is None) | (case_value == 'All')):
+            query_age = f"age == '{age_categories[0]}'"
+            query_case = ''
+        elif (age_value is None) | (age_value == 'All'):
+            query_age = ''
+        else:
+            query_age = f"age == '{age_value}'"
+
+        if (case_value is None) | (case_value == 'All'):
+            query_case = ''
+        else:
+            query_case = f"case == '{case_value}'"
+
+        query = ' & '.join(s for s in [query_age, query_case] if s)
+
+        if query.strip():
+            db_model_metric_table = df_model_metrics.round(2).query(query)
+        else:
+            db_model_metric_table = df_model_metrics.round(2)
+        metric_table = dbc.Table.from_dataframe(db_model_metric_table, 
+                                                id='validation-metric-table', striped=True, bordered=True, hover=True)
+
+        # update validation plots
+        if (age_value == 'All'):
+            age_cate_plot = age_categories
+        elif (age_value is None):
+            age_cate_plot = age_categories
+        else:
+            age_cate_plot = [age_value]
+
+        if (case_value == 'All'):
+            case_col_plot = case_cols
+        elif (case_value is None):
+            case_col_plot = [case_cols[0]]
+        else:
+            case_col_plot = [case_value]
+
+        graph_divs = model_validation_plots(population, model, age_cate_plot, case_col_plot, df_baseline, df_model)
+        return [metric_table, graph_divs]

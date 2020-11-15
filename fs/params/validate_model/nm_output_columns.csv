@@ -1,0 +1,10 @@
+columns
+Exposed
+Susceptible
+Exposed
+Infected_Presymptomatic
+Infected_Symptomatic
+Infected_Asymptomatic
+Hospitalized
+Recovered
+Fatalities
