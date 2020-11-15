@@ -3,6 +3,7 @@ import logging
 import dask
 from dask.diagnostics import ProgressBar
 from typeguard import typechecked
+import pandas as pd
 
 from ai4good.models.model import Model, ModelResult
 from ai4good.models.nm.models.nm_baseline import (

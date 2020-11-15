@@ -5,6 +5,7 @@ This file sets up the parameters for NM models
 import hashlib
 import json
 import pandas as pd
+import numpy as np
 
 from scipy.stats import poisson
 from seirsplus.utilities import gamma_dist
@@ -36,6 +37,8 @@ class Parameters:
         # Model Parameters
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         profile.set_index("Parameter", inplace=True)
+        # save profile for hashes
+        self.profile_hash = profile.to_dict("records")
 
         # Sample the population age, and parameter rates
         self.total_population = int(
@@ -373,13 +376,7 @@ class Parameters:
         hash_params = [
             self.total_population,
             self.camp,
-            self.neighbor_proximity,
-            self.neighbor_weight,
-            self.number_of_ethnic_groups,
-            self.q_start,
-            self.q_end,
-            self.m_start,
-            self.m_end,
+            self.profile_hash
         ]
         serialized_params = json.dumps(hash_params, sort_keys=True)
         hash_object = hashlib.sha1(serialized_params.encode("UTF-8"))
