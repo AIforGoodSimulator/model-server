@@ -84,9 +84,12 @@ class SEIRSDESolver:
         self.driftOnly = False;
         self.zero_diffusion = np.zeros((self.y0.shape[0], self.stoc_vars_num))
 
-    def sde_drift(self, y, t):
-        if self.stop.get():
+    def checkNotStopped(self):
+        if self.stop and self.stop.get():
             raise InterruptedError('The task was stopped by user')
+
+    def sde_drift(self, y, t):
+        self.checkNotStopped()
 
         ##
         params = self.params

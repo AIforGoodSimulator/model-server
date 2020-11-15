@@ -241,7 +241,7 @@ class ModelRunner:
         return self.facade.rs.exists(_mdl.id(), res_id)
 
     def get_result(self, _model: str, _profile: str, camp: str) -> ModelResult:
-        _mdl: Model = get_models()[_model](self.facade.ps)
+        _mdl: Model = get_models()[_model](self.facade.ps, None)
         params = create_params(self.facade.ps, _model, _profile, camp)
         res_id = _mdl.result_id(params)
         return self.facade.rs.load(_mdl.id(), res_id)

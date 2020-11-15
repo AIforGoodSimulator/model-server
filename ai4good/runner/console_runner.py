@@ -34,7 +34,7 @@ def run_model(_model: str, _profile: str, camp: str, load_from_cache: bool,
               save_to_cache: bool, is_save_plots: bool, is_show_plots: bool,
               is_save_report: bool, overrides) -> ModelResult:
     logger.info('Running %s model with %s profile', _model, _profile)
-    _mdl: Model = get_models()[_model](facade.ps)
+    _mdl: Model = get_models()[_model](facade.ps, None)
     params = create_params(facade.ps, _model, _profile, camp, overrides)
     res_id = _mdl.result_id(params)
     if load_from_cache and facade.rs.exists(_mdl.id(), res_id):
