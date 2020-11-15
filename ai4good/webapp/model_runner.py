@@ -1,5 +1,6 @@
 import traceback
 import redis
+import numpy as np
 import pandas as pd
 from typing import List
 from enum import Enum, auto
@@ -12,9 +13,62 @@ import socket
 from ai4good.webapp.commit_date import get_version_date
 from ai4good.utils.logger_util import get_logger
 
-MAX_CONCURRENT_MODELS = 3
-HISTORY_SIZE = 10
+MAX_CONCURRENT_MODELS = 30
+HISTORY_SIZE = 100
+INPUT_PARAMETER_TIMEOUT = 60*30 # in seconds
 logger = get_logger(__name__)
+
+_sid = np.random.randint(100000000, 1000000000)  # session id
+
+
+class InputParameterCache:
+    _CACHE_KEY = f'{socket.gethostname()}_{_sid}_input_parameter'
+
+    def __init__(self, _redis: redis.Redis):
+        self._redis = _redis
+
+    @staticmethod
+    def _decode_byte(value) -> List:
+        value = [i.decode('utf-8') if i is not None else None for i in value]
+        value = [i if i is None else None if i.strip() == '' else i for i in value]
+        for i,j in enumerate(value):
+            if j is not None:
+                try:
+                    value[i] = int(j)
+                except:
+                    value[i] = j
+        return value        
+        
+    def cache_get_all(self):
+        key_value_pair_dict = self._redis.hgetall(self._CACHE_KEY)
+        key = list(key_value_pair_dict.keys())
+        value = list(key_value_pair_dict.values())
+        return self._decode_byte(key), self._decode_byte(value)
+    
+    def cache_get(self, input_param_key):
+        if isinstance(input_param_key, str):
+            input_param_key = [input_param_key]
+        value = [self._redis.hget(self._CACHE_KEY, str(i)) for i in input_param_key]
+        return self._decode_byte(value)
+
+    def cache_set(self, input_param, page_number):
+        with self._redis.pipeline() as pipe:
+            error_count = 0
+            while error_count < 1000:
+                try:
+                    pipe.watch(self._CACHE_KEY)
+                    pipe.multi()
+                    for i,j in input_param.items():
+                        j_conv = '' if j is None else str(j)  # prevent string conversion of None
+                        pipe.hset(self._CACHE_KEY, str(i), j_conv)
+                    pipe.execute()
+                    pipe.unwatch()
+                    self._redis.expire(self._CACHE_KEY, INPUT_PARAMETER_TIMEOUT)
+                    return None
+                except redis.WatchError:
+                    error_count += 1
+                    logger.warning('Input page #%d optimistic lock error #%d; retrying', page_number, error_count)
+        raise RuntimeError('Failed to obtain lock - input parameters')
 
 
 class ModelScheduleRunResult(Enum):

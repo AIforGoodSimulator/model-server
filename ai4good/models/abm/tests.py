@@ -1,3 +1,4 @@
+"""
 import ai4good.models.abm.abm
 import numpy as np
 import pickle
@@ -252,3 +253,4 @@ def test_interaction_neighbours():
 test_assign_new_infections()
 test_move_hhl_quarantine()
 test_interaction_neighbours()
+"""

@@ -34,12 +34,12 @@ ACTIVITY_HOUSEHOLD = 0  # Agent is inside their household
 ACTIVITY_WANDERING = 1  # Agent is wandering outside their household
 ACTIVITY_TOILET = 2  # Agent is in the toilet queue
 ACTIVITY_FOOD_LINE = 3  # Agent is in the food line queue
-ACTIVITY_QUARANTINED = 4  # Agent is under quarantine
-ACTIVITY_HOSPITALIZED = 5   # Agent is hospitalized
+ACTIVITY_QUARANTINED = 4  # Agent is under quarantine. Infection spread in quarantine is similar to that of household
+ACTIVITY_HOSPITALIZED = 5   # Agent is hospitalized. Infection spread is not modelled inside hospitals
 
 
 # Number of features of each agent
-A_FEATURES = 15
+A_FEATURES = 16
 # Features of each agent
 A_X = 0  # x co-ordinate at any given point in time
 A_Y = 1  # y co-ordinate at any given point in time
@@ -61,6 +61,8 @@ A_DAY_COUNTER = 13
 # All children under the age of 16 become asymptomatic (ref), and others become asymptomatic with probability 0.178
 # (Mizumoto et al. 2020)
 A_IS_ASYMPTOMATIC = 14
+# The activity of agent before they went to a queue. Agents will be sent back to this activity after dequeue
+A_ACTIVITY_BEFORE_QUEUE = 15
 
 
 class OptimizedOps(object):
@@ -70,35 +72,6 @@ class OptimizedOps(object):
 
     def __init__(self):
         pass
-
-    @staticmethod
-    @nb.njit
-    def distance_matrix(pos: np.array) -> np.array:
-        """
-        Calculate and returns the distance matrix given (x,y) positions. For `n` positions, distance matrix returns a
-        `n`x`n` matrix where element `i`,`j` gives the Euclidean distance between position `i` and position `j`.
-        Parameters
-        ----------
-        pos: Position matrix of size n x 2 containing (x, y) co-ordinates
-
-        Returns
-        -------
-        out: Distance matrix of size n x n
-
-        """
-        n = pos.shape[0]  # number of positions
-        mat = np.zeros(shape=(n, n), dtype=np.float32)  # initialize distance matrix
-
-        # loop through all pairs
-        for i in range(n):
-            for j in range(n):
-                # calculate Euclidean distance between (i) and (j)
-                dij = (pos[i, 0] - pos[j, 0]) ** 2 + (pos[i, 1] - pos[j, 1]) ** 2
-                dij = dij ** 0.5
-                # store result in distance matrix
-                mat[i, j] = dij
-        # return distance matrix
-        return mat
 
     @staticmethod
     @nb.njit
@@ -113,7 +86,7 @@ class OptimizedOps(object):
 
         Returns
         -------
-            out: A (grid_size * grid_size, 2) shaped array containing (x, y) co-ordinates of the blocks
+            out: An array of length grid_size * grid_size (x, y) co-ordinates of the blocks
 
         """
 
@@ -204,7 +177,7 @@ class Camp:
 
     @staticmethod
     @nb.njit(parallel=True)
-    def simulate_households(agents: np.array, prob_spread: float) -> (np.array, int):
+    def simulate_households(agents: np.array, prob_spread: float, activity: int) -> (np.array, int):
         """
         Function to send people to household and simulate infection dynamics in those households.
         This function is optimized using numba.
@@ -213,6 +186,8 @@ class Camp:
         ----------
         agents: A Numpy array containing data of agents who will go inside their households at current simulation step
         prob_spread: The probability of infection transmission if a susceptible and infectious agent interact in house
+        activity: The activity inside the household. It can be either ACTIVITY_HOUSEHOLD (normal household visit) or
+            ACTIVITY_QUARANTINED (for when under quarantine)
 
         Returns
         -------
@@ -229,7 +204,7 @@ class Camp:
         for i in nb.prange(n):
 
             # Update current activity route
-            agents[i, A_ACTIVITY] = ACTIVITY_HOUSEHOLD
+            agents[i, A_ACTIVITY] = activity
             # Update current location of agent to household location
             agents[i, A_X] = agents[i, A_HOUSEHOLD_X]
             agents[i, A_Y] = agents[i, A_HOUSEHOLD_Y]
@@ -356,7 +331,7 @@ class Camp:
         # return updated agents array
         return agents, num_new_infections
 
-    def simulate_queues(self, ids, queue_name):
+    def simulate_queues(self, ids: np.array, queue_name: str, queue_pos: np.array) -> int:
         """
         Simulate agent visits to toilet and food line queues. The queue is assumed to be a single line (per toilet and
         food line), hence one agent will either interact with the agent on his front and/or the agent on his back.
@@ -365,7 +340,8 @@ class Camp:
         Parameters
         ----------
         ids: Boolean array containing `True` at indices where agent will go to queue else `False`
-        queue_name: Name of the queue. Possible values ["toilet", "food_line"]
+        queue_name: Type of the queue. Possible values ["toilet", "food_line"]
+        queue_pos: (x,y) co-ordinates of all the queues of type `queue_name`
 
         Returns
         -------
@@ -373,22 +349,25 @@ class Camp:
 
         """
 
-        agents = self.agents[ids, :].reshape((-1, A_FEATURES))
+        # Get the queue indices where each agents is going
+        queue = self.agents[ids, A_TOILET if queue_name == "toilet" else A_FOOD_LINE].astype(np.int32)
+        # Random order of queueing agents (useful specifically when two agents in `ids` have same queue)
+        q_order = list(range(ids.shape[0]))
+        random.shuffle(q_order)
 
-        # get the queues where agents are going
-        queue = agents[:, A_TOILET if queue_name == "toilet" else A_FOOD_LINE].copy()
-
-        # add agents to the queue (in random order)
-        np.random.shuffle(queue)
-
-        for i, q in enumerate(queue):
+        for i in q_order:
+            q = queue[i]
             # add agent to queue if he/she is not already in the queue
-            if agents[i, A_ACTIVITY] != ACTIVITY_TOILET and queue_name == "toilet":
-                self.toilet_queue[q].append(ids[i])
-                self.agents[ids[i], A_ACTIVITY] = ACTIVITY_TOILET
-            elif agents[i, A_ACTIVITY] != ACTIVITY_FOOD_LINE and queue_name == "food_line":
-                self.food_line_queue[q].append(ids[i])
-                self.agents[ids[i], A_ACTIVITY] = ACTIVITY_FOOD_LINE
+            if self.agents[ids[i], A_ACTIVITY] != ACTIVITY_TOILET and queue_name == "toilet":
+                self.toilet_queue[q].append(ids[i])  # add agent to queue
+                self.agents[ids[i], A_ACTIVITY_BEFORE_QUEUE] = self.agents[ids[i], A_ACTIVITY]  # save current activity
+                self.agents[ids[i], A_ACTIVITY] = ACTIVITY_TOILET  # update agent's activity
+                self.agents[ids[i], [A_X, A_Y]] = queue_pos[q, :]  # update agent's co-ordinates
+            elif self.agents[ids[i], A_ACTIVITY] != ACTIVITY_FOOD_LINE and queue_name == "food_line":
+                self.food_line_queue[q].append(ids[i])  # add agent to queue
+                self.agents[ids[i], A_ACTIVITY_BEFORE_QUEUE] = self.agents[ids[i], A_ACTIVITY]  # save current activity
+                self.agents[ids[i], A_ACTIVITY] = ACTIVITY_FOOD_LINE  # update agent's activity
+                self.agents[ids[i], [A_X, A_Y]] = queue_pos[q, :]  # update agent's co-ordinates
 
         # Simulate infection spread
 
@@ -434,30 +413,32 @@ class Camp:
 
         return np.count_nonzero(newly_exposed_ids)
 
-    def update_queues(self, pct_dequeue: float, dequeue_activity: int = ACTIVITY_WANDERING) -> None:
-        # remove agents from the front of the queues and send them to location defined by `dequeue_activity`
+    def update_queues(self, pct_dequeue: float) -> None:
+        # remove agents from the front of the queues
         for t in self.toilet_queue:
-            # at each step during the day, we clear 80% of all agents in the queue
+            # at each step during the day, we clear some percentage of all agents in the queue
             dequeue_count = int(np.ceil(pct_dequeue * len(self.toilet_queue[t])))
             try:
                 # get first `dequeue_count` agents at front of the queue
                 front = self.toilet_queue[t][:dequeue_count]
                 # remove them from the queue
                 self.toilet_queue[t] = self.toilet_queue[t][dequeue_count:]
-                # change activity status to wandering for people who left toilet
-                self.agents[front, A_ACTIVITY] = dequeue_activity
+                # change activity of the agents as the ones before they went into queue
+                self.agents[front, A_ACTIVITY] = self.agents[front, A_ACTIVITY_BEFORE_QUEUE]
+                self.agents[front, A_ACTIVITY_BEFORE_QUEUE] = -1
             except IndexError:
                 pass
         for f in self.food_line_queue:
-            # at each step of the day, we clear 80% of all agents in the queue
+            # at each step of the day, we clear some percentage of all agents in the queue
             dequeue_count = int(np.ceil(pct_dequeue * len(self.food_line_queue[f])))
             try:
                 # get first `dequeue_count` agents at front of the queue
                 front = self.food_line_queue[f][:dequeue_count]
                 # remove them from the queue
                 self.food_line_queue[f] = self.food_line_queue[f][dequeue_count:]
-                # change activity status to wandering for people who left food line
-                self.agents[front, A_ACTIVITY] = dequeue_activity
+                # change activity of the agents as the ones before they went into queue
+                self.agents[front, A_ACTIVITY] = self.agents[front, A_ACTIVITY_BEFORE_QUEUE]
+                self.agents[front, A_ACTIVITY_BEFORE_QUEUE] = -1
             except IndexError:
                 pass
 

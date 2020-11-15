@@ -20,6 +20,9 @@ import ai4good.webapp.abm_model_report_page as abm_model_report_page
 import ai4good.webapp.nm_model_results_page as nm_model_results_page
 import ai4good.webapp.nm_model_report_page as nm_model_report_page
 import ai4good.webapp.nm_admin_page as nm_admin_page
+import ai4good.webapp.model_results_scaffolding as model_results_scaffolding
+import ai4good.webapp.report_poc_graph as report_poc_graph
+import ai4good.webapp.waiting_page as waiting_page
 from ai4good.webapp.apps import flask_app, dash_app
 
 
@@ -80,10 +83,19 @@ def display_page(pathname, query=None):
             return nm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)
         else:
             return '404'
+    elif pathname == '/sim/dashboard':
+        query = parse_qs(urlparse(query).query)
+        return model_results_scaffolding.layout(query['camp'][0])
     elif pathname == '/sim/admin':
         return cm_admin_page.layout()
     elif pathname == '/sim/admin_nm':
         return nm_admin_page.layout()
+    elif pathname == '/sim/results_test':
+        return model_results_scaffolding.layout()
+    elif pathname == '/sim/poc_graph_test':
+        return report_poc_graph.layout()
+    elif pathname == '/sim/waiting':
+        return waiting_page.layout
     else:
         return '404'
 
