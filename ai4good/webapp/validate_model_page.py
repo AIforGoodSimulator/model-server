@@ -13,6 +13,7 @@ from ai4good.webapp.apps import dash_app, facade, model_runner
 import ai4good.webapp.run_model_page as run_model_page
 from ai4good.models.validate.model_validation_metrics import model_validation_metrics
 from ai4good.models.validate.model_validation_plots import model_validation_plots
+import ai4good.webapp.common_elements as common_elements
 
 # get output paths
 population = 18700
@@ -62,8 +63,7 @@ case_cols = []
 # output for validation results
 layout = html.Div(
     [
-        run_model_page.nav_bar(),
-    
+        common_elements.nav_bar(),
         html.Div([
             dbc.Container([
                 dbc.Row(
