@@ -28,8 +28,9 @@ def timing_function(t,time_vector):
 
 class SEIRSDESolver:
 
-    def __init__(self, params: Parameters):
+    def __init__(self, params: Parameters, stop):
         self.params = params
+        self.stop = stop
         population = self.params.population
         population_frame = self.params.population_frame
         control_dict = self.params.control_dict
@@ -84,6 +85,9 @@ class SEIRSDESolver:
         self.zero_diffusion = np.zeros((self.y0.shape[0], self.stoc_vars_num))
 
     def sde_drift(self, y, t):
+        if self.stop.get():
+            raise InterruptedError('The task was stopped by user')
+
         ##
         params = self.params
 
@@ -358,7 +362,8 @@ class SEIRSDESolver:
             lazy_result = dask.delayed(self.run_model)(tspan)
             lazy_sols.append(lazy_result)
 
-        with dask.config.set(scheduler='processes', num_workers=n_processes):
+        #with dask.config.set(scheduler='processes', num_workers=n_processes): --Does not work with Dask Distributed
+        with dask.config.set(scheduler='single-threaded', num_workers=1):
             with ProgressBar():
                 sols = dask.compute(*lazy_sols)
 

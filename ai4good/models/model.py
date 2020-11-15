@@ -19,8 +19,9 @@ class ModelResult:
 @typechecked
 class Model(ABC):
 
-    def __init__(self, ps: ParamStore):
+    def __init__(self, ps: ParamStore, stop):
         self.ps = ps
+        self.stop = stop
 
     @abstractmethod
     def id(self) -> str:
