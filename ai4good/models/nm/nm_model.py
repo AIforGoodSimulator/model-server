@@ -66,10 +66,11 @@ def run_parallel(p, sampled_graph):
         
         lazy_sols.append(lazy_result)
         
-    with dask.config.set(scheduler='processes', num_workers=10):
-            with ProgressBar():
-                sols = dask.compute(*lazy_sols)
+    with dask.config.set(scheduler='single-threaded', num_workers=1):
+        with ProgressBar():
+            sols = dask.compute(*lazy_sols)
     return sols
+
 
 def aggregate_results(results):
     return pd.concat(results).groupby(level=0).mean()

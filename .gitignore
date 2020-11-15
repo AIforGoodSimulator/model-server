@@ -27,3 +27,8 @@ ai4good/models/am/*
 temp/
 .vscode
 .gitignore
+.coverage
+upload.txt
+coverage.xml
+venv/
+.env
