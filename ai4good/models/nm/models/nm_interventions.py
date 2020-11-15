@@ -1,36 +1,10 @@
 from seirsplus.models import ExtSEIRSNetworkModel
 
-from ai4good.models.nm.utils.intervention_utils import Interventions, defaultdict
+from ai4good.models.nm.utils.intervention_utils import Interventions
 from ai4good.models.nm.utils.network_utils import (
-    STATE_DICTIONARY,
-    add_model_name,
-    create_graph,
-    create_grid,
-    create_multiple_food_queues,
-    create_node_groups,
-    defaultdict,
-    divide_grid,
-    downsample_graph,
-    get_nodes_per_state,
-    get_struct_neighbors,
-    get_values_per_node,
-    itertools,
-    link_nodes_by_activity,
-    link_nodes_by_property,
-    load_graph,
-    max_degree,
-    min_degree,
-    np,
-    nx,
-    pd,
-    pkl,
-    random,
-    remove_all_edges,
     remove_edges_from_graph,
     results_to_df,
     run_simulation,
-    save_graph,
-    tqdm,
 )
 
 

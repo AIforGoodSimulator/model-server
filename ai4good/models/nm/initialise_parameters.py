@@ -4,16 +4,11 @@ This file sets up the parameters for NM models
 
 import hashlib
 import json
+import pandas as pd
 
 from scipy.stats import poisson
-from seirsplus.utilities import (
-    dist_info,
-    gamma_dist,
-    network_info,
-    numpy,
-    pyplot,
-    results_summary,
-)
+from seirsplus.utilities import gamma_dist
+
 
 from ai4good.models.nm.utils.network_utils import create_grid, get_values_per_node
 from ai4good.models.nm.utils.stats_utils import sample_population
@@ -381,11 +376,10 @@ class Parameters:
             self.neighbor_proximity,
             self.neighbor_weight,
             self.number_of_ethnic_groups,
-            self.quarantine_start,
-            self.quarantine_end,
-            self.masks_start,
-            self.masks_end,
-            self.transmission_reduction,
+            self.q_start,
+            self.q_end,
+            self.m_start,
+            self.m_end,
         ]
         serialized_params = json.dumps(hash_params, sort_keys=True)
         hash_object = hashlib.sha1(serialized_params.encode("UTF-8"))

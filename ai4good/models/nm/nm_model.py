@@ -10,11 +10,11 @@ from ai4good.models.nm.models.nm_baseline import (
     create_new_graph,
     process_graph,
 )
-from ai4good.models.nm.models.nm_interventions import (
+from ai4good.models.nm.models.nm_interventions import process_graph_interventions
+from ai4good.models.nm.utils.network_utils import (
     create_multiple_food_queues,
     downsample_graph,
     link_nodes_by_activity,
-    process_graph_interventions,
 )
 from ai4good.params.param_store import SimpleParamStore
 from ai4good.utils.logger_util import get_logger
