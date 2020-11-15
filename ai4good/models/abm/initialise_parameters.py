@@ -165,6 +165,18 @@ class Parameters:
             # self.track_states.tolist(),
             # self.population.tolist(),
             self.camp,
+            self.permanently_asymptomatic_cases,
+            self.relative_strength_of_interaction,
+            self.smaller_movement_radius,
+            self.larger_movement_radius,
+            self.overlapping_rages_radius,
+            self.transmission_reduction,
+            self.probability_spotting_symptoms_per_day,
+            self.clearday,
+            self.prop_violating_lockdown,
+            self.lockdown_home_range,
+            self.prob_spread_wander,
+            self.prob_spread_house,
             self.model_params.to_dict('records')
         ]
         serialized_params = json.dumps(hash_params, sort_keys=True)
