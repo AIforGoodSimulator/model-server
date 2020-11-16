@@ -9,11 +9,15 @@ from dash.exceptions import PreventUpdate
 import os
 import json
 import ai4good.utils.path_utils as pu
+from ai4good.utils.logger_util import get_logger
 from ai4good.webapp.apps import dash_app, facade, model_runner
 import ai4good.webapp.run_model_page as run_model_page
 from ai4good.models.validate.model_validation_metrics import model_validation_metrics
 from ai4good.models.validate.model_validation_plots import model_validation_plots
+from ai4good.models.validate.initialise_parameters import Parameters
 import ai4good.webapp.common_elements as common_elements
+
+logger = get_logger(__name__)
 
 # get output paths
 population = 18700
@@ -104,6 +108,17 @@ layout = html.Div(
     ]
 )
 
+def get_validation_param(model:str, validate_param_filepath:dict):
+    # get validation parameters
+    age_categories = pd.read_csv(validate_param_filepath['age_categories_param'])['age'].to_list()
+    if model.upper() == "CM":
+        case_cols = pd.read_csv(validate_param_filepath['cm_output_columns_param'])['columns'].to_list()
+    elif model.upper() == "ABM":
+        case_cols = pd.read_csv(validate_param_filepath['abm_output_columns_param'])['columns'].to_list()
+    elif model.upper() == "NM":
+        case_cols = pd.read_csv(validate_param_filepath['nm_output_columns_param'])['columns'].to_list()
+    return age_categories, case_cols
+
 def generate_validation_data(model:str, baseline_output:str, model_output:str):
     # get output paths
     baseline_output_filename = baseline_output + '.' + output_filetype
@@ -114,10 +129,12 @@ def generate_validation_data(model:str, baseline_output:str, model_output:str):
         'baseline_output': baseline_output, 
         'model_output': model_output
     }
-    # generate output components
-    [df_model_metrics, df_baseline, df_model, age_categories, case_cols] = \
-        model_validation_metrics(population, model, validate_output_filepath, validate_param_filepath)
-    return [df_model_metrics, df_baseline, df_model, age_categories, case_cols]
+    # log validation input arguments
+    logger.info("Validation input arguments: model: %s, baseline_output: %s, model_output: %s", str(model), str(validate_output_filepath['baseline_output']), str(validate_output_filepath['model_output']))
+    # get validation data
+    df_baseline = pd.read_csv(validate_output_filepath['baseline_output'])
+    df_model = pd.read_csv(validate_output_filepath['model_output'])
+    return df_baseline, df_model
 
 @dash_app.callback(
     [Output('validate-model-status-text', 'children'), Output('validate-data-storage', 'Children'), 
@@ -141,10 +158,11 @@ def update_validation_data(baseline_output_value, model_output_value):
         if (baseline_output_model != model_output_model):
             status_str = 'Baseline output does not match with model output'
         else:
-            # generate validation data
+            # generate validation metrics
             model = baseline_output_model
-            [df_model_metrics, df_baseline, df_model, age_categories, case_cols] = \
-                generate_validation_data(model, baseline_output_value, model_output_value)
+            [age_categories, case_cols] = get_validation_param(model, validate_param_filepath)
+            [df_baseline, df_model] = generate_validation_data(model, baseline_output_value, model_output_value)
+            df_model_metrics = model_validation_metrics(population, model, age_categories, case_cols, df_baseline, df_model)
             # serialise output as JSON
             dataset = {
                 'df_model_metrics': df_model_metrics.to_json(orient='split'), 

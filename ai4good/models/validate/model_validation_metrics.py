@@ -6,37 +6,27 @@ from ai4good.models.validate.model_metrics import model_metrics
 
 logger = get_logger(__name__)
 
-def model_validation_metrics(population:int, model:str, validate_output_filepath:dict, validate_param_filepath:dict, save_output=""):
+def model_validation_metrics(population:int, model:str, age_categories:list, case_cols:list, df_baseline:pd.DataFrame, df_model:pd.DataFrame, save_output=""):
 
-    # Log validation input arguments
-    logger.info("Validation input arguments: model: %s, baseline_output: %s, model_output: %s", str(model), str(validate_output_filepath['baseline_output']), str(validate_output_filepath['model_output']))
-
-    # Process age categories
-    age_categories = pd.read_csv(validate_param_filepath['age_categories_param'])['age'].to_list()
-    cols_results = ["age", "case"]
-    df_model_metrics = pd.DataFrame(columns=cols_results)
-    
-    # Process case columns
-    case_cols=[]
+    # Initialise metrics
     if model.upper() == "CM":
         time_col = "Time"
-        case_cols = pd.read_csv(validate_param_filepath['cm_output_columns_param'])['columns'].to_list()
+        cols_results = ["age", "case"]
     elif model.upper() == "ABM":
         time_col = "DAY"
-        case_cols = pd.read_csv(validate_param_filepath['abm_output_columns_param'])['columns'].to_list()
+        cols_results = ["age", "case"]
     elif model.upper() == "NM":
         time_col = "Time"
-        case_cols = pd.read_csv(validate_param_filepath['nm_output_columns_param'])['columns'].to_list()
+        cols_results = ["case"]
     cols_overall = [time_col] + case_cols
+    df_model_metrics = pd.DataFrame(columns=cols_results)
 
     # Process Baseline First;
-    df_baseline = pd.read_csv(validate_output_filepath['baseline_output'])
     df_base_time = df_baseline[time_col]
     baseline_n_days = df_base_time.nunique()
     baseline_n_rows = df_base_time.shape[0]
 
     # Process Model Output and compare with baseline;
-    df_model = pd.read_csv(validate_output_filepath['model_output'])
     df_time = df_model[time_col]
     n_days = df_time.nunique()
     n_rows = df_time.shape[0]
@@ -126,9 +116,6 @@ def model_validation_metrics(population:int, model:str, validate_output_filepath
         df_baseline_all_mean=df_baseline_all_sum/baseline_n_simul
         df_baseline_all_std=df_baseline_all_simul.groupby([time_col]).std()
         
-        cols_results = ["age", "case"]
-        df_model_metrics = pd.DataFrame(columns=cols_results) 
-        
        # Get df for population
         # Use this as the benchmark for the age group
         df_model_all_simul = df_model[cols_overall]
@@ -199,9 +186,6 @@ def model_validation_metrics(population:int, model:str, validate_output_filepath
         df_baseline_all_mean = df_baseline_all.mean()
         df_baseline_all_std = df_baseline_all.std()
 
-        cols_results = ["case"]
-        df_model_metrics = pd.DataFrame(columns=cols_results)
-
         # Get df for population
         # Use this as the benchmark for the age group
         df_model_all_simul = df_model[cols_overall]
@@ -209,9 +193,6 @@ def model_validation_metrics(population:int, model:str, validate_output_filepath
         df_model_all = df_model_all_sum / n_simul
         df_model_all_mean = df_model_all.mean()
         df_model_all_std = df_model_all.std()
-
-        cols_results = ["case"]
-        df_model_metrics = pd.DataFrame(columns=cols_results)
 
         # Call Model Metrics for each case Col
         for col in case_cols:
@@ -234,4 +215,4 @@ def model_validation_metrics(population:int, model:str, validate_output_filepath
         df_model_metrics.to_csv(save_output)
         logger.info("Model Validation Metrics is saved in %s", str(save_output))
         
-    return df_model_metrics, df_baseline, df_model, age_categories, case_cols
+    return df_model_metrics
