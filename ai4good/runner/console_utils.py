@@ -12,7 +12,7 @@ facade = Facade.simple()
 def cache_info():
 
     def find_profile(m, c, rid):
-        _mdl = get_models()[m](facade.ps, None)
+        _mdl = get_models()[m](facade.ps)
         for p in facade.ps.get_profiles(m):
             params = create_params(facade.ps, m, p, c)
             res_id = _mdl.result_id(params)

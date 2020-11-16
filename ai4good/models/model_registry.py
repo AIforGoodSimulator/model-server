@@ -11,10 +11,10 @@ import json
 
 def get_models() -> Dict[str, Any]:
     return {
-        CompartmentalModel.ID: lambda ps, stop: CompartmentalModel(ps, stop),
-        CompartmentalModelStochastic.ID: lambda ps, stop: CompartmentalModelStochastic(ps, stop),
-        ABM.ID: lambda ps, stop: ABM(ps),
-        NetworkModel.ID: lambda ps, stop: NetworkModel(ps)
+        CompartmentalModel.ID: lambda ps: CompartmentalModel(ps),
+        CompartmentalModelStochastic.ID: lambda ps: CompartmentalModelStochastic(ps),
+        ABM.ID: lambda ps: ABM(ps),
+        NetworkModel.ID: lambda ps: NetworkModel(ps)
     }
 
 

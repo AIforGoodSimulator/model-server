@@ -16,8 +16,8 @@ logger = get_logger(__name__)
 
 
 class AbstractCompartmentalModel(Model):
-    def __init__(self, ps: ParamStore, stop):
-        Model.__init__(self, ps, stop)
+    def __init__(self, ps: ParamStore):
+        Model.__init__(self, ps)
 
     @abstractmethod
     def simulate(self, p):
@@ -63,8 +63,8 @@ class AbstractCompartmentalModel(Model):
 class CompartmentalModel(AbstractCompartmentalModel):
 
     ID = 'compartmental-model'
-    def __init__(self, ps: ParamStore, stop):
-        AbstractCompartmentalModel.__init__(self, ps, stop)
+    def __init__(self, ps: ParamStore):
+        AbstractCompartmentalModel.__init__(self, ps)
 
     def id(self) -> str:
         return self.ID
@@ -73,7 +73,7 @@ class CompartmentalModel(AbstractCompartmentalModel):
         return p.sha1_hash()
 
     def simulate(self, p):
-        sim = Simulator(p, self.stop)
+        sim = Simulator(p)
         sols_raw, standard_sol, percentiles, config_dict = sim.simulate_over_parameter_range_parallel(
             p.control_dict['numberOfIterations'], p.control_dict['t_sim'], p.control_dict['nProcesses'], p.generated_disease_vectors)
         return config_dict, percentiles, sols_raw, standard_sol
@@ -82,8 +82,8 @@ class CompartmentalModel(AbstractCompartmentalModel):
 class CompartmentalModelStochastic(AbstractCompartmentalModel):
 
     ID = 'compartmental-model-stochastic'
-    def __init__(self, ps: ParamStore, stop):
-        AbstractCompartmentalModel.__init__(self, ps, stop)
+    def __init__(self, ps: ParamStore):
+        AbstractCompartmentalModel.__init__(self, ps)
 
     def id(self) -> str:
         return self.ID
@@ -92,7 +92,7 @@ class CompartmentalModelStochastic(AbstractCompartmentalModel):
         return p.sha1_hash()
 
     def simulate(self, p):
-        sim = SEIRSDESolver(p, self.stop)
+        sim = SEIRSDESolver(p)
         sols_raw, standard_sol, percentiles, config_dict = sim.simulate_over_parameter_range_parallel(
             p.control_dict['numberOfIterations'], p.control_dict['t_sim'],  p.control_dict['nProcesses'])
         return config_dict, percentiles, sols_raw, standard_sol
