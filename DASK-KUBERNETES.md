@@ -7,236 +7,129 @@
 
 
 
-### Install 
+### Install Azure ClI
 
-To start install required packages with 
+Below is for Ubuntu, for other environments and details see - https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-apt
 
-    pip install -r requirements.txt
-    
-or first create and activate virtual environment
+```bash
+$ sudo apt-get update
+$ sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg
 
-* On macOS and Linux:
 
-        python3 -m venv env
-        source env/bin/activate
-        pip install -r requirements.txt
-        
-* On Windows:
-
-        py -m venv env
-        .\env\Scripts\activate
-        pip install -r requirements.txt
-
-
-    
-
-Go to root of the repo and run (or configure corresponding env. vars)
-
-Windows: 
-    
-    set PYTHONPATH=%PYTHONPATH%;.
-    
-Linux:
-
-    export PYTHONPATH="${PYTHONPATH}:."
-    
-### Command line execution 
-    
-To get commandline help:
-    
-    python ai4good/runner/console_runner.py -h
-    
-    
-Example execution (default camp is used):
-
-    python ai4good/runner/console_runner.py --profile custom --save_plots --save_report
-    
-CSV Report is  saved in fs/reports, plots are in fs/figs, model result cache in fs/model_results.
-
-Parameters are in fs/params + profile configuration in code right now, but to move to some kind of database in the future.
-
-
-### Webapp
-
-Webapp can be started from PyCharm by running server.py main method or from terminal:
-
-    waitress-serve --port 8050 --host 0.0.0.0 ai4good.webapp.server:flask_app
-    
-Note waitress is for local development only and gunicorn is used for production deployment. 
-    
-### Azure deployment
-
-First add azure remote
-
-    git remote add azure https://ai4good-sim2.scm.azurewebsites.net:443/ai4good-sim2.git
-    
- Note down deployment credentials from Deployment Center/Deployment Credentials on Azure portal for AI4Good-Sim2 app service.
- 
- Now just do 
-    
-    git push azure master
-
-enter credentials when prompted.
-    
-### Docker
-
-Change directory
-
-    cd model-server
-
-Build:
-
-    docker build -t model-server .
-
-Test:
-
-    docker run model-server python -m unittest discover -s ai4good/ -p "test_*.py"
-
-Run Example:
-
-    docker run model-server python ai4good/runner/console_runner.py --profile custom --save_plots --save_report
-
-Container Command Line:
-
-    docker run -it model-server /bin/bash
-
-### Design overview
-
-Model-server consists of following top level packages:
-
-* models - various COVID-19 models and model registry
-* params - parameter storage and retrieval
-* runner - console runner
-* webapp - web application runner / viewer
-
-    #### models
-    Every model needs to implement ai4good.models.model.Model abstract base class and basically just needs
-    to implement run(params) method, where params object can be chosen by the model itself and usually 
-    contains general parameters, camp specific parameters and model profile parameters. Model profiles
-    are there to investigate and compare various regimes of the model and to help user to select best
-    intervention scenario that mitigates COVID-19 spread.
-
-    Model also responsible to provide hash of it's own parameter object so that model results can cached. 
-    This functionality of saving/retrieving model result is provided by ModelResultStore and currently 
-    stored on filesystem.  
-
-    Model result is represented by ModelResult object which effectively just a free-from dictionary and
-    can include some precomputed aggregations to speed up result rending later.
-  
-    #### params
-    Provides abstract interface to parameter storage which is at the moment is based on csv files 
-    stored on local file system.  
-
-
-    #### runner
-
-    Contains console runner that can run a model for single profile or all profiles/camps in a batch.
-    Also contains console_utils to list currently cached models with human readable names.
-
-
-    #### webapp
-
-    Web application is built with dash/plotly and runs on Azure via gunicorn with multiple workers. There is also Redis
-    instance used to store some shared state, such as models currently executing and also hosting some page cache. There is
-    also cache on local disk that is used to store larger amounts of data. Webapp has model runner page and report pages.
-    Report page is model specific and allows to compare various intervention scenarios.  
-
-
-### Tests
-use run_tests cmd/sh to execute all tests
-
-### Instances
-
-Difference instances of model server are available:
-
-* Production - for end-users (docker)
-* Non-production - for development and testing (docker) 
-* Others - as backup and virtual environment deployment (e.g. DigitalOcean droplets)
-
-    #### Production
-    http://ai4good-sim2.azurewebsites.net/sim/run_model
-
-    #### Non-production
-    http://ai4good-uat.azurewebsites.net/sim/run_model (UAT)
-
-    http://ai4good-dev.azurewebsites.net/sim/run_model (DEV)
-
-    #### Others
-
-    * Address: http://139.59.146.160:8050/sim/run_model (Vera's private instance)
-
-    * Python Server - Waitress Python
-
-    Waitress is meant to be a production-quality pure-Python WSGI server with very acceptable performance. It has no dependencies except ones which live in the Python standard library. It runs on CPython on Unix and Windows under Python 2.7+ and Python 3.5+. It is also known to run on PyPy 1.6.0 on UNIX. It supports HTTP/1.0 and HTTP/1.1.
-
-    * How to run: 
-
-    ```
-    sudo apt update
-    sudo apt install python3-pip
-    git clone https://github.com/AIforGoodSimulator/model-server.git
-    cd model-server
-    pip3 install -r requirements.txt
-    apt install python3-waitress
-    waitress-serve --port 8050 --host your_host_ip ai4good.webapp.server:flask_app
-    ```
-### CI/CD Workflow 
-
-The following workflow should be used for development:
-
-* Run local tests, once all tests pass commit your branch to github
-
-* Your commit will run the tests on Github using actions. You can view the tests running under the 'Actions' menu item above.
-
-* Once your tests pass create a pull request to the 'dev' branch and merge.  Tests will be run again and the dev branch will be deployed to the dev server.
-* You can view your changes on : (Note build and deployment can take 5+ minutes) 
-
-    http://ai4good-dev.azurewebsites.net/sim/run_model (DEV)
-
-
-* Now create a pull request to the 'uat' branch. This pull request can be merged by the people below.
-* You can view your changes on : (Note build and deployment can take 5+ minutes) 
-* This is the branch the testing team will do UAT testing on.
-
-    http://ai4good-uat.azurewebsites.net/sim/run_model (UAT)
-
-* The pull to 'Master' branch will happen manually once UAT has been accepted.  This pull request can be merged by the following people :
-
-    [pardf](https://github.com/pardf)
-
-    [kariso2000](https://github.com/kariso2000)
-
-    [billlyzhaoyh](https://github.com/billlyzhaoyh)
-
-    [titorenko](https://github.com/titorenko)
-
-    [TensorMan](https://github.com/TensorMan)
-
-
-* Deploy to PROD server with master branch is currently manual.
-
-* You can also view web tests running on our Zalenium instance :
-
-    http://51.132.48.142/dashboard/#
-
-Please contact [kariso2000](https://github.com/kariso2000) on slack for userid and password.
-
-### FAQ
-Will the web server be a separate container?
-**Yes**
-
-Where do we intend to save the Results and Graphs? Volume/NFS?
-**Bucket Storage**
-
-Are we going to run this on ACI via docker context? or AKS?
-**AKS**
-
-How will new models and their dependencies be added/integrated into the model server?
-**Model server is just a framework you can have inception file to run your model on that model server. all commands are in github documentation already.**
-
-Or will this just become the base image to build a multistage container for new models?
-**Yes**
-
-Orca is not available via pip and requires some dependency management. Alternatives?
-**Which container or AKS does not have orca available. need to know the name.**
-        
+$ curl -sL https://packages.microsoft.com/keys/microsoft.asc |
+    gpg --dearmor |
+    sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+
+
+
+$ AZ_REPO=$(lsb_release -cs)
+$ echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" |
+    sudo tee /etc/apt/sources.list.d/azure-cli.list
+
+
+$ sudo apt-get update
+$ sudo apt-get install azure-cli
+```
+
+### Install Helm 
+
+Below is for Ubuntu, for other environments and details see - https://helm.sh/docs/intro/install/
+
+```bash
+$ curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+$ chmod 700 get_helm.sh
+$ ./get_helm.sh
+```
+
+### Install kubectl
+
+Below is for Ubuntu, for other environments and details see - https://kubernetes.io/docs/tasks/tools/install-kubectl/
+
+```bash
+$ sudo apt-get update && sudo apt-get install -y apt-transport-https gnupg2 curl
+$ curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+$ echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+$ sudo apt-get update
+$ sudo apt-get install -y kubectl
+
+
+```
+
+# Follow the steps below to authenticate and run commands to upgrade all kubernetes pods (dask workers) with the latest code libraries
+
+```bash
+$ az login 
+```
+
+You will be rediercted to a broswer and will need to login with your azure account.
+
+Get the credentials for the Dask Kubernetes service for ai4good and update helm repositories:
+```bash
+az aks get-credentials --resource-group AI4Good --name DaskAks
+helm repo add dask https://helm.dask.org/ 
+helm repo update   
+```
+
+Now make changes to the dask-config.yml file (add python libraries, change workers, etc) and run the following to deploy to all workers:
+
+```bash
+cd into the model-server directory
+helm upgrade dask-service dask/dask -f dask-config.yml        
+```
+                                      
+
+### Other useful commands
+
+* Get kube services and show your external IP
+```bash
+$ kubectl get services
+NAME                     TYPE           CLUSTER-IP    EXTERNAL-IP     PORT(S)                       AGE
+dask-service-scheduler   LoadBalancer   10.0.115.71   EXTERNAL_IP     8786:30339/TCP,80:30897/TCP   3d21h
+kubernetes               ClusterIP      10.0.0.1      <none>          443/TCP                       3d23h
+```
+
+* List the running pods.  This can be useful after running the 'helm update' command to see the status of updating pods.
+```bash
+$ kubectl get pods
+NAME                                      READY   STATUS    RESTARTS   AGE
+dask-service-scheduler-7d985fbbb5-mxqzm   1/1     Running   0          10h
+dask-service-worker-6d7c454445-2p5k5      1/1     Running   0          10h
+dask-service-worker-6d7c454445-4mjmb      1/1     Running   0          10h
+dask-service-worker-6d7c454445-65prp      1/1     Running   0          10h
+dask-service-worker-6d7c454445-8cxrl      1/1     Running   0          10h
+dask-service-worker-6d7c454445-8gwc4      1/1     Running   0          10h
+dask-service-worker-6d7c454445-8r8kw      1/1     Running   0          10h
+dask-service-worker-6d7c454445-99vs9      1/1     Running   0          10h
+dask-service-worker-6d7c454445-9mpmz      1/1     Running   0          10h
+dask-service-worker-6d7c454445-b7j66      1/1     Running   0          10h
+dask-service-worker-6d7c454445-g657v      1/1     Running   1          10h
+dask-service-worker-6d7c454445-n8xhg      1/1     Running   0          10h
+dask-service-worker-6d7c454445-pxjjp      1/1     Running   0          10h
+dask-service-worker-6d7c454445-wr7tb      1/1     Running   0          10h
+dask-service-worker-6d7c454445-x5d7n      1/1     Running   0          10h
+dask-service-worker-6d7c454445-xkqnj      1/1     Running   0          10h
+```
+
+* Examine the logs of a particular pod.  Can be useful for troubleshooting
+```bash
+$ kubectl logs dask-service-worker-6d7c454445-xkqnj 
++ '[' '' ']'
++ '[' -e /opt/app/environment.yml ']'
++ echo 'no environment.yml'
+no environment.yml
++ '[' 'unzip python==3.7' ']'
++ echo 'EXTRA_CONDA_PACKAGES environment variable found.  Installing.'
++ /opt/conda/bin/conda install -y unzip python==3.7
+EXTRA_CONDA_PACKAGES environment variable found.  Installing.
+Collecting package metadata (current_repodata.json): ...working... done
+...
+...
+...
+```
+
+* Install fresh ***WARNING : This is for new installs ONLY.  This will create a NEW cluster and it will have a NEW external IP***
+
+```bash
+helm delete dask-service
+helm install dask-service dask/dask -f dask-config.yml      
+```
