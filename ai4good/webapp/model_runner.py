@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from typing import List
 from enum import Enum, auto
-from dask.distributed import Client, Future
+from dask.distributed import Client, Future, Variable
 from ai4good.models.model import Model, ModelResult
 from ai4good.models.model_registry import get_models, create_params
 from datetime import datetime
@@ -160,6 +160,14 @@ class ModelRunner:
         self.history = ModelRunHistory(_redis)
         self.models_running_now = ModelsRunningNow(_redis)
         self.dask_client_provider = dask_client_provider
+        self.stopControls = {}
+
+    def cancel_model(self, _model: str, _profile: str, camp: str):
+        key = (_model, _profile, camp)
+        self.models_running_now.pop(key)
+        stop = self.stopControls[key]
+        if stop:
+            stop.set(True)
 
     def run_model(self, _model: str, _profile: str, camp: str) -> ModelScheduleRunResult:
 
@@ -178,12 +186,15 @@ class ModelRunner:
                 self.history.record_error(key, error_details)
 
         def submit():
-            client = self.dask_client_provider()
             self.history.record_scheduled(key)
-            future: Future = client.submit(self._sync_run_model, self.facade, _model, _profile, camp)
-            future.add_done_callback(on_future_done)
-        
+            currentModelFuture = client.submit(self._sync_run_model, self.facade, _model, _profile, camp, self.stopControls[key])
+            currentModelFuture.add_done_callback(on_future_done)
+
         key = (_model, _profile, camp)
+        client = self.dask_client_provider()
+        stop = Variable()
+        stop.set(False)
+        self.stopControls[key] = stop
         return self.models_running_now.start_run(key, submit)
 
     @staticmethod
@@ -212,9 +223,9 @@ class ModelRunner:
         return pd.DataFrame(rows)
 
     @staticmethod
-    def _sync_run_model(facade, _model: str, _profile: str, camp: str) -> ModelResult:
+    def _sync_run_model(facade, _model: str, _profile: str, camp: str, stop: Variable) -> ModelResult:
         logger.info('Running %s model with %s profile', _model, _profile)
-        _mdl: Model = get_models()[_model](facade.ps)
+        _mdl: Model = get_models()[_model](facade.ps, stop)
         params = create_params(facade.ps, _model, _profile, camp)
         res_id = _mdl.result_id(params)
         logger.info("Running model for camp %s", camp)
@@ -224,13 +235,13 @@ class ModelRunner:
         return mr
 
     def results_exist(self, _model: str, _profile: str, camp: str) -> bool:
-        _mdl: Model = get_models()[_model](self.facade.ps)
+        _mdl: Model = get_models()[_model](self.facade.ps, None)
         params = create_params(self.facade.ps, _model, _profile, camp)
         res_id = _mdl.result_id(params)
         return self.facade.rs.exists(_mdl.id(), res_id)
 
     def get_result(self, _model: str, _profile: str, camp: str) -> ModelResult:
-        _mdl: Model = get_models()[_model](self.facade.ps)
+        _mdl: Model = get_models()[_model](self.facade.ps, None)
         params = create_params(self.facade.ps, _model, _profile, camp)
         res_id = _mdl.result_id(params)
         return self.facade.rs.load(_mdl.id(), res_id)
