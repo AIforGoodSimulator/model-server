@@ -130,8 +130,9 @@ Collecting package metadata (current_repodata.json): ...working... done
 ```
 
 * Install fresh ***WARNING : This is for new installs ONLY.  This will create a NEW cluster and it will have a NEW external IP***
+* ***2nd WARNING only do the below if you know what you are doing and made the other necessary changes to environments that use the Dask service (remove the xxx below)***
 
 ```bash
-helm delete dask-service
-helm install dask-service dask/dask -f dask-config.yml      
+helm delete dask-servicexxx
+helm installxxx dask-service dask/dask -f dask-config.yml      
 ```
