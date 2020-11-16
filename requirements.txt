@@ -18,6 +18,8 @@ dash==1.17.0
 plotly==4.11.0
 dash_bootstrap_components==0.10.7
 PyGithub==1.53
+datetime==4.3
+scikit-learn==0.23.2
 selenium==3.141.0
 dask[complete]
 bcrypt==3.2.0

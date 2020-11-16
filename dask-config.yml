@@ -13,8 +13,7 @@ scheduler:
     - name: EXTRA_CONDA_PACKAGES
       value: unzip python==3.7
     - name: EXTRA_PIP_PACKAGES
-      value: seirsplus==1.0.9 tqdm==4.47.0 numba==0.48.0 scipy==1.5.2 Flask_Caching==1.9.0 numpy==1.18.1 dash_core_components==1.12.1 dash_table==4.10.1 pandas==1.0.5 typeguard==2.8.0 dash_html_components==1.1.1 matplotlib==3.2.2 seaborn==0.10.1 redis==3.5.3 networkx==2.5 Flask==1.1.2 dash==1.16.3 plotly==4.11.0 dash_bootstrap_components==0.10.7 PyGithub==1.53 selenium==3.141.0 dask[complete] distributed==2.30.0 pytest pytest-cov tornado==6.0.4 lz4==3.1.0 python-dotenv
-
+      value: seirsplus==1.0.9 tqdm==4.47.0 numba==0.48.0 scipy==1.5.2 Flask_Caching==1.9.0 numpy==1.18.1 dash_core_components==1.12.1 dash_table==4.10.1 pandas==1.0.5 typeguard==2.8.0 dash_html_components==1.1.1 matplotlib==3.2.2 seaborn==0.10.1 redis==3.5.3 networkx==2.5 Flask==1.1.2 dash==1.16.3 plotly==4.11.0 dash_bootstrap_components==0.10.7 PyGithub==1.53 selenium==3.141.0 dask[complete] distributed==2.30.0 pytest pytest-cov tornado==6.0.4 lz4==3.1.0 python-dotenv sdeint==0.2.1
 worker:
 #  image:
 #    repository: "daskdev/dask"  # Container image repository.
@@ -31,8 +30,7 @@ worker:
     - name: EXTRA_CONDA_PACKAGES
       value: unzip python==3.7
     - name: EXTRA_PIP_PACKAGES
-      value: seirsplus==1.0.9 tqdm==4.47.0 numba==0.48.0 scipy==1.5.2 Flask_Caching==1.9.0 numpy==1.18.1 dash_core_components==1.12.1 dash_table==4.10.1 pandas==1.0.5 typeguard==2.8.0 dash_html_components==1.1.1 matplotlib==3.2.2 seaborn==0.10.1 redis==3.5.3 networkx==2.5 Flask==1.1.2 dash==1.16.3 plotly==4.11.0 dash_bootstrap_components==0.10.7 PyGithub==1.53 selenium==3.141.0 dask[complete] distributed==2.30.0 pytest pytest-cov tornado==6.0.4 lz4==3.1.0 
-
+      value: seirsplus==1.0.9 tqdm==4.47.0 numba==0.48.0 scipy==1.5.2 Flask_Caching==1.9.0 numpy==1.18.1 dash_core_components==1.12.1 dash_table==4.10.1 pandas==1.0.5 typeguard==2.8.0 dash_html_components==1.1.1 matplotlib==3.2.2 seaborn==0.10.1 redis==3.5.3 networkx==2.5 Flask==1.1.2 dash==1.16.3 plotly==4.11.0 dash_bootstrap_components==0.10.7 PyGithub==1.53 selenium==3.141.0 dask[complete] distributed==2.30.0 pytest pytest-cov tornado==6.0.4 lz4==3.1.0 python-dotenv sdeint==0.2.1
 # We want to keep the same packages on the worker and jupyter environments
 jupyter:
   enabled: false
