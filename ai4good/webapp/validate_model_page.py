@@ -21,30 +21,14 @@ logger = get_logger(__name__)
 
 # get output paths
 population = 18700
-output_filetype = 'csv'
-age_categories_filename = 'age_categories.csv'
-cm_output_columns_filename = 'cm_output_columns.csv'
-abm_output_columns_filename = 'abm_output_columns.csv'
-nm_output_columns_filename = 'nm_output_columns.csv'
 
+output_filetype = 'csv'
 base_sample = '../../ai4good'
 base_output = base_sample
-base_param = '../../fs'
 path_sample = pu._path(f'{base_sample}/models/validate/output_sample/', '')
 path_output = path_sample
-path_param = pu._path(f'{base_param}/params/validate_model/', '')
 sample_output = [f for f in os.listdir(path_sample) if os.path.isfile(os.path.join(path_sample, f))]
 sample_output_clean = sorted([f.split('.')[0] for f in sample_output])
-age_categories_param = os.path.join(path_param, age_categories_filename)
-cm_output_columns_param = os.path.join(path_param, cm_output_columns_filename)
-abm_output_columns_param = os.path.join(path_param, abm_output_columns_filename)
-nm_output_columns_param = os.path.join(path_param, nm_output_columns_filename)
-validate_param_filepath = {   ## dictionary of model validation parameters
-    'age_categories_param': age_categories_param,
-    'cm_output_columns_param': cm_output_columns_param, 
-    'abm_output_columns_param': abm_output_columns_param, 
-    'nm_output_columns_param': nm_output_columns_param
-}
 
 # create tooltip
 metric_tooltip = 'Key: \n' + \
@@ -108,15 +92,10 @@ layout = html.Div(
     ]
 )
 
-def get_validation_param(model:str, validate_param_filepath:dict):
+def get_validation_param(model:str, param:Parameters):
     # get validation parameters
-    age_categories = pd.read_csv(validate_param_filepath['age_categories_param'])['age'].to_list()
-    if model.upper() == "CM":
-        case_cols = pd.read_csv(validate_param_filepath['cm_output_columns_param'])['columns'].to_list()
-    elif model.upper() == "ABM":
-        case_cols = pd.read_csv(validate_param_filepath['abm_output_columns_param'])['columns'].to_list()
-    elif model.upper() == "NM":
-        case_cols = pd.read_csv(validate_param_filepath['nm_output_columns_param'])['columns'].to_list()
+    age_categories = param.age_categories
+    case_cols = param.case_cols(model)
     return age_categories, case_cols
 
 def generate_validation_data(model:str, baseline_output:str, model_output:str):
@@ -160,7 +139,8 @@ def update_validation_data(baseline_output_value, model_output_value):
         else:
             # generate validation metrics
             model = baseline_output_model
-            [age_categories, case_cols] = get_validation_param(model, validate_param_filepath)
+            param = Parameters()
+            [age_categories, case_cols] = get_validation_param(model, param)
             [df_baseline, df_model] = generate_validation_data(model, baseline_output_value, model_output_value)
             df_model_metrics = model_validation_metrics(population, model, age_categories, case_cols, df_baseline, df_model)
             # serialise output as JSON
@@ -183,9 +163,9 @@ def update_validation_data(baseline_output_value, model_output_value):
 
 @dash_app.callback(
     [Output('validate-metric-table-div', 'children'), Output('validate-metric-graph-div', 'children')], 
-    [Input('validate-age-dropdown', 'value'), Input('validate-case-dropdown', 'value')], 
-    [State('validate-age-dropdown', 'options'), State('validate-case-dropdown', 'options'), State('validate-data-storage', 'Children')])
-def update_validation_display(age_value, case_value, age_dropdown_options, case_dropdown_options, data_storage_children):
+    [Input('validate-age-dropdown', 'value'), Input('validate-case-dropdown', 'value'), Input('validate-data-storage', 'Children')], 
+    [State('validate-age-dropdown', 'options'), State('validate-case-dropdown', 'options')])
+def update_validation_display(age_value, case_value, data_storage_children, age_dropdown_options, case_dropdown_options):
     if (not age_dropdown_options) | (not case_dropdown_options):
         return [None, None]  ## do not return table or plots before initialisations
     else:
@@ -197,6 +177,7 @@ def update_validation_display(age_value, case_value, age_dropdown_options, case_
         age_categories = dataset['age_categories']
         case_cols = dataset['case_cols']
         model = dataset['model']
+        
         # update validation metric table    
         if (age_value is None) & ((case_value is None) | (case_value == 'All')):
             query_age = f"age == '{age_categories[0]}'"
