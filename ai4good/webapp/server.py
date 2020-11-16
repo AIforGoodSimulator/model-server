@@ -11,6 +11,7 @@ import ai4good.webapp.input_page_2 as input_page_2
 import ai4good.webapp.input_page_3 as input_page_3
 import ai4good.webapp.input_page_4 as input_page_4
 import ai4good.webapp.run_model_page as run_model_page
+import ai4good.webapp.validate_model_page as validate_model_page
 import ai4good.webapp.cm_model_results_page as cm_model_results_page
 import ai4good.webapp.cm_model_report_page as cm_model_report_page
 import ai4good.webapp.cm_admin_page as cm_admin_page
@@ -57,6 +58,8 @@ def display_page(pathname, query=None):
         return input_page_4.layout
     elif pathname == '/sim/run_model':
         return run_model_page.layout
+    elif pathname == '/sim/validate_model':
+        return validate_model_page.layout
     elif pathname == '/sim/results':
         query = parse_qs(urlparse(query).query)
         if query['model'][0] in ['compartmental-model', 'compartmental-model-stochastic']:
