@@ -249,6 +249,7 @@ def model_run_buttons():
         html.Label('Start simulation', style={'font-weight': 'bold'}),
         html.Div([
             dbc.Button("Run Model", id="run_model_button", color="primary", className="mr-1", disabled=True), 
+            dbc.Button("Cancel Model", id="cancel_model_button", color="primary", className="mr-1", disabled=True),
             dbc.Button("Validate Model", id="validate_model_button", color="primary", className="mr-1", disabled=True),
         ], id='start_simulation', style={'margin-bottom':'25px'}),
         html.Label('Display outputs', style={'font-weight': 'bold'}),
@@ -428,24 +429,29 @@ def on_save_profile_button_click(n_save, n_close, n_confirm_save, is_open, new_p
 
 @dash_app.callback(
     [Output("run_model_toast", "is_open"), Output("run_model_toast", "children")],
-    [Input("run_model_button", "n_clicks")],
+    [Input("run_model_button", "n_clicks"), Input("cancel_model_button", "n_clicks")],
     [State('camp-dropdown', 'value'), State('model-dropdown', 'value'),
     State('profile-dropdown', 'value')]
 )
-def on_run_model_click(n, camp, model, profile):
+def on_run_model_click(run_n, cancel_n, camp, model, profile):
     ctx = dash.callback_context
     if not ctx.triggered:
         return False, dash.no_update
     else:
-        res = model_runner.run_model(model, profile, camp)
-        if res == ModelScheduleRunResult.SCHEDULED:
-            return True, html.P("Model run scheduled", className="mb-0")
-        elif res == ModelScheduleRunResult.CAPACITY:
-            return True, html.P("Can not run model now, over capacity, try again later", className="mb-0")
-        elif res == ModelScheduleRunResult.ALREADY_RUNNING:
-            return True, html.P("Already running", className="mb-0")
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        if button_id == 'run_model_button':
+            res = model_runner.run_model(model, profile, camp)
+            if res == ModelScheduleRunResult.SCHEDULED:
+                return True, html.P("Model run scheduled", className="mb-0")
+            elif res == ModelScheduleRunResult.CAPACITY:
+                return True, html.P("Can not run model now, over capacity, try again later", className="mb-0")
+            elif res == ModelScheduleRunResult.ALREADY_RUNNING:
+                return True, html.P("Already running", className="mb-0")
+            else:
+                raise RuntimeError("Unsupported result type: "+str(res))
         else:
-            raise RuntimeError("Unsupported result type: "+str(res))
+            model_runner.cancel_model(model, profile, camp)
+            return True, html.P("Cancelled task", className="mb-0")
 
 
 @dash_app.callback(Output('history_table', 'data'),
@@ -458,6 +464,7 @@ def update_history(n):
 @dash_app.callback(
     [
         Output('run_model_button', 'disabled'),
+        Output('cancel_model_button', 'disabled'),
         Output('validate_model_button', 'disabled'),
         Output('validate_model_button', 'href'),
         Output('model_results_button', 'disabled'),
@@ -476,6 +483,7 @@ def on_see_results_click_and_state_update(n, camp, model, profile):
 
     if camp is None or model is None or profile is None:
         return True, \
+               True, \
                True, '', \
                True, '', \
                True, \
@@ -483,13 +491,15 @@ def on_see_results_click_and_state_update(n, camp, model, profile):
     else:
         if model_runner.results_exist(model, profile, camp):
             return False, \
+                   False, \
                    False, '/sim/validate_model', \
                    False, f'/sim/results?model={model}&profile={profile}&camp={camp}', \
                    False, \
                    []
         else:
             return False, \
-                   True, \
+                   False, \
+                   True, '', \
                    True, '', \
                    True, \
                    dbc.Tooltip('No cached results, please run model first', id='_mr_tt', target='run_buttons_div'),
