@@ -18,7 +18,7 @@ import ai4good.webapp.common_elements as common_elements
 
 logger = get_logger(__name__)
 
-# @cache.memoize(timeout=cache_timeout)
+@cache.memoize(timeout=cache_timeout)
 def layout(camp):
     # get results here based on the camp
     message_5 = render_message_5_plots(camp)
@@ -187,14 +187,21 @@ def update_message_1_plots(camp, category):
 )
 def message_1_section(camp):
     # categories of interest for plotting
-    categories = ["Infected (symptomatic)", "Hospitalised", "Critical", "Deaths"]
-    # for dropdowns to select
-    dropdown_options = []
-    for option in categories:
-        dropdown_options.append({"label": option, "value": option})
+    dropdown_options = [
+        {"label": "Number of Symptomatically infected individuals", "value": "Infected (symptomatic)",
+         "title": "Symptomatic infection includes both mild and severe cases"},
+        {"label": "Number of people count per hospitalisation day", "value": "Hospitalised",
+         "title": "Hospitalisation demand on a daily basis interpreted as number of people needing hospitalisation "
+                  "care on that day (they might not get it)"},
+        {"label": "Number of people count per critical condition day", "value": "Critical",
+         "title": "Critical care demand on a daily basis interpreted as number of people needing critical care on that "
+                  "day (they might not get it)"},
+        {"label": "Cumulative number of deaths", "value": "Deaths", "title": "Number of cumulative deaths throughout "
+                                                                             "the course of the pandemic"},
+    ]
     dropdown_button = html.Div(
         [
-            html.H5("Category: "),
+            html.H5("Categories to inspect: "),
             dcc.Dropdown(
                 id="message_1_selection",
                 options=dropdown_options,
@@ -274,6 +281,44 @@ def render_message_5_plots(camp):
     ]
 
 
+# @dash_app.callback(
+#     Output('message_5_section', 'children'),
+#     [Input("camp-name", "children")]
+# )
+# def message_5_section(camp):
+#     # categories of interest for plotting
+#     categories = ["Infected (symptomatic)", "Hospitalised", "Critical", "Deaths"]
+#     # for dropdowns to select
+#     dropdown_options = []
+#     for option in categories:
+#         dropdown_options.append({"label": option, "value": option})
+#     dropdown_button = html.Div(
+#         [
+#             html.H5("Category: "),
+#             dcc.Dropdown(
+#                 id="message_1_selection",
+#                 options=dropdown_options,
+#                 value="Infected (symptomatic)",
+#                 searchable=False,
+#                 clearable=False,
+#                 style={"width": "100%"}
+#             )
+#         ],
+#         style={"width": "100%"},
+#         className='d-print-none'
+#     )
+#     fig = render_message_1_plots(camp)
+#     return[
+#         dcc.Markdown(high_level_message_1()),
+#         dropdown_button,
+#         dcc.Graph(
+#             id='plot_message1_fig',
+#             figure=fig,
+#             style={'width': '100%'}
+#         ),
+#     ]
+
+
 def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str, hover_text: str,
              x_col='Time', estimator=np.median,
              iqr_low=0.25, iqr_high=0.75):
@@ -290,8 +335,8 @@ def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str, hover_text: str,
     y_lower = y_lower[::-1]
     
     ci = go.Scatter(
-        x=x + x_rev, y=y_upper + y_lower, fill='toself', showlegend=False, hoverinfo="skip")
-    line = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6),
+        x=x + x_rev, y=y_upper + y_lower, fill='toself', showlegend=False, hoverinfo="skip", legendgroup=f"{graph_label}")
+    line = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6), legendgroup=f"{graph_label}", 
                       text=[f'{round(number)}' for number in est],
                       hovertemplate='%{text}' + f'<extra>{hover_text}</extra>')
     return ci, line
