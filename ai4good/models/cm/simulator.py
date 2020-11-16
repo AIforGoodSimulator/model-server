@@ -32,21 +32,15 @@ def timing_function(t,time_vector):
 
 class Simulator:
 
-    def __init__(self, params: Parameters, stop: Variable):
+    def __init__(self, params: Parameters):
         self.params = params
-        self.stop = stop
 
-    def checkNotStopped(self):
-        if self.stop and self.stop.get():
-            raise InterruptedError('The task was stopped by user')
 
     def ode_system2d(self, t, y,  # state of system
                    infection_matrix, age_categories, symptomatic_prob, hospital_prob, critical_prob, beta,  # params
                    latentRate, removalRate, hospRate, deathRateICU, deathRateNoIcu,  # more params
                    better_hygiene, remove_symptomatic, remove_high_risk, ICU_capacity  # control
                    ):
-        ##
-        self.checkNotStopped()
 
         params = self.params
 
