@@ -20,7 +20,7 @@ dash_bootstrap_components==0.10.7
 PyGithub==1.53
 selenium==3.141.0
 dask[complete]
-bcrypt==3.20
+bcrypt==3.2.0
 mysql-connector-python==8.0.22
 distributed==2.30.0
 pytest
