@@ -210,8 +210,6 @@ The following workflow should be used for development:
 
     [titorenko](https://github.com/titorenko)
 
-    [LucasMartinCalderon](https://github.com/LucasMartinCalderon)
-
     [TensorMan](https://github.com/TensorMan)
 
 
