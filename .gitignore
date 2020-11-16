@@ -32,3 +32,4 @@ upload.txt
 coverage.xml
 venv/
 .env
+model.server.code-workspace
