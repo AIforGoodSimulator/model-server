@@ -55,7 +55,9 @@ $ sudo apt-get install -y kubectl
 
 ```
 
-# Follow the steps below to authenticate and run commands to upgrade all kubernetes pods (dask workers) with the latest code libraries
+### Upgrade the pods 
+
+Follow the steps below to authenticate and run commands to upgrade all kubernetes pods (dask workers) with the latest code libraries
 
 ```bash
 $ az login 
