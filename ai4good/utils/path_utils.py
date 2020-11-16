@@ -20,6 +20,9 @@ def list_models(glob_spec: str):
 def params_path(name: str) -> str:
     return _path(f'{base}/params', name)
 
+def params_subpath(subdir: str, file_name: str) -> str:
+    return _path(f'{base}/params/{subdir}', file_name)
+
 
 def reports_path(name: str) -> str:
     return _path(f'{base}/reports', name)

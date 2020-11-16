@@ -1,3 +1,4 @@
+from ai4good.models.cm.cm_model import CompartmentalModelStochastic
 from ai4good.models.cm.initialise_parameters import Parameters
 from ai4good.models.cm.cm_model import CompartmentalModel
 from ai4good.models.nm.nm_model import NetworkModel
@@ -10,9 +11,10 @@ import json
 
 def get_models() -> Dict[str, Any]:
     return {
-        CompartmentalModel.ID: lambda ps: CompartmentalModel(ps),
-        ABM.ID: lambda ps: ABM(ps),
-        NetworkModel.ID: lambda ps: NetworkModel(ps)
+        CompartmentalModel.ID: lambda ps, stop: CompartmentalModel(ps, stop),
+        CompartmentalModelStochastic.ID: lambda ps, stop: CompartmentalModelStochastic(ps, stop),
+        ABM.ID: lambda ps, stop: ABM(ps),
+        NetworkModel.ID: lambda ps, stop: NetworkModel(ps)
     }
 
 
@@ -25,7 +27,7 @@ def create_params(ps, _model, _profile, camp, overrides=None):  # model specific
     :param overrides:
     :return:
     """
-    if _model == CompartmentalModel.ID:
+    if _model == CompartmentalModel.ID or _model == CompartmentalModelStochastic.ID:
         override_dct = {} if overrides is None else json.loads(overrides)
         profile_df = ps.get_params(_model, _profile) if (
             type(_profile) is str) else _profile

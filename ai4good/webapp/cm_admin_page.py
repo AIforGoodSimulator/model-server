@@ -1,4 +1,6 @@
 import dash_html_components as html
+
+from ai4good.models.cm.cm_model import CompartmentalModelStochastic
 from ai4good.webapp.apps import dash_app, facade, _redis, cache, local_cache
 from ai4good.models.cm.cm_model import CompartmentalModel
 from dash.dependencies import Input, Output
@@ -12,6 +14,11 @@ def layout():
             html.Div([
                 html.B("CM Model Cache"),
                 html.Pre(f'{facade.rs.list(CompartmentalModel.ID)}', id='cache_contents'),
+                html.Button('Clear', id='clear_button'),
+            ]),
+            html.Div([
+                html.B("CM Model Stochastic Cache"),
+                html.Pre(f'{facade.rs.list(CompartmentalModelStochastic.ID)}', id='cache_contents'),
                 html.Button('Clear', id='clear_button'),
             ]),
             html.Div([
