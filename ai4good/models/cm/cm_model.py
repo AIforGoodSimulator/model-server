@@ -94,6 +94,6 @@ class CompartmentalModelStochastic(AbstractCompartmentalModel):
     def simulate(self, p):
         sim = SEIRSDESolver(p)
         sols_raw, standard_sol, percentiles, config_dict = sim.simulate_over_parameter_range_parallel(
-            p.control_dict['numberOfIterations'], p.control_dict['t_sim'],  p.control_dict['nProcesses'])
+            p.control_dict['numberOfIterations'], p.control_dict['t_sim'],  p.control_dict['nProcesses'], p.control_dict['random_seed'])
         return config_dict, percentiles, sols_raw, standard_sol
 
