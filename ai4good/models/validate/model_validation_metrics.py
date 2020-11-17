@@ -126,10 +126,6 @@ def model_validation_metrics(population:int, model:str, age_categories:list, cas
         df_model_all_mean=df_model_all_sum/n_simul
         df_model_all_std=df_model_all_simul.groupby(['DAY']).std()
 
-        
-        case_cols.remove('HOSPITALIZED')
-        # Process for each age group:
-        
         # Process for each age group:
         for age in age_categories:
         
