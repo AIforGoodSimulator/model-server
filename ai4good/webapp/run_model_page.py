@@ -484,7 +484,7 @@ def on_see_results_click_and_state_update(n, camp, model, profile):
                True, '', \
                True, '', \
                True, \
-               dbc.Tooltip('Select camp, model and profile to see results', id='_mr_tt_1', target="run_buttons_div")
+               dbc.Tooltip('Select camp, model and profile to see results', id='_mr_tt', target="run_buttons_div")
     else:
         if model_runner.results_exist(model, profile, camp):
             return False, \
@@ -493,11 +493,11 @@ def on_see_results_click_and_state_update(n, camp, model, profile):
                    False, \
                    []
         else:
-            return True, \
+            return False, \
                    True, '', \
                    True, '', \
                    True, \
-                   dbc.Tooltip('No cached results, please run model first', id='_mr_tt_2', target='run_buttons_div'),
+                   dbc.Tooltip('No cached results, please run model first', id='_mr_tt', target='run_buttons_div'),
 
 
 @dash_app.callback(
