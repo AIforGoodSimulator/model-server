@@ -16,7 +16,7 @@ from ai4good.utils.logger_util import get_logger
 
 MAX_CONCURRENT_MODELS = 30
 HISTORY_SIZE = 100
-INPUT_PARAMETER_TIMEOUT = 60*30 # in seconds
+INPUT_PARAMETER_TIMEOUT = 60 * 30  # in seconds
 logger = get_logger(__name__)
 
 _sid = secrets.token_urlsafe(64)  # session id
@@ -32,20 +32,20 @@ class InputParameterCache:
     def _decode_byte(value) -> List:
         value = [i.decode('utf-8') if i is not None else None for i in value]
         value = [i if i is None else None if i.strip() == '' else i for i in value]
-        for i,j in enumerate(value):
+        for i, j in enumerate(value):
             if j is not None:
                 try:
                     value[i] = int(j)
                 except:
                     value[i] = j
-        return value        
-        
+        return value
+
     def cache_get_all(self):
         key_value_pair_dict = self._redis.hgetall(self._CACHE_KEY)
         key = list(key_value_pair_dict.keys())
         value = list(key_value_pair_dict.values())
         return self._decode_byte(key), self._decode_byte(value)
-    
+
     def cache_get(self, input_param_key):
         if isinstance(input_param_key, str):
             input_param_key = [input_param_key]
@@ -59,7 +59,7 @@ class InputParameterCache:
                 try:
                     pipe.watch(self._CACHE_KEY)
                     pipe.multi()
-                    for i,j in input_param.items():
+                    for i, j in input_param.items():
                         j_conv = '' if j is None else str(j)  # prevent string conversion of None
                         pipe.hset(self._CACHE_KEY, str(i), j_conv)
                     pipe.execute()
@@ -90,7 +90,6 @@ class ModelRunHistory:
 
     def __init__(self, _redis: redis.Redis):
         self._redis = _redis
-        
 
     def _append(self, t):
         with self._redis.pipeline() as pipe:
@@ -123,7 +122,7 @@ class ModelsRunningNow:
         self._redis = _redis
 
     def pop(self, key):
-        self._redis.srem(self._CACHE_KEY,  '¬'.join(key))
+        self._redis.srem(self._CACHE_KEY, '¬'.join(key))
 
     def start_run(self, key, f):
         _skey = '¬'.join(key)
@@ -133,7 +132,7 @@ class ModelsRunningNow:
                 try:
                     pipe.watch(self._CACHE_KEY)
                     n_running = self._redis.scard(self._CACHE_KEY)
-                    print("N_running: "+str(n_running))
+                    print("N_running: " + str(n_running))
                     is_running = self._redis.sismember(self._CACHE_KEY, _skey)
                     print("is_running: " + str(is_running))
                     if n_running >= MAX_CONCURRENT_MODELS:
@@ -161,14 +160,6 @@ class ModelRunner:
         self.history = ModelRunHistory(_redis)
         self.models_running_now = ModelsRunningNow(_redis)
         self.dask_client_provider = dask_client_provider
-        self.stopControls = {}
-
-    def cancel_model(self, _model: str, _profile: str, camp: str):
-        key = (_model, _profile, camp)
-        self.models_running_now.pop(key)
-        stop = self.stopControls[key]
-        if stop:
-            stop.set(True)
 
     def run_model(self, _model: str, _profile: str, camp: str) -> ModelScheduleRunResult:
 
@@ -187,20 +178,17 @@ class ModelRunner:
                 self.history.record_error(key, error_details)
 
         def submit():
+            client = self.dask_client_provider()
             self.history.record_scheduled(key)
-            currentModelFuture = client.submit(self._sync_run_model, self.facade, _model, _profile, camp, self.stopControls[key])
-            currentModelFuture.add_done_callback(on_future_done)
+            future: Future = client.submit(self._sync_run_model, self.facade, _model, _profile, camp)
+            future.add_done_callback(on_future_done)
 
         key = (_model, _profile, camp)
-        client = self.dask_client_provider()
-        stop = Variable()
-        stop.set(False)
-        self.stopControls[key] = stop
         return self.models_running_now.start_run(key, submit)
 
     @staticmethod
     def history_columns() -> List[str]:
-        return ['Key', 'Status', 'Time', 'Details', 'Version Date'] 
+        return ['Key', 'Status', 'Time', 'Details', 'Version Date']
 
     def history_df(self) -> pd.DataFrame:
         rows = []
@@ -213,20 +201,20 @@ class ModelRunner:
                     'Details': str(r[3]),
                     'Version Date': str(r[4]),
                 })
-            except IndexError: # avoids error when using a history for a model run before the version date parameter was added
+            except IndexError:  # avoids error when using a history for a model run before the version date parameter was added
                 rows.append({
                     'Key': str(r[0]),
                     'Status': str(r[1]),
                     'Time': str(r[2]),
                     'Details': str(r[3]),
-                })        
-            
+                })
+
         return pd.DataFrame(rows)
 
     @staticmethod
-    def _sync_run_model(facade, _model: str, _profile: str, camp: str, stop: Variable) -> ModelResult:
+    def _sync_run_model(facade, _model: str, _profile: str, camp: str) -> ModelResult:
         logger.info('Running %s model with %s profile', _model, _profile)
-        _mdl: Model = get_models()[_model](facade.ps, stop)
+        _mdl: Model = get_models()[_model](facade.ps)
         params = create_params(facade.ps, _model, _profile, camp)
         res_id = _mdl.result_id(params)
         logger.info("Running model for camp %s", camp)
@@ -236,13 +224,13 @@ class ModelRunner:
         return mr
 
     def results_exist(self, _model: str, _profile: str, camp: str) -> bool:
-        _mdl: Model = get_models()[_model](self.facade.ps, None)
+        _mdl: Model = get_models()[_model](self.facade.ps)
         params = create_params(self.facade.ps, _model, _profile, camp)
         res_id = _mdl.result_id(params)
         return self.facade.rs.exists(_mdl.id(), res_id)
 
     def get_result(self, _model: str, _profile: str, camp: str) -> ModelResult:
-        _mdl: Model = get_models()[_model](self.facade.ps, None)
+        _mdl: Model = get_models()[_model](self.facade.ps)
         params = create_params(self.facade.ps, _model, _profile, camp)
         res_id = _mdl.result_id(params)
         return self.facade.rs.load(_mdl.id(), res_id)
