@@ -29,12 +29,7 @@ def generate_col_age(model, col, age):
 
 def generate_model_age_df(model, category, age, df_model, time_col, n_simul, population):
     # Process case columns
-    if model.upper() == "CM":
-        cols = [category + ": " + age, time_col]
-    elif model.upper() == "ABM":
-        cols = [category + "_AGE" + age, time_col]
-    elif model.upper() == "NM":
-        cols = [category + ": " + age, time_col]
+    cols = [generate_col_age(model, category, age), time_col]
     df_model_age_simul = df_model[cols]
     # Calculate averages for all simulations
     df_model_age_sum = df_model_age_simul.groupby([time_col]).sum() * population

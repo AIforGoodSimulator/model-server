@@ -130,7 +130,6 @@ def model_validation_metrics(population:int, model:str, age_categories:list, cas
         for age in age_categories:
         
             # get columns for the age group
-        
             cols = [col + "_AGE" + age for col in case_cols]
             cols.append(time_col)
         
