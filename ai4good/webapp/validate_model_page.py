@@ -152,8 +152,11 @@ def update_validation_data(baseline_output_value, model_output_value):
                 'case_cols': case_cols, 
                 'model': model}
             # update metric dropdown options
-            age_categories_dropdown = age_categories[:]
-            age_categories_dropdown.append('All')
+            if model.upper() in ["CM", "ABM"]:
+                age_categories_dropdown = age_categories[:]
+                age_categories_dropdown.append('All')
+            elif model.upper() == "NM":
+                age_categories_dropdown = ['All']
             case_cols_dropdown = case_cols[:]
             case_cols_dropdown.append('All')
             age_dropdown_options = [{'label': k, 'value': k} for k in age_categories_dropdown]
@@ -193,7 +196,7 @@ def update_validation_display(age_value, case_value, data_storage_children, age_
             query_case = f"case == '{case_value}'"
 
         query = ' & '.join(s for s in [query_age, query_case] if s)
-
+        
         if query.strip():
             db_model_metric_table = df_model_metrics.round(2).query(query)
         else:
