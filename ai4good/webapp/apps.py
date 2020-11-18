@@ -27,11 +27,11 @@ cache = Cache(flask_app, config={
     'DEBUG': True,
     'CACHE_DEFAULT_TIMEOUT': cache_timeout,
     'CACHE_TYPE': 'redis',
-    'CACHE_REDIS_URL': REDIS_URL,
+    'CACHE_REDIS_URL': os.environ.get("REDIS_URL"),
     'CACHE_KEY_PREFIX': socket.gethostname()
 })
 
-_redis = redis.Redis.from_url(REDIS_URL)
+_redis = redis.Redis.from_url(os.environ.get("REDIS_URL"))
 
 dash_app = dash.Dash(
     __name__,
