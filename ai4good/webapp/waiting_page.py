@@ -58,6 +58,7 @@ layout = html.Div([
                     dbc.Col([
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
+                            html.Center(html.Img(src='/static/input_step5.png', title='Step completed', style={'width':'50%'}, className="step_counter")), 
                             html.Header('Please wait for the simulation to complete.', className='card-text'),
                             html.Div([
                                 html.P(("Status: ", initial_status),id="status_String",style={'margin':'0px'}),
@@ -75,7 +76,7 @@ layout = html.Div([
 
 
 # Check every 10 seconds to check if there is a report ready
-@dash_app.callback([Output('update_String', 'children'),Output('status_String', 'children')],
+@dash_app.callback([Output('update_String', 'children'), Output('status_String', 'children')],
     [Input('interval1', 'n_intervals')])
 def check_Model(n):
     if (model_runner.results_exist(model, profile, camp)):
