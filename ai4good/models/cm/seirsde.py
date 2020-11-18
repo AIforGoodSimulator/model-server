@@ -324,9 +324,11 @@ class SEIRSDESolver:
             dgdt2d[:, i] = dgdt3d[i].T.reshape(y.shape)
         return dgdt2d
 
-    def run_model(self, tspan, driftOnly=False):
+    def run_model(self, tspan, random_seed=None, driftOnly=False):
         self.driftOnly = driftOnly
 
+        if random_seed:
+            np.random.seed(random_seed)
         warnings.simplefilter("ignore")
         result = sdeint.itoint(self.sde_drift, self.sde_diffusion, self.y0, tspan)
 
@@ -351,13 +353,13 @@ class SEIRSDESolver:
 
 #--------------------------------------------------------------------
 
-    def simulate_over_parameter_range_parallel(self, numberOfIterations, t_stop, n_processes):
+    def simulate_over_parameter_range_parallel(self, numberOfIterations, t_stop, n_processes, random_seed=None):
         logging.info(f"Running parallel simulation with {n_processes} processes")
         lazy_sols = []
         sols_raw = {}
         tspan = np.linspace(0,t_stop, t_stop+1) # 1 time value per day
         for ii in range(numberOfIterations):
-            lazy_result = dask.delayed(self.run_model)(tspan)
+            lazy_result = dask.delayed(self.run_model)(tspan, random_seed)
             lazy_sols.append(lazy_result)
 
         #with dask.config.set(scheduler='processes', num_workers=n_processes): --Does not work with Dask Distributed
@@ -370,7 +372,7 @@ class SEIRSDESolver:
 
         [y_U95, y_UQ, y_LQ, y_L95, y_median] = self.generate_percentiles(sols)
         # standard run
-        StandardSol = [self.run_model(tspan, True)]
+        StandardSol = [self.run_model(tspan, random_seed, True)]
 
         return sols_raw, StandardSol, [y_U95, y_UQ, y_LQ, y_L95, y_median], None
 
