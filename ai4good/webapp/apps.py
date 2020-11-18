@@ -11,19 +11,20 @@ import redis
 import socket
 import os
 
+cache_timeout = 60*60*2  # In seconds
+DATABASE_USER = DATABASE_USERNAME
+DATABASE_PASS = DATABASE_PASSWORD
+DATABASE_HOST = DATABASE_HOST
+
 logger = get_logger(__name__,'DEBUG')
 load_dotenv()
 
 flask_app = Flask(__name__)
 
-cache_timeout = 60*60*2  # In seconds
-
 local_cache = Cache(flask_app, config={
     'CACHE_TYPE': 'simple',
     'CACHE_DEFAULT_TIMEOUT': cache_timeout
 })
-
-REDIS_URL = 'rediss://:IrKLJLmfJaafc4sIop3hJAlUFNj3KesPvb+cABkDEnk=@ai4good-redis.redis.cache.windows.net:6380'
 
 cache = Cache(flask_app, config={
     'DEBUG': True,
