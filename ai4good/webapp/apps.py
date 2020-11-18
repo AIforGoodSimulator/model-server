@@ -12,9 +12,6 @@ import socket
 import os
 
 cache_timeout = 60*60*2  # In seconds
-DATABASE_USER = DATABASE_USERNAME
-DATABASE_PASS = DATABASE_PASSWORD
-DATABASE_HOST = DATABASE_HOST
 
 logger = get_logger(__name__,'DEBUG')
 load_dotenv()
@@ -47,7 +44,6 @@ dash_app.title = "AI4Good COVID-19 Model Server"
 
 _client = None  # Needs lazy init
 
-
 def dask_client() -> Client:    
     global _client
 
@@ -67,6 +63,6 @@ def dask_client() -> Client:
 
     return _client
 
-
 facade = Facade.simple()
+
 model_runner = ModelRunner(facade, _redis, dask_client)
