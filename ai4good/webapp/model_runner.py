@@ -2,20 +2,18 @@ import traceback
 import redis
 import numpy as np
 import pandas as pd
+import pickle
+import socket
+from datetime import datetime
 from typing import List
 from enum import Enum, auto
 from dask.distributed import Client, Future, Variable
+from ai4good.config import BaseConfig
 from ai4good.models.model import Model, ModelResult
 from ai4good.models.model_registry import get_models, create_params
-from datetime import datetime
-import pickle
-import socket
 from ai4good.webapp.commit_date import get_version_date
 from ai4good.utils.logger_util import get_logger
 
-MAX_CONCURRENT_MODELS = 30
-HISTORY_SIZE = 100
-INPUT_PARAMETER_TIMEOUT = 60*30 # in seconds
 logger = get_logger(__name__)
 
 _sid = np.random.randint(100000000, 1000000000)  # session id

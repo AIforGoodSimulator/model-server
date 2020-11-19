@@ -10,6 +10,7 @@ import ai4good.webapp.input_page_1 as input_page_1
 import ai4good.webapp.input_page_2 as input_page_2
 import ai4good.webapp.input_page_3 as input_page_3
 import ai4good.webapp.input_page_4 as input_page_4
+import ai4good.webapp.waiting_page as waiting_page
 import ai4good.webapp.run_model_page as run_model_page
 import ai4good.webapp.cm_model_results_page as cm_model_results_page
 import ai4good.webapp.cm_model_report_page as cm_model_report_page
@@ -21,7 +22,6 @@ import ai4good.webapp.nm_model_report_page as nm_model_report_page
 import ai4good.webapp.nm_admin_page as nm_admin_page
 import ai4good.webapp.model_results_scaffolding as model_results_scaffolding
 import ai4good.webapp.report_poc_graph as report_poc_graph
-import ai4good.webapp.waiting_page as waiting_page
 import ai4good.webapp.dash_session_test as dash_session_test
 
 from ai4good.webapp.apps import flask_app, dash_app

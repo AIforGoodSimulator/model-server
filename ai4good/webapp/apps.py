@@ -5,6 +5,7 @@ from flask_caching import Cache
 from flask.helpers import get_root_path
 from flask_login import login_required
 from dask.distributed import Client
+from ai4good.config import BaseConfig
 from ai4good.runner.facade import Facade
 from ai4good.webapp.model_runner import ModelRunner
 from ai4good.utils.logger_util import get_logger
@@ -12,7 +13,6 @@ from dotenv import load_dotenv
 import redis
 import socket
 import os
-from ai4good.config import BaseConfig
 
 logger = get_logger(__name__,'DEBUG')
 load_dotenv()
