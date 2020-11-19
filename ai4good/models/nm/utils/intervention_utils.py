@@ -6,9 +6,9 @@ class Interventions:
         self.checkpoints = defaultdict(list)
 
     def add(self, g_intervention, time, **kwargs):
-        """ Adding an intervention to the checkpoints dictionary requires
-            a graph and a time step at which the intervention will occur.
-            Other parameters that are altered are optional """
+        """Adding an intervention to the checkpoints dictionary requires
+        a graph and a time step at which the intervention will occur.
+        Other parameters that are altered are optional"""
 
         # We assume that interventions are added in order
         self.checkpoints["G"].append(g_intervention)
@@ -58,5 +58,3 @@ class Interventions:
 
     def get_checkpoints(self):
         return dict(self.checkpoints)
-
-

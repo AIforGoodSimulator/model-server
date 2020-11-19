@@ -8,6 +8,7 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from ai4good.webapp.apps import dash_app, facade, model_runner, _redis
 import ai4good.webapp.run_model_page as run_model_page
+import ai4good.webapp.common_elements as common_elements
 from ai4good.webapp.model_runner import InputParameterCache
 import ai4good.utils.path_utils as pu
 import os
@@ -21,7 +22,7 @@ country_clean = sorted([f.split('.')[0] for f in country_raw])
 
 layout = html.Div(
     [
-        run_model_page.nav_bar(),
+        common_elements.nav_bar(),
         
         html.Div([
             dbc.Container([
@@ -44,16 +45,16 @@ layout = html.Div(
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
                             html.Center(html.Img(src='/static/input_step1.png', title='Step 1 of 4', style={'width':'50%'}, className="step_counter")), 
-                            html.P('Fill in the following fields to provide data in order to run the simulation',className='card-text'),
+                            html.P('Please fill in the following to provide data in order to run the simulation, fields are required unless \'optional\' is mentioned',className='card-text'),
                             html.H5('Camp information', className='card-text'),
                             html.Header('Name of Camp', className='card-text'),
-                            dbc.Input(id='name-camp', placeholder='Required', bs_size='sm', style={'margin-bottom':'25px'}),
+                            dbc.Input(id='name-camp', placeholder='', bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Location', className='card-text'),
-                            dbc.Input(id='location', placeholder='Required', bs_size='sm', style={'margin-bottom':'25px'}),
+                            dbc.Input(id='location', placeholder='', bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Country', className='card-text'),
-                            html.Small(dcc.Dropdown(
+                            html.B(dcc.Dropdown(
                                 options=[{'label': k, 'value': k} for k in country_clean], 
-                                id='country-dropdown', placeholder='Required', style={'margin-bottom':'25px'})),
+                                id='country-dropdown', placeholder='Select or search for one', style={'margin-bottom':'25px', 'font-size':'95%'})),
                             html.Header('Total Area (m²)', className='card-text'),
                             dbc.Input(id='total-area', placeholder='Optional', type='number', min=0, max=10000000, step=100, bs_size='sm', style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-1-button', color='secondary', href='/sim/input_page_2', style={'float':'right'})),

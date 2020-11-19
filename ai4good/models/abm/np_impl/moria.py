@@ -179,7 +179,7 @@ class Moria(Camp):
             self.save_progress(new_infections)
 
         # Save initialized progress to file
-        self.data_collector.to_csv(self.progress_file_name, index=False)
+        # self.data_collector.to_csv(self.progress_file_name, index=False)
 
     def day(self):
         # Run 1 day of simulation in the moria camp and return number of new infections in each activity

@@ -341,7 +341,8 @@ class Simulator:
             config_dict.append(Dict)
             #TODO: sols_raw[(self.params.generated_disease_vectors.R0[ii],latentRate,removalRate,hospRate,deathRateICU,deathRateNoIcu)]=result
 
-        with dask.config.set(scheduler='processes', num_workers=n_processes):
+        #with dask.config.set(scheduler='processes', num_workers=n_processes): --Does not work with Dask Distributed
+        with dask.config.set(scheduler='single-threaded', num_workers=1):
             with ProgressBar():
                 sols = dask.compute(*lazy_sols)
 

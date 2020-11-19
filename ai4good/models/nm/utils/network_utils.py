@@ -1,12 +1,12 @@
-import networkx as nx
-# from scipy.stats import poisson
 import itertools
-from tqdm import tqdm
-# from seirsplus.models import *
-import pandas as pd
-import numpy as np
-from collections import defaultdict
 import pickle as pkl
+import random
+from collections import defaultdict
+
+import networkx as nx
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
 
 STATE_DICTIONARY = {
     "Susceptible": 1,
@@ -20,20 +20,17 @@ STATE_DICTIONARY = {
     "Detected_Exposed": 9,
     "Detected_Presymptomatic": 10,
     "Detected_Symptomatic": 11,
-    "Detected_Asymptomatic": 12}
+    "Detected_Asymptomatic": 12,
+}
 
 
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Network creation utils
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-def create_graph(
-        n_structures,
-        start_idx,
-        population,
-        max_pop_per_struct,
-        **kwargs):
-    """ Creates a networkX graph containing all the population in the camp that is in a given structure (currently just isoboxes).
-        Draws edges between people from the same isobox and returns the networkX graph and an adjacency list
+def create_graph(n_structures, start_idx, population, max_pop_per_struct, **kwargs):
+    """Creates a networkX graph containing all the population in the camp assigned to their given households (structures)
+    Draws edges between people from the same structure and returns the networkX graph and a list of nodes per each structure, where:
+        - nodes_per_struct[i][j] denotes the node number (person identifier) j of person living in structure i
     """
 
     # Graph is a networkX graph object
@@ -52,65 +49,67 @@ def create_graph(
     for node in tqdm(range(start_idx, population)):
         g.add_node(node)
 
-        # Assign nodes to isoboxes randomly, until we reach the capacity of
-        # that isobox
+        # Assign nodes to structures randomly, until we reach the capacity of that structure
         struct_num = np.random.choice(available_structs)
 
         # Assign properties to nodes
         g.nodes[node]["age"] = kwargs["age_list"][node]
         g.nodes[node]["sex"] = kwargs["sex_list"][node]
         g.nodes[node]["location"] = struct_num
-        g.nodes[node]["ethnicity"] = np.random.choice(
-            range(kwargs["n_ethnicities"]))
+        g.nodes[node]["ethnicity"] = np.random.choice(range(kwargs["n_ethnicities"]))
 
-        # Update number of nodes per isobox and which nodes were added to
-        # iso_num
+        # Update number of nodes per structure and which nodes were added to that particular structure
         struct_count[struct_num] += 1
         nodes_per_struct[struct_num].append(node)
 
         if struct_count[struct_num] > max_pop_per_struct[struct_num]:
             available_structs.remove(struct_num)
 
-    # Now we connect nodes inside of the same isobox
+    # Now we connect nodes inside of the same structure
     for node_list in nodes_per_struct:
-        # Use the cartesian product to get all possible edges within the nodes in an isobox
+        # Use the cartesian product to get all possible edges within the nodes in a structure
         # and only add if they are not the same node
         edge_list = [
-            tup for tup in list(
-                itertools.product(
-                    node_list,
-                    repeat=2)) if tup[0] != tup[1]]
-        g.add_edges_from(
-            edge_list,
-            weight=kwargs["edge_weight"],
-            label=kwargs["label"])
+            tup
+            for tup in list(itertools.product(node_list, repeat=2))
+            if tup[0] != tup[1]
+        ]
+        g.add_edges_from(edge_list, weight=kwargs["edge_weight"], label=kwargs["label"])
 
     return g, nodes_per_struct
 
 
 def remove_edges_from_graph(base_graph, edge_label_list, scale, min_num_edges):
-    """ Randomly remove some of the edges that have a label included in the label list (i.e 'food', 'neighbors', etc)
-        The scale is a parameter for the exponential distribution and the min_num_edges the minimum number of edges
-        a node should keep (this will be the peak of the distribution) """
+    """Randomly remove some of the edges that have a label included in the label list (i.e 'food', 'neighbors', etc)
+    The scale is a parameter for the exponential distribution and the min_num_edges the minimum number of edges
+    a node should keep (this will be the peak of the distribution)"""
 
     graph = base_graph.copy()
 
     for node in graph:
         # Select all the neighbors that share an edge of a particular label
-        neighbors = [neighbor for neighbor in list(graph[node].keys())
-                     if graph.edges[node, neighbor]["label"] in edge_label_list]
+        neighbors = [
+            neighbor
+            for neighbor in list(graph[node].keys())
+            if graph.edges[node, neighbor]["label"] in edge_label_list
+        ]
 
         # If there are no neighbors that have a label from edge_label_list, we
         # continue
         if neighbors:
             # Randomly draw the number of edges to keep
-            quarantine_edge_num = int(max(min(np.random.exponential(
-                scale=scale, size=1), len(neighbors)), min_num_edges))
+            quarantine_edge_num = int(
+                max(
+                    min(np.random.exponential(scale=scale, size=1), len(neighbors)),
+                    min_num_edges,
+                )
+            )
 
             if quarantine_edge_num <= len(neighbors):
                 # Create the list of neighbors to keep
                 quarantine_keep_neighbors = np.random.choice(
-                    neighbors, size=quarantine_edge_num, replace=True)
+                    neighbors, size=quarantine_edge_num, replace=True
+                )
 
                 # Remove edges that are not in te list of neighbors to keep
                 for neighbor in neighbors:
@@ -123,8 +122,11 @@ def remove_edges_from_graph(base_graph, edge_label_list, scale, min_num_edges):
 def remove_all_edges(base_graph, edge_label_list):
     graph = base_graph.copy()
     for node in graph:
-        neighbors = [neighbor for neighbor in list(graph[node].keys())
-                     if graph.edges[node, neighbor]["label"] in edge_label_list]
+        neighbors = [
+            neighbor
+            for neighbor in list(graph[node].keys())
+            if graph.edges[node, neighbor]["label"] in edge_label_list
+        ]
 
         for neighbor in neighbors:
             graph.remove_edge(node, neighbor)
@@ -138,8 +140,8 @@ def divide_grid(grid, n_slices):
 
 
 def create_grid(width, height, starting_n):
-    """ Create a grid of isoboxes that resembles the isobox area of the camp, for ease of measuring proximity
-        between nodes. Returns a numpy array of shape (width, height) """
+    """Create a grid of isoboxes that resembles the isobox area of the camp, for ease of measuring proximity
+    between nodes. Returns a numpy array of shape (width, height)"""
 
     grid = np.zeros(shape=(width, height)).astype(int)
     n = starting_n
@@ -152,16 +154,16 @@ def create_grid(width, height, starting_n):
     return grid
 
 
-def get_neighbors(grid, structure_num, proximity):
-    """ Given a grid of structures, returns the closest proximity neighbors to the given structure
+def get_struct_neighbors(grid, structure_num, proximity):
+    """Given a grid of structures, returns the closest proximity neighbors to the given structure
 
-        params:
-        - Grid: 2D numpy array
-        - structure_num: int
-        - proximity: int
+    params:
+    - Grid: 2D numpy array
+    - structure_num: int
+    - proximity: int
 
-        :returns
-        - A list of neighboring structures to the current structure_num
+    :returns
+    - A list of neighboring structures to the current structure_num
     """
 
     # Get the number of columns for ease of access
@@ -183,72 +185,85 @@ def get_neighbors(grid, structure_num, proximity):
     return list(neighbors)
 
 
-def connect_neighbors(
-        base_graph,
-        start_idx,
-        n_structures,
-        nodes_per_structure,
-        grid,
-        proximity,
-        edge_weight,
-        label):
-    """ Draw edges in the given graph between people of neighboring structures (currently isoboxes)
-        f they have the same ethnicity """
+def link_nodes_by_property(
+    base_graph,
+    start_struct_idx,
+    n_structures,
+    nodes_per_struct,
+    grid,
+    proximity,
+    node_property,
+    edge_weight,
+    edge_label,
+):
+    """Draw edges in the given graph between all people of neighboring structures
+    if they have the same ethnicity"""
 
     graph = base_graph.copy()
 
-    # For every possible structure:
-    for structure in range(start_idx, n_structures + start_idx):
+    # First, get the nodes of the neighbouring structures per each structure
+    neighboring_nodes_per_struct = defaultdict(list)
+    for structure in range(start_struct_idx, n_structures + start_struct_idx):
+        neighboring_structs = get_struct_neighbors(grid, structure, proximity)
+        for neighbor in neighboring_structs:
+            neighboring_nodes_per_struct[structure].extend(nodes_per_struct[neighbor])
 
-        # Given an isobox number get its neighbor isoboxes
-        neighbors = get_neighbors(grid, structure, proximity)
+    # Then, draw an edge between nodes in neighboring structures if they share a node property (i.e ethnicity)
+    for structure, neighbor_nodes in neighboring_nodes_per_struct.items():
+        nodes_to_connect = [
+            (i, j)
+            for i in nodes_per_struct[structure]
+            for j in neighbor_nodes
+            if graph.nodes[i][node_property] == graph.nodes[j][node_property]
+        ]
 
-        # For every neighbor isobox:
-        for neighbor in neighbors:
-            # If they share the same properties, draw an edge between them
-            graph.add_edges_from([(i, j) for i in nodes_per_structure[structure]
-                                  for j in nodes_per_structure[neighbor] if
-                                  graph.nodes[i]["ethnicity"] == graph.nodes[j]["ethnicity"]],
-                                 weight=edge_weight, label=label)
+        graph.add_edges_from(nodes_to_connect, weight=edge_weight, label=edge_label)
 
     return graph
 
 
-def connect_food_queue(base_graph, nodes_per_structure, edge_weight, label):
-    """ Connect 1-2 people per structure (currently just isoboxes) randomly to represent that they go to the food queue
-        We have 3 options:
-            - Either have a range of people (2-5 per isobox) that go to food queue, same edge weights
-            - Connect all people in the food queue, same edge weights
-            - Connect all people in food queue with different edge weights
+def link_nodes_by_activity(
+    base_graph,
+    nodes_per_struct,
+    percentage_per_struct,
+    proximity_radius,
+    edge_weight,
+    activity_name,
+):
+    """Connect a given percentage of nodes per structure that engage in the same activity
+    with other nodes from different structures that engage in the same activity, at a given proximity radius
+    Examples of activities:
+    - Food queue
+    - Religious events
     """
-
     graph = base_graph.copy()
 
-    food_bois = set()
+    activity_bois = set()
 
-    # Choose half of the people randomly from each structure
-    for node_list in nodes_per_structure:
-        for i in range(len(node_list) // 2):
-            food_bois.add(np.random.choice(node_list))
+    # Choose a percentage of people randomly from each structure
+    for node_list in nodes_per_struct:
+        for i in range(int(len(node_list) * percentage_per_struct)):
+            activity_bois.add(np.random.choice(node_list))
 
-    # This list represents the food queue
-    food_bois = list(food_bois)
-    np.random.shuffle(food_bois)
+    activity_bois = list(activity_bois)
+    np.random.shuffle(activity_bois)
 
-    # Draw an edge between everyone in the list in order, since we have
-    # already shuffled them
-    for i in range(len(food_bois) - 6):
-        for j in range(i + 1, i + 6):
-            if not graph.has_edge(food_bois[i], food_bois[j]):
+    # Draw an edge between everyone in the list within a given proximity
+    for i in range(len(activity_bois) - proximity_radius):
+        for j in range(i + 1, i + proximity_radius + 1):
+            if not graph.has_edge(activity_bois[i], activity_bois[j]):
                 graph.add_edge(
-                    food_bois[i],
-                    food_bois[j],
+                    activity_bois[i],
+                    activity_bois[j],
                     weight=edge_weight,
-                    label=label)
+                    label=activity_name,
+                )
     return graph
 
 
-def create_multiple_food_queues(base_graph, n_food_queues_per_block, food_weight, nodes_per_struct, grids):
+def create_multiple_food_queues(
+    base_graph, n_food_queues_per_block, food_weight, nodes_per_struct, grids
+):
     graph = base_graph.copy()
     queue_num = 0
 
@@ -258,17 +273,28 @@ def create_multiple_food_queues(base_graph, n_food_queues_per_block, food_weight
         subgrids = []
         if not longest_axis:
             for i in range(n_food_queues_per_block):
-                subgrids.append(grid[i * index_limit:(i + 1) * index_limit, :])
+                subgrids.append(grid[i * index_limit : (i + 1) * index_limit, :])
         else:
             for i in range(n_food_queues_per_block):
-                subgrids.append(grid[:, i * index_limit:(i + 1) * index_limit])
+                subgrids.append(grid[:, i * index_limit : (i + 1) * index_limit])
 
         for i in range(len(subgrids)):
             subgrid = subgrids[i]
-            nodes_per_struct_subgrid = [nodes_per_struct[subgrid[i][j]] for i in range(len(subgrid)) for j in
-                                        range(len(subgrid[i]))]
+            nodes_per_struct_subgrid = [
+                nodes_per_struct[subgrid[i][j]]
+                for i in range(len(subgrid))
+                for j in range(len(subgrid[i]))
+            ]
 
-            graph = connect_food_queue(graph, nodes_per_struct_subgrid, food_weight, f"food_{queue_num}")
+            graph = link_nodes_by_activity(
+                graph,
+                nodes_per_struct_subgrid,
+                percentage_per_struct=0.5,
+                proximity_radius=5,
+                edge_weight=food_weight,
+                activity_name=f"food_{queue_num}",
+            )
+
             queue_num += 1
 
     return graph
@@ -279,14 +305,14 @@ def create_node_groups(graph):
     create node groups for each 10-year age bucket so the main simulation can track the results for people in each age bucket
     """
     AGE_BUCKET = 9
-    graph_data = list(graph.nodes(data='age'))
+    graph_data = list(graph.nodes(data="age"))
     node_groups = {}
     for age in range(AGE_BUCKET):
         nodeList = []
         if age == 8:
-            groupName = f'age>{age * 10}'
+            groupName = f"age>{age * 10}"
         else:
-            groupName = f'age{age * 10}-{(age + 1) * 10}'
+            groupName = f"age{age * 10}-{(age + 1) * 10}"
         for node in graph_data:
             if age == 8:
                 if node[1] >= age * 10:
@@ -312,8 +338,8 @@ def max_degree(graph):
 
 
 def get_nodes_per_state(X, graph, state):
-    """ Get the nodes that have a given state in the latest timestep of the SEIRS+ model
-        Since nodes are represented by their properties in this case, this will return a list of property dicts """
+    """Get the nodes that have a given state in the latest timestep of the SEIRS+ model
+    Since nodes are represented by their properties in this case, this will return a list of property dicts"""
     return [node for node in graph.nodes if X[node] == state]
 
 
@@ -363,7 +389,7 @@ def get_values_per_node(params_per_age, graph):
     # Build a list of parameters according to age in order of nodes
     node_params = list()
     for i in range(len(graph.nodes)):
-        age = graph.nodes[i]['age']
+        age = graph.nodes[i]["age"]
         for age_range, value in parsed_params_per_age.items():
             if age_range[0] <= int(age) <= age_range[1]:
                 node_params.append(value)
@@ -371,12 +397,31 @@ def get_values_per_node(params_per_age, graph):
     return node_params
 
 
+def downsample_graph(graph, new_graph_size, technique):
+    if technique == "uniform":
+        sampled_nodes = random.sample(graph.nodes, new_graph_size)
+        sampled_graph = graph.subgraph(sampled_nodes)
+        relabel_map = dict(
+            zip(list(sampled_graph.nodes), range(len(sampled_graph.nodes)))
+        )
+        final_graph = nx.relabel_nodes(sampled_graph, relabel_map)
+        return final_graph
+    else:
+        return None
+
+
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Model utils
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-def run_simulation(model, t, checkpoints=None, simulation_results=None, node_states=None, print_every=30,
-                   store_every=1):
-
+def run_simulation(
+    model,
+    t,
+    checkpoints=None,
+    simulation_results=None,
+    node_states=None,
+    print_every=30,
+    store_every=1,
+):
     if not simulation_results:
         node_states = dict()
         simulation_results = defaultdict(list)
@@ -386,17 +431,23 @@ def run_simulation(model, t, checkpoints=None, simulation_results=None, node_sta
 
     # Preprocess checkpoints
     if checkpoints:
-        numCheckpoints = len(checkpoints['t'])
+        numCheckpoints = len(checkpoints["t"])
         for chkpt_param, chkpt_values in checkpoints.items():
-            assert (isinstance(chkpt_values, (list, np.ndarray)) and len(
-                chkpt_values) == numCheckpoints), "Expecting a list of values with length equal to number of checkpoint times (" + str(
-                numCheckpoints) + ") for each checkpoint parameter."
-        checkpointIdx = np.searchsorted(checkpoints['t'], model.t)  # Finds 1st index in list greater than given val
+            assert (
+                isinstance(chkpt_values, (list, np.ndarray))
+                and len(chkpt_values) == numCheckpoints
+            ), (
+                "Expecting a list of values with length equal to number of checkpoint times ("
+                + str(numCheckpoints)
+                + ") for each checkpoint parameter."
+            )
+        # Finds 1st index in list greater than given val
+        checkpointIdx = np.searchsorted(checkpoints["t"], model.t)
         if checkpointIdx >= numCheckpoints:
             # We are out of checkpoints, stop checking them:
             checkpoints = None
         else:
-            checkpointTime = checkpoints['t'][checkpointIdx]
+            checkpointTime = checkpoints["t"][checkpointIdx]
 
     stored_times = set()
     running = True
@@ -410,21 +461,24 @@ def run_simulation(model, t, checkpoints=None, simulation_results=None, node_sta
 
                 # A checkpoint has been reached, update param values:
                 for param in list(model.parameters.keys()):
-                    if (param in list(checkpoints.keys())):
-                        model.parameters.update({param: checkpoints[param][checkpointIdx]})
+                    if param in list(checkpoints.keys()):
+                        model.parameters.update(
+                            {param: checkpoints[param][checkpointIdx]}
+                        )
 
                 # Update parameter data structures and scenario flags:
                 model.update_parameters()
 
                 # Update the next checkpoint time:
-                checkpointIdx = np.searchsorted(checkpoints['t'],
-                                                   model.t)  # Finds 1st index in list greater than given val
+                checkpointIdx = np.searchsorted(
+                    checkpoints["t"], model.t
+                )  # Finds 1st index in list greater than given val
 
-                if (checkpointIdx >= numCheckpoints):
+                if checkpointIdx >= numCheckpoints:
                     # We are out of checkpoints, stop checking them:
                     checkpoints = None
                 else:
-                    checkpointTime = checkpoints['t'][checkpointIdx]
+                    checkpointTime = checkpoints["t"][checkpointIdx]
 
         if int(model.t) % store_every == 0 and int(model.t) not in stored_times:
             # Store the node states - an array of size (1, num_nodes) -> we
@@ -435,10 +489,14 @@ def run_simulation(model, t, checkpoints=None, simulation_results=None, node_sta
             simulation_results["Susceptible"].append(model.numS[model.tidx])
             simulation_results["Exposed"].append(model.numE[model.tidx])
             simulation_results["Infected_Presymptomatic"].append(
-                model.numI_pre[model.tidx])
-            simulation_results["Infected_Symptomatic"].append(model.numI_sym[model.tidx])
+                model.numI_pre[model.tidx]
+            )
+            simulation_results["Infected_Symptomatic"].append(
+                model.numI_sym[model.tidx]
+            )
             simulation_results["Infected_Asymptomatic"].append(
-                model.numI_asym[model.tidx])
+                model.numI_asym[model.tidx]
+            )
             simulation_results["Hospitalized"].append(model.numH[model.tidx])
             simulation_results["Recovered"].append(model.numR[model.tidx])
             simulation_results["Fatalities"].append(model.numF[model.tidx])
@@ -463,11 +521,10 @@ def run_simulation(model, t, checkpoints=None, simulation_results=None, node_sta
 
 
 def results_to_df(simulation_results, store=False, store_name=None):
-    """ Convers the simulation results to a dataframe, adding a "timestep" column to it
-        Returns a dataframe with the information requested above, and stores it if store=True """
+    """Convers the simulation results to a dataframe, adding a "timestep" column to it
+    Returns a dataframe with the information requested above, and stores it if store=True"""
 
-    simulation_results["Time"] = list(
-        range(1, len(simulation_results["T_index"]) + 1))
+    simulation_results["Time"] = list(range(1, len(simulation_results["T_index"]) + 1))
     output = pd.DataFrame(simulation_results)
 
     if store:
@@ -476,20 +533,49 @@ def results_to_df(simulation_results, store=False, store_name=None):
     return output
 
 
-def add_model_name(name_csv, fig_name,
-                   household_weight, neighbor_weight, food_weight,
-                   transmission_rate, recovery_rate, progression_rate,
-                   hosp_rate, crit_rate, death_rate, init_symp_cases,
-                   init_asymp_cases, t_steps, q_time="", q_red="", h_time=""):
+def add_model_name(
+    name_csv,
+    fig_name,
+    household_weight,
+    neighbor_weight,
+    food_weight,
+    transmission_rate,
+    recovery_rate,
+    progression_rate,
+    hosp_rate,
+    crit_rate,
+    death_rate,
+    init_symp_cases,
+    init_asymp_cases,
+    t_steps,
+    q_time="",
+    q_red="",
+    h_time="",
+):
     """ Adds the parameters of model fig_name to name_csv """
 
     name_df = pd.read_csv(name_csv)
 
     # Add a new model name + parameters as a new row at the end of the df
     idx = 0 if pd.isnull(name_df.index.max()) else name_df.index.max() + 1
-    name_df.loc[idx] = [fig_name, household_weight, neighbor_weight, food_weight, transmission_rate, recovery_rate,
-                        progression_rate, hosp_rate, crit_rate, death_rate, init_symp_cases, init_asymp_cases, t_steps,
-                        q_time, q_red, h_time]
+    name_df.loc[idx] = [
+        fig_name,
+        household_weight,
+        neighbor_weight,
+        food_weight,
+        transmission_rate,
+        recovery_rate,
+        progression_rate,
+        hosp_rate,
+        crit_rate,
+        death_rate,
+        init_symp_cases,
+        init_asymp_cases,
+        t_steps,
+        q_time,
+        q_red,
+        h_time,
+    ]
 
     # Store as csv again
     name_df.to_csv(name_csv)

@@ -80,6 +80,9 @@ def display_page(pathname, query=None):
             return nm_model_report_page.layout(query['camp'][0], query['profile'][0], interventions)
         else:
             return '404'
+    elif pathname == '/sim/dashboard':
+        query = parse_qs(urlparse(query).query)
+        return model_results_scaffolding.layout(query['camp'][0])
     elif pathname == '/sim/admin':
         return cm_admin_page.layout()
     elif pathname == '/sim/admin_nm':

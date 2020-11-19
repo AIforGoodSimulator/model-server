@@ -14,46 +14,30 @@ from ai4good.models.cm.initialise_parameters import Parameters
 import plotly.graph_objs as go
 from ai4good.utils.logger_util import get_logger
 from plotly.colors import DEFAULT_PLOTLY_COLORS
+import ai4good.webapp.common_elements as common_elements
 
 logger = get_logger(__name__)
 
-
-CAMP = 'Moria'
-# this logic needs to be changed later where the user input params will be stored
-# can read in the camp parameters here directly from the user input thus avoiding retrieving data from the system elsewhere
-
-color_scheme_main = ['rgba(0, 176, 246, 0.2)',
-                     'rgba(130, 190, 240, 1)', 'rgb(0, 176, 246)']
-color_scheme_secondary = ['rgba(245, 240, 240, 0.5)']
-
-
 # @cache.memoize(timeout=cache_timeout)
-def layout():
-    # camp, profile, cmp_profiles
-    # _, profile_df, params, _ = get_model_result(camp, profile)
+def layout(camp):
+    # get results here based on the camp
     return html.Div(
         [
-            html.A(html.Button('Print', className="btn btn-light"), href='javascript:window.print()', className='d-print-none', style={"float": 'right'}),
-            dcc.Markdown(disclaimer(), style={'margin': 30}),
-            html.H1(f'AI for Good Simulator: Model Results Dashboard for the Refugee Camp', style={
-                    'margin': 30}),
-            # dcc.Markdown(overview(camp, params), style={'margin': 30}),
-            dcc.Markdown(high_level_message_1(), style={'margin': 30}),
-            html.Div(render_message_1_plots(), style={'margin': 30}),
-            dcc.Markdown(high_level_message_2(), style={'margin': 30}),
-            dcc.Markdown(high_level_message_3(), style={'margin': 30}),
-            dcc.Markdown(high_level_message_4(), style={'margin': 30}),
-            dcc.Markdown(high_level_message_5(), style={'margin': 30}),
-            html.Div(render_message_5_plots(), style={'margin': 30}),
-            dcc.Loading(
-                html.Div([], id='main_section_part2', style={'margin': 30})),
-            # base_profile_chart_section(),
-            # dcc.Loading(html.Div([], id='cmp_section', style={'margin': 30})),
-            # html.Div(camp, id='_camp_param', style={'display': 'none'}),
-            # html.Div(profile, id='_profile_param', style={'display': 'none'}),
-            # html.Div('¬'.join(cmp_profiles), id='_cmp_profiles',
-            #          style={'display': 'none'})
-        ], style={'margin': 50}
+            # Hidden div inside the app that stores the intermediate value
+            html.Div(camp, id='camp-name', style={'display': 'none'}),
+            common_elements.nav_bar(),
+            html.Div([
+                html.A(html.Button('Print', className="btn btn-light"), href='javascript:window.print()', className='d-print-none', style={"float": 'right'}),
+                dcc.Markdown(disclaimer(), style={'margin': 30}),
+                html.H1(f'AI for Good Simulator: Model Results Dashboard for the {camp} Camp', style={
+                        'margin': 30}),
+                dcc.Loading(html.Div([], id='message_1_section', style={'margin': 30})),
+                dcc.Markdown(high_level_message_2(), style={'margin': 30}),
+                dcc.Markdown(high_level_message_3(), style={'margin': 30}),
+                dcc.Markdown(high_level_message_4(), style={'margin': 30}),
+                dcc.Loading(html.Div([], id='message_5_section', style={'margin': 30})),
+            ], style={'margin': 30})
+        ]
     )
 
 
@@ -103,21 +87,21 @@ def high_level_message_5():
 
 
 @local_cache.memoize(timeout=cache_timeout)
-def get_model_result_message(message_key):
+def get_model_result_message(message_key, camp):
     logger.info(f"Reading data for high level message: {message_key}")
     model_profile_report_dict = defaultdict(dict)
     for model in model_profile_config[message_key].keys():
         if len(model_profile_config[message_key][model]) > 0:
             for profile in model_profile_config[message_key][model]:
                 try:
-                    mr = model_runner.get_result(model, profile, CAMP)
+                    mr = model_runner.get_result(model, profile, camp)
                     profile_df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
-                    params = Parameters(facade.ps, CAMP, profile_df, {})
+                    params = Parameters(facade.ps, camp, profile_df, {})
                     report = load_report(mr, params)
                     assert mr is not None
                     model_profile_report_dict[model][profile] = report
                 except:
-                    logger.info(f"Unable to load result for model: ({model}, {profile}, {CAMP}).")
+                    logger.info(f"Unable to load result for model: ({model}, {profile}, {camp}).")
     return model_profile_report_dict
 
 
@@ -134,26 +118,30 @@ def get_model_result_message(message_key):
 
 color_scheme_updated = DEFAULT_PLOTLY_COLORS
 
-def render_message_1_plots():
-    model_profile_report_dict = get_model_result_message("message_1")
-    columns_to_plot = ['Infected (symptomatic)']
+
+def render_message_1_plots(camp, category="Infected (symptomatic)"):
+    model_profile_report_dict = get_model_result_message("message_1", camp)
+    columns_to_plot = [category]
     fig = go.Figure()
     col = columns_to_plot[0]
     plot_num = 0
     for profile in model_profile_report_dict["compartmental-model"].keys():
         if profile == 'baseline':
             label_name = 'No interventions'
+            hover_text = '0 month'
         elif profile == 'better_hygiene_one_month':
             label_name = 'Wearing facemask for 1 month'
+            hover_text = '1 month'
         elif profile == 'better_hygiene_three_month':
             label_name = 'Wearing facemask for 3 month '
+            hover_text = '3 months'
         elif profile == 'better_hygiene_six_month':
             label_name = 'Using Hand Sanitizers & facemask for 6 month'
-
+            hover_text = '6 months'
         else:
             label_name = 'default'
-
-        ci,line= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_name)
+            hover_text = None
+        ci, line = plot_iqr(model_profile_report_dict["compartmental-model"][profile], col, label_name, hover_text)
         fig.add_trace(ci)
         fig.add_trace(line)
         fig.update_yaxes(title_text=col)
@@ -168,42 +156,101 @@ def render_message_1_plots():
     fig.update_layout(
         margin=dict(l=0, r=0, t=30, b=0),
         height=400,
-        showlegend=True
-
+        showlegend=True,
+        hovermode="x"
     )
+    # Match the background colour from external css style sheet
+    fig.layout.paper_bgcolor = '#ecf0f1'
+    fig.layout.xaxis.showspikes = True
+    fig.layout.xaxis.spikemode = 'across'
+    fig.layout.xaxis.spikesnap = 'cursor'
+    fig.layout.xaxis.showline = True
+    fig.layout.xaxis.showgrid = True
 
-    return [
+    return fig
+
+
+@dash_app.callback(
+    Output("plot_message1_fig", "figure"),
+    [Input("camp-name", "children"), Input("message_1_selection", "value")]
+)
+def update_message_1_plots(camp, category):
+    fig = render_message_1_plots(camp, category)
+    return fig
+
+
+@dash_app.callback(
+    Output('message_1_section', 'children'),
+    [Input("camp-name", "children")]
+)
+def message_1_section(camp):
+    # categories of interest for plotting
+    dropdown_options = [
+        {"label": "Number of Symptomatically infected individuals", "value": "Infected (symptomatic)",
+         "title": "Symptomatic infection includes both mild and severe cases"},
+        {"label": "Number of people count per hospitalisation day", "value": "Hospitalised",
+         "title": "Hospitalisation demand on a daily basis interpreted as number of people needing hospitalisation "
+                  "care on that day (they might not get it)"},
+        {"label": "Number of people count per critical condition day", "value": "Critical",
+         "title": "Critical care demand on a daily basis interpreted as number of people needing critical care on that "
+                  "day (they might not get it)"},
+        {"label": "Cumulative number of deaths", "value": "Deaths", "title": "Number of cumulative deaths throughout "
+                                                                             "the course of the pandemic"},
+    ]
+    dropdown_button = html.Div(
+        [
+            html.H5("Categories to inspect: "),
+            dcc.Dropdown(
+                id="message_1_selection",
+                options=dropdown_options,
+                value="Infected (symptomatic)",
+                searchable=False,
+                clearable=False,
+                style={"width": "100%"}
+            )
+        ],
+        style={"width": "100%"},
+        className='d-print-none'
+    )
+    fig = render_message_1_plots(camp)
+    return[
+        dcc.Markdown(high_level_message_1()),
+        dropdown_button,
         dcc.Graph(
             id='plot_message1_fig',
             figure=fig,
             style={'width': '100%'}
-        )
+        ),
     ]
 
 
-def render_message_5_plots():
-    model_profile_report_dict = get_model_result_message("message_5")
-    columns_to_plot = ['Deaths']
-    fig = make_subplots()
+def render_message_5_plots(camp, category="Deaths"):
+    model_profile_report_dict = get_model_result_message("message_5", camp)
+    columns_to_plot = [category]
+    fig = go.Figure()
     col = columns_to_plot[0]
     plot_num = 0
     for profile in model_profile_report_dict["compartmental-model"].keys():
         if profile == 'only_better_hygiene':
-            label_name = 'Only Implementing Better Hygiene'
+            label_name = 'Only improve personal hygiene'
+            hover_text = "hygiene"
         elif profile == 'only_remove_symptomatic':
-            label_name = 'Only Removing Symptomatic Individuals'
+            label_name = 'Only isolate symptomatic individuals with COVID infections'
+            hover_text = "isolation"
         elif profile == 'only_remove_high_risk':
-            label_name = 'Only Removing High-Risk Individuals'
+            label_name = 'Only move residents who are at high risk of COVID infection offsite'
+            hover_text = "removal"
         elif profile == 'combined_hygiene_symptomatic_high_risk':
-            label_name = 'Combining Better Hygiene and Removal of Symptomatic and High-Risk Individuals'
+            label_name = 'Combine all of the NPIs above'
+            hover_text = "all"
         else:
             label_name = 'default'
+            hover_text = None
 
-        p1,p2= plot_iqr(model_profile_report_dict["compartmental-model"][profile], col,label_name)
-        
-        fig.add_trace(p1, row=1, col=1)
-        fig.add_trace(p2, row=1, col=1)
-        fig.update_yaxes(title_text=col, row=1, col=1)
+        p1, p2 = plot_iqr(model_profile_report_dict["compartmental-model"][profile], col, label_name, hover_text)
+        fig.add_trace(p1)
+        fig.add_trace(p2)
+        fig.update_yaxes(title_text=col)
         if plot_num < len(color_scheme_updated):
             fig["data"][2 * plot_num]["line"]["color"] = color_scheme_updated[plot_num] #IQR Color
             fig["data"][2 * plot_num]["opacity"] = 0.2 #IQR Opacity
@@ -211,30 +258,83 @@ def render_message_5_plots():
         plot_num += 1
         
     x_title = 'Number of days since the virus was introduced to the camp'
-    fig.update_xaxes(title_text=x_title, row=1, col=1)
-    # fig.update_xaxes(title_text=x_title, row=2, col=1)
-    # fig.update_xaxes(title_text=x_title, row=3, col=1)
-    # fig.update_xaxes(title_text=x_title, row=4, col=1)
+    fig.update_xaxes(title_text=x_title)
     fig.update_traces(line=dict(width=2))
     fig.update_layout(
         margin=dict(l=0, r=0, t=30, b=0),
         height=400,
         showlegend=True,
-        legend_title_text='Scenarios'
-
+        hovermode = "x",
     )
 
-    return [
+    # Match the background colour from external css style sheet
+    fig.layout.paper_bgcolor = '#ecf0f1'
+    fig.layout.xaxis.showspikes = True
+    fig.layout.xaxis.spikemode = 'across'
+    fig.layout.xaxis.spikesnap = 'cursor'
+    fig.layout.xaxis.showline = True
+    fig.layout.xaxis.showgrid = True
+
+    return fig
+
+
+@dash_app.callback(
+    Output("plot_message5_fig", "figure"),
+    [Input("camp-name", "children"), Input("message_5_selection", "value")]
+)
+def update_message_5_plots(camp, category):
+    fig = render_message_5_plots(camp, category)
+    return fig
+
+
+@dash_app.callback(
+    Output('message_5_section', 'children'),
+    [Input("camp-name", "children")]
+)
+def message_5_section(camp):
+    # categories of interest for plotting
+    dropdown_options = [
+        {"label": "Number of Symptomatically infected individuals", "value": "Infected (symptomatic)",
+         "title": "Symptomatic infection includes both mild and severe cases"},
+        {"label": "Number of people count per hospitalisation day", "value": "Hospitalised",
+         "title": "Hospitalisation demand on a daily basis interpreted as number of people needing hospitalisation "
+                  "care on that day (they might not get it)"},
+        {"label": "Number of people count per critical condition day", "value": "Critical",
+         "title": "Critical care demand on a daily basis interpreted as number of people needing critical care on that "
+                  "day (they might not get it)"},
+        {"label": "Cumulative number of deaths", "value": "Deaths", "title": "Number of cumulative deaths throughout "
+                                                                             "the course of the pandemic"},
+    ]
+    dropdown_button = html.Div(
+        [
+            html.H5("Categories to inspect: "),
+            dcc.Dropdown(
+                id="message_5_selection",
+                options=dropdown_options,
+                value="Deaths",
+                searchable=False,
+                clearable=False,
+                style={"width": "100%"}
+            )
+        ],
+        style={"width": "100%"},
+        className='d-print-none'
+    )
+    fig = render_message_5_plots(camp)
+    return[
+        dcc.Markdown(high_level_message_5()),
+        dropdown_button,
         dcc.Graph(
             id='plot_message5_fig',
             figure=fig,
             style={'width': '100%'}
-        )
+        ),
     ]
 
 
-def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str,
-             x_col='Time', estimator=np.median, estimator_name='median',
+
+def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str, hover_text: str,
+             x_col='Time', estimator=np.median,
              iqr_low=0.25, iqr_high=0.75):
     grouped = df.groupby(x_col)[y_col]
     est = grouped.agg(estimator)
@@ -249,8 +349,10 @@ def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str,
     y_lower = y_lower[::-1]
     
     ci = go.Scatter(
-        x=x + x_rev, y=y_upper + y_lower, fill='toself', showlegend=False, hoverinfo="skip")
-    line = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6))
+        x=x + x_rev, y=y_upper + y_lower, fill='toself', showlegend=False, hoverinfo="skip", legendgroup=f"{graph_label}")
+    line = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6), legendgroup=f"{graph_label}", 
+                      text=[f'{round(number)}' for number in est],
+                      hovertemplate='%{text}' + f'<extra>{hover_text}</extra>')
     return ci, line
 
 # @dash_app.callback(

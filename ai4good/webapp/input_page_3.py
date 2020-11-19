@@ -8,6 +8,7 @@ from dash.dependencies import Input, Output, State, MATCH, ALL
 from dash.exceptions import PreventUpdate
 from ai4good.webapp.apps import dash_app, facade, model_runner, _redis
 import ai4good.webapp.run_model_page as run_model_page
+import ai4good.webapp.common_elements as common_elements
 from ai4good.webapp.model_runner import InputParameterCache
 import ai4good.utils.path_utils as pu
 
@@ -17,7 +18,7 @@ radio_option_3 = [{'label':'Yes', 'value':1}, {'label':'No', 'value':0}, {'label
 
 layout = html.Div(
     [
-        run_model_page.nav_bar(),
+        common_elements.nav_bar(),
  
         html.Div([
             dbc.Container([
@@ -30,14 +31,14 @@ layout = html.Div(
                             html.H5('Health Interventions', className='card-text'),
                             html.Header('Available ICU Beds', className='card-text'),
                             html.Header('How many ICU beds are currently available to residents?', className='card-text', style={'color':'darkgray'}), 
-                            dbc.Input(id='available-ICU-beds', placeholder='Required', type='number', min=0, max=100, step=1, bs_size='sm', style={'margin-bottom':'25px'}),
+                            dbc.Input(id='available-ICU-beds', placeholder='', type='number', min=0, max=100, step=1, bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Increased ICU Capacity Available', className='card-text'),
                             html.Header('How many additional ICU beds could be added to the existing capacity?', className='card-text', style={'color':'darkgray'}), 
-                            dbc.Input(id='increased-ICU-beds', placeholder='Required', type='number', min=0, max=100, step=1, bs_size='sm', style={'margin-bottom':'25px'}),
+                            dbc.Input(id='increased-ICU-beds', placeholder='', type='number', min=0, max=100, step=1, bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Remove High-risk Residents', className='card-text'),
-                            html.Header('Is it possible to move the residents at greater risk to the coronavirus disease to another location?', className='card-text', style={'color':'darkgray'}), 
+                            html.Header('Is it possible to move residents at greater risk to COVID-19 off-site?', className='card-text', style={'color':'darkgray'}), 
                             dbc.RadioItems(
-                                options=radio_option_3, value=not_sure_yes_no, id='remove-high-risk-off-site', inline=True, style={'margin-bottom':'25px'}),
+                                options=radio_option_3, id='remove-high-risk-off-site', inline=True, style={'margin-bottom':'25px'}),
                             html.Header('What is the age range of people that are moved off-site at the settlement?', className='card-text', style={'color':'darkgray'}), 
                             html.Div([
                                 html.B(''), 
@@ -45,23 +46,25 @@ layout = html.Div(
                                 dcc.RangeSlider(id='age-range-moved-off-site', min=0, max=100, step=1, value=age_off_site_range, updatemode='drag', allowCross=False), 
                                 dbc.Label('', id='age-max-moved-off-site')], 
                                 style={'display':'grid', 'grid-template-columns':'6% 4% 80% 10%', 'margin-bottom':'25px'}),
-                            html.Header('Residents with Comorbidity', className='card-text'),
-                            html.Header('What is the total number of people with known comorbidity of coronavirus?', className='card-text', id='question-number-known-comorbidity', style={'color':'darkgray'}), 
-                            dbc.Tooltip('Comorbidity - the simultaneous presence of two or more diseases or medical conditions in a patient', target='question-number-known-comorbidity'), 
+                            html.Header([
+                                html.B('Residents with Comorbidity '), 
+                                html.Abbr('\u2139', title='Comorbidity - the simultaneous presence of two or more diseases or medical conditions in a patient'), 
+                            ], className='card-text'), 
+                            html.Header('What is the total number of people with known comorbidity of COVID-19?', className='card-text', style={'color':'darkgray'}), 
                             dbc.Input(id='number-known-comorbidity', placeholder='Optional', type='number', min=0, max=100000, step=1, bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Isolation Capacity and Policy', className='card-text'),
                             html.Header('What is the total capacity of the isolation or quarantine centre at the settlement? If there is none, put 0. ', className='card-text', style={'color':'darkgray'}), 
-                            dbc.Input(id='isolation-centre-capacity', placeholder='Required', type='number', min=0, max=100000, step=1, bs_size='sm', style={'margin-bottom':'25px'}),
-                            html.Header('How many days do the residents need to spend in isolation or quarantine centre if they are suspected or tested positive', className='card-text', style={'color':'darkgray'}), 
+                            dbc.Input(id='isolation-centre-capacity', placeholder='', type='number', min=0, max=100000, step=1, bs_size='sm', style={'margin-bottom':'25px'}),
+                            html.Header('How many days do residents need to spend in isolation or quarantine centre if they are suspected or tested positive', className='card-text', style={'color':'darkgray'}), 
                             dbc.Input(id='days-quarantine-tested-positive', placeholder='Optional', type='number', min=0, max=30, step=1, bs_size='sm', style={'margin-bottom':'25px'}),
                             html.Header('Community Shielding', className='card-text'),
                             html.Header('Has community shielding been implemented already?', className='card-text', style={'color':'darkgray'}), 
                             dbc.RadioItems(
-                                options=radio_option_3, value=not_sure_yes_no, id='community-shielding', inline=True, style={'margin-bottom':'25px'}),
+                                options=radio_option_3, id='community-shielding', inline=True, style={'margin-bottom':'25px'}),
                             html.Header('COVID-19 Community Surveillance Program', className='card-text'),
                             html.Header('Are the health or other actors in the camp actively surveilling for COVID-19 cases within the camp?', className='card-text', style={'color':'darkgray'}), 
                             dbc.RadioItems(
-                                options=radio_option_3, value=not_sure_yes_no, id='community-surveillance-program', inline=True, style={'margin-bottom':'25px'}),
+                                options=radio_option_3, id='community-surveillance-program', inline=True, style={'margin-bottom':'25px'}),
                             dbc.CardFooter(dbc.Button('Next', id='page-3-button', color='secondary', href='/sim/input_page_4', style={'float':'right'})),
                             html.Div(id='input-page-3-alert')
                             ], body=True), 
@@ -114,9 +117,7 @@ def update_input_parameter_page_3(
         value = inputParameterCache.cache_get(input_param.keys())  # get cached value
         for i,j in enumerate(value):
             if j is None:  # if first time loading, get default value
-                if list(input_param.keys())[i] in {'remove-high-risk-off-site', 'community-shielding', 'community-surveillance-program'}:
-                    value[i] = not_sure_yes_no
-                elif list(input_param.keys())[i] in {'age-min-moved-off-site'}:
+                if list(input_param.keys())[i] in {'age-min-moved-off-site'}:
                     value[i] = age_off_site_range[0]
                 elif list(input_param.keys())[i] in {'age-max-moved-off-site'}:
                     value[i] = age_off_site_range[1]

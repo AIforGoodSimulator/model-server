@@ -3,8 +3,8 @@ import textwrap
 import dash_html_components as html
 import dash_core_components as dcc
 
-from ai4good.models.abm.abm_model import ABM
-from ai4good.models.abm.initialise_parameters import Parameters
+from ai4good.models.abm.np_impl.abm_model import ABM
+from ai4good.models.abm.np_impl.parameters import Parameters
 from ai4good.webapp.apps import dash_app, facade, model_runner, cache, local_cache, cache_timeout
 # from ai4good.webapp.abm_model_report_utils import *
 from ai4good.webapp.metadata_report import GenerateMetadataDict, GenerateMetadataHTML
@@ -39,7 +39,7 @@ def layout(camp, profile, cmp_profiles):
             dcc.Markdown(overview_interventions(camp,params), style={'margin': 30}),
             html.Img(src='/static/abm_restable.png'),
             dcc.Markdown(overview_results(camp,params), style={'margin': 30}),
-            html.Img(src='/static/abm_HTHIplots.png'),
+            html.Img(src='/static/abm_comp_profiles.png'),
         ], style={'margin': 50}
     )
 

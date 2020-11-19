@@ -1,6 +1,6 @@
 import dash_core_components as dcc
 import dash_html_components as html
-from ai4good.models.abm.abm_model import ABM
+from ai4good.models.abm.np_impl.abm_model import ABM
 from ai4good.webapp.apps import dash_app, facade, model_runner
 import plotly.graph_objects as go
 from ai4good.models.abm.plotter import figure_generator, age_structure_plot, stacked_bar_plot, uncertainty_plot
