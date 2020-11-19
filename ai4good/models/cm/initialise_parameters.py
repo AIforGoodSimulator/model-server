@@ -207,6 +207,7 @@ class Parameters:
         add_int_scalar(profile_copy, 't_sim', dct)
         add_int_scalar(profile_copy, 'numberOfIterations', dct)
         add_int_scalar(profile_copy, 'nProcesses', dct)
+        dct['random_seed'] = None
 
         for k, d in dct.items():
             if k in profile_override_dict.keys():
