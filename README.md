@@ -163,11 +163,11 @@ Difference instances of model server are available:
 
     #### Others
 
-    * Address: http://139.59.146.160:8050/sim/run_model (Vera's private instance)
+    * Local address: http://localhost:8050/sim/run_model (private instance)
 
     * Python Server - Waitress Python
 
-    Waitress is meant to be a production-quality pure-Python WSGI server with very acceptable performance. It has no dependencies except ones which live in the Python standard library. It runs on CPython on Unix and Windows under Python 2.7+ and Python 3.5+. It is also known to run on PyPy 1.6.0 on UNIX. It supports HTTP/1.0 and HTTP/1.1.
+      Waitress is meant to be a production-quality pure-Python WSGI server with very acceptable performance. It has no dependencies except ones which live in the Python standard library. It runs on CPython on Unix and Windows under Python 2.7+ and Python 3.5+. It is also known to run on PyPy 1.6.0 on UNIX. It supports HTTP/1.0 and HTTP/1.1.
 
     * How to run: 
 
@@ -189,6 +189,7 @@ The following workflow should be used for development:
 * Your commit will run the tests on Github using actions. You can view the tests running under the 'Actions' menu item above.
 
 * Once your tests pass create a pull request to the 'dev' branch and merge.  Tests will be run again and the dev branch will be deployed to the dev server.
+
 * You can view your changes on : (Note build and deployment can take 5+ minutes) 
 
     http://ai4good-dev.azurewebsites.net/sim/run_model (DEV)
@@ -209,8 +210,6 @@ The following workflow should be used for development:
     [billlyzhaoyh](https://github.com/billlyzhaoyh)
 
     [titorenko](https://github.com/titorenko)
-
-    [LucasMartinCalderon](https://github.com/LucasMartinCalderon)
 
     [TensorMan](https://github.com/TensorMan)
 

@@ -7,6 +7,7 @@ import dask
 import numpy as np
 import pandas as pd
 from dask.diagnostics import ProgressBar
+from distributed import Variable
 from scipy.integrate import ode
 from tqdm import tqdm
 
@@ -34,12 +35,13 @@ class Simulator:
     def __init__(self, params: Parameters):
         self.params = params
 
+
     def ode_system2d(self, t, y,  # state of system
                    infection_matrix, age_categories, symptomatic_prob, hospital_prob, critical_prob, beta,  # params
                    latentRate, removalRate, hospRate, deathRateICU, deathRateNoIcu,  # more params
                    better_hygiene, remove_symptomatic, remove_high_risk, ICU_capacity  # control
                    ):
-        ##
+
         params = self.params
 
         y2d = y.reshape(age_categories, self.params.number_compartments).T
@@ -241,7 +243,7 @@ class Simulator:
 
         return {'y': y_out,'t': tim, 'y_plot': y_plot}
 
-#--------------------------------------------------------------------
+
     # Generating percentile is currently not in use
     # def generate_percentiles(self, sols):
     #     n_time_points = len(sols[0]['t'])
@@ -305,21 +307,21 @@ class Simulator:
     #     return sols_raw, [y_U95, y_UQ, y_LQ, y_L95, y_median], config_dict
 
 
-    def simulate_over_parameter_range_parallel(self, numberOfIterations, t_stop, n_processes):
+    def simulate_over_parameter_range_parallel(self, numberOfIterations, t_stop, n_processes, generated_disease_vectors):
         logger.info(f"Running parallel simulation with {n_processes} processes")
         lazy_sols = []
         config_dict = []
         sols_raw = {}
 
-        for ii in range(min(numberOfIterations,len(self.params.generated_disease_vectors))):
-            latentRate  = 1/self.params.generated_disease_vectors.LatentPeriod[ii]
-            removalRate = 1/self.params.generated_disease_vectors.RemovalPeriod[ii]
+        for ii in range(min(numberOfIterations,len(generated_disease_vectors))):
+            latentRate  = 1/generated_disease_vectors.LatentPeriod[ii]
+            removalRate = 1/generated_disease_vectors.RemovalPeriod[ii]
 
-            beta        = removalRate*self.params.generated_disease_vectors.R0[ii]/self.params.largest_eigenvalue
+            beta        = removalRate*generated_disease_vectors.R0[ii]/self.params.largest_eigenvalue
 
-            hospRate       = 1/self.params.generated_disease_vectors.HospPeriod[ii]
-            deathRateICU   = 1/self.params.generated_disease_vectors.DeathICUPeriod[ii]
-            deathRateNoIcu = 1/self.params.generated_disease_vectors.DeathNoICUPeriod[ii]
+            hospRate       = 1/generated_disease_vectors.HospPeriod[ii]
+            deathRateICU   = 1/generated_disease_vectors.DeathICUPeriod[ii]
+            deathRateNoIcu = 1/generated_disease_vectors.DeathNoICUPeriod[ii]
 
             lazy_result = dask.delayed(self.run_model)(T_stop=t_stop, beta=beta,
                                     latent_rate=latentRate,
@@ -339,16 +341,15 @@ class Simulator:
                     deathRateNoIcu = deathRateNoIcu
                     )
             config_dict.append(Dict)
-            #TODO: sols_raw[(self.params.generated_disease_vectors.R0[ii],latentRate,removalRate,hospRate,deathRateICU,deathRateNoIcu)]=result
 
         #with dask.config.set(scheduler='processes', num_workers=n_processes): --Does not work with Dask Distributed
         with dask.config.set(scheduler='single-threaded', num_workers=1):
             with ProgressBar():
                 sols = dask.compute(*lazy_sols)
 
-        for ii in range(min(numberOfIterations, len(self.params.generated_disease_vectors))):
+        for ii in range(min(numberOfIterations, len(generated_disease_vectors))):
             dct = config_dict[ii]
-            sols_raw[(self.params.generated_disease_vectors.R0[ii], dct['latentRate'], dct['removalRate'],
+            sols_raw[(generated_disease_vectors.R0[ii], dct['latentRate'], dct['removalRate'],
                       dct['hospRate'], dct['deathRateICU'], dct['deathRateNoIcu'])] = sols[ii]
 
         # [y_U95, y_UQ, y_LQ, y_L95, y_median] = self.generate_percentiles(sols)
@@ -378,9 +379,13 @@ def generate_csv(data_to_save, params: Parameters,  input_type=None, time_vec=No
         solution_csv['Time'] = time_vec
         # this is our dataframe to be saved
 
-    elif input_type=='raw':
+    elif input_type == 'raw':
 
-        solution_csv = generate_csv_raw(category_map, data_to_save, params, population_frame)
+        solution_csv = generate_csv_raw(category_map, data_to_save, params, population_frame, True)
+
+    elif input_type == 'stochastic':
+
+        solution_csv = generate_csv_raw(category_map, data_to_save, params, population_frame, False)
 
     elif input_type=='solution':
         csv_sol = np.transpose(data_to_save[0]['y']) # age structured
@@ -410,7 +415,7 @@ def generate_csv(data_to_save, params: Parameters,  input_type=None, time_vec=No
     return solution_csv
 
 
-def generate_csv_raw(category_map, data_to_save, params, population_frame):
+def generate_csv_raw(category_map, data_to_save, params, population_frame, is_ordinary):
     # setup column names
     number_categories_with_age = params.number_compartments * population_frame.shape[0]
     col_names = []
@@ -422,12 +427,16 @@ def generate_csv_raw(category_map, data_to_save, params, population_frame):
     number_of_categories = len(params.categories)
     for j in range(number_of_categories):  # params.number_compartments
         col_names.append(params.categories[category_map[str(j)]]['longname'])
-    col_names.append('R0')
-    col_names.append('latentRate')
-    col_names.append('removalRate')
-    col_names.append('hospRate')
-    col_names.append('deathRateICU')
-    col_names.append('deathRateNoIcu')
+    if is_ordinary:
+        col_names.append('R0')
+        col_names.append('latentRate')
+        col_names.append('removalRate')
+        col_names.append('hospRate')
+        col_names.append('deathRateICU')
+        col_names.append('deathRateNoIcu')
+    else:
+        col_names.append('iteration')
+
     t_sim = params.control_dict['t_sim'] + 1
     initdata = np.zeros((len(data_to_save) * t_sim, len(col_names)))
     final_frame = pd.DataFrame(initdata, columns=col_names)
@@ -441,13 +450,16 @@ def generate_csv_raw(category_map, data_to_save, params, population_frame):
         final_frame.loc[idx:lastrow, 'Time'] = value['t']
         final_frame.iloc[idx:idxnxt, number_categories_with_age + 1:number_categories_with_age + 1 + number_of_categories] = value['y_plot'].T  # summary/non age-structured
 
-        (R0, latentRate, removalRate, hospRate, deathRateICU, deathRateNoIcu) = key
-        final_frame.loc[idx:lastrow, 'R0'] = [R0] * t_sim
-        final_frame.loc[idx:lastrow, 'latentRate'] = [latentRate] * t_sim
-        final_frame.loc[idx:lastrow, 'removalRate'] = [removalRate] * t_sim
-        final_frame.loc[idx:lastrow, 'hospRate'] = [hospRate] * t_sim
-        final_frame.loc[idx:lastrow, 'deathRateICU'] = [deathRateICU] * t_sim
-        final_frame.loc[idx:lastrow, 'deathRateNoIcu'] = [deathRateNoIcu] * t_sim
+        if is_ordinary:
+            (R0, latentRate, removalRate, hospRate, deathRateICU, deathRateNoIcu) = key
+            final_frame.loc[idx:lastrow, 'R0'] = [R0] * t_sim
+            final_frame.loc[idx:lastrow, 'latentRate'] = [latentRate] * t_sim
+            final_frame.loc[idx:lastrow, 'removalRate'] = [removalRate] * t_sim
+            final_frame.loc[idx:lastrow, 'hospRate'] = [hospRate] * t_sim
+            final_frame.loc[idx:lastrow, 'deathRateICU'] = [deathRateICU] * t_sim
+            final_frame.loc[idx:lastrow, 'deathRateNoIcu'] = [deathRateNoIcu] * t_sim
+        else:
+            final_frame.loc[idx:lastrow, 'iteration'] = [key] * t_sim
         idx += t_sim
         idxnxt += t_sim
     solution_csv = final_frame

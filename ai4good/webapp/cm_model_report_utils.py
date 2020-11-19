@@ -21,9 +21,14 @@ def load_report(mr, params) -> pd.DataFrame:
 
 def normalize_report(df, params):
     df = df.copy()
-    df.R0 = df.R0.apply(lambda x: round(complex(x).real, 1))
-    df_temp = df.drop(['Time', 'R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'],
+
+    if 'R0' in df.columns:
+        df.R0 = df.R0.apply(lambda x: round(complex(x).real, 1))
+        df_temp = df.drop(['Time', 'R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'],
                       axis=1)
+    else:
+        df_temp = df.drop(['Time', 'iteration'], axis=1)
+
     df_temp = df_temp * params.population
     df.update(df_temp)
     return df
@@ -31,8 +36,12 @@ def normalize_report(df, params):
 @timing
 def prevalence_all_table(df):
     # calculate Peak Day IQR and Peak Number IQR for each of the 'incident' variables to table
-    df = df.filter(regex='^Time$|^R0$|^latentRate$|^removalRate$|^hospRate$|^deathRateICU$|^deathRateNoIcu$|^Infected \(symptomatic\)$|^Hospitalised$|^Critical$|^Change in Deaths$')
-    groupby_columns = ['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu']
+    if 'iteration' in df.columns:
+        df = df.filter(regex='^Time$|^iteration$|^Infected \(symptomatic\)$|^Hospitalised$|^Critical$|^Change in Deaths$')
+        groupby_columns = ['iteration']
+    else:
+        df = df.filter(regex='^Time$|^R0$|^latentRate$|^removalRate$|^hospRate$|^deathRateICU$|^deathRateNoIcu$|^Infected \(symptomatic\)$|^Hospitalised$|^Critical$|^Change in Deaths$')
+        groupby_columns = ['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu']
     grouped = df.groupby(groupby_columns)
     indices_to_drop = groupby_columns + ['Time']
     peak_days = get_quantile_report(grouped.apply(lambda x: x.set_index('Time').idxmax()), indices_to_drop)
@@ -54,8 +63,12 @@ def get_quantile_report(x, indices_to_drop):
 @timing
 def prevalence_age_table(df):
     # calculate age specific Peak Day IQR and Peak Number IQR for each of the 'prevalent' variables to contruct table
-    df = df.filter(regex='^Time$|^R0$|^latentRate$|^removalRate$|^hospRate$|^deathRateICU$|^deathRateNoIcu$|^Infected \(symptomatic\)|^Hospitalised|^Critical')
-    groupby_columns = ['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu']
+    if 'iteration' in df.columns:
+        df = df.filter(regex='^Time$|^iteration$|^Infected \(symptomatic\)|^Hospitalised|^Critical')
+        groupby_columns = ['iteration']
+    else:
+        df = df.filter(regex='^Time$|^R0$|^latentRate$|^removalRate$|^hospRate$|^deathRateICU$|^deathRateNoIcu$|^Infected \(symptomatic\)|^Hospitalised|^Critical')
+        groupby_columns = ['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu']
     grouped = df.groupby(groupby_columns)
     indices_to_drop = groupby_columns + ['Time']
     peak_days = get_quantile_report(grouped.apply(lambda x: x.set_index('Time').idxmax()), indices_to_drop)
@@ -82,8 +95,13 @@ def cumulative_all_table(df, population, camp_params):
     # critical days: cumulative count of critical days
     # deaths: we already have that from the frame
 
-    df = df.filter(regex='^Time$|^R0$|^latentRate$|^removalRate$|^hospRate$|^deathRateICU$|^deathRateNoIcu$|Susceptible'+AGE_SEP+'|^Deaths$|^Hospitalised$|^Critical$|^Deaths$')
-    groups = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])
+    if 'iteration' in df.columns:
+        df = df.filter(regex='^Time$|^iteration$|Susceptible' + AGE_SEP + '|^Deaths$|^Hospitalised$|^Critical$|^Deaths$')
+        groupby_columns = ['iteration']
+    else:
+        df = df.filter(regex='^Time$|^R0$|^latentRate$|^removalRate$|^hospRate$|^deathRateICU$|^deathRateNoIcu$|Susceptible' + AGE_SEP + '|^Deaths$|^Hospitalised$|^Critical$|^Deaths$')
+        groupby_columns = ['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu']
+    groups = df.groupby(groupby_columns)
     groups_tails = groups.apply(lambda x: x.set_index('Time').tail(1))
 
     susceptible = groups_tails.filter(like='Susceptible'+AGE_SEP).rename(columns=lambda x: x.split(AGE_SEP)[1])[camp_params['Age']]
@@ -118,11 +136,16 @@ def cumulative_age_table(df, camp_params):
     params_accu = ['Hospitalised', 'Critical']
     columns_to_acc, columns_to_select, multipliers = collect_columns(df.columns, params_accu, params_select, camp_params)
 
-    first_month_diff = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+    if 'iteration' in df.columns:
+        groupby_columns = ['iteration']
+    else:
+        groupby_columns = ['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu']
+
+    first_month_diff = df.groupby(groupby_columns)[
         columns_to_select + ['Time']].apply(find_first_month_diff)
-    third_month_diff = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+    third_month_diff = df.groupby(groupby_columns)[
         columns_to_select + ['Time']].apply(find_third_month_diff)
-    sixth_month_diff = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+    sixth_month_diff = df.groupby(groupby_columns)[
         columns_to_select + ['Time']].apply(find_sixth_month_diff)
     first_month_select = first_month_diff[columns_to_select].mul(multipliers).quantile([.25, .75])
     three_month_select = third_month_diff[columns_to_select].mul(multipliers).quantile([.25, .75])
@@ -132,11 +155,11 @@ def cumulative_age_table(df, camp_params):
     three_month_select['Susceptible'] = three_month_select.filter(like='Susceptible:').sum(axis=1)
     six_month_select['Susceptible'] = six_month_select.filter(like='Susceptible:').sum(axis=1)
 
-    one_month_cumsum = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+    one_month_cumsum = df.groupby(groupby_columns)[
         columns_to_acc + ['Time']].apply(find_one_month)
-    three_month_cumsum = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+    three_month_cumsum = df.groupby(groupby_columns)[
         columns_to_acc + ['Time']].apply(find_three_months)
-    six_month_cumsum = df.groupby(['R0', 'latentRate', 'removalRate', 'hospRate', 'deathRateICU', 'deathRateNoIcu'])[
+    six_month_cumsum = df.groupby(groupby_columns)[
         columns_to_acc + ['Time']].apply(find_six_months)
     first_month_accu = one_month_cumsum[columns_to_acc].quantile([.25, .75])
     three_month_accu = three_month_cumsum[columns_to_acc].quantile([.25, .75])

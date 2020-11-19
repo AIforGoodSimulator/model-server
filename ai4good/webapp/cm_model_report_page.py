@@ -20,12 +20,12 @@ logger = get_logger(__name__)
 
 
 @cache.memoize(timeout=cache_timeout)
-def layout(camp, profile, cmp_profiles):
+def layout(model_id, camp, profile, cmp_profiles):
     
-    _, profile_df, params, _ = get_model_result(camp, profile)
+    _, profile_df, params, _ = get_model_result(model_id, camp, profile)
     return html.Div(
         [
-            GenerateMetadataHTML(GenerateMetadataDict(CompartmentalModel.ID, camp, profile, model_runner)),
+            GenerateMetadataHTML(GenerateMetadataDict(model_id, camp, profile, model_runner)),
             dcc.Markdown(disclaimer(camp), style={'margin': 30}),
             html.H1(f'AI for Good Simulator Model Report for {camp} Camp {profile} profile', style={'margin': 30}),
             dcc.Markdown(glossary(), style={'margin': 30}),
@@ -36,6 +36,7 @@ def layout(camp, profile, cmp_profiles):
             dcc.Loading(html.Div([], id='main_section_part2', style={'margin': 30})),
             base_profile_chart_section(),
             dcc.Loading(html.Div([], id='cmp_section', style={'margin': 30})),
+            html.Div(model_id, id='_model_id', style={'display': 'none'}),
             html.Div(camp, id='_camp_param', style={'display': 'none'}),
             html.Div(profile, id='_profile_param', style={'display': 'none'}),
             html.Div('¬'.join(cmp_profiles), id='_cmp_profiles', style={'display': 'none'})
@@ -106,11 +107,11 @@ def overview_population(params: Parameters):
 
 
 @local_cache.memoize(timeout=cache_timeout)
-def get_model_result(camp: str, profile: str):
-    logger.info("Reading data for: " + camp + ", " + profile)
-    mr = model_runner.get_result(CompartmentalModel.ID, profile, camp)
+def get_model_result(model_id:str, camp: str, profile: str):
+    logger.info("Reading data for: " + model_id + ", " + camp + ", " + profile)
+    mr = model_runner.get_result(model_id, profile, camp)
     assert mr is not None
-    profile_df = facade.ps.get_params(CompartmentalModel.ID, profile).drop(columns=['Profile'])
+    profile_df = facade.ps.get_params(model_id, profile).drop(columns=['Profile'])
     params = Parameters(facade.ps, camp, profile_df, {})
     report = load_report(mr, params)
     return mr, profile_df, params, report
@@ -118,11 +119,11 @@ def get_model_result(camp: str, profile: str):
 
 @dash_app.callback(
     Output('main_section_part1', 'children'),
-    [Input('_camp_param', 'children'), Input('_profile_param', 'children')],
+    [Input('_model_id', 'children'), Input('_camp_param', 'children'), Input('_profile_param', 'children')],
 )
 @cache.memoize(timeout=cache_timeout)
-def render_main_section_part1(camp, profile):
-    mr, profile_df, params, _ = get_model_result(camp, profile)
+def render_main_section_part1(model_id, camp, profile):
+    mr, profile_df, params, _ = get_model_result(model_id, camp, profile)
 
     prevalence = mr.get('prevalence_all')
     peak_critical_care_demand = prevalence[prevalence['Outcome'] == 'Critical Care Demand']['Peak Number IQR'].iloc[0]
@@ -224,11 +225,11 @@ def render_profile_df(df, params):
 
 @dash_app.callback(
     Output('main_section_part2', 'children'),
-    [Input('_camp_param', 'children'), Input('_profile_param', 'children')],
+    [Input('_model_id', 'children'), Input('_camp_param', 'children'), Input('_profile_param', 'children')],
 )
 @cache.memoize(timeout=cache_timeout)
-def render_main_section_part2(camp, profile):
-    mr, _, params, _ = get_model_result(camp, profile)
+def render_main_section_part2(model_id, camp, profile):
+    mr, _, params, _ = get_model_result(model_id, camp, profile)
 
     t_sim = params.control_dict['t_sim']
 
@@ -320,10 +321,10 @@ def base_profile_chart_section():
 
 @dash_app.callback(
     Output('chart_section_plot_container', 'children'),
-    [Input('_camp_param', 'children'), Input('_profile_param', 'children'), Input('charts_age_dropdown', 'value')],
+    [Input('_model_id', 'children'), Input('_camp_param', 'children'), Input('_profile_param', 'children'), Input('charts_age_dropdown', 'value')],
 )
-def render_main_section_charts(camp, profile, age_to_plot):
-    mr, profile_df, params, report = get_model_result(camp, profile)
+def render_main_section_charts(model_id, camp, profile, age_to_plot):
+    mr, profile_df, params, report = get_model_result(model_id, camp, profile)
     logger.info(f"Plotting {age_to_plot}")
 
     columns_to_plot = ['Infected (symptomatic)', 'Hospitalised', 'Critical', 'Deaths']
@@ -366,18 +367,18 @@ def render_main_section_charts(camp, profile, age_to_plot):
 
 @dash_app.callback(
     Output('cmp_section', 'children'),
-    [Input('_camp_param', 'children'), Input('_profile_param', 'children'), Input('_cmp_profiles', 'children')],
+    [Input('_model_id', 'children'), Input('_camp_param', 'children'), Input('_profile_param', 'children'), Input('_cmp_profiles', 'children')],
 )
 @cache.memoize(timeout=cache_timeout)
-def interventions(camp, profile, cmp_profiles):
+def interventions(model_id, camp, profile, cmp_profiles):
 
-    _, base_profile, base_params, base_df = get_model_result(camp, profile)
+    _, base_profile, base_params, base_df = get_model_result(model_id, camp, profile)
     profiles = cmp_profiles.split('¬')
 
     if len(profiles) == 0 or (len(profiles) == 1 and len(profiles[0].strip()) == 0):
         return []
 
-    intervention_content = [intervention(camp, p, i+1, base_df, base_params, base_profile, profile) for i, p in enumerate(profiles)]
+    intervention_content = [intervention(model_id, camp, p, i+1, base_df, base_params, base_profile, profile) for i, p in enumerate(profiles)]
     intervention_content = reduce(list.__add__, intervention_content)
 
     return [
@@ -391,8 +392,8 @@ def interventions(camp, profile, cmp_profiles):
     ]
 
 
-def intervention(camp, cmp_profile_name, idx, base_df, base_params, base_profile, base_profile_name):
-    _, cmp_profile, cmp_params, cmp_df = get_model_result(camp, cmp_profile_name)
+def intervention(model_id, camp, cmp_profile_name, idx, base_df, base_params, base_profile, base_profile_name):
+    _, cmp_profile, cmp_params, cmp_df = get_model_result(model_id, camp, cmp_profile_name)
 
     tbl = diff_table(base_df, cmp_df, cmp_params.population)
     profile_diff = profile_diff_tbl(base_profile, base_params, cmp_profile, cmp_params)

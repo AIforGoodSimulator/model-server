@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from typing import List
 from enum import Enum, auto
-from dask.distributed import Client, Future
+from dask.distributed import Client, Future, Variable
 from ai4good.models.model import Model, ModelResult
 from ai4good.models.model_registry import get_models, create_params
 from datetime import datetime
@@ -16,9 +16,11 @@ from ai4good.webapp.commit_date import get_version_date
 from ai4good.utils.logger_util import get_logger
 from dask.distributed import wait
 
-MAX_CONCURRENT_MODELS = 3
-HISTORY_SIZE = 10
-INPUT_PARAMETER_TIMEOUT = 60*30 # in seconds
+
+MAX_CONCURRENT_MODELS = 30
+HISTORY_SIZE = 100
+INPUT_PARAMETER_TIMEOUT = 60 * 30  # in seconds
+
 logger = get_logger(__name__)
 
 # _sid = np.random.randint(100000000, 1000000000)  # session id
@@ -34,20 +36,20 @@ class InputParameterCache:
     def _decode_byte(value) -> List:
         value = [i.decode('utf-8') if i is not None else None for i in value]
         value = [i if i is None else None if i.strip() == '' else i for i in value]
-        for i,j in enumerate(value):
+        for i, j in enumerate(value):
             if j is not None:
                 try:
                     value[i] = int(j)
                 except:
                     value[i] = j
-        return value        
-        
+        return value
+
     def cache_get_all(self):
         key_value_pair_dict = self._redis.hgetall(self._CACHE_KEY)
         key = list(key_value_pair_dict.keys())
         value = list(key_value_pair_dict.values())
         return self._decode_byte(key), self._decode_byte(value)
-    
+
     def cache_get(self, input_param_key):
         if isinstance(input_param_key, str):
             input_param_key = [input_param_key]
@@ -61,7 +63,7 @@ class InputParameterCache:
                 try:
                     pipe.watch(self._CACHE_KEY)
                     pipe.multi()
-                    for i,j in input_param.items():
+                    for i, j in input_param.items():
                         j_conv = '' if j is None else str(j)  # prevent string conversion of None
                         pipe.hset(self._CACHE_KEY, str(i), j_conv)
                     pipe.execute()
@@ -99,7 +101,6 @@ class ModelRunHistory:
 
     def __init__(self, _redis: redis.Redis):
         self._redis = _redis
-        
 
     def _append(self, t):
         with self._redis.pipeline() as pipe:
@@ -132,7 +133,7 @@ class ModelsRunningNow:
         self._redis = _redis
 
     def pop(self, key):
-        self._redis.srem(self._CACHE_KEY,  '¬'.join(key))
+        self._redis.srem(self._CACHE_KEY, '¬'.join(key))
 
     def start_run(self, key, f):
         _skey = '¬'.join(key)
@@ -142,7 +143,7 @@ class ModelsRunningNow:
                 try:
                     pipe.watch(self._CACHE_KEY)
                     n_running = self._redis.scard(self._CACHE_KEY)
-                    print("N_running: "+str(n_running))
+                    print("N_running: " + str(n_running))
                     is_running = self._redis.sismember(self._CACHE_KEY, _skey)
                     print("is_running: " + str(is_running))
                     if n_running >= MAX_CONCURRENT_MODELS:
@@ -207,8 +208,9 @@ class ModelRunner:
             self.history.record_scheduled(key)
             future: Future = client.submit(self._sync_run_model, self.facade, _model, _profile, self.user_input)
             future.add_done_callback(on_future_done)
-        
+
         key = (_model, _profile)
+
         return self.models_running_now.start_run(key, submit)
 
     def batch_run_model(self, run_config: dict):
@@ -242,7 +244,7 @@ class ModelRunner:
 
     @staticmethod
     def history_columns() -> List[str]:
-        return ['Key', 'Status', 'Time', 'Details', 'Version Date'] 
+        return ['Key', 'Status', 'Time', 'Details', 'Version Date']
 
     def history_df(self) -> pd.DataFrame:
         rows = []
@@ -255,14 +257,14 @@ class ModelRunner:
                     'Details': str(r[3]),
                     'Version Date': str(r[4]),
                 })
-            except IndexError: # avoids error when using a history for a model run before the version date parameter was added
+            except IndexError:  # avoids error when using a history for a model run before the version date parameter was added
                 rows.append({
                     'Key': str(r[0]),
                     'Status': str(r[1]),
                     'Time': str(r[2]),
                     'Details': str(r[3]),
-                })        
-            
+                })
+
         return pd.DataFrame(rows)
 
     @staticmethod
@@ -296,3 +298,4 @@ class ModelRunner:
         saved_keys, saved_values = input_param_cache.cache_get_all()
         user_input = json.dumps(dict(zip(saved_keys, saved_values)))
         return user_input
+
