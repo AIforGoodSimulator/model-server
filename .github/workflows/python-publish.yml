@@ -46,7 +46,7 @@ jobs:
         env:
           # The hostname used to communicate with the Redis service container
           #REDIS_HOST: redis
-          REDIS_URL: redis
+          REDIS_URL: 'rediss://redis'
           # The default Redis port
           #REDIS_PORT: 6379
 
