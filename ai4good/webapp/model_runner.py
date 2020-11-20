@@ -9,22 +9,21 @@ from ai4good.models.model import Model, ModelResult
 from ai4good.models.model_registry import get_models, create_params
 from datetime import datetime
 import pickle
-import json
 import socket
-from ai4good.utils import path_utils as pu
+import secrets
 from ai4good.webapp.commit_date import get_version_date
 from ai4good.utils.logger_util import get_logger
-from dask.distributed import wait
-
 
 MAX_CONCURRENT_MODELS = 30
 HISTORY_SIZE = 100
 INPUT_PARAMETER_TIMEOUT = 60 * 30  # in seconds
-
 logger = get_logger(__name__)
 
+_sid = secrets.token_urlsafe(64)  # session id
+# _sid = 42 #fixed for local dev
+
 # _sid = np.random.randint(100000000, 1000000000)  # session id
-_sid = 42 #fixed for local dev
+# _sid = 42 #fixed for local dev
 
 class InputParameterCache:
     _CACHE_KEY = f'{socket.gethostname()}_{_sid}_input_parameter'
@@ -74,13 +73,6 @@ class InputParameterCache:
                     error_count += 1
                     logger.warning('Input page #%d optimistic lock error #%d; retrying', page_number, error_count)
         raise RuntimeError('Failed to obtain lock - input parameters')
-    def cache_save(self):
-        """Save cache locally before processing it with the models"""
-        output_dict = dict(zip(self.cache_get_all))
-        pickle.dump(output_dict, open(pu.cache_path(f"{_CACHE_KEY}.pickle"), "wb"))
-
-
-
 
 
 class ModelScheduleRunResult(Enum):
