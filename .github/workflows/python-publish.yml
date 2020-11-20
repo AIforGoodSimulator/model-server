@@ -38,17 +38,12 @@ jobs:
           pip install selenium        
 
       - name: Run unit tests
-        # Runs a script that creates a Redis client, populates
-        # the client with data, and retrieves data
         run: |
           chmod 755 ./run_tests.sh
           ./run_tests.sh
         env:
           # The hostname used to communicate with the Redis service container
-          #REDIS_HOST: redis
           REDIS_URL: 'rediss://redis'
-          # The default Redis port
-          #REDIS_PORT: 6379
 
 
       - name: Wemake Python Stylguide
