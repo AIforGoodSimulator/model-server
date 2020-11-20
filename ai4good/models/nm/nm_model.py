@@ -92,13 +92,8 @@ def run_parallel(p, sampled_graph):
             lazy_result = dask.delayed(process_graph)(p, sampled_graph)
 
         lazy_sols.append(lazy_result)
-<<<<<<< HEAD
-
-    with dask.config.set(scheduler="processes", num_workers=10):
-=======
         
     with dask.config.set(scheduler='single-threaded', num_workers=1):
->>>>>>> origin/dev
         with ProgressBar():
             sols = dask.compute(*lazy_sols)
     return sols

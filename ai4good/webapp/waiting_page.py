@@ -1,12 +1,12 @@
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
-import ai4good.webapp.run_model_page as run_model_page
 from ai4good.webapp.model_runner import ModelsRunningNow, ModelScheduleRunResult, _sid, ModelRunner
 from dash.dependencies import Input, Output, State
 import time
-from ai4good.webapp.run_model_for_dashboard import run_model_results_for_messages
-from ai4good.webapp.apps import dash_app, facade, _redis, dask_client
+import ai4good.webapp.common_elements as common_elements
+from ai4good.webapp.run_model_for_dashboard import run_model_results_for_messages, check_model_results_for_messages
+from ai4good.webapp.apps import dash_app, facade, _redis, dask_client, model_runner
 from ai4good.utils.logger_util import get_logger
 
 logger = get_logger(__name__)
@@ -16,9 +16,9 @@ initial_time = time.strftime("%m/%d/%Y, %H:%M:%S", initial_time)
 
 
 layout = html.Div([
-        dcc.Interval(id='interval2', interval=1000, n_intervals=0, max_intervals=1),
+        dcc.Interval(id='starting', interval=1000, n_intervals=0, max_intervals=1),
         dcc.Interval(id='interval1', interval=10 * 1000, n_intervals=0),
-        run_model_page.nav_bar(),
+        common_elements.nav_bar(),
         html.Br(),
         html.Div([
             dbc.Container([
@@ -43,47 +43,31 @@ layout = html.Div([
 )
 
 
-@dash_app.callback([Output('memory', 'data')],[Input('interval2', 'n_intervals')])
+# we need to have a way to prevent a user submitting the runs multiple times
+# (some batch model running now might help)
+@dash_app.callback([Output('memory', 'data')],
+ [Input('starting', 'n_intervals')])
 def run_model_results(n):
-    running_log = ModelsRunningNow(_redis)
-    running_log.clear_run()
-    model_runner = ModelRunner(facade, _redis, dask_client, _sid)
-    queue = run_model_results_for_messages(model_runner,["message_1", "message_5"])
-    return [queue]
+    res = run_model_results_for_messages(model_runner,["message_1", "message_5"])
+    return ["placeholder"]
+    # output a queue to resubmit later if that happens but with the increased capacity
+    # on the model runner this might never happen
+    # check if they are all running
+    # for result in res:
+    #     if res == ModelScheduleRunResult.CAPACITY:
+    #         message = "some models are not running due to capacity reason"
+    #         return [message]
+    # message = "all models are running now"
+    # return [message]
 
-
-@dash_app.callback([Output('update_String', 'children'),Output('status_String', 'children')],
-    [Input('memory', 'data'),Input('interval1', 'n_intervals')])
-def empty_queue(queue,n):
-    model_runner = ModelRunner(facade, _redis, dask_client, _sid)
-    if len(queue) > 0:
-        queue_string = queue.pop(0)
-        splited_string = queue_string.split('|')
-        model = splited_string[0]
-        profile = splited_string[1]
-        res = model_runner.run_model(model, profile)
-        if res == ModelScheduleRunResult.SCHEDULED:
-            logger.info("Model run scheduled")
-        elif res == ModelScheduleRunResult.CAPACITY:
-            # put the pair back to the queue
-            queue.append(queue_string)
-            logger.info("Can not run model now, added to queue")
-        elif res == ModelScheduleRunResult.ALREADY_RUNNING:
-            logger.info("Already running")
-        else:
-            raise RuntimeError("Unsupported result type: " + str(res))
-        return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), ("Status: ", initial_status)
-    else:
-        ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), ("Status: Finished")
 
 # Check every 10 seconds to check if there is a report ready
-# Or make the previous run model blocking and update the message once the operations there are done
-# @dash_app.callback([Output('update_String', 'children'),Output('status_String', 'children')],
-#     [Input('interval1', 'n_intervals')])
-# def check_Model(n):
-#
-#     if (model_runner.results_exist(model, profile)):
-#         return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), ("Status: Finished")
-#     else:
-#         print("No results yet " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime())))
-#         return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), ("Status: ", initial_status)
+@dash_app.callback([Output('update_String', 'children'),Output('status_String', 'children')],
+    [Input('interval1', 'n_intervals')])
+def check_Model(n):
+    results_ready = check_model_results_for_messages(model_runner,["message_1", "message_5"])
+    if results_ready:
+        return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), ("Status: Finished")
+    else:
+        print("No results yet " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime())))
+        return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), ("Status: ", initial_status)

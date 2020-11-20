@@ -214,11 +214,12 @@ class ModelRunner:
         return self.models_running_now.start_run(key, submit)
 
     def batch_run_model(self, run_config: dict):
-        if self.user_input is None:
-            self.user_input = self.load_input_params()
+        # if self.user_input is None:
+        #     self.user_input = self.load_input_params()
+        self.user_input = self.load_input_params()
         # initialise the client
         client = self.dask_client_provider()
-        futures = []
+        res = []
         for model in run_config.keys():
             if len(run_config[model]) > 0:
                 for profile in run_config[model]:
@@ -234,13 +235,12 @@ class ModelRunner:
                             error_details = traceback.format_tb(tb)
                             logger.error("Model run %s failed: %s", str(key), error_details)
                             self.history.record_error(key, error_details)
-                    key = (model, profile)
+                    key = (model, profile, self.user_input)
+                    self.history.record_scheduled(key)
                     future: Future = client.submit(self._sync_run_model, self.facade, model, profile, self.user_input)
                     future.add_done_callback(on_future_done)
-                    futures.append(future)
-        wait(futures) # block operation until all futures are finished
-        logger.info('all runs have finished')
-        return True
+        logger.info('all runs have finished') # what would this output?
+        return None
 
     @staticmethod
     def history_columns() -> List[str]:

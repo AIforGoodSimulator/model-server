@@ -188,11 +188,11 @@ def update_input_parameter_page_4(
         raise PreventUpdate
 
 
-@dash_app.callback(Output('input-page-4-alert', 'children'),[Input('page-4-button', 'n_clicks')])
-def model_Dashboard(n_clicks):
-    if n_clicks:
-        running_log = ModelsRunningNow(_redis)
-        running_log.clear_run()
-        print("model_Dashboard: " + str(n_clicks))
-        run_model_for_dashboard.run_model_results_for_message("message_1")
-        run_model_for_dashboard.run_model_results_for_message("message_5")
+# @dash_app.callback(Output('input-page-4-alert', 'children'),[Input('page-4-button', 'n_clicks')])
+# def model_Dashboard(n_clicks):
+#     if n_clicks:
+#         running_log = ModelsRunningNow(_redis)
+#         running_log.clear_run()
+#         print("model_Dashboard: " + str(n_clicks))
+#         run_model_for_dashboard.run_model_results_for_message("message_1")
+#         run_model_for_dashboard.run_model_results_for_message("message_5")
