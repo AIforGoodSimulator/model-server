@@ -9,7 +9,7 @@ from flask_login import login_user
 from flask_login import logout_user
 from werkzeug.urls import url_parse
 
-from ai4good.extensions import db
+from ai4good.extensions import db_sqlalchemy
 from ai4good.forms import LoginForm
 from ai4good.forms import RegistrationForm
 from ai4good.models_file import User
@@ -60,8 +60,8 @@ def register():
     if form.validate_on_submit():
         user = User(username=form.username.data)
         user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
+        db_sqlalchemy.session.add(user)
+        db_sqlalchemy.session.commit()
 
         return redirect(url_for('main.login'))
 

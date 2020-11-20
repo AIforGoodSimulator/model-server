@@ -18,14 +18,14 @@ logger = get_logger(__name__,'DEBUG')
 load_dotenv()
 
 def register_extensions(server):
-    from ai4good.extensions import db
+    from ai4good.extensions import db_sqlalchemy
     from ai4good.extensions import login
     from ai4good.extensions import migrate
 
-    db.init_app(server)
+    db_sqlalchemy.init_app(server)
     login.init_app(server)
     login.login_view = 'main.login'
-    migrate.init_app(server, db)
+    migrate.init_app(server, db_sqlalchemy)
 
 def register_blueprints(server):
     from ai4good.webapp_file import server_bp
