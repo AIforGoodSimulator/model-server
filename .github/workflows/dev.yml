@@ -12,7 +12,7 @@ env:
 jobs:
   # Label of the container job
   build:
-    name: Unit Test
+    name: Build and deploy to DEV
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-18.04
     # Docker Hub image that `container-job` executes in
@@ -55,16 +55,16 @@ jobs:
         pip install pytest
         pip install pytest-cov
         pytest ./ai4good --cov=./ --cov-report=xml
+      env:
+        # The hostname used to communicate with the Redis service container
+        REDIS_URL: 'rediss://redis'
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
         flags: unittests
-      env:
-        # The hostname used to communicate with the Redis service container
-        REDIS_URL: 'rediss://redis'
-  
 
     - name: Building web app
       uses: azure/appservice-build@v2-beta
