@@ -2,10 +2,29 @@ name: AIforGood ModelServer Tests
 
 on: [push]
 
+
 jobs:
+  # Label of the container job
   qa:
-    name: Quality check
+    name: Unit Test
+    # Containers must run in Linux based operating systems
     runs-on: ubuntu-18.04
+    # Docker Hub image that `container-job` executes in
+    container: 3.7
+
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python
@@ -19,9 +38,18 @@ jobs:
           pip install selenium        
 
       - name: Run unit tests
+        # Runs a script that creates a Redis client, populates
+        # the client with data, and retrieves data
         run: |
           chmod 755 ./run_tests.sh
           ./run_tests.sh
+        env:
+          # The hostname used to communicate with the Redis service container
+          #REDIS_HOST: redis
+          REDIS_URL: redis
+          # The default Redis port
+          #REDIS_PORT: 6379
+
 
       - name: Wemake Python Stylguide
         uses: wemake-services/wemake-python-styleguide@0.14.1
