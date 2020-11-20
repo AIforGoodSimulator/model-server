@@ -10,9 +10,27 @@ env:
   AZURE_WEBAPP_PACKAGE_PATH: '.' 
 
 jobs:
+  # Label of the container job
   build:
-    name: Deploy to DEV Azure Web App
+    name: Unit Test
+    # Containers must run in Linux based operating systems
     runs-on: ubuntu-18.04
+    # Docker Hub image that `container-job` executes in
+    container: python:3.7.9-buster
+
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - uses: actions/checkout@v1
       with:
@@ -43,6 +61,10 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
         flags: unittests
+      env:
+        # The hostname used to communicate with the Redis service container
+        REDIS_URL: 'rediss://redis'
+  
 
     - name: Building web app
       uses: azure/appservice-build@v2-beta
