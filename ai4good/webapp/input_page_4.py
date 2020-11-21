@@ -102,7 +102,7 @@ layout = html.Div(
                                 ], id='tabs-activity-gathering', active_tab=tab_id_activity_gathering[0]), 
                             ], style={'border':'1px lightgray solid'}),
                             html.P(''),
-                            dbc.CardFooter(dbc.Button('Run Simulation', id='page-4-button', color='secondary', href='/sim/run_model', style={'float':'right'})),
+                            dbc.CardFooter(dbc.Button('Run Simulation', id='page-4-button', color='secondary', href='/sim/waiting', style={'float':'right'})),
                             html.Div(id='input-page-4-alert')
                             ], body=True), 
                         html.Br()], width=6

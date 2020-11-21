@@ -11,6 +11,10 @@ from dask.distributed import Client, Future, Variable
 from ai4good.config import BaseConfig
 from ai4good.models.model import Model, ModelResult
 from ai4good.models.model_registry import get_models, create_params
+from datetime import datetime
+import pickle
+import socket
+import secrets
 from ai4good.webapp.commit_date import get_version_date
 from ai4good.utils.logger_util import get_logger
 
@@ -20,7 +24,7 @@ INPUT_PARAMETER_TIMEOUT = 60 * 30  # in seconds
 
 logger = get_logger(__name__)
 
-_sid = np.random.randint(100000000, 1000000000)  # session id
+_sid = secrets.token_urlsafe(64)  # session id
 
 
 class InputParameterCache:
