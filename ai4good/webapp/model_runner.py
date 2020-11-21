@@ -13,6 +13,7 @@ import socket
 import secrets
 from ai4good.webapp.commit_date import get_version_date
 from ai4good.utils.logger_util import get_logger
+import json
 
 MAX_CONCURRENT_MODELS = 30
 HISTORY_SIZE = 100
@@ -20,10 +21,8 @@ INPUT_PARAMETER_TIMEOUT = 60 * 30  # in seconds
 logger = get_logger(__name__)
 
 _sid = secrets.token_urlsafe(64)  # session id
-# _sid = 42 #fixed for local dev
+_sid = 42 #fixed for local dev
 
-# _sid = np.random.randint(100000000, 1000000000)  # session id
-# _sid = 42 #fixed for local dev
 
 class InputParameterCache:
     _CACHE_KEY = f'{socket.gethostname()}_{_sid}_input_parameter'

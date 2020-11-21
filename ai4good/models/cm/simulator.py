@@ -267,44 +267,41 @@ class Simulator:
     #     return [y_U95, y_UQ, y_LQ, y_L95, y_median]
 
     # This function has been parallelized
-    # def simulate_over_parameter_range(self, numberOfIterations, t_stop=200):
 
-    #     sols = []
-    #     config_dict = []
-    #     sols_raw = {}
-    #     for ii in tqdm(range(min(numberOfIterations,len(self.params.generated_disease_vectors)))):
-    #         latentRate  = 1/self.params.generated_disease_vectors.LatentPeriod[ii]
-    #         removalRate = 1/self.params.generated_disease_vectors.RemovalPeriod[ii]
+    def simulate_over_parameter_range(self, numberOfIterations, t_stop, n_processes, generated_disease_vectors):
 
-    #         beta        = removalRate*self.params.generated_disease_vectors.R0[ii]/self.params.largest_eigenvalue
+        config_dict = []
+        sols_raw = {}
+        for ii in tqdm(range(min(numberOfIterations,len(self.params.generated_disease_vectors)))):
+            latentRate  = 1/self.params.generated_disease_vectors.LatentPeriod[ii]
+            removalRate = 1/self.params.generated_disease_vectors.RemovalPeriod[ii]
 
-    #         hospRate       = 1/self.params.generated_disease_vectors.HospPeriod[ii]
-    #         deathRateICU   = 1/self.params.generated_disease_vectors.DeathICUPeriod[ii]
-    #         deathRateNoIcu = 1/self.params.generated_disease_vectors.DeathNoICUPeriod[ii]
+            beta        = removalRate*self.params.generated_disease_vectors.R0[ii]/self.params.largest_eigenvalue
 
-    #         result = self.run_model(T_stop=t_stop, beta=beta,
-    #                                 latent_rate=latentRate,
-    #                                 removal_rate=removalRate,
-    #                                 hosp_rate=hospRate,
-    #                                 death_rate_ICU=deathRateICU,
-    #                                 death_rate_no_ICU=deathRateNoIcu
-    #                                 )
-    #         sols.append(result)
-    #         Dict = dict(beta       = beta,
-    #                 latentRate     = latentRate,
-    #                 removalRate    = removalRate,
-    #                 hospRate       = hospRate,
-    #                 deathRateICU   = deathRateICU,
-    #                 deathRateNoIcu = deathRateNoIcu
-    #                 )
-    #         config_dict.append(Dict)
-    #         sols_raw[(self.params.generated_disease_vectors.R0[ii],latentRate,removalRate,hospRate,deathRateICU,deathRateNoIcu)]=result
+            hospRate       = 1/self.params.generated_disease_vectors.HospPeriod[ii]
+            deathRateICU   = 1/self.params.generated_disease_vectors.DeathICUPeriod[ii]
+            deathRateNoIcu = 1/self.params.generated_disease_vectors.DeathNoICUPeriod[ii]
 
-    #     [y_U95, y_UQ, y_LQ, y_L95, y_median] = self.generate_percentiles(sols)
+            result = self.run_model(T_stop=t_stop, beta=beta,
+                                    latent_rate=latentRate,
+                                    removal_rate=removalRate,
+                                    hosp_rate=hospRate,
+                                    death_rate_ICU=deathRateICU,
+                                    death_rate_no_ICU=deathRateNoIcu
+                                    )
+            Dict = dict(beta=beta,
+                        latentRate=latentRate,
+                        removalRate=removalRate,
+                        hospRate=hospRate,
+                        deathRateICU=deathRateICU,
+                        deathRateNoIcu=deathRateNoIcu
+                        )
+            config_dict.append(Dict)
 
-    #     standard run
-    #     StandardSol = [self.run_model(T_stop=t_stop, beta=self.params.beta_list[1])]
-    #     return sols_raw, [y_U95, y_UQ, y_LQ, y_L95, y_median], config_dict
+            sols_raw[(generated_disease_vectors.R0[ii], latentRate, removalRate,
+                      hospRate, deathRateICU, deathRateNoIcu)] = result
+
+        return sols_raw, config_dict
 
 
     def simulate_over_parameter_range_parallel(self, numberOfIterations, t_stop, n_processes, generated_disease_vectors):

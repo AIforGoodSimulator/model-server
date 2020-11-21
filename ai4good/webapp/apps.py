@@ -2,7 +2,7 @@ import dash
 import dash_bootstrap_components as dbc
 from flask import Flask
 from flask_caching import Cache
-from dask.distributed import Client
+from dask.distributed import Client, LocalCluster
 from ai4good.runner.facade import Facade
 from ai4good.webapp.model_runner import ModelRunner, _sid
 from ai4good.utils.logger_util import get_logger
@@ -50,13 +50,16 @@ def dask_client() -> Client:
     if _client is None:
         if ("DASK_SCHEDULER_HOST" not in os.environ) :
             logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
-            _client = Client()
+            cluster = LocalCluster(n_workers=4, threads_per_worker=1)
+            _client = Client(cluster)
         elif (os.environ.get("DASK_SCHEDULER_HOST")=="127.0.0.1") :
             logger.info("Running Dask locally ...")
-            _client = Client()
+            cluster = LocalCluster(n_workers=4, threads_per_worker=1)
+            _client = Client(cluster)
         elif (os.environ.get("DASK_SCHEDULER_HOST")=='') :
             logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
-            _client = Client()
+            cluster = LocalCluster(n_workers=4, threads_per_worker=1)
+            _client = Client(cluster)
         else :
             logger.info("Running Dask Distributed using Dask Scheduler ["+os.environ.get("DASK_SCHEDULER_HOST")+"] ...")
             _client = Client(os.environ.get("DASK_SCHEDULER_HOST")+":"+os.environ.get("DASK_SCHEDULER_PORT"))

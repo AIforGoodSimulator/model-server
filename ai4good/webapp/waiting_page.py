@@ -1,3 +1,4 @@
+import dash
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
@@ -16,7 +17,7 @@ initial_time = time.strftime("%m/%d/%Y, %H:%M:%S", initial_time)
 
 
 layout = html.Div([
-        dcc.Interval(id='starting', interval=1000, n_intervals=0, max_intervals=1),
+        # dcc.Interval(id='starting', interval=1000, n_intervals=0, max_intervals=1),
         dcc.Interval(id='interval1', interval=10 * 1000, n_intervals=0),
         common_elements.nav_bar(),
         html.Br(),
@@ -28,9 +29,12 @@ layout = html.Div([
                             html.H4('COVID-19 Simulator', className='card-title'),
                             html.Header('Please wait for the simulation to complete.', className='card-text'),
                             html.Div([
-                                html.P(("Status: ", initial_status),id="status_String",style={'margin':'0px'}),
-                                html.P(("Last Updated: ", initial_time),id="update_String", className="status_Time", style={'font-size':'0.8em'}),
-                                dbc.Button("View Report", id="model_results_button", className="mr-1 holo"),
+                                html.P(("Status: ", initial_status), id="status_String",style={'margin':'0px'}),
+                                html.P(("Last Updated: ", initial_time), id="update_String", className="status_Time",
+                                       style={'font-size':'0.8em'}),
+                                dbc.Button("Rerun the models", id="model_rerun_button", className="mr-1 holo",
+                                           disabled=True),
+                                dbc.Button("View Results", id="model_dashboard_button_ui", className="mr-1 holo", disabled=True),
                             ], className="results_Controls")
                             ], body=True
                         ),html.Br()], width=6
@@ -46,10 +50,18 @@ layout = html.Div([
 # we need to have a way to prevent a user submitting the runs multiple times
 # (some batch model running now might help)
 @dash_app.callback([Output('memory', 'data')],
- [Input('starting', 'n_intervals')])
-def run_model_results(n):
-    res = run_model_results_for_messages(model_runner,["message_1", "message_5"])
-    return ["placeholder"]
+                   [Input("model_rerun_button", "n_clicks")])
+def re_run_model_results(run_n):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return ["placeholder"]
+    else:
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        if button_id == 'model_rerun_button':
+            res = run_model_results_for_messages(model_runner,["message_1", "message_5"])
+            return ["placeholder"]
+        else:
+            return ["placeholder"]
     # output a queue to resubmit later if that happens but with the increased capacity
     # on the model runner this might never happen
     # check if they are all running
@@ -62,12 +74,16 @@ def run_model_results(n):
 
 
 # Check every 10 seconds to check if there is a report ready
-@dash_app.callback([Output('update_String', 'children'),Output('status_String', 'children')],
+@dash_app.callback([Output('update_String', 'children'), Output('status_String', 'children'),
+                    Output("model_dashboard_button_ui", "disabled"), Output("model_rerun_button", "disabled")],
     [Input('interval1', 'n_intervals')])
 def check_Model(n):
     results_ready = check_model_results_for_messages(model_runner,["message_1", "message_5"])
     if results_ready:
-        return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), ("Status: Finished")
+        return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), \
+               "Status: Finished", False, True
     else:
         print("No results yet " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime())))
-        return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), ("Status: ", initial_status)
+        return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), \
+               ("Status: ", initial_status), True, False
+
