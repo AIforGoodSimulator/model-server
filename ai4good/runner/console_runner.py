@@ -10,6 +10,35 @@ from ai4good.webapp.apps import facade
 facade = Facade.simple()
 logger = get_logger(__name__)
 
+# Set a default user input for debugging purposes:
+user_input_params = '{"name-camp": "Test", "location": "Greece", "country-dropdown": "Georgia", ' \
+                    '"total-area": null, "total-population": 20000, "age-population-0-5": 3000, ' \
+                    '"age-population-6-9": 3000, "age-population-10-19": 2000, "age-population-20-29": 2000, ' \
+                    '"age-population-30-39": 2000, "age-population-40-49": 2000, "age-population-50-59": 2000, ' \
+                    '"age-population-60-69": 2000, "age-population-70+": 2000, "gender-perc-female": 50, ' \
+                    '"gender-perc-male": 50, "ethnic-no-1": null, "ethnic-no-2": null, "ethnic-no-3": null, ' \
+                    '"ethnic-no-4": null, "ethnic-no-5": null, "ethnic-no-6": null, "ethnic-no-7": null, ' \
+                    '"ethnic-no-8": null, "ethnic-no-9": null, "ethnic-no-10": null, ' \
+                    '"accommodation-area-type1": null, "accommodation-area-type2": null, ' \
+                    '"accommodation-area-type3": null, "accommodation-no-unit-type1": null, ' \
+                    '"accommodation-no-unit-type2": null, "accommodation-no-unit-type3": null, ' \
+                    '"accommodation-no-person-type1": null, "accommodation-no-person-type2": null, ' \
+                    '"accommodation-no-person-type3": null, "available-ICU-beds": null, ' \
+                    '"increased-ICU-beds": null, "remove-high-risk-off-site": null, ' \
+                    '"age-min-moved-off-site": 60, "age-max-moved-off-site": 100, ' \
+                    '"number-known-comorbidity": null, "isolation-centre-capacity": null, ' \
+                    '"days-quarantine-tested-positive": null, "community-shielding": null, ' \
+                    '"community-surveillance-program": null, "radio-intervene-social": null, ' \
+                    '"radio-intervene-face": null, "radio-intervene-handwashing": null, ' \
+                    '"radio-intervene-testing": null, "radio-intervene-lockdown": null, ' \
+                    '"activity-no-place-admin": null, "activity-no-place-food": null, ' \
+                    '"activity-no-place-health": null, "activity-no-place-recreational": null, ' \
+                    '"activity-no-place-religious": null, "activity-no-person-admin": null, ' \
+                    '"activity-no-person-food": null, "activity-no-person-health": null, ' \
+                    '"activity-no-person-recreational": null, "activity-no-person-religious": null, ' \
+                    '"activity-no-visit-admin": null, "activity-no-visit-food": null, ' \
+                    '"activity-no-visit-health": null, "activity-no-visit-recreational": null, ' \
+                    '"activity-no-visit-religious": null}'
 
 @typechecked
 def run_model(_model: str, _profile: str, camp: str, load_from_cache: bool,
@@ -17,7 +46,7 @@ def run_model(_model: str, _profile: str, camp: str, load_from_cache: bool,
               is_save_report: bool, overrides) -> ModelResult:
     logger.info('Running %s model with %s profile', _model, _profile)
     _mdl: Model = get_models()[_model](facade.ps)
-    params = create_params(facade.ps, _model, _profile, camp, overrides)
+    params = create_params(facade.ps, _model, _profile, user_input_params, overrides)
     res_id = _mdl.result_id(params)
     if load_from_cache and facade.rs.exists(_mdl.id(), res_id):
         logger.info("Loading from model result cache")

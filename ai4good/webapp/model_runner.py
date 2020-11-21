@@ -172,6 +172,7 @@ class ModelRunner:
         self.facade = facade
         self.history = ModelRunHistory(_redis)
         self.models_running_now = ModelsRunningNow(_redis)
+        self.models_running_now.clear_run() # clear running log for now
         self.dask_client_provider = dask_client_provider
         self._redis = _redis
         self._sid = _sid
@@ -180,6 +181,7 @@ class ModelRunner:
     def run_model(self, _model: str, _profile: str) -> ModelScheduleRunResult:
         if self.user_input is None:
             self.user_input = self.load_input_params()
+
         def on_future_done(f: Future):
             self.models_running_now.pop(key)
             if f.status == 'finished':
@@ -214,22 +216,28 @@ class ModelRunner:
         for model in run_config.keys():
             if len(run_config[model]) > 0:
                 for profile in run_config[model]:
-                    def on_future_done(f: Future):
-                        if f.status == 'finished':
-                            logger.info("Model run %s success", str(key))
-                            self.history.record_finished(key, f.result())
-                        elif f.status == 'cancelled':
-                            logger.info("Model run %s cancelled", str(key))
-                            self.history.record_cancelled(key)
-                        else:
-                            tb = f.traceback()
-                            error_details = traceback.format_tb(tb)
-                            logger.error("Model run %s failed: %s", str(key), error_details)
-                            self.history.record_error(key, error_details)
+                    def submit():
+                        key = (model, profile, self.user_input)  # duplicate the key here so the result report will be right
+
+                        def on_future_done(f: Future):
+                            self.models_running_now.pop(key)
+                            if f.status == 'finished':
+                                logger.info("Model run %s success", str(key))
+                                self.history.record_finished(key, f.result())
+                            elif f.status == 'cancelled':
+                                logger.info("Model run %s cancelled", str(key))
+                                self.history.record_cancelled(key)
+                            else:
+                                tb = f.traceback()
+                                error_details = traceback.format_tb(tb)
+                                logger.error("Model run %s failed: %s", str(key), error_details)
+                                self.history.record_error(key, error_details)
+                        logger.info(f"submitting model run {key}")
+                        self.history.record_scheduled(key)
+                        future: Future = client.submit(self._sync_run_model, self.facade, model, profile, self.user_input)
+                        future.add_done_callback(on_future_done)
                     key = (model, profile, self.user_input)
-                    self.history.record_scheduled(key)
-                    future: Future = client.submit(self._sync_run_model, self.facade, model, profile, self.user_input)
-                    future.add_done_callback(on_future_done)
+                    self.models_running_now.start_run(key, submit)
         logger.info('all runs have been submitted to the distributed client')
         return None
 

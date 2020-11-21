@@ -157,23 +157,21 @@ class Parameters:
 
         return dct, icu_capacity
 
-
     def prepare_population_frame(self, df=None):
         age0to5 = int(self.user_input['age-population-0-5'])
         age6to9 = int(self.user_input['age-population-6-9'])
-        population_structure = [age0to5 + age6to9, int(self.user_input['age-population-10-19']),
+        population_structure = np.asarray([age0to5 + age6to9, int(self.user_input['age-population-10-19']),
                 int(self.user_input['age-population-20-29']), int(self.user_input['age-population-30-39']),
                 int(self.user_input['age-population-40-49']), int(self.user_input['age-population-50-59']),
-                int(self.user_input['age-population-60-69']), int(self.user_input['age-population-70+'])]
+                int(self.user_input['age-population-60-69']), int(self.user_input['age-population-70+'])])
+        population_size = int(self.user_input['total-population'])
+        population_structure_percentage = population_structure/population_size
         ages = ['0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70+']
         population_frame = \
-            pd.DataFrame({'Age': ages, 'Population_structure': population_structure,
+            pd.DataFrame({'Age': ages, 'Population_structure': population_structure_percentage,
                          'p_symptomatic': covid_specific_parameters['p_symptomatic'],
                         'p_hosp_given_symptomatic': covid_specific_parameters['p_hosp_given_symptomatic'],
                          'p_critical_given_hospitalised': covid_specific_parameters['p_critical_given_hospitalised']})
-
-        population_size = int(self.user_input['total-population'])
-
         return population_frame, population_size
 
     def generate_infection_matrix(self):

@@ -6,7 +6,7 @@ from ai4good.webapp.model_runner import ModelsRunningNow, ModelScheduleRunResult
 from dash.dependencies import Input, Output, State
 import time
 import ai4good.webapp.common_elements as common_elements
-from ai4good.webapp.run_model_for_dashboard import run_model_results_for_messages, check_model_results_for_messages, collate_model_results_for_user
+from ai4good.webapp.run_model_for_dashboard import run_model_results_for_messages, check_model_results_for_messages, collate_model_results_for_user, check_model_results_for_messages_unrun
 from ai4good.webapp.apps import dash_app, facade, _redis, dask_client, model_runner
 from ai4good.utils.logger_util import get_logger
 import json
@@ -59,7 +59,8 @@ def re_run_model_results(run_n):
     else:
         button_id = ctx.triggered[0]['prop_id'].split('.')[0]
         if button_id == 'model_rerun_button':
-            res = run_model_results_for_messages(model_runner,["message_1", "message_5"])
+            rerun_config = check_model_results_for_messages_unrun(model_runner,["message_1", "message_5"])
+            model_runner.batch_run_model(rerun_config)
             return ["placeholder"]
         else:
             return ["placeholder"]

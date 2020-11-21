@@ -41,6 +41,18 @@ def check_model_results_for_messages(model_runner, message_keys):
     return results_ready
 
 
+def check_model_results_for_messages_unrun(model_runner, message_keys):
+    logger.info("checking which messages haven't been run yet")
+    unrun_model_profiles = defaultdict(list)
+    for message_key in message_keys:
+        for model in model_profile_config[message_key].keys():
+            if len(model_profile_config[message_key][model])>0:
+                for profile in model_profile_config[message_key][model]:
+                    if not model_runner.results_exist(model, profile):
+                        unrun_model_profiles[model].append(profile)
+    return unrun_model_profiles
+
+
 def load_report_cm(mr, total_population) -> pd.DataFrame:
     return normalize_report_cm(mr.get('report'), total_population)
 
