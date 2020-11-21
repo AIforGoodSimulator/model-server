@@ -66,6 +66,7 @@ def dask_client() -> Client:
 
     return _client
 
+
 facade = Facade.simple()
 model_runner = ModelRunner(facade, _redis, dask_client, _sid)
 

@@ -6,9 +6,10 @@ from ai4good.webapp.model_runner import ModelsRunningNow, ModelScheduleRunResult
 from dash.dependencies import Input, Output, State
 import time
 import ai4good.webapp.common_elements as common_elements
-from ai4good.webapp.run_model_for_dashboard import run_model_results_for_messages, check_model_results_for_messages
+from ai4good.webapp.run_model_for_dashboard import run_model_results_for_messages, check_model_results_for_messages, collate_model_results_for_user
 from ai4good.webapp.apps import dash_app, facade, _redis, dask_client, model_runner
 from ai4good.utils.logger_util import get_logger
+import json
 
 logger = get_logger(__name__)
 initial_status = "Simulation Running ..."
@@ -75,15 +76,20 @@ def re_run_model_results(run_n):
 
 # Check every 10 seconds to check if there is a report ready
 @dash_app.callback([Output('update_String', 'children'), Output('status_String', 'children'),
-                    Output("model_dashboard_button_ui", "disabled"), Output("model_rerun_button", "disabled")],
+                    Output("model_dashboard_button_ui", "disabled"), Output("model_dashboard_button_ui", "href"),
+                    Output("model_rerun_button", "disabled"), ],
     [Input('interval1', 'n_intervals')])
 def check_Model(n):
-    results_ready = check_model_results_for_messages(model_runner,["message_1", "message_5"])
+    results_ready = check_model_results_for_messages(model_runner, ["message_1", "message_5"])
     if results_ready:
+        user_input = json.loads(model_runner.user_input)
+        camp = str(user_input['name-camp'])
+        total_population = int(user_input["total-population"])
+        collate_model_results_for_user(model_runner, ["message_1", "message_5"], camp, total_population)
         return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), \
-               "Status: Finished", False, True
+               "Status: Finished", False, f'/sim/dashboard?camp={camp}', True
     else:
         print("No results yet " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime())))
         return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), \
-               ("Status: ", initial_status), True, False
+               ("Status: ", initial_status), True, "", False
 

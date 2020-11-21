@@ -230,7 +230,7 @@ class ModelRunner:
                     self.history.record_scheduled(key)
                     future: Future = client.submit(self._sync_run_model, self.facade, model, profile, self.user_input)
                     future.add_done_callback(on_future_done)
-        logger.info('all runs have finished') # what would this output?
+        logger.info('all runs have been submitted to the distributed client')
         return None
 
     @staticmethod
@@ -271,12 +271,16 @@ class ModelRunner:
         return mr
 
     def results_exist(self, _model: str, _profile: str) -> bool:
+        if self.user_input is None:
+            self.user_input = self.load_input_params()
         _mdl: Model = get_models()[_model](self.facade.ps)
         params = create_params(self.facade.ps, _model, _profile, self.user_input)
         res_id = _mdl.result_id(params)
         return self.facade.rs.exists(_mdl.id(), res_id)
 
     def get_result(self, _model: str, _profile: str) -> ModelResult:
+        if self.user_input is None:
+            self.user_input = self.load_input_params()
         _mdl: Model = get_models()[_model](self.facade.ps)
         params = create_params(self.facade.ps, _model, _profile, self.user_input)
         res_id = _mdl.result_id(params)

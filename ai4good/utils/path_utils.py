@@ -12,6 +12,10 @@ def model_results_path(name: str) -> str:
     return _path(f'{base}/model_results', name)
 
 
+def user_results_path(name: str) -> str:
+    return _path(f'{base}/user_results', name)
+
+
 def list_models(glob_spec: str):
     p = _path(f'{base}/model_results')
     return glob.glob(p+'/'+glob_spec)

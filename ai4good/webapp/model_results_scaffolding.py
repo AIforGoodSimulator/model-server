@@ -15,6 +15,9 @@ import plotly.graph_objs as go
 from ai4good.utils.logger_util import get_logger
 from plotly.colors import DEFAULT_PLOTLY_COLORS
 import ai4good.webapp.common_elements as common_elements
+import pickle
+import ai4good.utils.path_utils as pu
+
 
 logger = get_logger(__name__)
 
@@ -87,21 +90,23 @@ def high_level_message_5():
 
 
 @local_cache.memoize(timeout=cache_timeout)
+def load_user_results(camp):
+    logger.info(f"Reading user results for camp {camp}")
+    p = pu.user_results_path(f"{camp}_results_collage.pkl")
+    with open(p, 'rb') as handle:
+        user_results = pickle.load(handle)
+        return user_results
+
+
+@local_cache.memoize(timeout=cache_timeout)
 def get_model_result_message(message_key, camp):
+    user_results = load_user_results(camp)
     logger.info(f"Reading data for high level message: {message_key}")
     model_profile_report_dict = defaultdict(dict)
     for model in model_profile_config[message_key].keys():
         if len(model_profile_config[message_key][model]) > 0:
             for profile in model_profile_config[message_key][model]:
-                try:
-                    mr = model_runner.get_result(model, profile, camp)
-                    profile_df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
-                    params = Parameters(facade.ps, camp, profile_df, {})
-                    report = load_report(mr, params)
-                    assert mr is not None
-                    model_profile_report_dict[model][profile] = report
-                except:
-                    logger.info(f"Unable to load result for model: ({model}, {profile}, {camp}).")
+                model_profile_report_dict[model][profile] = user_results[model][profile]
     return model_profile_report_dict
 
 

@@ -172,7 +172,7 @@ class Parameters:
                         'p_hosp_given_symptomatic': covid_specific_parameters['p_hosp_given_symptomatic'],
                          'p_critical_given_hospitalised': covid_specific_parameters['p_critical_given_hospitalised']})
 
-        population_size = self.user_input['total-population']
+        population_size = int(self.user_input['total-population'])
 
         return population_frame, population_size
 
