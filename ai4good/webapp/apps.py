@@ -23,38 +23,16 @@ logger = get_logger(__name__,'DEBUG')
 load_dotenv()
 
 # register flask components
-def register_flask_components(server):
+def register_flask_extensions(server):
     # register flask extensions
     db_sqlalchemy.init_app(server)
     db_migrate.init_app(server, db_sqlalchemy)
     login.init_app(server)
     login.login_view = 'main.login'
 
-def register_blueprints(server):
+def register_flask_blueprints(server):
     from ai4good.webapp_file import server_bp
-
     server.register_blueprint(server_bp)
-
-def register_dashapps(app):
-    from ai4good.dashapp1.layout import layout
-    from ai4good.dashapp1.callbacks import register_callbacks
-
-    # Meta tags for viewport responsiveness
-    meta_viewport = {"name": "viewport", "content": "width=device-width, initial-scale=1, shrink-to-fit=no"}
-
-    dashapp1 = dash.Dash(__name__,
-                         server=app,
-                         url_base_pathname='/dashboard/',
-                         assets_folder=get_root_path(__name__) + '/dashboard/assets/',
-                         meta_tags=[meta_viewport])
-
-    with app.app_context():
-        dashapp1.title = 'Dashapp 1'
-        dashapp1.layout = layout
-        register_callbacks(dashapp1)
-
-    _protect_dashviews(dashapp1)
-
 
 def _protect_dashviews(dashapp):
     for view_func in dashapp.server.view_functions:
@@ -77,9 +55,8 @@ db_sqlalchemy = SQLAlchemy()
 db_migrate = Migrate()
 login = LoginManager()
 
-register_dashapps(flask_app)
-register_flask_components(flask_app)
-register_blueprints(flask_app)
+register_flask_extensions(flask_app)
+register_flask_blueprints(flask_app)
 
 
 local_cache = Cache(flask_app, config={
