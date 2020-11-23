@@ -10,9 +10,12 @@ from flask_login import logout_user
 from werkzeug.urls import url_parse
 from urllib.parse import urlparse, urljoin
 
+from ai4good.utils.logger_util import get_logger
 from ai4good.webapp.apps import db_sqlalchemy
 from ai4good.webapp.authenticate.forms import LoginForm, RegistrationForm
 from ai4good.webapp.authenticate.models import User
+
+logger = get_logger(__file__, 'DEBUG')
 
 server_bp = Blueprint('main', __name__)
 
@@ -45,6 +48,7 @@ def login():
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('main.index')
         elif is_safe_url(next_page):
+            logger.warn('Attempt to redirect user to an external or/and unsafe site: {}'.format(next_page))
             next_page = url_for('main.index')
         return redirect(next_page)
 
