@@ -9,7 +9,7 @@ from flask_login import login_user
 from flask_login import logout_user
 from werkzeug.urls import url_parse
 
-from ai4good.extensions import db_sqlalchemy
+from ai4good.webapp.apps import db_sqlalchemy
 from ai4good.forms import LoginForm
 from ai4good.forms import RegistrationForm
 from ai4good.models_file import User

@@ -2,8 +2,8 @@ from flask_login import UserMixin
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
 
-from ai4good.extensions import db_sqlalchemy
-from ai4good.extensions import login
+from ai4good.webapp.apps import db_sqlalchemy
+from ai4good.webapp.apps import login
 
 
 @login.user_loader

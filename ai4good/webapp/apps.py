@@ -1,9 +1,12 @@
 import dash
 import dash_bootstrap_components as dbc
-from flask import Flask
+from flask import Flask, Blueprint
 from flask_caching import Cache
-from flask.helpers import get_root_path
 from flask_login import login_required
+from flask_login import LoginManager
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
+from flask.helpers import get_root_path
 from dask.distributed import Client
 from ai4good.config import BaseConfig
 from ai4good.runner.facade import Facade
@@ -19,15 +22,13 @@ cache_timeout = 60*60*2  # In seconds
 logger = get_logger(__name__,'DEBUG')
 load_dotenv()
 
-def register_extensions(server):
-    from ai4good.extensions import db_sqlalchemy
-    from ai4good.extensions import login
-    from ai4good.extensions import migrate
-
+# register flask components
+def register_flask_components(server):
+    # register flask extensions
     db_sqlalchemy.init_app(server)
+    db_migrate.init_app(server, db_sqlalchemy)
     login.init_app(server)
     login.login_view = 'main.login'
-    migrate.init_app(server, db_sqlalchemy)
 
 def register_blueprints(server):
     from ai4good.webapp_file import server_bp
@@ -71,8 +72,13 @@ def _protect_simviews(dashapp):
 flask_app = Flask(__name__)
 flask_app.config.from_object(BaseConfig)
 
+# start flask extensions
+db_sqlalchemy = SQLAlchemy()
+db_migrate = Migrate()
+login = LoginManager()
+
 register_dashapps(flask_app)
-register_extensions(flask_app)
+register_flask_components(flask_app)
 register_blueprints(flask_app)
 
 
