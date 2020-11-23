@@ -30,7 +30,7 @@ def register_flask_extensions(server):
     login.login_view = 'main.login'
 
 def register_flask_blueprints(server):
-    from ai4good.webapp_file import server_bp
+    from ai4good.webapp.authenticate.webapp_file import server_bp
     server.register_blueprint(server_bp)
 
 def _protect_dashviews(dashapp):
