@@ -8,12 +8,20 @@ from flask_login import login_required
 from flask_login import login_user
 from flask_login import logout_user
 from werkzeug.urls import url_parse
+from urllib.parse import urlparse, urljoin
 
 from ai4good.webapp.apps import db_sqlalchemy
 from ai4good.webapp.authenticate.forms import LoginForm, RegistrationForm
 from ai4good.webapp.authenticate.models import User
 
 server_bp = Blueprint('main', __name__)
+
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and \
+           ref_url.netloc == test_url.netloc
+
 
 @server_bp.route('/')
 def index():
@@ -35,6 +43,8 @@ def login():
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
+            next_page = url_for('main.index')
+        elif is_safe_url(next_page):
             next_page = url_for('main.index')
         return redirect(next_page)
 
