@@ -18,7 +18,7 @@ layout = html.Div(
                             html.P(html.Center(text_introduction), className='card-text', style={'margin-bottom':'35px'}),
                             dbc.CardFooter(
                                 html.Div([
-                                    html.Center(dbc.Button('Get Started', id='landing-button', color='secondary', href='/sim/login_page')), 
+                                    html.Center(dbc.Button('Get Started', id='landing-button', color='secondary', href='/sim/input_page_1')), 
                                 ]), 
                             ), 
                             html.Div(id='landing-alert')

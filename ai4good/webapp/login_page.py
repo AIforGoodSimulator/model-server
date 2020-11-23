@@ -30,7 +30,7 @@ layout = html.Div(
                                     ]), 
                                     dbc.Tooltip('Please contact AI for Good if your password is lost', target='forgot-password'), 
                                     html.P(''), 
-                                    dbc.Button('Login', id='login-button', color='dark', href='/sim/input_page_1', style={'float':'right'}), 
+                                    dbc.Button('Login', id='login-button', color='dark', href='/sim/landing_page', style={'float':'right'}), 
                                 ], style={'display':'grid', 'grid-template-columns':'50% 20% 30%'}), 
                             ), 
                             html.Div(id='login-alert')
