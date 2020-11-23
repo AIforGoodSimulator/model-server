@@ -39,14 +39,6 @@ def _protect_dashviews(dashapp):
         if view_func.startswith(dashapp.config.url_base_pathname):
             dashapp.server.view_functions[view_func] = login_required(dashapp.server.view_functions[view_func])
 
-
-def _protect_simviews(dashapp):
-    for view_func in dashapp.server.view_functions:
-        if view_func.startswith(dashapp.config.url_base_pathname):
-            dashapp.server.view_functions[view_func] = login_required(dashapp.server.view_functions[view_func])
-
-
-
 flask_app = Flask(__name__)
 flask_app.config.from_object(BaseConfig)
 
