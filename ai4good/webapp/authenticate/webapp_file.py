@@ -11,7 +11,7 @@ from werkzeug.urls import url_parse
 
 from ai4good.webapp.apps import db_sqlalchemy
 from ai4good.webapp.authenticate.forms import LoginForm, RegistrationForm
-from ai4good.webapp.authenticate.models_file import User
+from ai4good.webapp.authenticate.models import User
 
 server_bp = Blueprint('main', __name__)
 

@@ -87,7 +87,7 @@ cache = Cache(flask_app, config={
 
 _redis = redis.Redis.from_url(os.environ.get("REDIS_URL"))
 
-#create dash app
+# create dash app under flask
 dash_app = dash.Dash(
     __name__,
     server=flask_app,

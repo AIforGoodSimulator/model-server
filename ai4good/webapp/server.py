@@ -23,8 +23,6 @@ import ai4good.webapp.nm_model_report_page as nm_model_report_page
 import ai4good.webapp.nm_admin_page as nm_admin_page
 import ai4good.webapp.model_results_scaffolding as model_results_scaffolding
 import ai4good.webapp.report_poc_graph as report_poc_graph
-import ai4good.webapp.dash_session_test as dash_session_test
-
 from ai4good.webapp.apps import flask_app, dash_app
 
 
@@ -60,8 +58,6 @@ def display_page(pathname, query=None):
         return input_page_4.layout
     elif pathname == '/sim/run_model':
         return run_model_page.layout
-    elif pathname == '/sim/dash_session_test':
-        return dash_session_test.layout
     elif pathname == '/sim/validate_model':
         return validate_model_page.layout
     elif pathname == '/sim/results':
