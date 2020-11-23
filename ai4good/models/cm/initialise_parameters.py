@@ -16,13 +16,19 @@ class Parameters:
         self.camp = str(self.user_input['name-camp'])
         self.country = str(self.user_input['country-dropdown'])
         self.age_limits = np.array([0, 10, 20, 30, 40, 50, 60, 70, 80], dtype=int)
-        self.R_0_list = np.asarray([covid_specific_parameters["R0_low"],covid_specific_parameters["R0_medium"],covid_specific_parameters["R0_high"]])
+        self.R_0_list = np.asarray([covid_specific_parameters["R0_low"], covid_specific_parameters["R0_medium"], covid_specific_parameters["R0_high"]])
+        self.R_0_sigma_list = np.asarray([covid_specific_parameters["R0_low_sigma"], covid_specific_parameters["R0_medium_sigma"], covid_specific_parameters["R0_high_sigma"]])
         self.latent_rate = 1 / (np.float(covid_specific_parameters["Latent_period"]))
+        self.latent_period_sigma = np.float(covid_specific_parameters["Latent_period_sigma"])
         self.removal_rate = 1 / (np.float(covid_specific_parameters["Infectious_period"]))
+        self.infectious_period_sigma = np.float(covid_specific_parameters["Infectious_period_sigma"])
         self.hosp_rate = 1 / (np.float(covid_specific_parameters["Hosp_period"]))
+        self.hosp_period_sigma = np.float(covid_specific_parameters["Hosp_period_sigma"])
         self.death_rate = 1 / (np.float(covid_specific_parameters["Death_period"]))
+        self.death_period_sigma = np.float(covid_specific_parameters["Death_period_sigma"])
         self.death_rate_with_ICU = 1 / (np.float(covid_specific_parameters["Death_period_withICU"]))
-        self.death_prob_with_ICU= np.float(covid_specific_parameters["Death_prob_withICU"])
+        self.death_period_with_icu_sigma = np.float(covid_specific_parameters["Death_period_withICU_sigma"])
+        self.death_prob_with_ICU = np.float(covid_specific_parameters["Death_prob_withICU"])
         self.number_compartments = 11 # S,E,I,A,R,H,C,D,O,Q,U refer to model write up for more details
         self.beta_list = [R_0 * self.removal_rate for R_0 in self.R_0_list]  # R_0 mu/N, N=1
         self.AsymptInfectiousFactor = np.float(covid_specific_parameters["Infectiousness_asymptomatic"])
@@ -157,15 +163,17 @@ class Parameters:
 
         return dct, icu_capacity
 
-    def prepare_population_frame(self, df=None):
-        age0to5 = int(self.user_input['age-population-0-5'])
-        age6to9 = int(self.user_input['age-population-6-9'])
-        population_structure = np.asarray([age0to5 + age6to9, int(self.user_input['age-population-10-19']),
-                int(self.user_input['age-population-20-29']), int(self.user_input['age-population-30-39']),
-                int(self.user_input['age-population-40-49']), int(self.user_input['age-population-50-59']),
-                int(self.user_input['age-population-60-69']), int(self.user_input['age-population-70+'])])
+    def prepare_population_frame(self):
+        age0to5 = float(self.user_input['age-population-0-5'])
+        age6to9 = float(self.user_input['age-population-6-9'])
+        population_structure = np.asarray([age0to5 + age6to9, float(self.user_input['age-population-10-19']),
+                float(self.user_input['age-population-20-29']), float(self.user_input['age-population-30-39']),
+                float(self.user_input['age-population-40-49']), float(self.user_input['age-population-50-59']),
+                float(self.user_input['age-population-60-69']), float(self.user_input['age-population-70+'])])
         population_size = int(self.user_input['total-population'])
-        population_structure_percentage = population_structure/population_size
+        population_structure_percentage = population_structure/population_size*100
+        # fix population structure to Moria see if the testing passes:
+        # population_structure_percentage = [21.05, 17.34, 26.35, 17.16, 9.24, 5.55, 2.54, 0.77]
         ages = ['0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70+']
         population_frame = \
             pd.DataFrame({'Age': ages, 'Population_structure': population_structure_percentage,

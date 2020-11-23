@@ -49,8 +49,8 @@ class SEIRSDESolver:
         self.infection_matrix = self.params.infection_matrix
         self.age_categories = int(population_frame.shape[0])
         self.symptomatic_prob = np.asarray(population_frame.p_symptomatic)
-        self.hospital_prob = np.asarray(population_frame.p_hospitalised)
-        self.critical_prob = np.asarray(population_frame.p_critical)
+        self.hospital_prob = np.asarray(population_frame.p_hosp_given_symptomatic)
+        self.critical_prob = np.asarray(population_frame.p_critical_given_hospitalised)
         self.beta = self.params.beta_list[1]
         self.beta_sigma = self.params.R_0_sigma_list[1]
         self.latent_rate = self.params.latent_rate
@@ -374,7 +374,8 @@ class SEIRSDESolver:
         # standard run
         StandardSol = [self.run_model(tspan, random_seed, True)]
 
-        return sols_raw, StandardSol, [y_U95, y_UQ, y_LQ, y_L95, y_median], None
+        # return sols_raw, StandardSol, [y_U95, y_UQ, y_LQ, y_L95, y_median], None
+        return sols_raw, None
 
     def generate_percentiles(self, sols):
         n_time_points = len(sols[0]['t'])

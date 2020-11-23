@@ -62,9 +62,9 @@ only_remove_high_risk,remove_high_risk_categories,<no_edit>,<no_edit>,2
 only_remove_high_risk,t_sim,<no_edit>,<no_edit>,200
 only_remove_high_risk,numberOfIterations,<no_edit>,<no_edit>,1000
 only_remove_high_risk,nProcesses,<no_edit>,<no_edit>,4
-combined_hygiene_symptomatic_high_risk,better_hygiene,0,200,<default>
-combined_hygiene_symptomatic_high_risk,remove_symptomatic,0,60,20
-combined_hygiene_symptomatic_high_risk,remove_high_risk,0,30,20
+combined_hygiene_symptomatic_high_risk,better_hygiene,0,60,<default>
+combined_hygiene_symptomatic_high_risk,remove_symptomatic,0,30,5
+combined_hygiene_symptomatic_high_risk,remove_high_risk,0,30,5
 combined_hygiene_symptomatic_high_risk,ICU_capacity,<no_edit>,<no_edit>,6
 combined_hygiene_symptomatic_high_risk,shielding,<no_edit>,<no_edit>,False
 combined_hygiene_symptomatic_high_risk,remove_high_risk_categories,<no_edit>,<no_edit>,2

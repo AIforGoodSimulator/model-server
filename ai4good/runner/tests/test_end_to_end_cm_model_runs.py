@@ -51,11 +51,12 @@ class TestEndToEndRuns(unittest.TestCase):
         # check(mr.get('cumulative_all'), 'expected_call.csv')
         # check(mr.get('cumulative_age'), 'expected_cage.csv')
 
-def check(actual, expected):
-    actual = actual.reset_index()
-    # actual.to_csv(expected, index=False)
-    expected_df = pd.read_csv(pu._path('../runner/tests', expected))
-    pdt.assert_frame_equal(expected_df, actual)
+
+# def check(actual, expected):
+#     actual = actual.reset_index()
+#     # actual.to_csv(expected, index=False)
+#     expected_df = pd.read_csv(pu._path('../runner/tests', expected))
+#     pdt.assert_frame_equal(expected_df, actual)
 
 
 

@@ -2,7 +2,7 @@ import unittest
 
 from ai4good.runner.facade import Facade
 from ai4good.models.abm.np_impl.moria import *
-from ai4good.models.model_registry import create_params
+from ai4good.models.model_registry import create_params_abm
 from ai4good.utils.logger_util import get_logger
 
 logger = get_logger(__name__)
@@ -18,7 +18,7 @@ def get_params(_profile='BaselineHTHI'):
     camp = 'Moria'
     overrides = '{"numberOfIterations": 1, "nProcesses": 1}'
     facade = Facade.simple()
-    params = create_params(facade.ps, _model, _profile, camp, overrides)
+    params = create_params_abm(facade.ps, _model, _profile, camp, overrides)
     return params
 
 
