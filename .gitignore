@@ -32,4 +32,5 @@ upload.txt
 coverage.xml
 venv/
 .env
+*.swp
 model.server.code-workspace
