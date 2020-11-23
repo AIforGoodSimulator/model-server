@@ -8,3 +8,4 @@ class BaseConfig:
     MAX_CONCURRENT_MODELS = 30
     HISTORY_SIZE = 100
     INPUT_PARAMETER_TIMEOUT = 60*30 # in seconds
+    CACHE_TIMEOUT = 60*60*2  # in seconds (not used yet)
