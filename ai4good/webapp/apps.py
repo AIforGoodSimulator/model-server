@@ -6,7 +6,6 @@ from flask_login import login_required
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from flask.helpers import get_root_path
 from dask.distributed import Client
 from ai4good.config import BaseConfig
 from ai4good.runner.facade import Facade
@@ -39,18 +38,40 @@ def _protect_dashviews(dashapp):
         if view_func.startswith(dashapp.config.url_base_pathname):
             dashapp.server.view_functions[view_func] = login_required(dashapp.server.view_functions[view_func])
 
-flask_app = Flask(__name__)
-flask_app.config.from_object(BaseConfig)
+# initialise dask distributed client
+def dask_client() -> Client:    
+    global _client
 
-# start flask extensions
+    if _client is None:
+        if ("DASK_SCHEDULER_HOST" not in os.environ) :
+            logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
+            _client = Client()
+        elif (os.environ.get("DASK_SCHEDULER_HOST")=="127.0.0.1") :
+            logger.info("Running Dask locally ...")
+            _client = Client()
+        elif (os.environ.get("DASK_SCHEDULER_HOST")=='') :
+            logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
+            _client = Client()
+        else :
+            logger.info("Running Dask Distributed using Dask Scheduler [" + os.environ.get("DASK_SCHEDULER_HOST")+"] ...")
+            _client = Client(os.environ.get("DASK_SCHEDULER_HOST") + ":" + os.environ.get("DASK_SCHEDULER_PORT"))
+
+    return _client
+            
+# initialise flask extensions
 db_sqlalchemy = SQLAlchemy()
 db_migrate = Migrate()
 login = LoginManager()
 
+# create flask app
+flask_app = Flask(__name__)
+flask_app.config.from_object(BaseConfig)
+
+# register flask components
 register_flask_extensions(flask_app)
 register_flask_blueprints(flask_app)
 
-
+# create cache
 local_cache = Cache(flask_app, config={
     'CACHE_TYPE': 'simple',
     'CACHE_DEFAULT_TIMEOUT': cache_timeout
@@ -66,6 +87,7 @@ cache = Cache(flask_app, config={
 
 _redis = redis.Redis.from_url(os.environ.get("REDIS_URL"))
 
+#create dash app
 dash_app = dash.Dash(
     __name__,
     server=flask_app,
@@ -78,25 +100,6 @@ dash_app.title = "AI4Good COVID-19 Model Server"
 _protect_dashviews(dash_app)
 
 _client = None  # Needs lazy init
-
-def dask_client() -> Client:    
-    global _client
-
-    if _client is None:
-        if ("DASK_SCHEDULER_HOST" not in os.environ) :
-            logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
-            _client = Client()
-        elif (os.environ.get("DASK_SCHEDULER_HOST")=="127.0.0.1") :
-            logger.info("Running Dask locally ...")
-            _client = Client()
-        elif (os.environ.get("DASK_SCHEDULER_HOST")=='') :
-            logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
-            _client = Client()
-        else :
-            logger.info("Running Dask Distributed using Dask Scheduler ["+os.environ.get("DASK_SCHEDULER_HOST")+"] ...")
-            _client = Client(os.environ.get("DASK_SCHEDULER_HOST")+":"+os.environ.get("DASK_SCHEDULER_PORT"))
-
-    return _client
 
 facade = Facade.simple()
 
