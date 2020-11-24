@@ -39,8 +39,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          chmod 755 ./run_tests.sh
-          ./run_tests.sh
+          pytest ./ai4good
         env:
           # The hostname used to communicate with the Redis service container
           REDIS_URL: 'rediss://redis'
