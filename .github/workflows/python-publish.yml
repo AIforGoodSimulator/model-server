@@ -39,6 +39,7 @@ jobs:
 
       - name: Run unit tests
         run: |
+          export PYTHONPATH="${PYTHONPATH}:."
           #pytest ./ai4good
           #pytest ./ai4good/models/abm/np_impl/test/test_abm.py
           pytest ./ai4good/params/tests/test_param_store.py
