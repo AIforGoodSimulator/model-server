@@ -46,27 +46,23 @@ _client = None  # Needs lazy init
 
 def dask_client() -> Client:    
     global _client
-    # client can only have one thread due to scipy ode solver constraints
-    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.ode.html
+
     if _client is None:
         if ("DASK_SCHEDULER_HOST" not in os.environ) :
             logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
-            cluster = LocalCluster(n_workers=4, threads_per_worker=1)
-            _client = Client(cluster)
+            _client = Client()
         elif (os.environ.get("DASK_SCHEDULER_HOST")=="127.0.0.1") :
             logger.info("Running Dask locally ...")
-            cluster = LocalCluster(n_workers=4, threads_per_worker=1)
-            _client = Client(cluster)
+            _client = Client()
         elif (os.environ.get("DASK_SCHEDULER_HOST")=='') :
             logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
-            cluster = LocalCluster(n_workers=4, threads_per_worker=1)
-            _client = Client(cluster)
+            _client = Client()
         else :
             logger.info("Running Dask Distributed using Dask Scheduler ["+os.environ.get("DASK_SCHEDULER_HOST")+"] ...")
-            _client = Client(os.environ.get("DASK_SCHEDULER_HOST")+":"+os.environ.get("DASK_SCHEDULER_PORT"),
-                             threads_per_worker=1)
+            _client = Client(os.environ.get("DASK_SCHEDULER_HOST")+":"+os.environ.get("DASK_SCHEDULER_PORT"))
 
     return _client
+
 
 
 facade = Facade.simple()
