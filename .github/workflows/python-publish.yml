@@ -40,12 +40,12 @@ jobs:
       - name: Run unit tests
         run: |
           export PYTHONPATH="${PYTHONPATH}:."
-          pytest ./ai4good
-          #pytest ./ai4good/models/abm/np_impl/test/test_abm.py
-          #pytest ./ai4good/params/tests/test_param_store.py
-          #FAIL#pytest ./ai4good/runner/tests/test_end_to_end_cm_model_runs.py
-          #FAIL#pytest ./ai4good/runner/tests/test_end_to_end_stoch_cm_model_runs.py
-          #pytest ./ai4good/tests/cm/test_initialise_parameters.py
+          #pytest ./ai4good
+          pytest ./ai4good/models/abm/np_impl/test/test_abm.py
+          pytest ./ai4good/params/tests/test_param_store.py
+          pytest ./ai4good/runner/tests/test_end_to_end_cm_model_runs.py
+          pytest ./ai4good/runner/tests/test_end_to_end_stoch_cm_model_runs.py
+          pytest ./ai4good/tests/cm/test_initialise_parameters.py
         env:
           # The hostname used to communicate with the Redis service container
           REDIS_URL: 'rediss://redis'
