@@ -139,6 +139,7 @@ class ModelsRunningNow:
                         pipe.unwatch()
                         return ModelScheduleRunResult.CAPACITY
                     elif is_running:
+                        # self.pop(key)
                         pipe.unwatch()
                         return ModelScheduleRunResult.ALREADY_RUNNING
                     else:

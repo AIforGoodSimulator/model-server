@@ -52,17 +52,17 @@ class SEIRSDESolver:
         self.hospital_prob = np.asarray(population_frame.p_hospitalised)
         self.critical_prob = np.asarray(population_frame.p_critical)
         self.beta = self.params.beta_list[1]
-        self.beta_sigma = self.params.R_0_sigma_list[1]
+        self.beta_sigma = self.params.beta_sigma_list[1]
         self.latent_rate = self.params.latent_rate
-        self.latent_rate_sigma = self.params.latent_period_sigma
+        self.latent_rate_sigma = self.params.latent_rate_sigma
         self.removal_rate = self.params.removal_rate
-        self.removal_rate_sigma = self.params.infectious_period_sigma
+        self.removal_rate_sigma = self.params.removal_rate_sigma
         self.hosp_rate = self.params.hosp_rate
         self.hosp_rate_sigma = self.params.hosp_period_sigma
         self.death_rate_icu = self.params.death_rate_with_ICU
-        self.death_rate_icu_sigma = self.params.death_period_with_icu_sigma
+        self.death_rate_icu_sigma = self.params.death_rate_with_icu_sigma
         self.death_rate_no_icu = self.params.death_rate  # more params
-        self.death_rate_no_icu_sigma = self.params.death_period_sigma
+        self.death_rate_no_icu_sigma = self.params.death_rate_sigma
         self.stoc_vars_num = 6
         self.index_beta = 0
         self.index_latent = 1
@@ -82,6 +82,7 @@ class SEIRSDESolver:
         self.sigma = np.full((self.y0.shape[0], 1), 0.1)
         self.driftOnly = False;
         self.zero_diffusion = np.zeros((self.y0.shape[0], self.stoc_vars_num))
+        # self.iteration=0
 
 
     def sde_drift(self, y, t):
@@ -183,7 +184,9 @@ class SEIRSDESolver:
         # **including those that will be made available by new deaths
         # without ICU treatment
         dydt2d[index_C, :] = (icu_cared - deaths_on_icu)
-
+        # self.iteration = self.iteration + 1
+        # if np.max(dydt2d[index_C, :]) > 10e12:
+        #     print("iteration:" + str(self.iteration) + " dydt2d[index_C, :]=" + str(dydt2d[index_C, :]))
         # Uncared - no ICU
         deaths_without_icu = self.death_rate_no_icu * y2d[index_U, :] # died without ICU treatment (all cases that don't get treatment die)
         dydt2d[index_U, :] = (needing_care - icu_cared - deaths_without_icu)  # without ICU treatment
@@ -328,6 +331,7 @@ class SEIRSDESolver:
         self.driftOnly = driftOnly
 
         if random_seed:
+            print("Set random seed: " + str(random_seed))
             np.random.seed(random_seed)
         warnings.simplefilter("ignore")
         result = sdeint.itoint(self.sde_drift, self.sde_diffusion, self.y0, tspan)
