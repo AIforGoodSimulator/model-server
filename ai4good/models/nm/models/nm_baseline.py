@@ -39,7 +39,6 @@ def process_graph(p, graph, node_groups):
                                  initE=p.init_exposed, node_groups=node_groups)
 
     # Run model
-    p.t_steps = 10
     node_states, simulation_results = run_simulation(model, p.t_steps)
     # Construct results dataframe
     output_df = results_to_df(simulation_results)
