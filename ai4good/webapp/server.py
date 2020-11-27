@@ -1,11 +1,13 @@
-from flask import redirect
+from flask import redirect, url_for
+from flask_login import current_user
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 from urllib.parse import urlparse, parse_qs
 from ai4good.utils.logger_util import get_logger
-import ai4good.webapp.landing_page as landing_page
 import ai4good.webapp.login_page as login_page
+import ai4good.webapp.register_page as register_page
+import ai4good.webapp.landing_page as landing_page
 import ai4good.webapp.input_page_1 as input_page_1
 import ai4good.webapp.input_page_2 as input_page_2
 import ai4good.webapp.input_page_3 as input_page_3
@@ -23,31 +25,61 @@ import ai4good.webapp.nm_model_report_page as nm_model_report_page
 import ai4good.webapp.nm_admin_page as nm_admin_page
 import ai4good.webapp.model_results_scaffolding as model_results_scaffolding
 import ai4good.webapp.report_poc_graph as report_poc_graph
-from ai4good.webapp.apps import flask_app, dash_app
-
+from ai4good.webapp.apps import flask_app, dash_app, dash_auth_app
 
 logger = get_logger(__file__, 'DEBUG')
 
 
-@flask_app.route("/")
+@flask_app.route('/')
 def index():
-    return redirect('/sim/landing')
+    return redirect('/auth/')
 
 
-dash_app.layout = html.Div([
-    dcc.Location(id='url', refresh=False),
-    html.Div(id='page-content')
+@flask_app.route('/register/')
+def register():
+    print('reg auth/reg')
+    return redirect('/auth/register/')
+
+
+dash_auth_app.layout = html.Div([
+    dcc.Location(id='url-auth-app', refresh=False),
+    html.Div(id='page-content-auth-app')
 ])
 
 
-@dash_app.callback(Output('page-content', 'children'),
-                   [Input('url', 'pathname'), Input('url', 'search')])
-def display_page(pathname, query=None):
+dash_app.layout = html.Div([
+    dcc.Location(id='url-app', refresh=False),
+    html.Div(id='page-content-app')
+])
+
+
+@dash_auth_app.callback(Output('page-content-auth-app', 'children'),
+                   [Input('url-auth-app', 'pathname'), Input('url-auth-app', 'search')])
+def display_dash_auth_app_page(pathname, query=None):
+    logger.info("Displaying page %s with query %s", pathname, query)
+    if pathname in ['/auth/login_page', '/auth/login/', '/auth/']:
+        return login_page.layout
+    if pathname in ['/auth/register_page', '/auth/register/']:
+        return register_page.layout
+    else:
+        return '404 auth'
+
+
+@dash_app.callback([Output('navlink-user', 'children'), Output('navlink-tooltip-user', 'children')], 
+                   [Input('url-app', 'pathname'), Input('url-app', 'search')])
+def update_dash_app_navbar(pathname, query=None):
+    assert current_user
+    return [current_user.username.split('@')[0], 'Welcome ' + current_user.username]
+
+
+@dash_app.callback(Output('page-content-app', 'children'),
+                   [Input('url-app', 'pathname'), Input('url-app', 'search')])
+def display_dash_app_page(pathname, query=None):
     logger.info("Displaying page %s with query %s", pathname, query)
     if pathname == '/sim/landing' or pathname == '/sim/':
         return landing_page.layout
-    elif pathname == '/sim/login_page':
-        return login_page.layout
+#    elif pathname == '/sim/login_page':
+#        return login_page.layout
     elif pathname == '/sim/input_page_1':
         return input_page_1.layout
     elif pathname == '/sim/input_page_2':
@@ -99,6 +131,6 @@ def display_page(pathname, query=None):
     else:
         return '404'
 
-
 if __name__ == '__main__':
     dash_app.run_server(debug=True)
+    dash_auth_app.run_server(debug=True)

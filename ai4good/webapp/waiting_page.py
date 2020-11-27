@@ -67,7 +67,7 @@ layout = html.Div([
                                 html.P('', id="waiting-end-time", style={'margin':'0px'}),
                                 html.P(("Last Updated: ", initial_time), id="waiting-update", className="status_Time", style={'font-size':'0.8em'}),
                             ], className="results_Controls"), 
-                            dbc.CardFooter(dbc.Button('View Report', id='model_results_button', className="mr-1 holo", style={'float':'right'})),
+                            dbc.CardFooter(dbc.Button('View Report', id='waiting-view-button', className="mr-1 holo", style={'float':'right'})),
                             html.Div(id='waiting-page-alert')
                             ], body=True), 
                          html.Br()], width=6

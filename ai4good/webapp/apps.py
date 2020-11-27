@@ -1,22 +1,22 @@
 import dash
 import dash_bootstrap_components as dbc
-from flask import Flask, Blueprint
+from flask import Flask, Blueprint, url_for
 from flask_caching import Cache
 from flask_login import login_required
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from dask.distributed import Client
-from ai4good.config import BaseConfig
-from ai4good.runner.facade import Facade
-from ai4good.webapp.model_runner import ModelRunner
-from ai4good.utils.logger_util import get_logger
 from dotenv import load_dotenv
 import redis
 import socket
 import os
+from ai4good.config import FlaskConfig, ModelConfig
+from ai4good.runner.facade import Facade
+from ai4good.webapp.model_runner import ModelRunner
+from ai4good.utils.logger_util import get_logger
 
-cache_timeout = 60*60*2  # In seconds
+cache_timeout = ModelConfig.CACHE_TIMEOUT
 
 logger = get_logger(__name__,'DEBUG')
 load_dotenv()
@@ -30,7 +30,7 @@ def register_flask_extensions(server):
     login.login_view = 'main.login'
 
 def register_flask_blueprints(server):
-    from ai4good.webapp.authenticate.webapp_file import server_bp
+    from ai4good.webapp.authenticate.authapp import server_bp
     server.register_blueprint(server_bp)
 
 def _protect_dashviews(dashapp):
@@ -65,7 +65,7 @@ login = LoginManager()
 
 # create flask app
 flask_app = Flask(__name__)
-flask_app.config.from_object(BaseConfig)
+flask_app.config.from_object(FlaskConfig)
 
 # register flask components
 register_flask_extensions(flask_app)
@@ -98,6 +98,16 @@ dash_app = dash.Dash(
 )
 dash_app.title = "AI4Good COVID-19 Model Server"
 _protect_dashviews(dash_app)
+
+# create dash auth app under flask
+dash_auth_app = dash.Dash(
+    __name__,
+    server=flask_app,
+    url_base_pathname='/auth/',
+    suppress_callback_exceptions=True,
+    external_stylesheets=[dbc.themes.BOOTSTRAP, '/static/css/ai4good.css']
+)
+dash_auth_app.title = "AI4Good COVID-19 Model Server authentication"
 
 _client = None  # Needs lazy init
 
