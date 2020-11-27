@@ -2,8 +2,7 @@ import dash
 import dash_bootstrap_components as dbc
 from flask import Flask, Blueprint, url_for
 from flask_caching import Cache
-from flask_login import login_required
-from flask_login import LoginManager
+from flask_login import login_required, LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from dask.distributed import Client
