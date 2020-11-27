@@ -25,7 +25,7 @@ class NetworkModel(Model):
 
     def run(self, p: Parameters) -> ModelResult:
         logging.info("Generating network graph with neighbors...")
-        graph, nodes_per_struct, node_groups = create_new_graph(p)
+        graph, nodes_per_struct = create_new_graph(p)
 
         logging.info("Adding food queues...")
         if '4_food_queues' in p.profile_name:  # Multiple food queues model: 4
@@ -41,14 +41,16 @@ class NetworkModel(Model):
                 graph, nodes_per_struct, percentage_per_struct=0.5, proximity_radius=5,
                 edge_weight=p.food_weight, activity_name="food")
 
-        # logging.info("Sampling from original graph...")
-        # new_graph_size = len(graph.nodes) // 4
-        # sampled_graph = downsample_graph(graph, new_graph_size, "uniform")
-        p.update_parameters(graph)
-        p.initialise_age_parameters(graph)
+        logging.info("Sampling from original graph...")
+        new_graph_size = len(graph.nodes) // 4
+        sampled_graph, updated_nodes_per_struct = downsample_graph(graph, nodes_per_struct, new_graph_size, "snowball")
+        p.update_parameters(sampled_graph)
+        p.initialise_age_parameters(sampled_graph)
+
+        node_groups = create_node_groups(sampled_graph)
 
         logging.info("Running network model...")
-        results = run_parallel(p, graph, node_groups)
+        results = run_parallel(p, sampled_graph, node_groups)
 
         return ModelResult(self.result_id(p), {
             'params': p,

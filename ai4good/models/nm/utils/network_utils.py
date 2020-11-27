@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict
 import pickle as pkl
+from littleballoffur import CirculatedNeighborsRandomWalkSampler, SnowBallSampler
 
 STATE_DICTIONARY = {
     "Susceptible": 1,
@@ -374,13 +375,26 @@ def get_values_per_node(params_per_age, graph):
     return node_params
 
 
-def downsample_graph(graph, new_graph_size, technique):
-    if technique == "uniform":
-        sampled_nodes = random.sample(graph.nodes, new_graph_size)
-        sampled_graph = graph.subgraph(sampled_nodes)
+def update_nodes_per_struct(nodes_per_struct, relabel_map):
+    new_nodes_per_struct = []
+    for i, struct in enumerate(nodes_per_struct):
+        sampled_nodes = []
+        for j, node in enumerate(struct):
+            if node in relabel_map:
+                sampled_nodes.append(relabel_map[node])
+        if len(sampled_nodes) != 0:
+            new_nodes_per_struct.append(sampled_nodes)
+
+    return new_nodes_per_struct
+
+
+def downsample_graph(graph, nodes_per_struct, new_graph_size, technique, seed=69420):
+    if technique == "snowball":
+        sampled_graph = SnowBallSampler(number_of_nodes=new_graph_size, seed=seed).sample(graph)
         relabel_map = dict(zip(list(sampled_graph.nodes), range(len(sampled_graph.nodes))))
         final_graph = nx.relabel_nodes(sampled_graph, relabel_map)
-        return final_graph
+        updated_nodes_per_struct = update_nodes_per_struct(nodes_per_struct, relabel_map)
+        return final_graph, updated_nodes_per_struct
     else:
         return None
 
