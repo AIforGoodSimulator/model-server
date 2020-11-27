@@ -21,30 +21,30 @@ class Parameters:
         # disease params
         parameter_csv = disease_params
         model_params = parameter_csv[parameter_csv['Type'] == 'Model Parameter']
-        model_params = model_params.loc[:, ['Name', 'Value', 'Sigma']]
+        model_params = model_params.loc[:, ['Name', 'Value', 'CV']]
         control_data = parameter_csv[parameter_csv['Type'] == 'Control']
         self.model_params = model_params
 
         # print()
 
         R_0_list = np.asarray(model_params[model_params['Name'] == 'R0'].Value)
-        R_0_sigma_list = np.asarray(model_params[model_params['Name'] == 'R0'].Sigma)
+        R_0_cv_list = np.asarray(model_params[model_params['Name'] == 'R0'].CV)
 
         latent_period = np.float(model_params[model_params['Name'] == 'latent period'].Value)
         latent_rate = 1 / (latent_period)
-        latent_period_sigma = np.float(model_params[model_params['Name'] == 'latent period'].Sigma)
+        latent_period_cv = np.float(model_params[model_params['Name'] == 'latent period'].CV)
         infectious_period = np.float(model_params[model_params['Name'] == 'infectious period'].Value)
-        infectious_period_sigma = np.float(model_params[model_params['Name'] == 'infectious period'].Sigma)
+        infectious_period_cv = np.float(model_params[model_params['Name'] == 'infectious period'].CV)
         removal_rate = 1 / (infectious_period)
         hosp_period = np.float(model_params[model_params['Name'] == 'hosp period'].Value)
         hosp_rate = 1 / (hosp_period)
-        hosp_period_sigma = np.float(model_params[model_params['Name'] == 'hosp period'].Sigma)
+        hosp_period_cv = np.float(model_params[model_params['Name'] == 'hosp period'].CV)
         death_period = np.float(model_params[model_params['Name'] == 'death period'].Value)
         death_rate = 1 / (death_period)
-        death_period_sigma = np.float(model_params[model_params['Name'] == 'death period'].Sigma)
+        death_period_cv = np.float(model_params[model_params['Name'] == 'death period'].CV)
         death_period_with_icu = np.float(model_params[model_params['Name'] == 'death period with ICU'].Value)
         death_rate_with_ICU = 1 / (death_period_with_icu)
-        death_period_with_icu_sigma = np.float(model_params[model_params['Name'] == 'death period with ICU'].Sigma)
+        death_period_with_icu_cv = np.float(model_params[model_params['Name'] == 'death period with ICU'].CV)
 
         quarant_rate = 1 / (np.float(model_params[model_params['Name'] == 'quarantine period'].Value))
 
@@ -52,7 +52,7 @@ class Parameters:
 
         number_compartments = int(model_params[model_params['Name'] == 'number_compartments'].Value)
 
-        beta_list = [R_0 * removal_rate for R_0 in R_0_list]  # R_0 mu/N, N=1
+        beta_list = R_0_list * removal_rate  # R_0 mu/N, N=1
 
         shield_decrease = np.float(control_data[control_data['Name'] == 'Reduction in contact between groups'].Value)
         shield_increase = np.float(control_data[control_data['Name'] == 'Increase in contact within group'].Value)
@@ -62,24 +62,25 @@ class Parameters:
         AsymptInfectiousFactor = np.float(model_params[model_params['Name'] == 'infectiousness of asymptomatic'].Value)
 
         self.R_0_list = R_0_list
-        self.R_0_sigma_list = R_0_sigma_list
+        self.R_0_cv_list = R_0_cv_list
         self.beta_list = beta_list
+        self.beta_sigma_list = beta_list*R_0_cv_list
         self.shield_increase = shield_increase
         self.shield_decrease = shield_decrease
         self.better_hygiene  = better_hygiene
         self.number_compartments = number_compartments
         self.AsymptInfectiousFactor = AsymptInfectiousFactor
         self.latent_rate = latent_rate
-        self.latent_period_sigma = latent_period_sigma
+        self.latent_rate_sigma = latent_period_cv*latent_rate
         self.removal_rate = removal_rate
-        self.infectious_period_sigma = infectious_period_sigma
+        self.removal_rate_sigma = infectious_period_cv*removal_rate
         self.hosp_rate = hosp_rate
-        self.hosp_period_sigma = hosp_period_sigma
+        self.hosp_period_sigma = hosp_period_cv*hosp_rate
         self.quarant_rate = quarant_rate
         self.death_rate = death_rate
-        self.death_period_sigma = death_period_sigma
+        self.death_rate_sigma = death_period_cv*death_rate
         self.death_rate_with_ICU = death_rate_with_ICU
-        self.death_period_with_icu_sigma = death_period_with_icu_sigma
+        self.death_rate_with_icu_sigma = death_period_with_icu_cv*death_rate_with_ICU
         self.death_prob_with_ICU = death_prob_with_ICU
 
         categs = pd.read_csv(pu.cm_params_path('categories.csv'), delimiter=';', skipinitialspace=True)
