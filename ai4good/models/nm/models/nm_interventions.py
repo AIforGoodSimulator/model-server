@@ -1,9 +1,10 @@
-from seirsplus.models import *
+# from seirsplus.models import *
+from ai4good.models.nm.custom_models import *
 from ai4good.models.nm.utils.network_utils import *
 from ai4good.models.nm.utils.intervention_utils import *
 
 
-def process_graph_interventions(p, graph):
+def process_graph_interventions(p, graph, node_groups):
     # Create quarantine graph - This also includes neighbor/friendship edges
     quarantine_graph = remove_edges_from_graph(graph, scale=2, edge_label_list=[
         "food", "friendship"], min_num_edges=2)
@@ -29,7 +30,7 @@ def process_graph_interventions(p, graph):
                                  a=p.pct_asymptomatic, h=p.pct_hospitalized, f=p.pct_fatality,
                                  alpha=p.alpha, beta_pairwise_mode=p.beta_pairwise_mode,
                                  delta_pairwise_mode=p.delta_pairwise_mode,
-                                 initE=p.init_exposed)
+                                 initE=p.init_exposed, node_groups=node_groups)
 
     # Run model
     node_states, simulation_results = run_simulation(model, p.t_steps, checkpoints)

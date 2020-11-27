@@ -227,8 +227,11 @@ def link_nodes_by_activity(base_graph, nodes_per_struct, percentage_per_struct, 
 
     # Choose a percentage of people randomly from each structure
     for node_list in nodes_per_struct:
-        for i in range(int(len(node_list) * percentage_per_struct)):
-            activity_bois.add(np.random.choice(node_list))
+        if len(node_list) == 1:
+            activity_bois.add(node_list[0])
+        else:
+            for i in range(int(len(node_list) * percentage_per_struct)):
+                activity_bois.add(np.random.choice(node_list))
 
     activity_bois = list(activity_bois)
     np.random.shuffle(activity_bois)
@@ -276,23 +279,23 @@ def create_multiple_food_queues(base_graph, n_food_queues_per_block, food_weight
 
 def create_node_groups(graph):
     """
-    create node groups for each 10-year age bucket so the main simulation can track the results for people in each age bucket
+    Create node groups for each 10-year age bucket so the main simulation can track the results for people in each age bucket
     """
-    AGE_BUCKET = 9
+    AGE_BUCKET = 8
     graph_data = list(graph.nodes(data='age'))
     node_groups = {}
     for age in range(AGE_BUCKET):
         nodeList = []
-        if age == 8:
-            groupName = f'age>{age * 10}'
+        if age == 7:
+            groupName = f'{age * 10}+'
         else:
-            groupName = f'age{age * 10}-{(age + 1) * 10}'
+            groupName = f'{age * 10}-{(age + 1) * 10 - 1}'
         for node in graph_data:
-            if age == 8:
+            if age == 7:
                 if node[1] >= age * 10:
                     nodeList.append(node[0])
             else:
-                if node[1] >= age * 10 and node[1] < (age + 1) * 10:
+                if age * 10 <= node[1] < (age + 1) * 10:
                     nodeList.append(node[0])
         node_groups[groupName] = nodeList
     return node_groups
@@ -456,6 +459,24 @@ def run_simulation(model, t, checkpoints=None, simulation_results=None, node_sta
             simulation_results["Recovered"].append(model.numR[model.tidx])
             simulation_results["Fatalities"].append(model.numF[model.tidx])
             simulation_results["T_index"].append(model.tidx)
+
+            for age_bucket in model.nodeGroupData:
+                simulation_results[f'Susceptible: {age_bucket}'].append(
+                    model.nodeGroupData[age_bucket]['numS'][model.tidx])
+                simulation_results[f'Exposed: {age_bucket}'].append(
+                    model.nodeGroupData[age_bucket]['numE'][model.tidx])
+                simulation_results[f'Infected_Presymptomatic: {age_bucket}'].append(
+                    model.nodeGroupData[age_bucket]['numI_pre'][model.tidx])
+                simulation_results[f'Infected_Symptomatic: {age_bucket}'].append(
+                    model.nodeGroupData[age_bucket]['numI_sym'][model.tidx])
+                simulation_results[f'Infected_Asymptomatic: {age_bucket}'].append(
+                    model.nodeGroupData[age_bucket]['numI_asym'][model.tidx])
+                simulation_results[f'Hospitalized: {age_bucket}'].append(
+                    model.nodeGroupData[age_bucket]['numH'][model.tidx])
+                simulation_results[f'Recovered: {age_bucket}'].append(
+                    model.nodeGroupData[age_bucket]['numR'][model.tidx])
+                simulation_results[f'Fatalities: {age_bucket}'].append(
+                    model.nodeGroupData[age_bucket]['numF'][model.tidx])
 
         if int(model.t) % print_every == 0 and int(model.t) not in stored_times:
             print("-------------------------------------------")
