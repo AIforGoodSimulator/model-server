@@ -37,3 +37,4 @@ blosc==1.9.2
 python-dotenv
 sdeint==0.2.1
 littleballoffur==2.1.2
+cython
