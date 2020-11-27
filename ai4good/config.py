@@ -6,7 +6,7 @@ class FlaskConfig:
     #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://' + os.environ.get('DATABASE_USERNAME') + ':' os.environ.get('DATABASE_PASSWORD') + '@' + os.environ.get('DATABASE_URL')
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = os.environ['SECRET_KEY']
+#    SECRET_KEY = os.environ['SECRET_KEY']
     REMEMBER_COOKIE_DURATION = datetime.timedelta(minutes=30)
 
 # class for app setup
