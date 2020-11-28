@@ -22,7 +22,6 @@ load_dotenv()
 
 # register flask components
 def register_flask_extensions(server):
-    # register flask extensions
     db_sqlalchemy.init_app(server)
     db_migrate.init_app(server, db_sqlalchemy)
     login.init_app(server)

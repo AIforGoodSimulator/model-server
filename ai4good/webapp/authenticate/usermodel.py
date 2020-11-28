@@ -15,7 +15,8 @@ class User(UserMixin, db_sqlalchemy.Model):
     id = db_sqlalchemy.Column(db_sqlalchemy.Integer, primary_key=True)
     username = db_sqlalchemy.Column(db_sqlalchemy.String(64), index=True, unique=True)
     password_hash = db_sqlalchemy.Column(db_sqlalchemy.String(128))
-    _sid = db_sqlalchemy.Column(db_sqlalchemy.String(64))
+    _sid = ''
+    #_sid = db_sqlalchemy.Column(db_sqlalchemy.String(64))
     
     def set_sid(self):
         self._sid = secrets.token_urlsafe(64)  # session id

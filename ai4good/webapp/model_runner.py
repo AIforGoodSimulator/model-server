@@ -26,6 +26,7 @@ class InputParameterCache:
 
     def __init__(self, _redis: redis.Redis):
         self._redis = _redis
+        assert current_user
 
     @staticmethod
     def _decode_byte(value) -> List:
