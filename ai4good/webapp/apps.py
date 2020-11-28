@@ -1,15 +1,15 @@
-import dash
-import dash_bootstrap_components as dbc
+import socket
+import os
+from dotenv import load_dotenv
+import redis
 from flask import Flask, Blueprint, url_for
 from flask_caching import Cache
 from flask_login import login_required, LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+import dash
+import dash_bootstrap_components as dbc
 from dask.distributed import Client
-from dotenv import load_dotenv
-import redis
-import socket
-import os
 from ai4good.config import FlaskConfig, ModelConfig
 from ai4good.runner.facade import Facade
 from ai4good.webapp.model_runner import ModelRunner

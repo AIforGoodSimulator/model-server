@@ -1,5 +1,4 @@
 import traceback
-import redis
 import numpy as np
 import pandas as pd
 import pickle
@@ -8,6 +7,8 @@ import secrets
 from datetime import datetime
 from typing import List
 from enum import Enum, auto
+import redis
+from flask_login import current_user
 from dask.distributed import Client, Future, Variable
 from ai4good.config import ModelConfig
 from ai4good.models.model import Model, ModelResult

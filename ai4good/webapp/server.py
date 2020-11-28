@@ -1,9 +1,9 @@
+from urllib.parse import urlparse, parse_qs
 from flask import redirect, url_for
 from flask_login import current_user
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
-from urllib.parse import urlparse, parse_qs
 from ai4good.utils.logger_util import get_logger
 import ai4good.webapp.login_page as login_page
 import ai4good.webapp.register_page as register_page
