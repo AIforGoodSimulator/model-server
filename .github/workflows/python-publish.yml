@@ -34,8 +34,8 @@ jobs:
         
       - name: Set up dependancies
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y cython
+          apt-get update -y
+          apt-get install -y cython
           pip install -r requirements.txt
           #pip install selenium        
 
