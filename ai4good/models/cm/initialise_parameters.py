@@ -17,20 +17,27 @@ class Parameters:
         self.country = str(self.user_input['country-dropdown'])
         self.age_limits = np.array([0, 10, 20, 30, 40, 50, 60, 70, 80], dtype=int)
         self.R_0_list = np.asarray([covid_specific_parameters["R0_low"], covid_specific_parameters["R0_medium"], covid_specific_parameters["R0_high"]])
-        self.R_0_sigma_list = np.asarray([covid_specific_parameters["R0_low_sigma"], covid_specific_parameters["R0_medium_sigma"], covid_specific_parameters["R0_high_sigma"]])
+        self.R_0_cv_list = np.asarray([covid_specific_parameters["R0_low_cv"], covid_specific_parameters["R0_medium_cv"], covid_specific_parameters["R0_high_cv"]])
         self.latent_rate = 1 / (np.float(covid_specific_parameters["Latent_period"]))
-        self.latent_period_sigma = np.float(covid_specific_parameters["Latent_period_sigma"])
+        latent_period_cv = np.float(covid_specific_parameters["Latent_period_cv"])
+        self.latent_rate_sigma = latent_period_cv * self.latent_rate
         self.removal_rate = 1 / (np.float(covid_specific_parameters["Infectious_period"]))
-        self.infectious_period_sigma = np.float(covid_specific_parameters["Infectious_period_sigma"])
+        infectious_period_cv = np.float(covid_specific_parameters["Infectious_period_cv"])
+        self.infectious_rate_sigma = infectious_period_cv * self.removal_rate
+        self.removal_rate_sigma = infectious_period_cv * self.removal_rate
         self.hosp_rate = 1 / (np.float(covid_specific_parameters["Hosp_period"]))
-        self.hosp_period_sigma = np.float(covid_specific_parameters["Hosp_period_sigma"])
+        hosp_period_cv = np.float(covid_specific_parameters["Hosp_period_cv"])
+        self.hosp_period_sigma = hosp_period_cv * self.hosp_rate
         self.death_rate = 1 / (np.float(covid_specific_parameters["Death_period"]))
-        self.death_period_sigma = np.float(covid_specific_parameters["Death_period_sigma"])
+        death_rate_cv = np.float(covid_specific_parameters["Death_period_cv"])
+        self.death_rate_sigma = death_rate_cv * self.death_rate
         self.death_rate_with_ICU = 1 / (np.float(covid_specific_parameters["Death_period_withICU"]))
-        self.death_period_with_icu_sigma = np.float(covid_specific_parameters["Death_period_withICU_sigma"])
+        death_period_with_icu_cv = np.float(covid_specific_parameters["Death_period_withICU_cv"])
+        self.death_rate_with_icu_sigma = death_period_with_icu_cv * self.death_rate_with_ICU
         self.death_prob_with_ICU = np.float(covid_specific_parameters["Death_prob_withICU"])
         self.number_compartments = 11 # S,E,I,A,R,H,C,D,O,Q,U refer to model write up for more details
         self.beta_list = [R_0 * self.removal_rate for R_0 in self.R_0_list]  # R_0 mu/N, N=1
+        self.beta_sigma_list = self.beta_list * self.R_0_cv_list
         self.AsymptInfectiousFactor = np.float(covid_specific_parameters["Infectiousness_asymptomatic"])
 
         # These are unique model control params
