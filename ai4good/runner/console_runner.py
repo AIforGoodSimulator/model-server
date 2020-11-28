@@ -6,7 +6,6 @@ from ai4good.runner.facade import Facade
 from ai4good.utils.logger_util import get_logger
 import ai4good.utils.path_utils as pu
 from ai4good.models.cm.cm_model import CompartmentalModel
-from ai4good.webapp.apps import facade
 facade = Facade.simple()
 logger = get_logger(__name__)
 

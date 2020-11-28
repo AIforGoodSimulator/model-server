@@ -7,7 +7,6 @@ from ai4good.models.model import Model, ModelResult
 from ai4good.params.param_store import ParamStore
 from ai4good.models.cm.initialise_parameters import Parameters
 from ai4good.models.cm.simulator import Simulator, generate_csv
-from ai4good.models.cm.simulator import generate_csv
 from ai4good.utils.logger_util import get_logger
 from ai4good.webapp.cm_model_report_utils import normalize_report, prevalence_age_table, prevalence_all_table, \
     cumulative_all_table, cumulative_age_table
@@ -25,7 +24,7 @@ class AbstractCompartmentalModel(Model):
 
     def run(self, p: Parameters) -> ModelResult:
         # config_dict, percentiles, sols_raw, standard_sol = self.simulate(p)
-        config_dict, sols_raw = self.simulate(p) # we are currently using sols_raw in results generating
+        config_dict, sols_raw = self.simulate(p)  # we are currently using sols_raw in results generating
         # Precompute some reports
         logger.info("Generating main report")
         if config_dict is None:
