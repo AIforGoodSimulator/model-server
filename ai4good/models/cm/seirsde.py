@@ -82,6 +82,7 @@ class SEIRSDESolver:
         self.sigma = np.full((self.y0.shape[0], 1), 0.1)
         self.driftOnly = False;
         self.zero_diffusion = np.zeros((self.y0.shape[0], self.stoc_vars_num))
+        # self.iteration=0
 
 
     def sde_drift(self, y, t):
@@ -183,7 +184,9 @@ class SEIRSDESolver:
         # **including those that will be made available by new deaths
         # without ICU treatment
         dydt2d[index_C, :] = (icu_cared - deaths_on_icu)
-
+        # self.iteration = self.iteration + 1
+        # if np.max(dydt2d[index_C, :]) > 10e12:
+        #     print("iteration:" + str(self.iteration) + " dydt2d[index_C, :]=" + str(dydt2d[index_C, :]))
         # Uncared - no ICU
         deaths_without_icu = self.death_rate_no_icu * y2d[index_U, :] # died without ICU treatment (all cases that don't get treatment die)
         dydt2d[index_U, :] = (needing_care - icu_cared - deaths_without_icu)  # without ICU treatment
@@ -328,6 +331,7 @@ class SEIRSDESolver:
         self.driftOnly = driftOnly
 
         if random_seed:
+            print("Set random seed: " + str(random_seed))
             np.random.seed(random_seed)
         warnings.simplefilter("ignore")
         result = sdeint.itoint(self.sde_drift, self.sde_diffusion, self.y0, tspan)
