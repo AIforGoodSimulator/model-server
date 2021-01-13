@@ -34,7 +34,6 @@ layout = html.Div(
                                         ]), 
                                         dbc.Tooltip(forgot_password_msg, target='login-forgot-password'), 
                                         html.P(''), 
-                                        #dbc.Button('Login', id='login-button', color='dark', href='/sim/landing', style={'float':'right'}), 
                                         html.Button('Login', id='login-submit-button', type='submit', disabled=True, className='mr-1', style={'float':'right'}), 
                                     ], style={'display':'grid', 'grid-template-columns':'50% 20% 30%'}), 
                                 ), 

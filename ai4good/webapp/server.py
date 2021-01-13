@@ -6,6 +6,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 from ai4good.utils.logger_util import get_logger
 import ai4good.webapp.login_page as login_page
+import ai4good.webapp.logout_page as logout_page
 import ai4good.webapp.register_page as register_page
 import ai4good.webapp.landing_page as landing_page
 import ai4good.webapp.input_page_1 as input_page_1
@@ -37,7 +38,6 @@ def index():
 
 @flask_app.route('/register/')
 def register():
-    print('reg auth/reg')
     return redirect('/auth/register/')
 
 
@@ -59,7 +59,7 @@ def display_dash_auth_app_page(pathname, query=None):
     logger.info("Displaying page %s with query %s", pathname, query)
     if pathname in ['/auth/login_page', '/auth/login/', '/auth/']:
         return login_page.layout
-    if pathname in ['/auth/register_page', '/auth/register/']:
+    elif pathname in ['/auth/register_page', '/auth/register/']:
         return register_page.layout
     else:
         return '404 auth'
@@ -76,10 +76,10 @@ def update_dash_app_navbar(pathname, query=None):
                    [Input('url-app', 'pathname'), Input('url-app', 'search')])
 def display_dash_app_page(pathname, query=None):
     logger.info("Displaying page %s with query %s", pathname, query)
-    if pathname == '/sim/landing' or pathname == '/sim/':
+    if pathname in ['/auth/logout_page', '/auth/logout/', '/logout/']:
+        return logout_page.layout
+    elif pathname == '/sim/landing' or pathname == '/sim/':
         return landing_page.layout
-#    elif pathname == '/sim/login_page':
-#        return login_page.layout
     elif pathname == '/sim/input_page_1':
         return input_page_1.layout
     elif pathname == '/sim/input_page_2':

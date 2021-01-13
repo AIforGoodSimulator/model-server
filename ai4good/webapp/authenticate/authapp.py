@@ -60,7 +60,8 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('main.index'))
+    next_page = url_for('main.index')
+    return redirect(next_page)
 
 
 @server_bp.route('/register/', methods=['GET', 'POST'])

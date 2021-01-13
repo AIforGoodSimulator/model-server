@@ -11,6 +11,9 @@ def nav_bar(internal=None):
     elif internal.lower() == 'login':
         internal_children = 'Login'
         internal_href = '/auth/login/'
+    elif internal.lower() in ['landing', 'start']:
+        internal_children = 'Start'
+        internal_href = '/sim/'
     else:
         internal_children = ''
         internal_href = '#'
