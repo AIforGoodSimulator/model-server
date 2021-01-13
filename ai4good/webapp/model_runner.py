@@ -1,22 +1,21 @@
 import traceback
-import redis
 import numpy as np
 import pandas as pd
-from typing import List
-from enum import Enum, auto
-from dask.distributed import Client, Future, Variable
-from ai4good.models.model import Model, ModelResult
-from ai4good.models.model_registry import get_models, create_params
-from datetime import datetime
 import pickle
 import socket
 import secrets
+from datetime import datetime
+from typing import List
+from enum import Enum, auto
+import redis
+from flask_login import current_user
+from dask.distributed import Client, Future, Variable
+from ai4good.config import ModelConfig
+from ai4good.models.model import Model, ModelResult
+from ai4good.models.model_registry import get_models, create_params
 from ai4good.webapp.commit_date import get_version_date
 from ai4good.utils.logger_util import get_logger
 
-MAX_CONCURRENT_MODELS = 30
-HISTORY_SIZE = 100
-INPUT_PARAMETER_TIMEOUT = 60 * 30  # in seconds
 logger = get_logger(__name__)
 
 _sid = secrets.token_urlsafe(64)  # session id
@@ -27,6 +26,7 @@ class InputParameterCache:
 
     def __init__(self, _redis: redis.Redis):
         self._redis = _redis
+        assert current_user
 
     @staticmethod
     def _decode_byte(value) -> List:
@@ -64,7 +64,7 @@ class InputParameterCache:
                         pipe.hset(self._CACHE_KEY, str(i), j_conv)
                     pipe.execute()
                     pipe.unwatch()
-                    self._redis.expire(self._CACHE_KEY, INPUT_PARAMETER_TIMEOUT)
+                    self._redis.expire(self._CACHE_KEY, ModelConfig.INPUT_PARAMETER_TIMEOUT)
                     return None
                 except redis.WatchError:
                     error_count += 1
@@ -94,7 +94,7 @@ class ModelRunHistory:
     def _append(self, t):
         with self._redis.pipeline() as pipe:
             pipe.lpush(self._CACHE_KEY, pickle.dumps(t))
-            pipe.ltrim(self._CACHE_KEY, 0, HISTORY_SIZE)
+            pipe.ltrim(self._CACHE_KEY, 0, ModelConfig.HISTORY_SIZE)
             pipe.execute()
 
     def record_scheduled(self, key):
@@ -110,7 +110,7 @@ class ModelRunHistory:
         self._append((key, ModelRunResult.CANCELLED, datetime.now(), error_details, str(get_version_date())))
 
     def history(self):
-        history = self._redis.lrange(self._CACHE_KEY, 0, HISTORY_SIZE)
+        history = self._redis.lrange(self._CACHE_KEY, 0, ModelConfig.HISTORY_SIZE)
         return map(pickle.loads, history)
 
 
@@ -135,7 +135,7 @@ class ModelsRunningNow:
                     print("N_running: " + str(n_running))
                     is_running = self._redis.sismember(self._CACHE_KEY, _skey)
                     print("is_running: " + str(is_running))
-                    if n_running >= MAX_CONCURRENT_MODELS:
+                    if n_running >= ModelConfig.MAX_CONCURRENT_MODELS:
                         pipe.unwatch()
                         return ModelScheduleRunResult.CAPACITY
                     elif is_running:
