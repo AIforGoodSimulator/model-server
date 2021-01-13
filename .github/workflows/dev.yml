@@ -54,6 +54,8 @@ jobs:
       env:
         # The hostname used to communicate with the Redis service container
         REDIS_URL: 'rediss://redis'
+        DATABASE_HOST: 'url'
+        SECRET_KEY: 'secret'
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
