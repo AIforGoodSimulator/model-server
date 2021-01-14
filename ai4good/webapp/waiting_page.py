@@ -80,7 +80,7 @@ def re_run_model_results(run_n):
                     Output("model_dashboard_button_ui", "disabled"), Output("model_dashboard_button_ui", "href"),
                     Output("model_rerun_button", "disabled"), ],
     [Input('interval1', 'n_intervals')])
-def check_Model(n):
+def check_model(n):
     results_ready = check_model_results_for_messages(model_runner, ["message_1", "message_5"])
     if results_ready:
         user_input = json.loads(model_runner.user_input)

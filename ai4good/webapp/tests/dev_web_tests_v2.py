@@ -23,21 +23,22 @@ driver = webdriver.Remote(
    command_executor='http://'+args.zaluser+':'+args.zalpassword+'@'+args.zalhost+'/wd/hub',
    desired_capabilities=DesiredCapabilities.CHROME)
 
-driver.get("http://ai4good-dev.azurewebsites.net/")
+home_url = "http://ai4good-dev.azurewebsites.net/sim/run_model"
+run_model_url = home_url + "sim/run_model"
+validate_model_url = home_url + "sim/validate_model"
+driver.get(home_url)
 
-# assert "Python" in driver.title
-#elem = driver.find_element_by_id("react-entry-point")
-# elem.clear()
-# elem.send_keys("pycon")
-# #elem.send_keys(Keys.RETURN)
-# assert "No results found." not in driver.page_source
+# test code
 driver.set_window_size(1920, 1029)
-assert "AI4Good COVID-19 Model Server" in driver.title # check for correct page title
-driver.find_element(By.ID, "landing-button").click()
+assert driver.title in ("AI4Good COVID-19 Model Server authentication", "Updating...")
 driver.find_element(By.ID, "login-email").click()
 driver.find_element(By.ID, "login-email").send_keys("test@test.com")
 driver.find_element(By.ID, "login-password").send_keys("test123")
-driver.find_element(By.ID, "login-button").click()
+driver.find_element(By.ID, "login-submit-button").click()
+driver.execute_script("window.scrollTo(0,0)")
+driver.find_element(By.ID, "landing-button").click()
+driver.execute_script("window.scrollTo(0,0)")
+assert driver.title in ("AI4Good COVID-19 Model Server", "Updating...")
 driver.find_element(By.ID, "name-camp").click()
 driver.find_element(By.ID, "name-camp").send_keys("Moira")
 driver.find_element(By.ID, "location").click()
@@ -72,7 +73,8 @@ driver.find_element(By.ID, "activity-no-person-admin").click()
 driver.find_element(By.ID, "activity-no-person-admin").click()
 driver.find_element(By.ID, "activity-no-person-admin").send_keys("100")
 driver.find_element(By.ID, "activity-no-visit-admin").click()
-driver.find_element(By.ID, "activity-no-visit-admin").send_keys("2000")
+driver.find_element(By.ID, "activity-no-visit-admin").send_keys("200")
 driver.find_element(By.ID, "page-4-button").click()
 driver.execute_script("window.scrollTo(0,0)")
+assert r"Please wait for the simulation to complete" in  driver.page_source
 driver.close()
