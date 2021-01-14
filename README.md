@@ -43,11 +43,11 @@ Copy the .env.default file to .env :
 
 * Windows: 
     
-        Command line :
+  Command line :
 
         cp .env.default .env
 
-        Windows explorer :
+  Windows explorer :
 
         Copy the .env.default and rename it to .env
     
