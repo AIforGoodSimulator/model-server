@@ -55,6 +55,17 @@ Copy the .env.default file to .env :
 
         cp .env.default .env
 
+You also need to fill in the .env variable REDIS_URL with the details of the REDIS server.  You can fill in the information with the details of a local REDIS instance or request the development REDIS parameters from :
+
+    [pardf](https://github.com/pardf)
+
+    [kariso2000](https://github.com/kariso2000)
+
+    [billlyzhaoyh](https://github.com/billlyzhaoyh)
+
+    [titorenko](https://github.com/titorenko)
+
+    [TensorMan](https://github.com/TensorMan)
     
 ### Command line execution 
     
