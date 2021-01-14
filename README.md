@@ -40,6 +40,25 @@ Linux:
 
     export PYTHONPATH="${PYTHONPATH}:."
     
+    
+Copy the .env.default file to .env :
+
+
+Windows: 
+    
+    Command line :
+    
+    cp .env.default .env
+    
+    Windows explorer :
+    
+    Copy the .env.default and rename it to .env
+    
+Linux:
+
+    cp .env.default .env
+
+    
 ### Command line execution 
     
 To get commandline help:
