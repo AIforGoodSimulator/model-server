@@ -28,35 +28,32 @@ or first create and activate virtual environment
         pip install -r requirements.txt
 
 
-    
-
 Go to root of the repo and run (or configure corresponding env. vars)
 
-Windows: 
+* Windows: 
     
-    set PYTHONPATH=%PYTHONPATH%;.
+        set PYTHONPATH=%PYTHONPATH%;.
     
-Linux:
+* Linux:
 
-    export PYTHONPATH="${PYTHONPATH}:."
+        export PYTHONPATH="${PYTHONPATH}:."
     
     
 Copy the .env.default file to .env :
 
+* Windows: 
+    
+        Command line :
 
-Windows: 
-    
-    Command line :
-    
-    cp .env.default .env
-    
-    Windows explorer :
-    
-    Copy the .env.default and rename it to .env
-    
-Linux:
+        cp .env.default .env
 
-    cp .env.default .env
+        Windows explorer :
+
+        Copy the .env.default and rename it to .env
+    
+* Linux:
+
+        cp .env.default .env
 
     
 ### Command line execution 
