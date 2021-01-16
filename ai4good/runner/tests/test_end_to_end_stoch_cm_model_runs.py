@@ -5,6 +5,7 @@ import pandas.testing as pdt
 from ai4good.models.cm.cm_model import CompartmentalModelStochastic
 import ai4good.runner.console_runner as cr
 import ai4good.utils.path_utils as pu
+from ai4good.runner.tests import user_input_params
 
 
 class TestEndToEndRuns(unittest.TestCase):
@@ -13,7 +14,7 @@ class TestEndToEndRuns(unittest.TestCase):
         mr = cr.run_model(
             _model=CompartmentalModelStochastic.ID,
             _profile='custom',
-            camp='Moria',
+            user_input_params=user_input_params,
             load_from_cache=False,
             save_to_cache=False,
             is_save_plots=False,

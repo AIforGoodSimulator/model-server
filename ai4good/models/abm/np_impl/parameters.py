@@ -152,7 +152,21 @@ class Parameters(object):
     def sha1_hash(self) -> str:
         hash_params = [
             self.camp,
-            self.model_params.to_dict('records')
+            self.model_params.to_dict('records'),
+            self.number_of_steps,
+            self.prob_symp2sevr.tolist(),
+            self.prob_symp2mild.tolist(),
+            self.permanently_asymptomatic_cases,
+            self.relative_strength_of_interaction,
+            self.smaller_movement_radius,
+            self.larger_movement_radius,
+            self.transmission_reduction,
+            self.probability_spotting_symptoms_per_day,
+            self.clear_day,
+            self.prop_violating_lockdown,
+            self.lockdown_home_range,
+            self.prob_spread_wander,
+            self.prob_spread_house,
         ]
         serialized_params = json.dumps(hash_params, sort_keys=True)
         hash_object = hashlib.sha1(serialized_params.encode('UTF-8'))

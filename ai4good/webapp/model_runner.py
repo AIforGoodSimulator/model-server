@@ -15,10 +15,12 @@ from ai4good.models.model import Model, ModelResult
 from ai4good.models.model_registry import get_models, create_params
 from ai4good.webapp.commit_date import get_version_date
 from ai4good.utils.logger_util import get_logger
+import json
 
 logger = get_logger(__name__)
 
 _sid = secrets.token_urlsafe(64)  # session id
+_sid = 42 #fixed for local dev
 
 
 class InputParameterCache:
@@ -153,16 +155,33 @@ class ModelsRunningNow:
                     logger.warning("ModelsRunningNow optimistic lock error #%d; retrying", error_count)
         raise RuntimeError("Failed to obtain lock")
 
+    def clear_run(self):
+        for running_now in self._redis.smembers(self._CACHE_KEY):
+            self._redis.srem(self._CACHE_KEY, running_now)
+
+    def run_available(self):
+        n_running = self._redis.scard(self._CACHE_KEY)
+        if n_running >= MAX_CONCURRENT_MODELS:
+            return False
+        else:
+            return True
+
 
 class ModelRunner:
 
-    def __init__(self, facade, _redis: redis.Redis, dask_client_provider):
+    def __init__(self, facade, _redis: redis.Redis, dask_client_provider, _sid):
         self.facade = facade
         self.history = ModelRunHistory(_redis)
         self.models_running_now = ModelsRunningNow(_redis)
+        self.models_running_now.clear_run() # clear running log for now
         self.dask_client_provider = dask_client_provider
+        self._redis = _redis
+        self._sid = _sid
+        self.user_input = None
 
-    def run_model(self, _model: str, _profile: str, camp: str) -> ModelScheduleRunResult:
+    def run_model(self, _model: str, _profile: str) -> ModelScheduleRunResult:
+        if self.user_input is None:
+            self.user_input = self.load_input_params()
 
         def on_future_done(f: Future):
             self.models_running_now.pop(key)
@@ -181,11 +200,47 @@ class ModelRunner:
         def submit():
             client = self.dask_client_provider()
             self.history.record_scheduled(key)
-            future: Future = client.submit(self._sync_run_model, self.facade, _model, _profile, camp)
+            future: Future = client.submit(self._sync_run_model, self.facade, _model, _profile, self.user_input)
             future.add_done_callback(on_future_done)
 
-        key = (_model, _profile, camp)
+        key = (_model, _profile)
+
         return self.models_running_now.start_run(key, submit)
+
+    def batch_run_model(self, run_config: dict):
+        # if self.user_input is None:
+        #     self.user_input = self.load_input_params()
+        self.user_input = self.load_input_params()
+        # initialise the client
+        client = self.dask_client_provider()
+        res = []
+        for model in run_config.keys():
+            if len(run_config[model]) > 0:
+                for profile in run_config[model]:
+                    def submit():
+                        key = (model, profile, self.user_input)  # duplicate the key here so the result report will be right
+
+                        def on_future_done(f: Future):
+                            self.models_running_now.pop(key)
+                            if f.status == 'finished':
+                                logger.info("Model run %s success", str(key))
+                                self.history.record_finished(key, f.result())
+                            elif f.status == 'cancelled':
+                                logger.info("Model run %s cancelled", str(key))
+                                self.history.record_cancelled(key)
+                            else:
+                                tb = f.traceback()
+                                error_details = traceback.format_tb(tb)
+                                logger.error("Model run %s failed: %s", str(key), error_details)
+                                self.history.record_error(key, error_details)
+                        logger.info(f"submitting model run {key}")
+                        self.history.record_scheduled(key)
+                        future: Future = client.submit(self._sync_run_model, self.facade, model, profile, self.user_input)
+                        future.add_done_callback(on_future_done)
+                    key = (model, profile, self.user_input)
+                    self.models_running_now.start_run(key, submit)
+        logger.info('all runs have been submitted to the distributed client')
+        return None
 
     @staticmethod
     def history_columns() -> List[str]:
@@ -213,25 +268,38 @@ class ModelRunner:
         return pd.DataFrame(rows)
 
     @staticmethod
-    def _sync_run_model(facade, _model: str, _profile: str, camp: str) -> ModelResult:
+    def _sync_run_model(facade, _model: str, _profile: str, user_input: str) -> ModelResult:
         logger.info('Running %s model with %s profile', _model, _profile)
         _mdl: Model = get_models()[_model](facade.ps)
-        params = create_params(facade.ps, _model, _profile, camp)
+        params = create_params(facade.ps, _model, _profile, user_input)
         res_id = _mdl.result_id(params)
-        logger.info("Running model for camp %s", camp)
+        logger.info(f"Running model for camp with {_mdl.id()} %s")
         mr = _mdl.run(params)
         logger.info("Saving model result to cache")
         facade.rs.store(_mdl.id(), res_id, mr)
         return mr
 
-    def results_exist(self, _model: str, _profile: str, camp: str) -> bool:
+    def results_exist(self, _model: str, _profile: str) -> bool:
+        if self.user_input is None:
+            self.user_input = self.load_input_params()
         _mdl: Model = get_models()[_model](self.facade.ps)
-        params = create_params(self.facade.ps, _model, _profile, camp)
+        params = create_params(self.facade.ps, _model, _profile, self.user_input)
         res_id = _mdl.result_id(params)
         return self.facade.rs.exists(_mdl.id(), res_id)
 
-    def get_result(self, _model: str, _profile: str, camp: str) -> ModelResult:
+    def get_result(self, _model: str, _profile: str) -> ModelResult:
+        if self.user_input is None:
+            self.user_input = self.load_input_params()
         _mdl: Model = get_models()[_model](self.facade.ps)
-        params = create_params(self.facade.ps, _model, _profile, camp)
+        params = create_params(self.facade.ps, _model, _profile, self.user_input)
         res_id = _mdl.result_id(params)
         return self.facade.rs.load(_mdl.id(), res_id)
+
+    def load_input_params(self):
+        # access the particular cache from the cache ID
+        input_param_cache = InputParameterCache(self._redis)
+        input_param_cache._CACHE_KEY = f'{socket.gethostname()}_{self._sid}_input_parameter'
+        saved_keys, saved_values = input_param_cache.cache_get_all()
+        user_input = json.dumps(dict(zip(saved_keys, saved_values)))
+        return user_input
+

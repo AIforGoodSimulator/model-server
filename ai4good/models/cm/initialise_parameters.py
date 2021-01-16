@@ -1,105 +1,60 @@
-"""
-This file sets up the parameters for SEIR models used in the cov_functions_AI.py
-"""
-
 import numpy as np
 import pandas as pd
 import json
 import hashlib
 from ai4good.params.param_store import ParamStore
 from ai4good.utils import path_utils as pu
+from ai4good.models.cm import longname, shortname, colour, index, fill_colour
+from ai4good.params.disease_params import covid_specific_parameters
+from ai4good.params.model_control_params import model_config_cm
 
 
 class Parameters:
-    def __init__(self, ps: ParamStore, camp: str, profile: pd.DataFrame, profile_override_dict={}):
+    def __init__(self, ps: ParamStore, user_input_parameters: str, profile: pd.DataFrame, profile_override_dict={}):
+        self.user_input = json.loads(user_input_parameters)
         self.ps = ps
-        self.camp = camp
+        self.camp = str(self.user_input['name-camp'])
+        self.country = str(self.user_input['country-dropdown'])
         self.age_limits = np.array([0, 10, 20, 30, 40, 50, 60, 70, 80], dtype=int)
-        disease_params = ps.get_disease_params()
-        self.camp_params = ps.get_camp_params(camp)
-        # ------------------------------------------------------------
-        # disease params
-        parameter_csv = disease_params
-        model_params = parameter_csv[parameter_csv['Type'] == 'Model Parameter']
-        model_params = model_params.loc[:, ['Name', 'Value', 'CV']]
-        control_data = parameter_csv[parameter_csv['Type'] == 'Control']
-        self.model_params = model_params
+        self.R_0_list = np.asarray([covid_specific_parameters["R0_low"], covid_specific_parameters["R0_medium"], covid_specific_parameters["R0_high"]])
+        self.R_0_cv_list = np.asarray([covid_specific_parameters["R0_low_cv"], covid_specific_parameters["R0_medium_cv"], covid_specific_parameters["R0_high_cv"]])
+        self.latent_rate = 1 / (np.float(covid_specific_parameters["Latent_period"]))
+        latent_period_cv = np.float(covid_specific_parameters["Latent_period_cv"])
+        self.latent_rate_sigma = latent_period_cv * self.latent_rate
+        self.removal_rate = 1 / (np.float(covid_specific_parameters["Infectious_period"]))
+        infectious_period_cv = np.float(covid_specific_parameters["Infectious_period_cv"])
+        self.infectious_rate_sigma = infectious_period_cv * self.removal_rate
+        self.removal_rate_sigma = infectious_period_cv * self.removal_rate
+        self.hosp_rate = 1 / (np.float(covid_specific_parameters["Hosp_period"]))
+        hosp_period_cv = np.float(covid_specific_parameters["Hosp_period_cv"])
+        self.hosp_period_sigma = hosp_period_cv * self.hosp_rate
+        self.death_rate = 1 / (np.float(covid_specific_parameters["Death_period"]))
+        death_rate_cv = np.float(covid_specific_parameters["Death_period_cv"])
+        self.death_rate_sigma = death_rate_cv * self.death_rate
+        self.death_rate_with_ICU = 1 / (np.float(covid_specific_parameters["Death_period_withICU"]))
+        death_period_with_icu_cv = np.float(covid_specific_parameters["Death_period_withICU_cv"])
+        self.death_rate_with_icu_sigma = death_period_with_icu_cv * self.death_rate_with_ICU
+        self.death_prob_with_ICU = np.float(covid_specific_parameters["Death_prob_withICU"])
+        self.number_compartments = 11 # S,E,I,A,R,H,C,D,O,Q,U refer to model write up for more details
+        self.beta_list = [R_0 * self.removal_rate for R_0 in self.R_0_list]  # R_0 mu/N, N=1
+        self.beta_sigma_list = self.beta_list * self.R_0_cv_list
+        self.AsymptInfectiousFactor = np.float(covid_specific_parameters["Infectiousness_asymptomatic"])
 
-        # print()
+        # These are unique model control params
+        self.shield_decrease = np.float(model_config_cm["shiedling_reduction_between_groups"])
+        self.shield_increase = np.float(model_config_cm["shielding_increase_within_group"])
+        self.better_hygiene = np.float(model_config_cm["better_hygiene_infection_scale"])
 
-        R_0_list = np.asarray(model_params[model_params['Name'] == 'R0'].Value)
-        R_0_cv_list = np.asarray(model_params[model_params['Name'] == 'R0'].CV)
+        #we will get this from the UI default to 14 for now
+        self.quarant_rate = 1 / (np.float(model_config_cm["default_quarantine_period"]))
 
-        latent_period = np.float(model_params[model_params['Name'] == 'latent period'].Value)
-        latent_rate = 1 / (latent_period)
-        latent_period_cv = np.float(model_params[model_params['Name'] == 'latent period'].CV)
-        infectious_period = np.float(model_params[model_params['Name'] == 'infectious period'].Value)
-        infectious_period_cv = np.float(model_params[model_params['Name'] == 'infectious period'].CV)
-        removal_rate = 1 / (infectious_period)
-        hosp_period = np.float(model_params[model_params['Name'] == 'hosp period'].Value)
-        hosp_rate = 1 / (hosp_period)
-        hosp_period_cv = np.float(model_params[model_params['Name'] == 'hosp period'].CV)
-        death_period = np.float(model_params[model_params['Name'] == 'death period'].Value)
-        death_rate = 1 / (death_period)
-        death_period_cv = np.float(model_params[model_params['Name'] == 'death period'].CV)
-        death_period_with_icu = np.float(model_params[model_params['Name'] == 'death period with ICU'].Value)
-        death_rate_with_ICU = 1 / (death_period_with_icu)
-        death_period_with_icu_cv = np.float(model_params[model_params['Name'] == 'death period with ICU'].CV)
+        self.calculated_categories = ['S','E','I','A','R','H','C','D','O','Q','U']
+        self.change_in_categories = ['C'+category for category in self.calculated_categories]
+        categories_dicts = [longname,shortname,colour,index,fill_colour]
+        categories_df = pd.DataFrame(categories_dicts, index =['longname', 'shortname','colour','index','fill_colour'])
+        self.categories: dict = categories_df.to_dict()
 
-        quarant_rate = 1 / (np.float(model_params[model_params['Name'] == 'quarantine period'].Value))
-
-        death_prob_with_ICU = np.float(model_params[model_params['Name'] == 'death prob with ICU'].Value)
-
-        number_compartments = int(model_params[model_params['Name'] == 'number_compartments'].Value)
-
-        beta_list = R_0_list * removal_rate  # R_0 mu/N, N=1
-
-        shield_decrease = np.float(control_data[control_data['Name'] == 'Reduction in contact between groups'].Value)
-        shield_increase = np.float(control_data[control_data['Name'] == 'Increase in contact within group'].Value)
-
-        better_hygiene = np.float(control_data.Value[control_data.Name == 'Better hygiene'])
-
-        AsymptInfectiousFactor = np.float(model_params[model_params['Name'] == 'infectiousness of asymptomatic'].Value)
-
-        self.R_0_list = R_0_list
-        self.R_0_cv_list = R_0_cv_list
-        self.beta_list = beta_list
-        self.beta_sigma_list = beta_list*R_0_cv_list
-        self.shield_increase = shield_increase
-        self.shield_decrease = shield_decrease
-        self.better_hygiene  = better_hygiene
-        self.number_compartments = number_compartments
-        self.AsymptInfectiousFactor = AsymptInfectiousFactor
-        self.latent_rate = latent_rate
-        self.latent_rate_sigma = latent_period_cv*latent_rate
-        self.removal_rate = removal_rate
-        self.removal_rate_sigma = infectious_period_cv*removal_rate
-        self.hosp_rate = hosp_rate
-        self.hosp_period_sigma = hosp_period_cv*hosp_rate
-        self.quarant_rate = quarant_rate
-        self.death_rate = death_rate
-        self.death_rate_sigma = death_period_cv*death_rate
-        self.death_rate_with_ICU = death_rate_with_ICU
-        self.death_rate_with_icu_sigma = death_period_with_icu_cv*death_rate_with_ICU
-        self.death_prob_with_ICU = death_prob_with_ICU
-
-        categs = pd.read_csv(pu.cm_params_path('categories.csv'), delimiter=';', skipinitialspace=True)
-        self.calculated_categories = categs['category'].to_list()
-        categs['index'] = np.arange(self.number_compartments)
-
-        change_categs = pd.read_csv(pu.cm_params_path('change_categories.csv'), delimiter=';', skipinitialspace=True)
-        self.change_in_categories = change_categs['category'].to_list()
-        change_categs['index'] = np.arange(len(categs), 2 * self.number_compartments)
-
-        new_infected_category = {'category': 'Ninf', 'shortname': 'New Infected',
-                                 'longname': 'Change in total active infections', 'colour': 'rgb(255,125,100)',
-                                 'colour_name': '', 'index': 2*self.number_compartments}
-
-        all_categs = pd.concat([categs, change_categs, pd.DataFrame([new_infected_category])])
-        all_categs['fill_colour'] = all_categs.apply(lambda row: 'rgba' + row['colour'][3:-1] + ',0.1)', axis=1)
-        self.categories: dict = all_categs.set_index(all_categs['category']).transpose().to_dict()
-
-        self.population_frame, self.population = self.prepare_population_frame(self.camp_params)
+        self.population_frame, self.population = self.prepare_population_frame()
 
         self.control_dict, self.icu_count = self.load_control_dict(profile, profile_override_dict)
 
@@ -147,7 +102,6 @@ class Parameters:
             self.camp,
             self.country,
             self.calculated_categories,
-            self.model_params.to_dict('records')
         ]
         serialized_params = json.dumps(hash_params, sort_keys=True)
         hash_object = hashlib.sha1(serialized_params.encode('UTF-8'))
@@ -216,19 +170,23 @@ class Parameters:
 
         return dct, icu_capacity
 
-    @staticmethod
-    def prepare_population_frame(population_frame):
-        population_frame = population_frame.loc[:, 'Age':'Total_population']
-
-        population_frame = population_frame.assign(p_hospitalised=lambda x: (x.Hosp_given_symptomatic / 100),
-                                                   # *frac_symptomatic,
-                                                   p_critical=lambda x: (x.Critical_given_hospitalised / 100))
-
-        # make sure population frame.value sum to 100
-        # population_frame.loc[:,'Population'] = population_frame.Population/sum(population_frame.Population)
-
-        population_size = np.float(population_frame.reset_index()['Total_population'][0])
-
+    def prepare_population_frame(self):
+        age0to5 = float(self.user_input['age-population-0-5'])
+        age6to9 = float(self.user_input['age-population-6-9'])
+        population_structure = np.asarray([age0to5 + age6to9, float(self.user_input['age-population-10-19']),
+                float(self.user_input['age-population-20-29']), float(self.user_input['age-population-30-39']),
+                float(self.user_input['age-population-40-49']), float(self.user_input['age-population-50-59']),
+                float(self.user_input['age-population-60-69']), float(self.user_input['age-population-70+'])])
+        population_size = int(self.user_input['total-population'])
+        population_structure_percentage = population_structure/population_size*100
+        # fix population structure to Moria see if the testing passes:
+        # population_structure_percentage = [21.05, 17.34, 26.35, 17.16, 9.24, 5.55, 2.54, 0.77]
+        ages = ['0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70+']
+        population_frame = \
+            pd.DataFrame({'Age': ages, 'Population_structure': population_structure_percentage,
+                         'p_symptomatic': covid_specific_parameters['p_symptomatic'],
+                        'p_hosp_given_symptomatic': covid_specific_parameters['p_hosp_given_symptomatic'],
+                         'p_critical_given_hospitalised': covid_specific_parameters['p_critical_given_hospitalised']})
         return population_frame, population_size
 
     def generate_infection_matrix(self):
@@ -251,23 +209,15 @@ class Parameters:
         return infection_matrix, beta_list, largest_eigenvalue
 
     def generate_contact_matrix(self, age_limits: np.array):
-        supported_countries = self.ps.get_supported_countries()
-        self.country = self.camp_params['Country'].tolist()[0]
-        if self.country not in supported_countries:
-            return self.ps.get_contact_matrix_params(self.camp).to_numpy()[:, 2:].astype(np.double)
-        contact_matrix_path = pu.cm_params_path(f'contact_matrices/{self.country}.csv')
+        contact_matrix_path = pu.params_path(f'contact_matrices/{self.country}.csv')
         contact_matrix = pd.read_csv(contact_matrix_path).to_numpy()
-        population_array = self.camp_params['Population_structure'].to_numpy()
-
+        population_array = self.population_frame['Population_structure'].to_numpy()
         n_categories = len(age_limits) - 1
         ind_limits = np.array(age_limits / 5, dtype=int)
-
         p = np.zeros(16)
         for i in range(n_categories):
             p[ind_limits[i]: ind_limits[i + 1]] = population_array[i] / (ind_limits[i + 1] - ind_limits[i])
-
         transformed_matrix = np.zeros((n_categories, n_categories))
-
         for i in range(n_categories):
             for j in range(n_categories):
                 sump = sum(p[ind_limits[i]: ind_limits[i + 1]])
@@ -275,5 +225,4 @@ class Parameters:
                     p[ind_limits[i]: ind_limits[i + 1]]).transpose()
                 v1 = b.sum() / sump
                 transformed_matrix[i, j] = v1
-
         return transformed_matrix

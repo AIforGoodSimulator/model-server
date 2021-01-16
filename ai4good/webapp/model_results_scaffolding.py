@@ -15,13 +15,15 @@ import plotly.graph_objs as go
 from ai4good.utils.logger_util import get_logger
 from plotly.colors import DEFAULT_PLOTLY_COLORS
 import ai4good.webapp.common_elements as common_elements
+import pickle
+import ai4good.utils.path_utils as pu
+
 
 logger = get_logger(__name__)
 
 # @cache.memoize(timeout=cache_timeout)
 def layout(camp):
     # get results here based on the camp
-    message_5 = render_message_5_plots(camp)
     return html.Div(
         [
             # Hidden div inside the app that stores the intermediate value
@@ -36,8 +38,7 @@ def layout(camp):
                 dcc.Markdown(high_level_message_2(), style={'margin': 30}),
                 dcc.Markdown(high_level_message_3(), style={'margin': 30}),
                 dcc.Markdown(high_level_message_4(), style={'margin': 30}),
-                dcc.Markdown(high_level_message_5(), style={'margin': 30}),
-                html.Div(message_5, style={'margin': 30}),
+                dcc.Loading(html.Div([], id='message_5_section', style={'margin': 30})),
             ], style={'margin': 30})
         ]
     )
@@ -89,21 +90,23 @@ def high_level_message_5():
 
 
 @local_cache.memoize(timeout=cache_timeout)
+def load_user_results(camp):
+    logger.info(f"Reading user results for camp {camp}")
+    p = pu.user_results_path(f"{camp}_results_collage.pkl")
+    with open(p, 'rb') as handle:
+        user_results = pickle.load(handle)
+        return user_results
+
+
+@local_cache.memoize(timeout=cache_timeout)
 def get_model_result_message(message_key, camp):
+    user_results = load_user_results(camp)
     logger.info(f"Reading data for high level message: {message_key}")
     model_profile_report_dict = defaultdict(dict)
     for model in model_profile_config[message_key].keys():
         if len(model_profile_config[message_key][model]) > 0:
             for profile in model_profile_config[message_key][model]:
-                try:
-                    mr = model_runner.get_result(model, profile, camp)
-                    profile_df = facade.ps.get_params(model, profile).drop(columns=['Profile'])
-                    params = Parameters(facade.ps, camp, profile_df, {})
-                    report = load_report(mr, params)
-                    assert mr is not None
-                    model_profile_report_dict[model][profile] = report
-                except:
-                    logger.info(f"Unable to load result for model: ({model}, {profile}, {camp}).")
+                model_profile_report_dict[model][profile] = user_results[model][profile]
     return model_profile_report_dict
 
 
@@ -187,14 +190,21 @@ def update_message_1_plots(camp, category):
 )
 def message_1_section(camp):
     # categories of interest for plotting
-    categories = ["Infected (symptomatic)", "Hospitalised", "Critical", "Deaths"]
-    # for dropdowns to select
-    dropdown_options = []
-    for option in categories:
-        dropdown_options.append({"label": option, "value": option})
+    dropdown_options = [
+        {"label": "Number of Symptomatically infected individuals", "value": "Infected (symptomatic)",
+         "title": "Symptomatic infection includes both mild and severe cases"},
+        {"label": "Number of people count per hospitalisation day", "value": "Hospitalised",
+         "title": "Hospitalisation demand on a daily basis interpreted as number of people needing hospitalisation "
+                  "care on that day (they might not get it)"},
+        {"label": "Number of people count per critical condition day", "value": "Critical",
+         "title": "Critical care demand on a daily basis interpreted as number of people needing critical care on that "
+                  "day (they might not get it)"},
+        {"label": "Cumulative number of deaths", "value": "Deaths", "title": "Number of cumulative deaths throughout "
+                                                                             "the course of the pandemic"},
+    ]
     dropdown_button = html.Div(
         [
-            html.H5("Category: "),
+            html.H5("Categories to inspect: "),
             dcc.Dropdown(
                 id="message_1_selection",
                 options=dropdown_options,
@@ -219,29 +229,33 @@ def message_1_section(camp):
     ]
 
 
-def render_message_5_plots(camp):
+def render_message_5_plots(camp, category="Deaths"):
     model_profile_report_dict = get_model_result_message("message_5", camp)
-    columns_to_plot = ['Deaths']
-    fig = make_subplots()
+    columns_to_plot = [category]
+    fig = go.Figure()
     col = columns_to_plot[0]
     plot_num = 0
     for profile in model_profile_report_dict["compartmental-model"].keys():
         if profile == 'only_better_hygiene':
-            label_name = 'Only Implementing Better Hygiene'
+            label_name = 'Only improve personal hygiene'
+            hover_text = "hygiene"
         elif profile == 'only_remove_symptomatic':
-            label_name = 'Only Removing Symptomatic Individuals'
+            label_name = 'Only isolate symptomatic individuals with COVID infections'
+            hover_text = "isolation"
         elif profile == 'only_remove_high_risk':
-            label_name = 'Only Removing High-Risk Individuals'
+            label_name = 'Only move residents who are at high risk of COVID infection offsite'
+            hover_text = "removal"
         elif profile == 'combined_hygiene_symptomatic_high_risk':
-            label_name = 'Combining Better Hygiene and Removal of Symptomatic and High-Risk Individuals'
+            label_name = 'Combine all of the NPIs above'
+            hover_text = "all"
         else:
             label_name = 'default'
+            hover_text = None
 
-        p1, p2 = plot_iqr(model_profile_report_dict["compartmental-model"][profile], col, label_name, '')
-        
-        fig.add_trace(p1, row=1, col=1)
-        fig.add_trace(p2, row=1, col=1)
-        fig.update_yaxes(title_text=col, row=1, col=1)
+        p1, p2 = plot_iqr(model_profile_report_dict["compartmental-model"][profile], col, label_name, hover_text)
+        fig.add_trace(p1)
+        fig.add_trace(p2)
+        fig.update_yaxes(title_text=col)
         if plot_num < len(color_scheme_updated):
             fig["data"][2 * plot_num]["line"]["color"] = color_scheme_updated[plot_num] #IQR Color
             fig["data"][2 * plot_num]["opacity"] = 0.2 #IQR Opacity
@@ -249,29 +263,79 @@ def render_message_5_plots(camp):
         plot_num += 1
         
     x_title = 'Number of days since the virus was introduced to the camp'
-    fig.update_xaxes(title_text=x_title, row=1, col=1)
-    # fig.update_xaxes(title_text=x_title, row=2, col=1)
-    # fig.update_xaxes(title_text=x_title, row=3, col=1)
-    # fig.update_xaxes(title_text=x_title, row=4, col=1)
+    fig.update_xaxes(title_text=x_title)
     fig.update_traces(line=dict(width=2))
     fig.update_layout(
         margin=dict(l=0, r=0, t=30, b=0),
         height=400,
         showlegend=True,
-        legend_title_text='Scenarios'
-
+        hovermode = "x",
     )
 
     # Match the background colour from external css style sheet
     fig.layout.paper_bgcolor = '#ecf0f1'
+    fig.layout.xaxis.showspikes = True
+    fig.layout.xaxis.spikemode = 'across'
+    fig.layout.xaxis.spikesnap = 'cursor'
+    fig.layout.xaxis.showline = True
+    fig.layout.xaxis.showgrid = True
 
-    return [
+    return fig
+
+
+@dash_app.callback(
+    Output("plot_message5_fig", "figure"),
+    [Input("camp-name", "children"), Input("message_5_selection", "value")]
+)
+def update_message_5_plots(camp, category):
+    fig = render_message_5_plots(camp, category)
+    return fig
+
+
+@dash_app.callback(
+    Output('message_5_section', 'children'),
+    [Input("camp-name", "children")]
+)
+def message_5_section(camp):
+    # categories of interest for plotting
+    dropdown_options = [
+        {"label": "Number of Symptomatically infected individuals", "value": "Infected (symptomatic)",
+         "title": "Symptomatic infection includes both mild and severe cases"},
+        {"label": "Number of people count per hospitalisation day", "value": "Hospitalised",
+         "title": "Hospitalisation demand on a daily basis interpreted as number of people needing hospitalisation "
+                  "care on that day (they might not get it)"},
+        {"label": "Number of people count per critical condition day", "value": "Critical",
+         "title": "Critical care demand on a daily basis interpreted as number of people needing critical care on that "
+                  "day (they might not get it)"},
+        {"label": "Cumulative number of deaths", "value": "Deaths", "title": "Number of cumulative deaths throughout "
+                                                                             "the course of the pandemic"},
+    ]
+    dropdown_button = html.Div(
+        [
+            html.H5("Categories to inspect: "),
+            dcc.Dropdown(
+                id="message_5_selection",
+                options=dropdown_options,
+                value="Deaths",
+                searchable=False,
+                clearable=False,
+                style={"width": "100%"}
+            )
+        ],
+        style={"width": "100%"},
+        className='d-print-none'
+    )
+    fig = render_message_5_plots(camp)
+    return[
+        dcc.Markdown(high_level_message_5()),
+        dropdown_button,
         dcc.Graph(
             id='plot_message5_fig',
             figure=fig,
             style={'width': '100%'}
-        )
+        ),
     ]
+
 
 
 def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str, hover_text: str,
@@ -290,8 +354,8 @@ def plot_iqr(df: pd.DataFrame, y_col: str, graph_label: str, hover_text: str,
     y_lower = y_lower[::-1]
     
     ci = go.Scatter(
-        x=x + x_rev, y=y_upper + y_lower, fill='toself', showlegend=False, hoverinfo="skip")
-    line = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6),
+        x=x + x_rev, y=y_upper + y_lower, fill='toself', showlegend=False, hoverinfo="skip", legendgroup=f"{graph_label}")
+    line = go.Scatter(x=x, y=est,  name=f'{graph_label}', line=dict(width=6), legendgroup=f"{graph_label}", 
                       text=[f'{round(number)}' for number in est],
                       hovertemplate='%{text}' + f'<extra>{hover_text}</extra>')
     return ci, line

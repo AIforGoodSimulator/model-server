@@ -1,56 +1,25 @@
-import numpy as np
-import pandas as pd
 import dash
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
-from ai4good.webapp.apps import dash_app, facade, model_runner
-import ai4good.webapp.run_model_page as run_model_page
-from ai4good.webapp.model_runner import ModelScheduleRunResult
-from ai4good.webapp.apps import model_runner
-from ai4good.webapp.model_runner import ModelScheduleRunResult
-import ai4good.utils.path_utils as pu
+from ai4good.webapp.model_runner import ModelsRunningNow, ModelScheduleRunResult, _sid, ModelRunner
 from dash.dependencies import Input, Output, State
-import ai4good.webapp.common_elements as common_elements
-import dash_table
-import os
-from datetime import datetime
 import time
+import ai4good.webapp.common_elements as common_elements
+from ai4good.webapp.run_model_for_dashboard import run_model_results_for_messages, check_model_results_for_messages, collate_model_results_for_user, check_model_results_for_messages_unrun
+from ai4good.webapp.apps import dash_app, facade, _redis, dask_client, model_runner
+from ai4good.utils.logger_util import get_logger
+import json
 
-# some default stuff
-base = '../../fs'
+logger = get_logger(__name__)
 initial_status = "Simulation Running ..."
-finished_status = "Simulation Completed"
-time_format_raw = "%Y-%m-%d %H:%M:%S.%f"
-time_format = "%Y-%m-%d, %H:%M:%S"
 initial_time = time.localtime()
-initial_time = time.strftime(time_format, initial_time)
-
-# model Parameter
-model = 'compartmental-model'
-profile = 'baseline'
-camp = 'Moria'
-
-# def run_model_results_for_message_1():
-#     for prof in profile:
-#         res = model_runner.run_model(model, profile, camp)
-#         if res == ModelScheduleRunResult.SCHEDULED:
-#             print("Model run scheduled")
-#         elif res == ModelScheduleRunResult.CAPACITY:
-#             print("Can not run model now, over capacity, try again later")
-#         elif res == ModelScheduleRunResult.ALREADY_RUNNING:
-#             print("Already running")
-#         else:
-#             raise RuntimeError("Unsupported result type: "+str(res))
-#     return None
-
-# # Runs the model so that there is something to check for in cache
-# run_model_results_for_message_1()
-
+initial_time = time.strftime("%m/%d/%Y, %H:%M:%S", initial_time)
 
 
 layout = html.Div([
-        dcc.Interval(id='waiting-interval', interval=10 * 1000, n_intervals=0),
+        # dcc.Interval(id='starting', interval=1000, n_intervals=0, max_intervals=1),
+        dcc.Interval(id='interval1', interval=10 * 1000, n_intervals=0),
         common_elements.nav_bar(),
         html.Br(),
         html.Div([
@@ -59,47 +28,69 @@ layout = html.Div([
                     dbc.Col([
                         dbc.Card([
                             html.H4('COVID-19 Simulator', className='card-title'),
-                            html.Center(html.Img(src='/static/input_step5.png', title='Step completed', style={'width':'50%'}, className="step_counter")), 
                             html.Header('Please wait for the simulation to complete.', className='card-text'),
                             html.Div([
-                                html.P('', id="waiting-status", style={'margin':'0px'}),
-                                html.P('', id="waiting-start-time", style={'margin':'0px'}),
-                                html.P('', id="waiting-end-time", style={'margin':'0px'}),
-                                html.P(("Last Updated: ", initial_time), id="waiting-update", className="status_Time", style={'font-size':'0.8em'}),
-                            ], className="results_Controls"), 
-                            dbc.CardFooter(dbc.Button('View Report', id='waiting-view-button', className="mr-1 holo", style={'float':'right'})),
-                            html.Div(id='waiting-page-alert')
-                            ], body=True), 
-                         html.Br()], width=6
+                                html.P(("Status: ", initial_status), id="status_String",style={'margin':'0px'}),
+                                html.P(("Last Updated: ", initial_time), id="update_String", className="status_Time",
+                                       style={'font-size':'0.8em'}),
+                                dbc.Button("Rerun the models", id="model_rerun_button", className="mr-1 holo",
+                                           disabled=True),
+                                dbc.Button("View Results", id="model_dashboard_button_ui", className="mr-1 holo", disabled=True),
+                            ], className="results_Controls")
+                            ], body=True
+                        ),html.Br()], width=6
                     ), justify='center', style={'margin-top':'50px'}
                 )
             ])
-        ])
+        ]),
+        dcc.Store(id='memory'),
     ]
 )
 
 
-# Check every 10 seconds to check if there is a report ready
-@dash_app.callback(
-    [Output('waiting-update', 'children'), Output('waiting-status', 'children'), 
-     Output('waiting-start-time', 'children'), Output('waiting-end-time', 'children')], 
-    [Input('waiting-interval', 'n_intervals')])
-def check_model_status(n):
-    mr = model_runner.get_result(model, profile, camp)
-    assert mr is not None
-    history_df = model_runner.history_df()
-    history_mr_start = history_df[
-        (history_df.Key.isin([str(f"('{model}', '{profile}', '{camp}')")])) &
-        (history_df.Status.isin(['ModelRunResult.RUNNING']))]
-    start_time_raw = datetime.strptime(str(history_mr_start.Time.iloc[0]), time_format_raw)
-    start_time = datetime.strftime(start_time_raw, time_format)
-    last_updated_time = time.strftime(time_format, time.localtime())
-    if (model_runner.results_exist(model, profile, camp)):
-        history_mr_end = history_df[
-            (history_df.Key.isin([str(f"('{model}', '{profile}', '{camp}')")])) &
-            (history_df.Status.isin(['ModelRunResult.SUCCESS']))]
-        end_time_raw = datetime.strptime(str(history_mr_end.Time.iloc[0]), time_format_raw)
-        end_time = datetime.strftime(end_time_raw, time_format)
-        return ("Last Updated: " + str(last_updated_time)), ("Status: ", finished_status), ("Start time: " + str(start_time)), ("End time: " + str(end_time))
+# we need to have a way to prevent a user submitting the runs multiple times
+# (some batch model running now might help)
+@dash_app.callback([Output('memory', 'data')],
+                   [Input("model_rerun_button", "n_clicks")])
+def re_run_model_results(run_n):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return ["placeholder"]
     else:
-        return ("Last Updated: " + str(last_updated_time)), ("Status: ", initial_status), ("Start time: " + str(start_time)), ("End time: ", '')
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        if button_id == 'model_rerun_button':
+            rerun_config = check_model_results_for_messages_unrun(model_runner,["message_1", "message_5"])
+            model_runner.batch_run_model(rerun_config)
+            return ["placeholder"]
+        else:
+            return ["placeholder"]
+    # output a queue to resubmit later if that happens but with the increased capacity
+    # on the model runner this might never happen
+    # check if they are all running
+    # for result in res:
+    #     if res == ModelScheduleRunResult.CAPACITY:
+    #         message = "some models are not running due to capacity reason"
+    #         return [message]
+    # message = "all models are running now"
+    # return [message]
+
+
+# Check every 10 seconds to check if there is a report ready
+@dash_app.callback([Output('update_String', 'children'), Output('status_String', 'children'),
+                    Output("model_dashboard_button_ui", "disabled"), Output("model_dashboard_button_ui", "href"),
+                    Output("model_rerun_button", "disabled"), ],
+    [Input('interval1', 'n_intervals')])
+def check_model(n):
+    results_ready = check_model_results_for_messages(model_runner, ["message_1", "message_5"])
+    if results_ready:
+        user_input = json.loads(model_runner.user_input)
+        camp = str(user_input['name-camp'])
+        total_population = int(user_input["total-population"])
+        collate_model_results_for_user(model_runner, ["message_1", "message_5"], camp, total_population)
+        return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), \
+               "Status: Finished", False, f'/sim/dashboard?camp={camp}', True
+    else:
+        print("No results yet " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime())))
+        return ("Last Updated: " + str(time.strftime("%m/%d/%Y, %H:%M:%S", time.localtime()))), \
+               ("Status: ", initial_status), True, "", False
+

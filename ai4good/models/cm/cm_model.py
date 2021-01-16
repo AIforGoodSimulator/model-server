@@ -7,7 +7,6 @@ from ai4good.models.model import Model, ModelResult
 from ai4good.params.param_store import ParamStore
 from ai4good.models.cm.initialise_parameters import Parameters
 from ai4good.models.cm.simulator import Simulator, generate_csv
-from ai4good.models.cm.simulator import generate_csv
 from ai4good.utils.logger_util import get_logger
 from ai4good.webapp.cm_model_report_utils import normalize_report, prevalence_age_table, prevalence_all_table, \
     cumulative_all_table, cumulative_age_table
@@ -24,8 +23,8 @@ class AbstractCompartmentalModel(Model):
         pass
 
     def run(self, p: Parameters) -> ModelResult:
-        config_dict, percentiles, sols_raw, standard_sol = self.simulate(p)
-
+        # config_dict, percentiles, sols_raw, standard_sol = self.simulate(p)
+        config_dict, sols_raw = self.simulate(p)  # we are currently using sols_raw in results generating
         # Precompute some reports
         logger.info("Generating main report")
         if config_dict is None:
@@ -33,29 +32,27 @@ class AbstractCompartmentalModel(Model):
         else:
             report_raw = generate_csv(sols_raw, p, input_type='raw')
 
-        report = normalize_report(report_raw, p)
-
-        logger.info("Computing prevalence_age_table")
-        prevalence_age = prevalence_age_table(report)
-        logger.info("Computing prevalence_all_table")
-        prevalence_all = prevalence_all_table(report)
-        logger.info("Computing cumulative_all_table")
-        cumulative_all = cumulative_all_table(report, p.population, p.camp_params)
-        logger.info("Computing cumulative_age_table")
-        cumulative_age = cumulative_age_table(report, p.camp_params)
+        # report = normalize_report(report_raw, p)
+        #
+        # logger.info("Computing prevalence_age_table")
+        # prevalence_age = prevalence_age_table(report)
+        # logger.info("Computing prevalence_all_table")
+        # prevalence_all = prevalence_all_table(report)
+        # logger.info("Computing cumulative_all_table")
+        # cumulative_all = cumulative_all_table(report, p.population, p.camp_params)
+        # logger.info("Computing cumulative_age_table")
+        # cumulative_age = cumulative_age_table(report, p.camp_params)
 
         logger.info("Model result ready")
         return ModelResult(self.result_id(p), {
-            #'sols_raw': sols_raw,
-            'standard_sol': standard_sol,
-            'percentiles': percentiles,
+            # 'percentiles': percentiles,
             'config_dict': config_dict,
             'params': p,
             'report': report_raw,
-            'prevalence_age': prevalence_age,
-            'prevalence_all': prevalence_all,
-            'cumulative_all': cumulative_all,
-            'cumulative_age': cumulative_age
+            # 'prevalence_age': prevalence_age,
+            # 'prevalence_all': prevalence_all,
+            # 'cumulative_all': cumulative_all,
+            # 'cumulative_age': cumulative_age
         })
 
 
@@ -74,9 +71,9 @@ class CompartmentalModel(AbstractCompartmentalModel):
 
     def simulate(self, p):
         sim = Simulator(p)
-        sols_raw, standard_sol, percentiles, config_dict = sim.simulate_over_parameter_range_parallel(
+        sols_raw, config_dict = sim.simulate_over_parameter_range_parallel(
             p.control_dict['numberOfIterations'], p.control_dict['t_sim'], p.control_dict['nProcesses'], p.generated_disease_vectors)
-        return config_dict, percentiles, sols_raw, standard_sol
+        return config_dict, sols_raw,
 
 @typechecked
 class CompartmentalModelStochastic(AbstractCompartmentalModel):
@@ -93,7 +90,7 @@ class CompartmentalModelStochastic(AbstractCompartmentalModel):
 
     def simulate(self, p):
         sim = SEIRSDESolver(p)
-        sols_raw, standard_sol, percentiles, config_dict = sim.simulate_over_parameter_range_parallel(
+        sols_raw, config_dict = sim.simulate_over_parameter_range_parallel(
             p.control_dict['numberOfIterations'], p.control_dict['t_sim'],  p.control_dict['nProcesses'], p.control_dict['random_seed'])
-        return config_dict, percentiles, sols_raw, standard_sol
+        return config_dict, sols_raw
 

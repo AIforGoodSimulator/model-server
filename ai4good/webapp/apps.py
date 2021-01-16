@@ -9,16 +9,17 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 import dash
 import dash_bootstrap_components as dbc
-from dask.distributed import Client
+from dask.distributed import Client, LocalCluster
 from ai4good.config import FlaskConfig, ModelConfig
 from ai4good.runner.facade import Facade
-from ai4good.webapp.model_runner import ModelRunner
+from ai4good.webapp.model_runner import ModelRunner, _sid
 from ai4good.utils.logger_util import get_logger
 
 cache_timeout = ModelConfig.CACHE_TIMEOUT
 
 logger = get_logger(__name__,'DEBUG')
 load_dotenv()
+
 
 # register flask components
 def register_flask_extensions(server):
@@ -27,32 +28,40 @@ def register_flask_extensions(server):
     login.init_app(server)
     login.login_view = 'main.login'
 
+
 def register_flask_blueprints(server):
     from ai4good.webapp.authenticate.authapp import server_bp
     server.register_blueprint(server_bp)
+
 
 def _protect_dashviews(dashapp):
     for view_func in dashapp.server.view_functions:
         if view_func.startswith(dashapp.config.url_base_pathname):
             dashapp.server.view_functions[view_func] = login_required(dashapp.server.view_functions[view_func])
 
+
 # initialise dask distributed client
 def dask_client() -> Client:    
     global _client
-
+    # client can only have one thread due to scipy ode solver constraints
+    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.ode.html
     if _client is None:
         if ("DASK_SCHEDULER_HOST" not in os.environ) :
             logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
-            _client = Client()
+            cluster = LocalCluster(n_workers=4, threads_per_worker=1)
+            _client = Client(cluster)
         elif (os.environ.get("DASK_SCHEDULER_HOST")=="127.0.0.1") :
             logger.info("Running Dask locally ...")
-            _client = Client()
+            cluster = LocalCluster(n_workers=4, threads_per_worker=1)
+            _client = Client(cluster)
         elif (os.environ.get("DASK_SCHEDULER_HOST")=='') :
             logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
-            _client = Client()
+            cluster = LocalCluster(n_workers=4, threads_per_worker=1)
+            _client = Client(cluster)
         else :
-            logger.info("Running Dask Distributed using Dask Scheduler [" + os.environ.get("DASK_SCHEDULER_HOST")+"] ...")
-            _client = Client(os.environ.get("DASK_SCHEDULER_HOST") + ":" + os.environ.get("DASK_SCHEDULER_PORT"))
+            logger.info("Running Dask Distributed using Dask Scheduler ["+os.environ.get("DASK_SCHEDULER_HOST")+"] ...")
+            _client = Client(os.environ.get("DASK_SCHEDULER_HOST")+":"+os.environ.get("DASK_SCHEDULER_PORT"),
+                             threads_per_worker=1)
 
     return _client
             
@@ -111,4 +120,5 @@ _client = None  # Needs lazy init
 
 facade = Facade.simple()
 
-model_runner = ModelRunner(facade, _redis, dask_client)
+model_runner = ModelRunner(facade, _redis, dask_client, _sid)
+

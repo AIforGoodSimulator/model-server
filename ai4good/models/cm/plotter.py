@@ -212,7 +212,7 @@ def uncertainty_plot(sols, params, cats_to_plot, confidence_range=None):
                         # 'Time: %{x:.1f} days<extra></extra>',
                         'text': [population_format(i*population_plot/100) for i in y_plot],
                         'line': {'width': 0, 'color': categories[name]['colour']},
-                        'fillcolor': categories[name]['fill_colour'][:-4] + opac,
+                        'fillcolor': categories[name]['fill_colour'][:-4],
                         'legendgroup': name + 'fill',
                         'showlegend': showledge[ii-1],
                         'mode': 'lines',
