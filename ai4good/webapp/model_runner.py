@@ -210,15 +210,15 @@ class ModelRunner:
     def batch_run_model(self, run_config: dict):
         # if self.user_input is None:
         #     self.user_input = self.load_input_params()
-        self.user_input = self.load_input_params()
+        user_input_job = self.load_input_params()
+        self.user_input = user_input_job  # TODO: each user needs to have the input in DB
         # initialise the client
         client = self.dask_client_provider()
-        res = []
         for model in run_config.keys():
             if len(run_config[model]) > 0:
                 for profile in run_config[model]:
                     def submit():
-                        key = (model, profile, self.user_input)  # duplicate the key here so the result report will be right
+                        key = (model, profile, user_input_job)  # duplicate the key here so the result report will be right
 
                         def on_future_done(f: Future):
                             self.models_running_now.pop(key)
@@ -235,9 +235,9 @@ class ModelRunner:
                                 self.history.record_error(key, error_details)
                         logger.info(f"submitting model run {key}")
                         self.history.record_scheduled(key)
-                        future: Future = client.submit(self._sync_run_model, self.facade, model, profile, self.user_input)
+                        future: Future = client.submit(self._sync_run_model, self.facade, model, profile, user_input_job)
                         future.add_done_callback(on_future_done)
-                    key = (model, profile, self.user_input)
+                    key = (model, profile, user_input_job)
                     self.models_running_now.start_run(key, submit)
         logger.info('all runs have been submitted to the distributed client')
         return None
