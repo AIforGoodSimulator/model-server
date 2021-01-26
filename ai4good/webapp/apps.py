@@ -60,8 +60,7 @@ def dask_client() -> Client:
             _client = Client(cluster)
         else :
             logger.info("Running Dask Distributed using Dask Scheduler ["+os.environ.get("DASK_SCHEDULER_HOST")+"] ...")
-            _client = Client(os.environ.get("DASK_SCHEDULER_HOST")+":"+os.environ.get("DASK_SCHEDULER_PORT"),
-                             threads_per_worker=1)
+            _client = Client(os.environ.get("DASK_SCHEDULER_HOST")+":"+os.environ.get("DASK_SCHEDULER_PORT"))
 
     return _client
             
