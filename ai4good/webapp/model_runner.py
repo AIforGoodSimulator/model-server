@@ -212,29 +212,27 @@ class ModelRunner:
         #     self.user_input = self.load_input_params()
         user_input_job = self.load_input_params()
         self.user_input = user_input_job  # TODO: each user needs to have the input in DB
-        # initialise the client
-        client = self.dask_client_provider()
+        def on_future_done(f: Future):
+            self.models_running_now.pop(key)
+            if f.status == 'finished':
+                logger.info("Model run %s success", str(key))
+                self.history.record_finished(key, f.result())
+            elif f.status == 'cancelled':
+                logger.info("Model run %s cancelled", str(key))
+                self.history.record_cancelled(key)
+            else:
+                tb = f.traceback()
+                error_details = traceback.format_tb(tb)
+                logger.error("Model run %s failed: %s", str(key), error_details)
+                self.history.record_error(key, error_details)
         for model in run_config.keys():
             if len(run_config[model]) > 0:
                 for profile in run_config[model]:
                     def submit():
+                        client = self.dask_client_provider()
                         key = (model, profile, user_input_job)  # duplicate the key here so the result report will be right
-
-                        def on_future_done(f: Future):
-                            self.models_running_now.pop(key)
-                            if f.status == 'finished':
-                                logger.info("Model run %s success", str(key))
-                                self.history.record_finished(key, f.result())
-                            elif f.status == 'cancelled':
-                                logger.info("Model run %s cancelled", str(key))
-                                self.history.record_cancelled(key)
-                            else:
-                                tb = f.traceback()
-                                error_details = traceback.format_tb(tb)
-                                logger.error("Model run %s failed: %s", str(key), error_details)
-                                self.history.record_error(key, error_details)
-                        logger.info(f"submitting model run {key}")
                         self.history.record_scheduled(key)
+                        logger.info(f"submitting model run {key}")
                         future: Future = client.submit(self._sync_run_model, self.facade, model, profile, user_input_job)
                         future.add_done_callback(on_future_done)
                     key = (model, profile, user_input_job)
