@@ -174,7 +174,7 @@ class ModelRunner:
         self.history = ModelRunHistory(_redis)
         self.models_running_now = ModelsRunningNow(_redis)
         self.models_running_now.clear_run() # clear running log for now
-        self.dask_client_provider = dask_client_provider
+        self.client = dask_client_provider()
         self._redis = _redis
         self._sid = _sid
         self.user_input = None
@@ -230,7 +230,8 @@ class ModelRunner:
                             self.history.record_error(key, error_details)
 
                     def submit():
-                        client = self.dask_client_provider()
+                        client = self.client
+                        logger.info(f"client object has the following params {client.scheduler_info()}")
                         self.history.record_scheduled(key)
                         logger.info(f"submitting model run {key}")
                         future: Future = client.submit(self._sync_run_model, self.facade, model, profile, user_input_job)
