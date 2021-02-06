@@ -3,7 +3,7 @@ import dash_html_components as html
 from ai4good.models.cm.cm_model import CompartmentalModel
 from ai4good.webapp.apps import dash_app, facade, model_runner
 import plotly.graph_objects as go
-from ai4good.models.cm.plotter import figure_generator, age_structure_plot, stacked_bar_plot, uncertainty_plot
+from ai4good.models.cm.archive.plotter import figure_generator, age_structure_plot, stacked_bar_plot, uncertainty_plot
 from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 
