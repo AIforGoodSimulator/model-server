@@ -19,8 +19,8 @@ import ai4good.webapp.validate_model_page as validate_model_page
 import ai4good.webapp.old_pages.cm_model_results_page as cm_model_results_page
 import ai4good.webapp.cm_model_report_page as cm_model_report_page
 import ai4good.webapp.cm_admin_page as cm_admin_page
-import ai4good.webapp.abm_model_results_page as abm_model_results_page
-import ai4good.webapp.abm_model_report_page as abm_model_report_page
+import ai4good.webapp.old_pages.abm_model_results_page as abm_model_results_page
+import ai4good.webapp.old_pages.abm_model_report_page as abm_model_report_page
 import ai4good.webapp.nm_model_results_page as nm_model_results_page
 import ai4good.webapp.nm_model_report_page as nm_model_report_page
 import ai4good.webapp.nm_admin_page as nm_admin_page
