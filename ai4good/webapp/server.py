@@ -1,5 +1,5 @@
 from urllib.parse import urlparse, parse_qs
-from flask import redirect, url_for
+from flask import redirect
 from flask_login import current_user
 import dash_core_components as dcc
 import dash_html_components as html
@@ -16,16 +16,15 @@ import ai4good.webapp.input_page_4 as input_page_4
 import ai4good.webapp.waiting_page as waiting_page
 import ai4good.webapp.run_model_page as run_model_page
 import ai4good.webapp.validate_model_page as validate_model_page
-import ai4good.webapp.cm_model_results_page as cm_model_results_page
-import ai4good.webapp.cm_model_report_page as cm_model_report_page
-import ai4good.webapp.cm_admin_page as cm_admin_page
-import ai4good.webapp.abm_model_results_page as abm_model_results_page
-import ai4good.webapp.abm_model_report_page as abm_model_report_page
+import ai4good.webapp.old_pages.cm_model_results_page as cm_model_results_page
+import ai4good.webapp.old_pages.cm_model_report_page as cm_model_report_page
+import ai4good.webapp.old_pages.cm_admin_page as cm_admin_page
+import ai4good.webapp.old_pages.abm_model_results_page as abm_model_results_page
+import ai4good.webapp.old_pages.abm_model_report_page as abm_model_report_page
 import ai4good.webapp.nm_model_results_page as nm_model_results_page
 import ai4good.webapp.nm_model_report_page as nm_model_report_page
 import ai4good.webapp.nm_admin_page as nm_admin_page
 import ai4good.webapp.model_results_scaffolding as model_results_scaffolding
-import ai4good.webapp.report_poc_graph as report_poc_graph
 from ai4good.webapp.apps import flask_app, dash_app, dash_auth_app
 
 logger = get_logger(__file__, 'DEBUG')
@@ -124,8 +123,6 @@ def display_dash_app_page(pathname, query=None):
         return nm_admin_page.layout()
     elif pathname == '/sim/results_test':
         return model_results_scaffolding.layout()
-    elif pathname == '/sim/poc_graph_test':
-        return report_poc_graph.layout()
     elif pathname == '/sim/waiting':
         return waiting_page.layout
     else:
