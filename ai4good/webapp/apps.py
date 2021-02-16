@@ -63,6 +63,32 @@ def dask_client() -> Client:
             _client = Client(os.environ.get("DASK_SCHEDULER_HOST")+":"+os.environ.get("DASK_SCHEDULER_PORT"))
 
     return _client
+
+
+# initialise dask distributed client
+def async_dask_client() -> Client:
+    global _client
+    # client can only have one thread due to scipy ode solver constraints
+    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.ode.html
+    if _client is None:
+        if ("DASK_SCHEDULER_HOST" not in os.environ) :
+            logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
+            cluster = LocalCluster(n_workers=4, threads_per_worker=1)
+            _client = Client(cluster, asynchronous=True)
+        elif (os.environ.get("DASK_SCHEDULER_HOST")=="127.0.0.1") :
+            logger.info("Running Dask locally ...")
+            cluster = LocalCluster(n_workers=4, threads_per_worker=1)
+            _client = Client(cluster, asynchronous=True)
+        elif (os.environ.get("DASK_SCHEDULER_HOST")=='') :
+            logger.warn("No Dask Sceduler host specified in .env, Running Dask locally ...")
+            cluster = LocalCluster(n_workers=4, threads_per_worker=1)
+            _client = Client(cluster, asynchronous=True)
+        else :
+            logger.info("Running Dask Distributed using Dask Scheduler ["+os.environ.get("DASK_SCHEDULER_HOST")+"] ...")
+            _client = Client(os.environ.get("DASK_SCHEDULER_HOST")+":"+os.environ.get("DASK_SCHEDULER_PORT"),
+                             asynchronous=True)
+
+    return _client
             
 # initialise flask extensions
 db_sqlalchemy = SQLAlchemy()
@@ -119,5 +145,5 @@ _client = None  # Needs lazy init
 
 facade = Facade.simple()
 
-model_runner = ModelRunner(facade, _redis, dask_client, _sid)
+model_runner = ModelRunner(facade, _redis, dask_client, _sid, async_dask_client)
 

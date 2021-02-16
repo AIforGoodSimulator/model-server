@@ -18,13 +18,14 @@ class ModelQueueItem:
         self.profile = profile
 
 
-def run_model_results_for_messages(model_runner, message_keys):
+async def run_model_results_for_messages(model_runner, message_keys):
     run_config = defaultdict(list)
     for message_key in message_keys:
         for model in model_profile_config[message_key].keys():
             run_config[model] += (model_profile_config[message_key][model])
     logger.info(run_config)
-    res = model_runner.batch_run_model(run_config)
+    res = await model_runner.async_batch_run_model(run_config)
+    logger.info(f'{res}')
     return res
 
 

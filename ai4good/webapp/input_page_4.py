@@ -105,12 +105,12 @@ layout = html.Div(
                             ], style={'border':'1px lightgray solid'}),
                             html.P(''),
                             dbc.CardFooter(dbc.Button('Run Simulation', id='page-4-button', color='secondary', href='/sim/waiting', style={'float':'right'})),
-                            html.Div(id='input-page-4-alert')
                             ], body=True), 
                         html.Br()], width=6
                     ), justify='center', style={'margin-top':'50px'}
                 )
-            ])
+            ]),
+            html.Div(id='model-run-memory-output', style={'display': 'none'}),
         ])
     ]
 )
@@ -189,8 +189,11 @@ def update_input_parameter_page_4(
         raise PreventUpdate
 
 
-@dash_app.callback(Output('input-page-4-alert', 'children'),[Input('page-4-button', 'n_clicks')])
-def model_Dashboard(n_clicks):
-    if n_clicks:
-        res = run_model_results_for_messages(model_runner,["message_1", "message_5"])
-        return None
+# @dash_app.callback(Output('model-run-memory-output', 'children'), [Input('page-4-button', 'n_clicks')])
+# def model_Dashboard(n_clicks):
+#     if n_clicks:
+#         res = run_model_results_for_messages(model_runner, ["message_1", "message_5"])
+#         res_dict = {}
+#         for index, future in enumerate(res):
+#             res_dict[index] = future
+#         return res_dict

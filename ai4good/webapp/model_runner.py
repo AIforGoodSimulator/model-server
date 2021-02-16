@@ -169,77 +169,101 @@ class ModelsRunningNow:
 
 class ModelRunner:
 
-    def __init__(self, facade, _redis: redis.Redis, dask_client_provider, _sid):
+    def __init__(self, facade, _redis: redis.Redis, dask_client_provider, _sid, async_dask_client):
         self.facade = facade
-        self.history = ModelRunHistory(_redis)
-        self.models_running_now = ModelsRunningNow(_redis)
-        self.models_running_now.clear_run() # clear running log for now
-        self.client = dask_client_provider()
-        self._redis = _redis
-        self._sid = _sid
-        self.user_input = None
+        self.dask_client = dask_client_provider
+        self._redis = _redis  # for input parameter cache
+        self._sid = _sid  # for input parameter cache
+        self.user_input = None  # lazy init
+        self.async_dask_client = async_dask_client
+        self.client = None  # lazy init
 
-    def run_model(self, _model: str, _profile: str) -> ModelScheduleRunResult:
+    def run_model(self, _model: str, _profile: str):
         if self.user_input is None:
             self.user_input = self.load_input_params()
 
         def on_future_done(f: Future):
-            self.models_running_now.pop(key)
+            """Simple logging callbacks for the future object"""
             if f.status == 'finished':
                 logger.info("Model run %s success", str(key))
-                self.history.record_finished(key, f.result())
             elif f.status == 'cancelled':
                 logger.info("Model run %s cancelled", str(key))
-                self.history.record_cancelled(key)
             else:
                 tb = f.traceback()
                 error_details = traceback.format_tb(tb)
                 logger.error("Model run %s failed: %s", str(key), error_details)
-                self.history.record_error(key, error_details)
 
-        def submit():
-            client = self.dask_client_provider()
-            self.history.record_scheduled(key)
-            future: Future = client.submit(self._sync_run_model, self.facade, _model, _profile, self.user_input)
-            future.add_done_callback(on_future_done)
-
-        key = (_model, _profile)
-
-        return self.models_running_now.start_run(key, submit)
+        client = self.dask_client_provider()
+        future: Future = client.submit(self._sync_run_model, self.facade, _model, _profile, self.user_input)
+        future.add_done_callback(on_future_done)
+        # gather is non-blocking
+        results = client.gather(future)
+        return
 
     def batch_run_model(self, run_config: dict):
-        # if self.user_input is None:
-        #     self.user_input = self.load_input_params()
-        user_input_job = self.load_input_params()
-        self.user_input = user_input_job  # TODO: each user needs to have the input in DB
+        # TODO: each user needs to have the input in DB
+        if self.user_input is None:
+            self.user_input = self.load_input_params()
+        model_run_futures = []
         for model in run_config.keys():
             if len(run_config[model]) > 0:
                 for profile in run_config[model]:
+                    key = (model, profile, self.user_input)
+
                     def on_future_done(f: Future):
-                        self.models_running_now.pop(key)
                         if f.status == 'finished':
                             logger.info("Model run %s success", str(key))
-                            self.history.record_finished(key, f.result())
                         elif f.status == 'cancelled':
                             logger.info("Model run %s cancelled", str(key))
-                            self.history.record_cancelled(key)
                         else:
                             tb = f.traceback()
                             error_details = traceback.format_tb(tb)
                             logger.error("Model run %s failed: %s", str(key), error_details)
-                            self.history.record_error(key, error_details)
-
-                    def submit():
-                        client = self.client
-                        logger.info(f"client object has the following params {client.scheduler_info()}")
-                        self.history.record_scheduled(key)
-                        logger.info(f"submitting model run {key}")
-                        future: Future = client.submit(self._sync_run_model, self.facade, model, profile, user_input_job)
-                        future.add_done_callback(on_future_done)
-                    key = (model, profile, user_input_job)
-                    self.models_running_now.start_run(key, submit)
+                    logger.info(f"client object has the following params {self.client.scheduler_info()}")
+                    logger.info(f"submitting model run {key}")
+                    future: Future = self.client.submit(self._sync_run_model, self.facade, model, profile, self.user_input)
+                    future.add_done_callback(on_future_done)
+                    model_run_futures.append(future)
         logger.info('all runs have been submitted to the distributed client')
-        return None
+        logger.info(f'all the futures are here and we are going to gather them{model_run_futures}')
+        # model_reports = self.client.gather(model_run_futures)
+        # logger.info('waited for collecting of model_reports')
+        # # store the whole results in fs for now
+        # self.facade.rs.store('test', 'batch', model_reports)
+        return model_run_futures
+
+    async def async_batch_run_model(self, run_config: dict):
+        if self.user_input is None:
+            self.user_input = self.load_input_params()
+        self.client = await self.async_dask_client()
+        model_run_futures = []
+        for model in run_config.keys():
+            if len(run_config[model]) > 0:
+                for profile in run_config[model]:
+                    key = (model, profile, self.user_input)
+
+                    def on_future_done(f: Future):
+                        if f.status == 'finished':
+                            logger.info("Model run %s success", str(key))
+                        elif f.status == 'cancelled':
+                            logger.info("Model run %s cancelled", str(key))
+                        else:
+                            tb = f.traceback()
+                            error_details = traceback.format_tb(tb)
+                            logger.error("Model run %s failed: %s", str(key), error_details)
+
+                    logger.info(f"submitting model run {key}")
+                    future: Future = self.client.submit(self._sync_run_model, self.facade, model, profile,
+                                                        self.user_input)
+                    future.add_done_callback(on_future_done)
+                    model_run_futures.append(future)
+        logger.info('all runs have been submitted to the distributed client')
+        logger.info(f'all the futures are here and we are going to gather them{model_run_futures}')
+        # model_reports = self.client.gather(model_run_futures)
+        # logger.info('waited for collecting of model_reports')
+        # # store the whole results in fs for now
+        # self.facade.rs.store('test', 'batch', model_reports)
+        return model_run_futures
 
     @staticmethod
     def history_columns() -> List[str]:
@@ -274,8 +298,9 @@ class ModelRunner:
         res_id = _mdl.result_id(params)
         logger.info(f"Running model for camp with {_mdl.id()} %s")
         mr = _mdl.run(params)
-        logger.info("Saving model result to cache")
-        facade.rs.store(_mdl.id(), res_id, mr)
+        # now we are getting the results back instead of leaving them at the worker node
+        # logger.info("Saving model result to cache")
+        # facade.rs.store(_mdl.id(), res_id, mr)
         return mr
 
     def results_exist(self, _model: str, _profile: str) -> bool:
