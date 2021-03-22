@@ -174,7 +174,7 @@ class ModelRunner:
         self.history = ModelRunHistory(_redis)
         self.models_running_now = ModelsRunningNow(_redis)
         self.models_running_now.clear_run() # clear running log for now
-        self.client = dask_client_provider()
+        self.client = dask_client_provider
         self._redis = _redis
         self._sid = _sid
         self.user_input = None
@@ -217,7 +217,7 @@ class ModelRunner:
             if len(run_config[model]) > 0:
                 for profile in run_config[model]:
                     def submit():
-                        client = self.client
+                        client = self.client()
                         logger.info(f"client object has the following params {client.scheduler_info()}")
                         logger.info(f"submitting model run {key}")
                         future: Future = client.submit(self._sync_run_model, self.facade, model, profile, user_input_job)

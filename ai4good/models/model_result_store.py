@@ -41,7 +41,7 @@ class SimpleModelResultStore(ModelResultStore):
     def store(self, model_id: str, result_id: str, obj: Any):
         p = self._path(f"{model_id}_{result_id}.pkl")
         with open(p, 'wb') as handle:
-            pickle.dump(obj, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(obj, handle)
 
     def load(self, model_id: str, result_id: str) -> Any:
         p = self._path(f"{model_id}_{result_id}.pkl")
