@@ -226,10 +226,16 @@ class ModelRunner:
                     future = submit()
                     futures.append(future)
         logger.info('all runs have been submitted to the distributed client')
+        # this method is slightly better since client can release a future once we have saved it!
         for future, result in as_completed(futures, with_results=True):
             mr, model_id, res_id = result
             logger.info(f"saving model results from {res_id}")
             self.facade.rs.store(model_id, res_id, mr)
+        # results = self.client().gather(futures)
+        # for result in results:
+        #     mr, model_id, res_id = result
+        #     logger.info(f"saving model results from {res_id}")
+        #     self.facade.rs.store(model_id, res_id, mr)
         return None
 
     @staticmethod
