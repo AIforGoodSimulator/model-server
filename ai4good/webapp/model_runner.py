@@ -9,7 +9,7 @@ from typing import List
 from enum import Enum, auto
 import redis
 from flask_login import current_user
-from dask.distributed import Client, Future, Variable
+from dask.distributed import Client, Future, Variable, as_completed
 from ai4good.config import ModelConfig
 from ai4good.models.model import Model, ModelResult
 from ai4good.models.model_registry import get_models, create_params
@@ -212,33 +212,24 @@ class ModelRunner:
         #     self.user_input = self.load_input_params()
         user_input_job = self.load_input_params()
         self.user_input = user_input_job  # TODO: each user needs to have the input in DB
+        futures = []
         for model in run_config.keys():
             if len(run_config[model]) > 0:
                 for profile in run_config[model]:
-                    def on_future_done(f: Future):
-                        self.models_running_now.pop(key)
-                        if f.status == 'finished':
-                            logger.info("Model run %s success", str(key))
-                            self.history.record_finished(key, f.result())
-                        elif f.status == 'cancelled':
-                            logger.info("Model run %s cancelled", str(key))
-                            self.history.record_cancelled(key)
-                        else:
-                            tb = f.traceback()
-                            error_details = traceback.format_tb(tb)
-                            logger.error("Model run %s failed: %s", str(key), error_details)
-                            self.history.record_error(key, error_details)
-
                     def submit():
                         client = self.client
                         logger.info(f"client object has the following params {client.scheduler_info()}")
-                        self.history.record_scheduled(key)
                         logger.info(f"submitting model run {key}")
                         future: Future = client.submit(self._sync_run_model, self.facade, model, profile, user_input_job)
-                        future.add_done_callback(on_future_done)
+                        return future
                     key = (model, profile, user_input_job)
-                    self.models_running_now.start_run(key, submit)
+                    future = submit()
+                    futures.append(future)
         logger.info('all runs have been submitted to the distributed client')
+        for future, result in as_completed(futures, with_results=True):
+            mr, model_id, res_id = result
+            logger.info(f"saving model results from {res_id}")
+            self.facade.rs.store(model_id, res_id, mr)
         return None
 
     @staticmethod
@@ -274,9 +265,7 @@ class ModelRunner:
         res_id = _mdl.result_id(params)
         logger.info(f"Running model for camp with {_mdl.id()} %s")
         mr = _mdl.run(params)
-        logger.info("Saving model result to cache")
-        facade.rs.store(_mdl.id(), res_id, mr)
-        return mr
+        return mr, _mdl.id(), res_id
 
     def results_exist(self, _model: str, _profile: str) -> bool:
         if self.user_input is None:
