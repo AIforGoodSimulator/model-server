@@ -34,7 +34,7 @@ requests==2.25.0
 blosc==1.9.2
 python-dotenv
 sdeint==0.2.1
-Werkzeug==0.16.1
+Werkzeug==2.2.3
 flask_login==0.4.0
 flask_migrate==2.5.3
 flask_sqlalchemy==2.4.4
